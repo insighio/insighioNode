@@ -37,3 +37,19 @@ sudo  ampy -p /dev/ttyUSB0 -b 115200 put . /flash
 # for ESP32 devices
 sudo  ampy -p /dev/ttyUSB0 -b 115200 put . /
 ```
+
+## Configure
+
+The configuration of the device operation, security keys, network connection etc. can be done through the implemented [Web UI configuration wizard](https://docs.insigh.io/gettingstarted/configuration/).
+
+After following the [Getting Started](https://docs.insigh.io/gettingstarted/) steps, the device will be ready to start measurements!
+
+# Future Work
+
+* Over-The-Air update support
+* Security enhancements (TLS)
+* < Name your desired feature! >
+
+# Issues
+
+In case of bug reports or feature requests feel free to open an [issue](https://github.com/insighio/insighioNode/issues).
