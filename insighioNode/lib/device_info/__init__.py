@@ -13,7 +13,6 @@ if not sys.platform == 'esp32':
     import pycom
     _LORA_COMPATIBLE_PLATFORMS = ["LoPy", "FiPy", "LoPy4"]
     _LTE_COMPATIBLE_PLATFORMS = ["GPy", "FiPy"]
-    wdt = machine.WDT(timeout=120000)
 
 
 def get_device_fw():
@@ -89,6 +88,10 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
     # setup watchdog
     pycom.wdt_on_boot(wdt_on_boot)
     pycom.wdt_on_boot_timeout(wdt_on_boot_timeout_sec * 1000)  # reboots after X ms if no wdt.feed
+    if(wdt_on_boot):
+        wdt = machine.WDT(timeout=120000)
+    else:
+        wdt = None
 
     try:
         pycom.pybytes_on_boot(False)
