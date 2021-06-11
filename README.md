@@ -12,12 +12,12 @@ A complete description of all the supported APIs along with tutorials can be fou
 
 First thing first, clone repository and get all required submodules:
 
-    ```bash
-    git clone https://github.com/insighio/insighioNode
+```bash
+git clone https://github.com/insighio/insighioNode
 
-    cd insighioNode
-    git submodule update --init --recursive
-    ```
+cd insighioNode
+git submodule update --init --recursive
+```
 
 ## Code upload via [Pymakr](https://pycom.io/products/supported-networks/pymakr/)
 
@@ -42,7 +42,7 @@ sudo  ampy -p /dev/ttyUSB0 -b 115200 put . /
 
 The configuration of the device operation, security keys, network connection etc. can be done through the implemented [Web UI configuration wizard](https://docs.insigh.io/gettingstarted/configuration/).
 
-After following the [Getting Started](https://docs.insigh.io/gettingstarted/) steps, the device will be ready to start measurements!
+After following the [Getting Started](https://docs.insigh.io/gettingstarted/) steps, the device will be ready to measure and upload!
 
 # Future Work
 
