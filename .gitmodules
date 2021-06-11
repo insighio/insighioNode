@@ -1,0 +1,18 @@
+[submodule "lib-external/micropython-lib"]
+	path = lib-external/micropython-lib
+	url = https://github.com/micropython/micropython-lib
+[submodule "lib-external/microCoAPy"]
+	path = lib-external/microCoAPy
+	url = https://github.com/insighiot/microCoAPy
+[submodule "lib-external/senml-micropython-library"]
+	path = lib-external/senml-micropython-library
+	url = https://github.com/insighio/senml-micropython-library.git
+[submodule "lib-external/microATsocket"]
+	path = lib-external/microATsocket
+	url = https://github.com/insighio/microATsocket.git
+[submodule "lib-external/microsdi12"]
+	path = lib-external/microsdi12
+	url = https://github.com/insighio/microSDI12.git
+[submodule "lib-external/MicroWebSrv2"]
+	path = lib-external/MicroWebSrv2
+	url = https://github.com/insighio/MicroWebSrv2.git

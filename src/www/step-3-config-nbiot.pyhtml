@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>insigh.io Device</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="css/spectre.min.css" />
+    </head>
+
+    <body class="body-custom">
+      {{ py }}
+      import gc
+      gc.collect()
+      {{ end }}
+        <img src="img/logo.png" class="img-responsive img-center">
+
+        <div class="panel panel-custom">
+          <div class="panel-header">
+            <div class="panel-title text-center">Set network connection details</div>
+          </div>
+
+          <div class="panel-nav">
+            <ul class="step">
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 1">Login</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 2">Select Network</a>
+              </li>
+              <li class="step-item active">
+                <a href="#" class="tooltip" data-tooltip="Step 3">Network Params</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 5">Measurements</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 6">Verify</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="panel-body">
+            <br />
+            <hr />
+            <br />
+            <div class="text-center">
+              Configuration details for: <span class="text-bold">NBIoT</span>
+            </div>
+            <br />
+            <div class="columns flex-centered">
+              <div class="column col-7">
+                <form class="form-horizontal">
+                  <div class="form-group">
+                    <div class="col-12">
+                      <div class="divider text-center" data-content="Connection Configuration"></div>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label" for="input-example-nbiot">APN</label>
+                    </div>
+                    <div class="col-9 col-sm-12">
+                      <input class="form-input constr-field" type="text" id="input-apn" placeholder="" />
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label" for="input-example-nbiot">Band</label>
+                    </div>
+                    <div class="col-9 col-sm-12">
+                      <input class="form-input constr-field" type="number" id="input-band" value=20 />
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-12">
+                      <div class="divider text-center" data-content="Generic Configuration"></div>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label" for="input-example-nbiot">Sleep Period (seconds)</label>
+                    </div>
+                    <div class="col-9 col-sm-12">
+                      <input class="form-input constr-field" type="number" id="input-period" value=60 />
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label" for="input-example-nbiot">Protocol</label>
+                    </div>
+                    <div class="col-9 col-sm-12">
+                      <label class="form-radio">
+                        <input type="radio" name="protocol" onclick="showIpVersion(false)"  value="mqtt" checked>
+                        <i class="form-icon"></i> MQTT
+                      </label>
+                      <label class="form-radio">
+                        <input type="radio" name="protocol" onclick="showIpVersion(true)" value="coap">
+                        <i class="form-icon"></i> CoAP
+                      </label>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label" for="input-example-nbiot">IP version</label>
+                    </div>
+                    <div class="col-9 col-sm-12" >
+                      <label class="form-radio">
+                        <input type="radio" name="ipversion" value="IP" id="ipv4Option" checked>
+                        <i class="form-icon"></i> IPv4
+                      </label>
+                      <label class="form-radio">
+                        <input type="radio" name="ipversion" value="IPV6" id="ipv6Option" disabled>
+                        <i class="form-icon"></i> IPv6
+                      </label>
+                    </div>
+                    <br />
+                    <br />
+                  </div>
+                </form>
+                <div class="columns">
+                  <div class="column col-4 col-mr-auto"></div>
+                  <div class="column col-1"><button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button></div>
+                  <div class="column col-1"><button class="btn btn-primary float-right" onclick="validateMyForm()" id="save-button">Save</button></div>
+                </div>
+                <br />
+                <br />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script src="js.cookie.min.js"></script>
+        <script >
+          function goBack() {
+            window.history.back();
+          }
+
+          function clearCookies() {
+            Cookies.remove('lora-region')
+            Cookies.remove('network')
+            Cookies.remove('lora-adr')
+            Cookies.remove('lora-confirmed')
+            Cookies.remove('lora-dr')
+            Cookies.remove('lora-retries')
+            Cookies.remove('nbiot-apn')
+            Cookies.remove('nbiot-band')
+            Cookies.remove('period')
+            Cookies.remove('wifi-pass')
+            Cookies.remove('wifi-ssid')
+            Cookies.remove('protocol')
+          }
+
+          function setRadioGroupValue(groupName, cookieName){
+            var elems = document.getElementsByName(groupName)
+
+            for (var i = 0, length = elems.length; i < length; i++) {
+              if (elems[i].checked) {
+                Cookies.set(cookieName, elems[i].value)
+                break;
+              }
+            }
+          }
+
+          function enableElement(id, status) {
+            var elem = document.getElementById(id)
+            elem.disabled = !status
+          }
+
+          function showIpVersion(status){
+            enableElement("ipv6Option", status)
+            if(!status) {
+                document.getElementById("ipv6Option").checked = false
+                document.getElementById("ipv4Option").checked = true
+            }
+          }
+
+          function storeData(){
+            document.getElementById('save-button').disabled = true
+            clearCookies();
+            Cookies.set('period', document.getElementById('input-period').value)
+
+            Cookies.set('network', "nbiot")
+
+            Cookies.set('nbiot-apn', document.getElementById('input-apn').value.trim())
+            Cookies.set('nbiot-band', document.getElementById('input-band').value)
+
+            setRadioGroupValue('protocol', 'protocol')
+            setRadioGroupValue('ipversion', 'ipversion')
+
+            location.href = "step-4-keys.pyhtml?op=NBIoT";
+          }
+
+          function validateMyForm(){
+            var apn =  document.getElementById('input-apn')
+            if(apn.value.trim() == ""){
+                apn.style.borderColor = "red";
+                apn.focus()
+                window.alert("Please enter an APN")
+                return false
+            }
+            apn.style.borderColor = "green";
+
+            storeData()
+            return true
+          }
+        </script>
+    </body>
+</html>

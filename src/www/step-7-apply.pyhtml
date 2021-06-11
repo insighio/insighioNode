@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>insigh.io Device</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="css/spectre-icons.min.css" />
+        <link rel="stylesheet" href="css/spectre.min.css" />
+    </head>
+
+    <body class="body-custom">
+
+        <img src="img/logo.png" class="img-responsive img-center">
+
+        <div class="panel panel-custom">
+          <div class="panel-header">
+            <div class="panel-title text-center">Applying configuration</div>
+          </div>
+
+          <div class="panel-nav">
+            <ul class="step">
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 1">Login</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 2">Select Network</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 3">Network Params</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 5">Measurements</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 6">Verify</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="panel-body">
+            <br />
+            <hr />
+            <br />
+            <div class="empty">
+              <div class="empty-icon">
+                <i class="icon icon-2x icon-check"></i>
+              </div>
+              <p class="empty-title h5">Configuration Applied</p>
+              <p class="empty-subtitle">The device will soon reboot to the desired configuration.</p>
+              <button class="btn btn-primary" id="save-button" onclick="startOver()">Start over?</button>
+            </div>
+          </div>
+          <script>
+          function startOver() {
+            location.href = "step-2-select.html"
+          }
+          </script>
+          {{ py }}
+            import gc
+            import utils
+            gc.collect()
+
+            operation = ""
+            board = ""
+            for param in Request.QueryParams:
+              if param == "network":
+                operation = Request.QueryParams[param]
+              elif param == "selected-board":
+                board = Request.QueryParams[param]
+
+            file = '/flash/apps/demo_console/demo_config.py'
+
+            # set project configuration content
+            contents = utils.readFromFile('/flash/apps/demo_console/templ/device_config_templ.py')
+            contents = contents + '\n'
+
+            if board == "sdi12":
+              contents += utils.readFromFile('/flash/apps/demo_console/templ/device_sdi12_config_templ.py')
+            else:
+              contents += utils.readFromFile('/flash/apps/demo_console/templ/device_i2c_analog_config_templ.py')
+            contents += '\n'
+
+            if operation == 'wifi':
+              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/wifi_config_templ.py')
+              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/protocol_config_templ.py')
+            elif operation == 'nbiot':
+              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/nbiot_config_templ.py')
+              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/protocol_config_templ.py')
+            elif operation == 'lora':
+              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/lora_config_templ.py')
+
+            for param in Request.QueryParams:
+              contents = contents.replace('<' + param + '>', Request.QueryParams[param])
+
+            utils.writeToFile(file, contents)
+
+            gc.collect()
+
+          {{ end }}
+
+          {{ pyend }}
+            import machine
+            import utime
+
+            start_time = utime.ticks_ms()
+            WAIT_UNTIL_REBOOT_MSEC = 3000
+            while (utime.ticks_ms()-start_time < WAIT_UNTIL_REBOOT_MSEC):
+                    utime.sleep_ms(1000)
+
+            machine.reset()
+          {{ end }}
+        </pre>
+      </div>
+    </body>
+
+</html>

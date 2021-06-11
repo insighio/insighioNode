@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>insigh.io Device</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="css/spectre.min.css" />
+    </head>
+
+    <body class="body-custom">
+
+        <img src="img/logo.png" class="img-responsive img-center">
+
+        <div class="panel panel-custom">
+          <div class="panel-header">
+            <div class="panel-title text-center">Select desired operation</div>
+          </div>
+
+          <div class="panel-nav">
+            <ul class="step">
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 1">Login</a>
+              </li>
+              <li class="step-item active">
+                <a href="#" class="tooltip" data-tooltip="Step 2">Select Network</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 3">Network Params</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 5">Measurements</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 6">Verify</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="panel-body">
+            <br />
+            <hr />
+            <br />
+            <div class="text-center">Select network technology to be used:</div>
+            <br />
+            <br />
+            <div class="container">
+              <div class="columns flex-centered">
+                <div class="column col-8 col-mr-auto img-center">
+                  <div class="btn-group btn-group-block img-center">
+                    <button class="btn" id="button-wifi" onclick="operationSelected('WiFi')">WiFi</button>
+                    <button class="btn" id="button-nbiot" onclick="operationSelected('NBIoT')">NBIoT</button>
+                    <button class="btn" id="button-lora" onclick="operationSelected('LoRa')">LoRa</button>
+                  </div>
+                </div>
+             </div>
+             <br />
+            <script>
+             function operationSelected(operationName) {
+               document.getElementById('button-wifi').disabled = true
+               document.getElementById('button-nbiot').disabled = true
+               document.getElementById('button-lora').disabled = true
+               if(operationName == "WiFi")
+                  location.href = "step-3-config-wifi.pyhtml";
+              else if(operationName == "NBIoT")
+                 location.href = "step-3-config-nbiot.pyhtml";
+              else if(operationName == "LoRa")
+                 location.href = "step-3-config-lora.pyhtml";
+             }
+            </script>
+          </div>
+      </div>
+    </body>
+
+</html>
