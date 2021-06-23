@@ -145,10 +145,10 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-channel-control">Control Channel</label>
+                      <label class="form-label" for="input-controlChannel">Control Channel</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-channel-control" onpaste="fillClipboardData('controlChannel')" value="{{ insighioControlChannel }}" />
+                      <input class="form-input constr-field" type="text" id="input-control-channel" onpaste="fillClipboardData('control-channel')" value="{{ insighioControlChannel }}" />
                     </div>
                     {{ end }}
                     <br />
@@ -182,7 +182,7 @@
               document.getElementById('input-id').value = obj.id
               document.getElementById('input-key').value = obj.key
               document.getElementById('input-channel').value = obj.channel
-              document.getElementById('input-channel-control').value = obj.controlChannel
+              document.getElementById('input-control-channel').value = obj.controlChannel
 
             }
             catch(e) {
@@ -213,7 +213,7 @@
             Cookies.set('insighio-id', document.getElementById('input-id').value.trim())
             Cookies.set('insighio-key', document.getElementById('input-key').value.trim())
             Cookies.set('insighio-channel', document.getElementById('input-channel').value.trim())
-            Cookies.set('insighio-channel-control', document.getElementById('input-channel-control').value.trim())
+            Cookies.set('insighio-control-channel', document.getElementById('input-control-channel').value.trim())
           }
 
           location.href = "step-5-measurements.html"
