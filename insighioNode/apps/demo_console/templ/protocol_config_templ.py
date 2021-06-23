@@ -24,5 +24,6 @@ else:
 
 """ console.insigh.io security keys """
 protocol_config.message_channel_id = "<insighio-channel>"
+protocol_config.control_channel_id = "<insighio-control-channel>"
 protocol_config.thing_id = "<insighio-id>"
 protocol_config.thing_token = "<insighio-key>"
