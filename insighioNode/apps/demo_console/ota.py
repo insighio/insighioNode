@@ -21,6 +21,7 @@ def checkAndApply(cfg):
             eventId = None
             fileId = None
             fileType = None
+            fileSize = None
             for el in senmlMessage:
                 name = str(el.name)
                 if name == "e":
@@ -29,12 +30,28 @@ def checkAndApply(cfg):
                     fileId = el.value
                 elif name == "t":
                     fileType = el.value
+                elif name == "s":
+                    fileSize = el.value
             # eventId ==0 => pending for installation
-            if str(eventId) == "0" and fileId and fileType:
-                executeOTA(cfg, fileId, fileType)
+            if str(eventId) == "0" and fileId and fileType and fileSize:
+                applyOTA(cfg, fileId, fileType)
     else:
         logging.info("MQTT not connected, idle for this loop")
 
 
-def executeOTA(cfg, fileId, fileType):
+def hasEnoughFreeSpace(fileSize):
+    import uos
+    # for ESP32 uos.statvfs('/')
+    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs('/flash')
+    freesize = f_bsize * f_bfree
+    return fileSize < freesize
+
+
+def applyOTA(cfg, fileId, fileType, fileSize):
     logging.info("About to download OTA package: " + fileId + fileType)
+
+    if not hasEnoughFreeSpace(fileSize):
+        # send failure message
+        pass
+
+    # http://<ip>/packages/download?fuid=<file-uid>&did=<device-id>&dk=<device-key>&cid=<control-channel-id>
