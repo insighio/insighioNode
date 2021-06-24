@@ -37,5 +37,10 @@ def send_message(cfg, message):
     transfer_protocol.send_packet(cfg, message)
 
 
+def checkForOTA(cfg):
+    from . import transfer_protocol
+    transfer_protocol.checkForOTA(cfg)
+
+
 def disconnect():
     logging.info("Deactivating WiFi: {}".format(wifi.deactivate()))
