@@ -36,3 +36,5 @@ _MEAS_NETWORK_STAT_ENABLE = <meas-network-stat>
 _MEAS_TEMP_UNIT_IS_CELSIUS = <meas-temp-unit>
 
 _CONST_MEAS_DISABLED = "disabled"
+
+_CHECK_FOR_OTA = True

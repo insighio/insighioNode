@@ -2,6 +2,7 @@ import logging
 
 
 def send_packet(cfg, message):
+    logging.debug(cfg, message)
     # transport-related functionalities
     cfg.protocol_config.client_name = cfg.device_id
     if cfg.protocol == 'coap':
@@ -41,3 +42,26 @@ def send_packet(cfg, message):
             logging.info("Disconnected")
         else:
             logging.info("MQTT not connected, idle for this loop")
+
+
+def checkForOTA(cfg):
+    from protocols import mqtt_client
+    mqtt_cli = mqtt_client.MQTTClientCustom(cfg.protocol_config)
+    connectionStatus = mqtt_cli.connect()
+    logging.info("Mqtt connection status: " + str(connectionStatus))
+    connectionStatus = 1  # TODO: temp solution till we resolve what values are returned from connect function
+    if connectionStatus != 0:
+        message = mqtt_cli.subscribe_and_get_first_message()
+        # mqtt_cli.sendMessage(message)
+        mqtt_cli.disconnect()
+
+        if message is not None and message["message"] is not None:
+            logging.debug("mqtt messqage received: " + str(message["message"]))
+
+            from external.kpn_senml.senml_pack_json import SenmlPackJson
+            senmlMessage = SenmlPackJson("")
+            senmlMessage.from_json(message["message"])
+            for el in senmlMessage:
+                logging.debug("senml: " + str(el.name) + " => " + str(el.value))
+    else:
+        logging.info("MQTT not connected, idle for this loop")
