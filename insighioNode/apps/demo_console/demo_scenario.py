@@ -68,7 +68,8 @@ try:
         utime.sleep_ms(1000)
 
         if cfg._CHECK_FOR_OTA:
-            network.checkForOTA(cfg)
+            from . import ota
+            ota.checkAndApply(cfg)
     else:
         logging.info("Network [" + cfg.network + "] not connected")
 
