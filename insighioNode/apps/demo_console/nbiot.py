@@ -27,6 +27,12 @@ def connect(cfg):
     return results
 
 
+def disconnect():
+    status = nbiot.deactivate()
+    logging.info("Deactivate NB-IOT: {}".format(status))
+    return status
+
+
 def create_message(device_id, measurements):
     message = SenmlPackJson(device_id + '-')
 
@@ -44,5 +50,5 @@ def send_message(cfg, message):
     transfer_protocol.send_packet(cfg, message)
 
 
-def disconnect():
-    logging.info("Deactivate NB-IOT: {}".format(nbiot.deactivate()))
+def checkAndApplyOTA(cfg):
+    pass

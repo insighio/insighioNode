@@ -6,6 +6,8 @@ from external.kpn_senml.senml_record import SenmlRecord
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
+transfer_client = None
+
 
 def connect(cfg):
     (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=False)
@@ -17,7 +19,21 @@ def connect(cfg):
         results["wifi_scan_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": scanDur}
         results["wifi_channel"] = {"value": wifiChannel}
         results["wifi_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": wifiRssi}
+
+    if connOk:
+        from . import transfer_protocol
+        global transfer_client
+        transfer_client = transfer_protocol.TransferProtocol(cfg)
+        transfer_client.connect()
+
     return results
+
+
+def disconnect():
+    if transfer_client is not None:
+        transfer_client.disconnect()
+
+    logging.info("Deactivating WiFi: {}".format(wifi.deactivate()))
 
 
 def create_message(device_id, measurements):
@@ -33,9 +49,11 @@ def create_message(device_id, measurements):
 
 
 def send_message(cfg, message):
-    from . import transfer_protocol
-    transfer_protocol.send_packet(cfg, message)
+    if transfer_client is not None:
+        transfer_client.send_packet(message)
 
 
-def disconnect():
-    logging.info("Deactivating WiFi: {}".format(wifi.deactivate()))
+def checkAndApplyOTA(cfg):
+    if transfer_client is not None:
+        from . import ota
+        ota.checkAndApply(cfg, transfer_client)

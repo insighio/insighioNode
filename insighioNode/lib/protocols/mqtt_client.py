@@ -70,8 +70,10 @@ class MQTTClientCustom:
             logging.exception(e, 'Exception during MQTT connect with:')
             return False
 
-    def sendMessage(self, message):
-        self.__sendMessageEx(self.messageChannel, message, 1, False)
+    def sendMessage(self, message, channel=None, retained=False):
+        if channel is None:
+            channel = self.messageChannel
+        self.__sendMessageEx(channel, message, 1, retained)
 
     def subscribe_and_get_first_message(self, channel=None):
         try:
