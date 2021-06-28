@@ -40,7 +40,7 @@ class TransferProtocol:
         self.connected = False
         logging.info("Disconnected")
 
-    def send_packet(self, message):
+    def send_packet(self, message, channel=None):
         # transport-related functionalities
         if not self.connected:
             logging.info("TransferProtocol not connected")
@@ -54,9 +54,12 @@ class TransferProtocol:
             # self.client.poll(2000)
         elif self.protocol == 'mqtt':
             logging.info("About to send: " + message)
-            self.client.sendMessage(message)
+            self.client.sendMessage(message, channel)
             logging.info("Done.")
         return False
+
+    def send_control_packet_ota(self, message):
+        return self.send_packet(message, self.protocol_config.control_channel_id)
 
     def get_control_message(self):
         if not self.connected:

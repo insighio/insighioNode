@@ -2,7 +2,7 @@ import logging
 from . import transfer_protocol
 
 
-def checkAndApply(cfg, client):
+def checkAndApply(client):
     if client is None:
         logging.debug("OTA check aborted, no active transfer client")
         return False
@@ -31,7 +31,7 @@ def checkAndApply(cfg, client):
                 fileSize = el.value
         # eventId ==0 => pending for installation
         if str(eventId) == "0" and fileId and fileType and fileSize:
-            applyOTA(cfg, fileId, fileType, fileSize, client)
+            applyOTA(client, fileId, fileType, fileSize)
 
 
 def hasEnoughFreeSpace(fileSize):
@@ -42,7 +42,7 @@ def hasEnoughFreeSpace(fileSize):
     return fileSize < freesize
 
 
-def sendFailureMessage(cfg, fileId, client):
+def sendFailureMessage(client, fileId):
     from . import transfer_protocol
     from external.kpn_senml.senml_pack_json import SenmlPackJson
     from external.kpn_senml.senml_record import SenmlRecord
@@ -51,16 +51,17 @@ def sendFailureMessage(cfg, fileId, client):
     message.add(SenmlRecord("e", value=2))  # event id == 2 => failure
     message.add(SenmlRecord("i", value=fileId))
 
-    client.send_packet(message)
+    client.send_control_packet_ota(message.to_json())
     client.clear_control_messages()
 
 
-def applyOTA(cfg, fileId, fileType, fileSize, client):
+def applyOTA(client, fileId, fileType, fileSize):
     logging.info("About to download OTA package: " + fileId + fileType)
 
-    if not hasEnoughFreeSpace(int(fileSize)):
-        # send failure message
-        pass
+    # if not hasEnoughFreeSpace(int(fileSize)):
+    if True:
+        sendFailureMessage(client, fileId)
+        return
 
     logging.debug("OTA size check passed")
 

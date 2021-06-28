@@ -56,4 +56,4 @@ def send_message(cfg, message):
 def checkAndApplyOTA(cfg):
     if transfer_client is not None:
         from . import ota
-        ota.checkAndApply(cfg, transfer_client)
+        ota.checkAndApply(transfer_client)
