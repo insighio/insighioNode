@@ -1,7 +1,13 @@
 import utime
 from machine import Pin, UART
 import ure
-import network
+# TODO: check if some regexes need to be precompiled: ure.compile('\d+mplam,pla')
+
+# Modem state
+MODEM_DETTACHED = -1  # initial value, nothing happened
+MODEM_ACTIVATED = 0
+MODEM_ATTACHED = 1
+MODEM_CONNECTED = 2
 
 
 class Modem:
@@ -15,13 +21,24 @@ class Modem:
         return status
 
     def print_status(self):
-        self.send_at_cmd("ATI")
         self.send_at_cmd("AT+CFUN?")
         self.send_at_cmd("AT+CMEE=2")
         self.send_at_cmd("AT+CPIN?")
         self.send_at_cmd("AT+QDSIM?")
         self.send_at_cmd("AT+QSIMVOL?")
         self.send_at_cmd("AT+QSIMDET?")
+
+    def get_model(self):
+        (status, lines) = self.send_at_cmd("ATI")
+        if not status or len(lines) < 3:
+            return None
+
+        if lines[0].lower().startwith("quectel"):
+            if "mc60" in lines[1].lower():
+                return "MC60"
+            elif "bg600" in lines[1].lower():
+                return "BG600"
+        return lines[1]
 
     def power_on(self):
         # network registration
@@ -50,14 +67,15 @@ class Modem:
             self.power_on()
 
         if self.is_alive():
-            self.send_at_cmd('ATE0')  # disable command exho
+            # disable command echo
+            self.send_at_cmd('ATE0')
+
+            # set auto-registration
+            self.send_at_cmd("AT+COPS=0")
+
+            # disable unsolicited report of network registration
+            self.send_at_cmd("AT+CREG=0")
             return True
-
-        # set auto-registration
-        self.send_at_cmd("AT+COPS=0")
-
-        # disable unsolicited report of network registration
-        self.send_at_cmf("AT+CREG=0")
 
         return False
 
@@ -82,6 +100,8 @@ class Modem:
         (status, lines) = self.send_at_cmd('AT+CGDATA="PPP",1', 30000, "CONNECT")
         if not status:
             return False
+
+        import network
 
         self.ppp = network.PPP(self.uart)
         self.ppp.active(True)

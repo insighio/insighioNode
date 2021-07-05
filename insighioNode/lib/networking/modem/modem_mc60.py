@@ -1,4 +1,4 @@
-from modem import Modem
+from modem_base import Modem
 import utime
 import ure
 from micropyGPS.micropyGPS import MicropyGPS
