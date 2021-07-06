@@ -88,8 +88,8 @@
             if operation == 'wifi':
               contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/wifi_config_templ.py')
               contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/protocol_config_templ.py')
-            elif operation == 'nbiot':
-              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/nbiot_config_templ.py')
+            elif operation == 'cellular':
+              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/cellular_config_templ.py')
               contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/protocol_config_templ.py')
             elif operation == 'lora':
               contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/lora_config_templ.py')

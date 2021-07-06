@@ -37,7 +37,7 @@ class WebServer:
                 return True
         return False
 
-    def extractInsighioIds(self, project):
+    def extractInsighioIds(self):
         projectConfig = utils.readFromFile("/flash/apps/demo_console/demo_config.py").strip().split("\n")
         linesCount = len(projectConfig)
 
@@ -50,13 +50,13 @@ class WebServer:
         while i < linesCount:
             if (self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.message_channel_id', "insighioChannelId", '"') or
                self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_id', "insighioDeviceId", '"') or
-               self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_token', "insighioDeviceToken", '"')) :
-               euisFilled = euisFilled + 1
+               self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_token', "insighioDeviceToken", '"')):
+                euisFilled = euisFilled + 1
 
             if euisFilled == 3:
                 return True
             else:
-                i = i +1
+                i = i + 1
 
         return False
 
@@ -90,8 +90,7 @@ class WebServer:
 
     def storeIds(self):
         self.extractLoRaUIDS()
-        if not self.extractInsighioIds("wifi"):
-            self.extractInsighioIds("nbiot")
+        self.extractInsighioIds()
         self.pyhtmlMod.SetGlobalVar("wifiAvailableNets", self.available_nets)
 
     def start(self, timeoutMs=-1):

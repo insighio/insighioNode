@@ -1,4 +1,4 @@
-from networking import nbiot
+from networking import cellular
 from external.kpn_senml.senml_pack_json import SenmlPackJson
 from external.kpn_senml.senml_record import SenmlRecord
 from external.kpn_senml.senml_unit import SenmlUnits
@@ -10,19 +10,19 @@ import logging
 def connect(cfg):
     logging.info("Connecting to NB-IOT...")
     enableDataState = (cfg._IP_VERSION == "IP")
-    (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq) = nbiot.connect(cfg, dataStateOn=enableDataState)
+    (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq) = cellular.connect(cfg, dataStateOn=enableDataState)
     results = {}
-    results["status"] = {"value": (status == nbiot.NBIOT_CONNECTED)}
+    results["status"] = {"value": (status == cellular.NBIOT_CONNECTED)}
 
     # if network statistics are enabled
     if cfg._MEAS_NETWORK_STAT_ENABLE:
-        results["nbiot_act_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": activation_duration}
-        results["nbiot_att_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": attachment_duration}
-        results["nbiot_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rssi}
-        results["nbiot_rsrp"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rsrp}
-        results["nbiot_rsrq"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rsrq}
+        results["cellular_act_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": activation_duration}
+        results["cellular_att_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": attachment_duration}
+        results["cellular_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rssi}
+        results["cellular_rsrp"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rsrp}
+        results["cellular_rsrq"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rsrq}
         if not cfg.protocol_config.use_custom_socket:
-            results["nbiot_con_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connection_duration}
+            results["cellular_con_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connection_duration}
 
     return results
 
@@ -45,4 +45,4 @@ def send_message(cfg, message):
 
 
 def disconnect():
-    logging.info("Deactivate NB-IOT: {}".format(nbiot.deactivate()))
+    logging.info("Deactivate NB-IOT: {}".format(cellular.deactivate()))

@@ -38,8 +38,8 @@ measurements = demo_utils.get_measurements(cfg)
 # connect to network
 if cfg.network == "lora":
     from . import lora as network
-elif cfg.network == "nbiot":
-    from . import nbiot as network
+elif cfg.network == "cellular":
+    from . import cellular as network
 elif cfg.network == "wifi":
     from . import wifi as network
 

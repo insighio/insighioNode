@@ -83,7 +83,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Sleep Period (seconds)</label>
+                      <label class="form-label" for="input-example-cellular">Sleep Period (seconds)</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <input class="form-input constr-field" type="number" id="input-period" value=60 />
@@ -91,7 +91,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Protocol</label>
+                      <label class="form-label" for="input-example-cellular">Protocol</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <label class="form-radio">
@@ -164,8 +164,8 @@
             Cookies.remove('lora-confirmed')
             Cookies.remove('lora-dr')
             Cookies.remove('lora-retries')
-            Cookies.remove('nbiot-apn')
-            Cookies.remove('nbiot-band')
+            Cookies.remove('cell-apn')
+            Cookies.remove('cell-band')
             Cookies.remove('period')
             Cookies.remove('wifi-pass')
             Cookies.remove('wifi-ssid')
