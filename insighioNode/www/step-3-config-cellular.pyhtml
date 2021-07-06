@@ -49,7 +49,7 @@
             <hr />
             <br />
             <div class="text-center">
-              Configuration details for: <span class="text-bold">NBIoT</span>
+              Configuration details for: <span class="text-bold">Cellular</span>
             </div>
             <br />
             <div class="columns flex-centered">
@@ -62,7 +62,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">APN</label>
+                      <label class="form-label" for="input-example-cellular">APN</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <input class="form-input constr-field" type="text" id="input-apn" placeholder="" />
@@ -70,7 +70,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Band</label>
+                      <label class="form-label" for="input-example-cellular">Band</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <input class="form-input constr-field" type="number" id="input-band" value=20 />
@@ -83,7 +83,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Sleep Period (seconds)</label>
+                      <label class="form-label" for="input-example-cellular">Sleep Period (seconds)</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <input class="form-input constr-field" type="number" id="input-period" value=60 />
@@ -91,7 +91,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Protocol</label>
+                      <label class="form-label" for="input-example-cellular">Protocol</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <label class="form-radio">
@@ -106,7 +106,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">IP version</label>
+                      <label class="form-label" for="input-example-cellular">IP version</label>
                     </div>
                     <div class="col-9 col-sm-12" >
                       <label class="form-radio">
@@ -147,8 +147,8 @@
             Cookies.remove('lora-confirmed')
             Cookies.remove('lora-dr')
             Cookies.remove('lora-retries')
-            Cookies.remove('nbiot-apn')
-            Cookies.remove('nbiot-band')
+            Cookies.remove('cell-apn')
+            Cookies.remove('cell-band')
             Cookies.remove('period')
             Cookies.remove('wifi-pass')
             Cookies.remove('wifi-ssid')
@@ -184,15 +184,15 @@
             clearCookies();
             Cookies.set('period', document.getElementById('input-period').value)
 
-            Cookies.set('network', "nbiot")
+            Cookies.set('network', "cellular")
 
-            Cookies.set('nbiot-apn', document.getElementById('input-apn').value.trim())
-            Cookies.set('nbiot-band', document.getElementById('input-band').value)
+            Cookies.set('cell-apn', document.getElementById('input-apn').value.trim())
+            Cookies.set('cell-band', document.getElementById('input-band').value)
 
             setRadioGroupValue('protocol', 'protocol')
             setRadioGroupValue('ipversion', 'ipversion')
 
-            location.href = "step-4-keys.pyhtml?op=NBIoT";
+            location.href = "step-4-keys.pyhtml?op=Cellular";
           }
 
           function validateMyForm(){
