@@ -70,11 +70,12 @@ def get_lte_ids():
     # valid only for lte compatible devices
     if sys.platform in _LTE_COMPATIBLE_PLATFORMS:
         from network import LTE
+        lte = LTE()
         # IMEI and ICCID are exposed directly by the Pycom LTE API, for others we need to parse AT commands
-        imsi = LTE().send_at_cmd('AT+CIMI').split('\r\n')[1].split(',')[-1]
-        modem_version = LTE().send_at_cmd('ATI1').split('\r\n')[1]
-        lte_fw_version = LTE().send_at_cmd('ATI1').split('\r\n')[2]
-        return (LTE().imei(), LTE().iccid(), imsi, modem_version, lte_fw_version)
+        imsi = lte.send_at_cmd('AT+CIMI').split('\r\n')[1].split(',')[-1]
+        modem_version = lte.send_at_cmd('ATI1').split('\r\n')[1]
+        lte_fw_version = lte.send_at_cmd('ATI1').split('\r\n')[2]
+        return (lte.imei(), lte.iccid(), imsi, modem_version, lte_fw_version)
     else:
         return (None, None, None, None, None)
 

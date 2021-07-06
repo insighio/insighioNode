@@ -9,7 +9,7 @@ class ModemMC60(Modem):
         super().__init__(uart)
 
     def set_gps_state(self, poweron=True):
-        self.send_at_cmd('AT+QGNSSC=' + "1" if poweron else "0")
+        self.send_at_cmd('AT+QGNSSC=' + ("1" if poweron else "0"))
 
     # to be overriden by children
     def is_gps_on(self):
@@ -20,7 +20,7 @@ class ModemMC60(Modem):
             return res is not None and res.group(1) == "1"
         return False
 
-    def get_gps_position(self, timeoutms=300000, satelite_number_threshold=6):
+    def get_gps_position(self, timeoutms=300000, satelite_number_threshold=5):
         counter = 0
         gps_fix = False
         print("Starting query gps")

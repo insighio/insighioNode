@@ -43,8 +43,6 @@ elif cfg.network == "cellular":
 elif cfg.network == "wifi":
     from . import wifi as network
 
-message = network.create_message(cfg.device_id, measurements)
-
 try:
     device_info.set_led_color('red')
     logging.info("Connecting to network over: " + cfg.network)

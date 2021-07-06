@@ -3,13 +3,6 @@ from machine import Pin, UART
 import ure
 # TODO: check if some regexes need to be precompiled: ure.compile('\d+mplam,pla')
 
-# Modem state
-MODEM_DETTACHED = -1  # initial value, nothing happened
-MODEM_ACTIVATED = 0
-MODEM_ATTACHED = 1
-MODEM_CONNECTED = 2
-
-
 class Modem:
     def __init__(self, uart):
         self.uart = uart
@@ -30,15 +23,10 @@ class Modem:
 
     def get_model(self):
         (status, lines) = self.send_at_cmd("ATI")
-        if not status or len(lines) < 3:
+        if not status or len(lines) < 2:
             return None
 
-        if lines[0].lower().startwith("quectel"):
-            if "mc60" in lines[1].lower():
-                return "MC60"
-            elif "bg600" in lines[1].lower():
-                return "BG600"
-        return lines[1]
+        return lines[1].lower()
 
     def power_on(self):
         # network registration
@@ -52,7 +40,6 @@ class Modem:
         utime.sleep_ms(1200)
         p0.off()
         print("Output Pin {} {}".format(pinNum, p0.value()))
-        utime.sleep_ms(2000)
 
     def power_off(self):
         pinNum = 23
@@ -62,7 +49,7 @@ class Modem:
         utime.sleep_ms(800)
         p0.off()
 
-    def init(self):
+    def init(self, cfg):
         if not self.is_alive():
             self.power_on()
 
@@ -71,13 +58,20 @@ class Modem:
             self.send_at_cmd('ATE0')
 
             # set auto-registration
-            self.send_at_cmd("AT+COPS=0")
-
+            self.send_at_cmd("AT+CFUN=0")
             # disable unsolicited report of network registration
             self.send_at_cmd("AT+CREG=0")
+
+            self.send_at_cmd("AT+CGDCONT=1,\"" + cfg._IP_VERSION + "\",\"" + cfg._APN + "\"")
+            self.set_technology(cfg)
+
+            lte.send_at_cmd("AT+CFUN=1")
             return True
 
         return False
+
+    def set_technology(self, cfg):
+        pass
 
     def wait_for_registration(self, timeoutms=30000):
         status = False
@@ -93,8 +87,12 @@ class Modem:
                     regex_match = ure.search(regex_creg, line)
                     if regex_match and regex_match.group(1) == "1":
                         return True
-            utime.sleep_ms(1000)
+            utime.sleep_ms(100)
         return False
+
+    def is_attached(self):
+        (status, lines) = self.send_at_cmd("at+cgatt?")
+        return (status and len(lines) > 0 and '+CGATT: 1' in lines[0])
 
     def connect(self, timeoutms=30000):
         (status, lines) = self.send_at_cmd('AT+CGDATA="PPP",1', 30000, "CONNECT")
@@ -130,6 +128,30 @@ class Modem:
         self.connected = False
         (status, _) = self.send_at_cmd("AT+CGACT=0,1")
         return status
+
+    def get_rssi(self):
+        rssi = -141
+        (status, lines) = self.send_at_cmd('AT+CSQ')
+        if status and len(lines) > 0:
+            rssi_tmp = int(lines[0].split(',')[0].split(' ')[-1])
+            if(rssi_tmp >= 0 and rssi_tmp <= 31):
+                return -113 + rssi_tmp * 2
+        else:
+            return -141
+
+    def get_extended_signal_quality(self):
+        rsrp = -141
+        rsrq = -40
+        (status, lines) = lte.send_at_cmd('AT+CESQ').split(',')
+        if status and len(lines) > 0:
+            cesq_data = lines[0].split(',')
+            rsrq_tmp = int(cesq_data[-2])
+            rsrp_tmp = int(cesq_data[-1])
+            if(rsrq_tmp >= 0 and rsrq_tmp <= 34):
+                rsrq = -20 + rsrq_tmp * 0.5
+            if(rsrp_tmp >= 0 and rsrp_tmp <= 97):
+                rsrp = -141 + rsrp_tmp
+        return (rsrp, rsrq)
 
     # to be overriden by children
     def set_gps_state(self, poweron=True):

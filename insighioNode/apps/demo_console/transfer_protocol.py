@@ -9,9 +9,9 @@ def send_packet(cfg, message):
         coap_cli = coap_client.CoAPClient(cfg.protocol_config)
         if cfg.protocol_config.use_custom_socket:
             import external.microATsocket.microATsocket as socket
-            from network import LTE
+            from networking import cellular
             cfg.protocol_config.custom_socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-            cfg.protocol_config.custom_socket.setModemInstance(LTE())
+            cfg.protocol_config.custom_socket.setModemInstance(cellular.get_modem_instance())
 
         connectionStatus = coap_cli.start()
         logging.info("CoAP connection status: " + str(connectionStatus))
