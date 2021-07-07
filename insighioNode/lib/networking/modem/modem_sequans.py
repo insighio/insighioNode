@@ -4,7 +4,7 @@ import logging
 
 
 class ModemSequans(Modem):
-    def __init__(self, uart):
+    def __init__(self):
         self.lte = LTE()
 
     def power_on(self):

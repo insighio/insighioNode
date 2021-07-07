@@ -1,6 +1,9 @@
 """ System configuration options """
 _WD_PERIOD = 120 # watchdog time for rebooting in seconds
 _BOARD_TYPE = "<selected-board>"
+_CONST_BOARD_TYPE_DEFAULT = "default"
+_CONST_BOARD_TYPE_SDI_12 = "sdi12"
+_CONST_BOARD_TYPE_ESP_GEN_1 = "ins_esp_gen_1"
 
 """ Measurement configuration options """
 _UC_IO_BAT_MEAS_ON = 'P23'
@@ -25,6 +28,8 @@ _UC_IO_SENSOR_SWITCH_ON = 'P11'
 ''' Parameters for i2c sensors '''
 _UC_IO_I2C_SDA = 'P9'
 _UC_IO_I2C_SCL = 'P10'
+
+_UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SI7021
 
 ''' measurements that are controlled by boolean values '''
 _MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>

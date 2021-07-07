@@ -63,6 +63,7 @@
           {{ py }}
             import gc
             import utils
+            import device_info
             gc.collect()
 
             operation = ""
@@ -73,30 +74,36 @@
               elif param == "selected-board":
                 board = Request.QueryParams[param]
 
-            file = '/flash/apps/demo_console/demo_config.py'
+            rootFolder = device_info.get_device_root_folder()
+
+            contents = utils.readFromFile(rootFolder + 'apps/demo_console/templ/const_templ.py')
 
             # set project configuration content
-            contents = utils.readFromFile('/flash/apps/demo_console/templ/device_config_templ.py')
-            contents = contents + '\n'
+            if device_info.is_esp32():
+              contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_1_config_templ.py')
+            else:
+              contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_py_gen_1_config_templ.py')
+            contents += '\n'
 
             if board == "sdi12":
-              contents += utils.readFromFile('/flash/apps/demo_console/templ/device_sdi12_config_templ.py')
+              contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_sdi12_config_templ.py')
             else:
-              contents += utils.readFromFile('/flash/apps/demo_console/templ/device_i2c_analog_config_templ.py')
+              contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
             contents += '\n'
 
             if operation == 'wifi':
-              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/wifi_config_templ.py')
-              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/protocol_config_templ.py')
+              contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/wifi_config_templ.py')
+              contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/protocol_config_templ.py')
             elif operation == 'cellular':
-              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/cellular_config_templ.py')
-              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/protocol_config_templ.py')
+              contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/cellular_config_templ.py')
+              contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/protocol_config_templ.py')
             elif operation == 'lora':
-              contents = contents + '\n' + utils.readFromFile('/flash/apps/demo_console/templ/lora_config_templ.py')
+              contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/lora_config_templ.py')
 
             for param in Request.QueryParams:
               contents = contents.replace('<' + param + '>', Request.QueryParams[param])
 
+            file = rootFolder + 'apps/demo_console/demo_config.py'
             utils.writeToFile(file, contents)
 
             gc.collect()

@@ -1,5 +1,7 @@
 import sys
 import device_info
+import utime
+import logging
 
 CELLULAR_NO_INIT = None
 CELLULAR_NO      = 0
@@ -17,25 +19,19 @@ MODEM_ACTIVATED = 0
 MODEM_ATTACHED = 1
 MODEM_CONNECTED = 2
 
-cellular_model = CELLULAR_NO
+cellular_model = CELLULAR_NO_INIT
 modem_instance = None
-
-
-def get_modem_id():
-    global cellular_model
-    return cellular_model
 
 
 def detect_modem(cfg):
     global cellular_model
-    if sys.platform == 'esp32':
+    if device_info.is_esp32():
         from networking.modem.modem_base import Modem
-        uart1 = UART(1)
-        uart1.init(115200, bits=8, parity=None, stop=1, tx=cfg.MODEM_PIN_TX, rx=cfg.MODEM_PIN_RX, timeout=500, timeout_char=1000)
-        modemInst = Modem(uart1)
+        modemInst = Modem(cfg)
         model_name = modemInst.get_model()
         modemInst = None
         uart1 = None
+        logging.debug("modem name returned: " + model_name)
         if not model_name:
             cellular_model = CELLULAR_NO
         elif CELLULAR_MC60_STR in model_name:
@@ -50,32 +46,34 @@ def detect_modem(cfg):
             cellular_model = CELLULAR_SEQUANS if sys.platform in device_info._LTE_COMPATIBLE_PLATFORMS else CELLULAR_NO
         except Exception as e:
             cellular_model = CELLULAR_NO
+
+    logging.debug("selected modem: " + cellular_model)
     return cellular_model
 
 
 def get_modem_instance(cfg=None):
     global modem_instance
+    logging.debug("getting modem instance...")
     if modem_instance is None and cfg is not None:
-        modem_id = get_modem_id()
+        modem_id = cellular_model
         if modem_id == CELLULAR_NO_INIT:
             modem_id = detect_modem(cfg)
 
         if modem_id == CELLULAR_MC60 or modem_id == CELLULAR_BG600 or modem_id == CELLULAR_UNKNOWN:
-            uart1 = UART(1)
-            uart1.init(115200, bits=8, parity=None, stop=1, tx=cfg.MODEM_PIN_TX, rx=cfg.MODEM_PIN_RX, timeout=500, timeout_char=1000)
-
             if modem_id == CELLULAR_MC60:
                 from networking.modem.modem_mc60 import ModemMC60
-                modem_instance = ModemMC60(uart1)
+                modem_instance = ModemMC60(cfg)
             elif modem_id == CELLULAR_BG600:
                 from networking.modem.modem_bg600 import ModemBG600
-                modem_instance = ModemBG600(uart1)
+                modem_instance = ModemBG600(cfg)
             else:
                 from networking.modem.modem_base import Modem
                 modem_instance = Modem(uart1)  # generic
         elif modem_id == CELLULAR_SEQUANS:
             from networking.modem.modem_sequans import ModemSequans
             modem_instance = ModemSequans()
+    else:
+        logging.debug("modem_instance is not None ir cfg is None")
 
     return modem_instance
 
@@ -165,11 +163,11 @@ def deactivate():
     start_time_deactivation = utime.ticks_ms()
 
     try:
-        logging.debug('Modem disconnecting...')
-        modemInst.disconnect()
-
-        logging.debug('Modem deinitializing...')
-        modemInst.power_off()
+        if modemInst:
+            logging.debug('Modem disconnecting...')
+            modemInst.disconnect()
+            logging.debug('Modem deinitializing...')
+            modemInst.power_off()
         # LTE().send_at_cmd('AT+CFUN=0')
         deactivation_status = True
     except Exception as e:

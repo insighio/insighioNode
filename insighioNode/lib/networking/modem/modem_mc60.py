@@ -5,8 +5,8 @@ from micropyGPS.micropyGPS import MicropyGPS
 
 
 class ModemMC60(Modem):
-    def __init__(self, uart):
-        super().__init__(uart)
+    def __init__(self, cgf):
+        super().__init__(cgf)
 
     def set_gps_state(self, poweron=True):
         self.send_at_cmd('AT+QGNSSC=' + ("1" if poweron else "0"))

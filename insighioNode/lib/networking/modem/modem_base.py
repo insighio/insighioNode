@@ -3,11 +3,27 @@ from machine import Pin, UART
 import ure
 # TODO: check if some regexes need to be precompiled: ure.compile('\d+mplam,pla')
 
+
 class Modem:
-    def __init__(self, uart):
-        self.uart = uart
+    def __init__(self, cfg):
         self.connected = False
         self.ppp = None
+        self.uart = None
+        self.modem_power_on = None
+        self.modem_power_key = None
+
+        if cfg._UC_UART_MODEM_TX is not None and cfg._UC_UART_MODEM_RX is not None:
+            self.uart = UART(1)
+            self.uart.init(115200, bits=8, parity=None, stop=1, tx=cfg._UC_UART_MODEM_TX, rx=cfg._UC_UART_MODEM_RX, timeout=500, timeout_char=1000)
+
+        if cfg._UC_IO_RADIO_ON:
+            self.modem_power_on = cfg._UC_IO_RADIO_ON
+
+        if cfg._UC_IO_PWRKEY:
+            self.modem_power_key = cfg._UC_IO_PWRKEY
+
+        if not self.is_alive():
+            self.power_on()
 
     def is_alive(self):
         (status, response) = self.send_at_cmd("AT", 5000)
@@ -30,11 +46,9 @@ class Modem:
 
     def power_on(self):
         # network registration
-        p0 = Pin(26, Pin.OUT)
-        p0.on()
+        Pin(self.modem_power_on, Pin.OUT).on()
         # modem boot
-        pinNum = 23
-        p0 = Pin(pinNum, Pin.OUT)
+        p0 = Pin(self.modem_power_key, Pin.OUT)
         p0.on()
         print("Output Pin {} {}".format(pinNum, p0.value()))
         utime.sleep_ms(1200)
@@ -42,17 +56,14 @@ class Modem:
         print("Output Pin {} {}".format(pinNum, p0.value()))
 
     def power_off(self):
-        pinNum = 23
-        p0 = Pin(pinNum, Pin.OUT)
+        p0 = Pin(self.modem_power_key, Pin.OUT)
         p0.on()
         print("Output Pin {} {}".format(pinNum, p0.value()))
         utime.sleep_ms(800)
         p0.off()
+        Pin(self.modem_power_on, Pin.OUT).off()
 
     def init(self, cfg):
-        if not self.is_alive():
-            self.power_on()
-
         if self.is_alive():
             # disable command echo
             self.send_at_cmd('ATE0')
@@ -67,7 +78,6 @@ class Modem:
 
             lte.send_at_cmd("AT+CFUN=1")
             return True
-
         return False
 
     def set_technology(self, cfg):

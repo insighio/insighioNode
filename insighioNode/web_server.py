@@ -1,4 +1,4 @@
-from network import WLAN
+import network
 
 import sys
 from external.MicroWebSrv2 import *
@@ -14,7 +14,11 @@ class WebServer:
     def __init__(self):
         device_info.set_defaults()
         logging.info("Initializing WiFi APs in range")
-        self.wlan = WLAN(mode=WLAN.STA, antenna=WLAN.INT_ANT)
+        self.wlan = None
+        if device_info.is_esp32():
+            self.wlan = network.WLAN(network.STA_IF)
+        else:
+            self.wlan = network.WLAN(mode=network.WLAN.STA, antenna=network.WLAN.INT_ANT)
         try:
             nets = self.wlan.scan()
             nets = nets[:min(10, len(nets))]
@@ -96,7 +100,15 @@ class WebServer:
     def start(self, timeoutMs=-1):
         logging.info('\n\n** Init WLAN mode and WAP2')
         device_info.wdt_reset()
-        self.wlan = WLAN(mode=WLAN.AP, ssid=self.ssidCustom, auth=(WLAN.WPA2, 'insighiodev'))
+        if device_info.is_esp32():
+            self.wlan = network.WLAN(network.AP_IF)
+            self.wlan.active(True)
+            self.wlan.config(essid=self.ssidCustom)  # set the ESSID of the access point
+            self.wlan.config(password='insighiodev')
+            self.wlan.config(authmode=3)  # 3 -- WPA2-PSK
+            self.wlan.config(max_clients=1)  # set how many clients can connect to the network
+        else:
+            self.wlan = network.WLAN(mode=WLAN.AP, ssid=self.ssidCustom, auth=(WLAN.WPA2, 'insighiodev'))
 
         device_info.wdt_reset()
 
@@ -111,6 +123,8 @@ class WebServer:
 
         # Starts the server as easily as possible in managed mode,
         self.mws2.StartManaged()
+
+        logging.info("Web UI started")
 
         purple = 0x4c004c
         device_info.set_led_color(purple)

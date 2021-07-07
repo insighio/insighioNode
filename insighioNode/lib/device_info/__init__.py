@@ -9,10 +9,19 @@ import utime
 
 wdt = None
 
-if not sys.platform == 'esp32':
+
+def is_esp32():
+    return sys.platform == 'esp32'
+
+
+if not is_esp32():
     import pycom
     _LORA_COMPATIBLE_PLATFORMS = ["LoPy", "FiPy", "LoPy4"]
     _LTE_COMPATIBLE_PLATFORMS = ["GPy", "FiPy"]
+
+
+def get_device_root_folder():
+    return '/' if is_esp32() else '/flash/'
 
 
 def get_device_fw():
@@ -81,54 +90,67 @@ def get_lte_ids():
 
 
 def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_boot_timeout_sec=120, bt_on_boot=False):
-    """ Sets basic configuration of pycom board """
+    """ Sets basic configuration of board """
     # disable/enable heartbeat
-    pycom.heartbeat(heartbeat)
-    # disable/enable wifi on boot
-    pycom.wifi_on_boot(wifi_on_boot)
-    # setup watchdog
-    pycom.wdt_on_boot(wdt_on_boot)
-    pycom.wdt_on_boot_timeout(wdt_on_boot_timeout_sec * 1000)  # reboots after X ms if no wdt.feed
-    if(wdt_on_boot):
-        wdt = machine.WDT(timeout=120000)
+    wdt = None
+    if is_esp32():
+        import network
+        wl = network.WLAN(network.STA_IF)
+        wl.active(wifi_on_boot)
+
+        from ubluetooth import BLE
+        BLE().active(bt_on_boot)
+
+        if(wdt_on_boot):
+            wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
     else:
-        wdt = None
-
-    try:
-        pycom.pybytes_on_boot(False)
-    except Exception as e:
-        pass
-
-    # bluetooth disable if requested
-    if not bt_on_boot:
         try:
-            from network import Bluetooth
-            Bluetooth().deinit()
+            import pycom
+            pycom.heartbeat(heartbeat)
+            # disable/enable wifi on boot
+            pycom.wifi_on_boot(wifi_on_boot)
+            # setup watchdog
+            pycom.wdt_on_boot(wdt_on_boot)
+            pycom.wdt_on_boot_timeout(wdt_on_boot_timeout_sec * 1000)  # reboots after X ms if no wdt.feed
+            pycom.pybytes_on_boot(False)
+            if(wdt_on_boot):
+                wdt = machine.WDT(wdt_on_boot_timeout_sec * 1000)
         except Exception as e:
             pass
+
+        # bluetooth disable if requested
+        if not bt_on_boot:
+            try:
+                from network import Bluetooth
+                Bluetooth().deinit()
+            except Exception as e:
+                pass
         # print("Bluetooth disabled")
+
     # garbage collection
-    gc.disable()
+    # TODO: review why the next line existed
+    # gc.disable()
 
 
 def set_led_color(color):
     """ Sets led color """
-    try:
-        if color == 'blue':
-            pycom.rgbled(0x000010)  # blue
-        elif color == 'red':
-            pycom.rgbled(0x100000)  # red
-        elif color == 'yellow':
-            pycom.rgbled(0x101000)  # yellow
-        elif color == 'green':
-            pycom.rgbled(0x001100)  # green
-        elif color == 'white':
-            pycom.rgbled(0x000000)
-        else:
-            # Custom color
-            pycom.rgbled(color)
-    except Exception as e:
-        pass
+    if sys.platform is not 'esp32':
+        try:
+            if color == 'blue':
+                pycom.rgbled(0x000010)  # blue
+            elif color == 'red':
+                pycom.rgbled(0x100000)  # red
+            elif color == 'yellow':
+                pycom.rgbled(0x101000)  # yellow
+            elif color == 'green':
+                pycom.rgbled(0x001100)  # green
+            elif color == 'white':
+                pycom.rgbled(0x000000)
+            else:
+                # Custom color
+                pycom.rgbled(color)
+        except Exception as e:
+            pass
 
 
 def wdt_reset():

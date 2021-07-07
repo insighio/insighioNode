@@ -12,7 +12,8 @@ def connect(cfg):
     enableDataState = (cfg._IP_VERSION == "IP")
     results = {}
 
-    modemInstance = cellular.get_modem_instance(cfg)
+    modem_instance = cellular.get_modem_instance(cfg)
+    logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
     if modem_instance is not None:
         (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq) = cellular.connect(cfg, dataStateOn=enableDataState)
         results["status"] = {"value": (status == cellular.MODEM_CONNECTED)}

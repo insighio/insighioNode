@@ -9,12 +9,18 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 
 def device_init():
+    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        return
+
     gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
         gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 1)
 
 
 def device_deinit():
+    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        return
+
     gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 0)
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
         gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 0)
@@ -23,8 +29,10 @@ def device_deinit():
 def watchdog_reset():
     # first reset internal hardware watchdog
     device_info.wdt_reset()
+
     # then reset external hardware watchdog
-    gpio_handler.timed_pin_pull_up(cfg._UC_IO_WATCHDOG_RESET, 500)
+    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        gpio_handler.timed_pin_pull_up(cfg._UC_IO_WATCHDOG_RESET, 500)
 
 
 def set_value(measurements, key, value, unit=None):
@@ -73,8 +81,11 @@ def get_measurements(cfg):
 
     # read internal temperature and humidity
     if cfg._MEAS_BOARD_SENSE_ENABLE:
-        from sensors import si7021
-        (board_temp, board_humidity) = si7021.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
+        if cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._CONST_SENSOR_SI7021:
+            from sensors import si7021 as sens
+        elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._UC_INTERNAL_TEMP_HUM_SENSOR:
+            from sensors import sht40 as sens
+        (board_temp, board_humidity) = sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
         set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
         set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
@@ -90,14 +101,17 @@ def get_measurements(cfg):
 
 def read_battery_voltage_and_current():
     # BATT VOLTAGE & CURR measurement
+    current = None
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 1)
-    gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
+    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
     utime.sleep_ms(500)
     vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, voltage_divider=cfg._BAT_VDIV, attn=cfg._BAT_ATT)
-    vina_mV = gpio_handler.get_input_voltage(cfg._UC_IO_CUR_READ, voltage_divider=cfg._CUR_VDIV, attn=cfg._CUR_ATT)
-    current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
-    # changed the order of the following two lines. evaluate if correct.
-    gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 0)
+    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        vina_mV = gpio_handler.get_input_voltage(cfg._UC_IO_CUR_READ, voltage_divider=cfg._CUR_VDIV, attn=cfg._CUR_ATT)
+        current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
+        # changed the order of the following two lines. evaluate if correct.
+        gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 0)
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 0)
     return (vbatt, current)
 
