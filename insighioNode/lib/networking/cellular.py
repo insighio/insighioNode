@@ -29,8 +29,6 @@ pin_modem_rx = None
 pin_modem_power_on = None
 pin_modem_power_key = None
 
-rtc = None
-
 
 def set_pins(power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx=None, gps_rx=None):
     global pin_modem_tx
@@ -184,18 +182,15 @@ def update_rtc_from_network_time(modem):
     if not device_info.is_esp32():
         return
 
-    time_tuple = modem.get_network_date_time()
-    if time_tuple is not None:
-        global rtc
+    try:
         from machine import RTC
-        logging.debug("Setting cellular RTC with: " + str(time_tuple))
-        rtc = RTC()
-        rtc.datetime(time_tuple)
-
-
-def get_rtc():
-    global rtc
-    return rtc
+        time_tuple = modem.get_network_date_time()
+        if time_tuple is not None:
+            logging.debug("Setting cellular RTC with: " + str(time_tuple))
+            rtc = RTC()
+            rtc.datetime(time_tuple)
+    except Exception as e:
+        logging.error("RTC init failed")
 
 
 def deactivate():
