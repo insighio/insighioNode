@@ -31,6 +31,15 @@ _UC_IO_I2C_SCL = 'P10'
 
 _UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SI7021
 
+""" Load Regulator configuration """
+_UC_IO_LOAD_PWR_SAVE_OFF = 'P4'
+
+""" External Sensors configuration """
+_UC_IO_ANALOG_DIGITAL_P1 = 'P20'
+_UC_IO_ANALOG_DIGITAL_P2 = 'P19'
+_UC_IO_ANALOG_P1 = 'P18'
+_UC_IO_ANALOG_P2 = 'P17'
+
 ''' measurements that are controlled by boolean values '''
 _MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>
 _MEAS_BOARD_SENSE_ENABLE = <meas-board-sense>

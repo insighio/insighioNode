@@ -1,11 +1,4 @@
-""" Load Regulator configuration """
-_UC_IO_LOAD_PWR_SAVE_OFF = 'P4'
 
-""" External Sensors configuration """
-_UC_IO_ANALOG_DIGITAL_P1 = 'P20'
-_UC_IO_ANALOG_DIGITAL_P2 = 'P19'
-_UC_IO_ANALOG_P1 = 'P18'
-_UC_IO_ANALOG_P2 = 'P17'
 
 ''' measurements that are controlled by string selection. Deactivated if string is equal to "disabled" '''
 _MEAS_I2C_1 = "<meas-i2c-1>"
