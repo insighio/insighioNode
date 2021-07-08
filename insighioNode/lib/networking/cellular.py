@@ -29,6 +29,8 @@ pin_modem_rx = None
 pin_modem_power_on = None
 pin_modem_power_key = None
 
+rtc = None
+
 
 def set_pins(power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx=None, gps_rx=None):
     global pin_modem_tx
@@ -120,6 +122,7 @@ def connect(cfg, dataStateOn=True):
         start_activation_duration = utime.ticks_ms()
         if modemInst.wait_for_registration():
             # print("Modem activated (AT+CFUN=1), continuing...")
+
             status = MODEM_ACTIVATED
             activation_duration = utime.ticks_ms() - start_activation_duration
             # proceed with attachment
@@ -136,6 +139,8 @@ def connect(cfg, dataStateOn=True):
                 status = MODEM_ATTACHED
                 attachment_duration = utime.ticks_ms() - start_attachment_duration
                 logging.debug('Modem attached')
+
+                update_rtc_from_network_time(modemInst)
 
                 # printout/gather some information before activating PDP
                 # check registation status
@@ -173,6 +178,24 @@ def connect(cfg, dataStateOn=True):
         logging.exception(e, "Outer Exception: {}".format(e))
 
     return (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq)
+
+
+def update_rtc_from_network_time(modem):
+    if not device_info.is_esp32():
+        return
+
+    time_tuple = modem.get_network_date_time()
+    if time_tuple is not None:
+        global rtc
+        from machine import RTC
+        logging.debug("Setting cellular RTC with: " + str(time_tuple))
+        rtc = RTC()
+        rtc.datetime(time_tuple)
+
+
+def get_rtc():
+    global rtc
+    return rtc
 
 
 def deactivate():
