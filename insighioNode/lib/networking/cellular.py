@@ -3,6 +3,8 @@ import device_info
 import utime
 import logging
 
+import gc
+
 CELLULAR_NO_INIT = None
 CELLULAR_NO      = 0
 CELLULAR_SEQUANS = 1
@@ -10,8 +12,8 @@ CELLULAR_MC60    = 2
 CELLULAR_BG600   = 3
 CELLULAR_UNKNOWN = 4
 
-CELLULAR_MC60_STR  = "mc60"
-CELLULAR_BG600_STR = "bg600"
+CELLULAR_MC60_STR  = 'mc60'
+CELLULAR_BG600_STR = 'bg600'
 
 # Modem state
 MODEM_DETTACHED = -1  # initial value, nothing happened
@@ -22,16 +24,32 @@ MODEM_CONNECTED = 2
 cellular_model = CELLULAR_NO_INIT
 modem_instance = None
 
+pin_modem_tx = None
+pin_modem_rx = None
+pin_modem_power_on = None
+pin_modem_power_key = None
 
-def detect_modem(cfg):
+
+def set_pins(power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx=None, gps_rx=None):
+    global pin_modem_tx
+    global pin_modem_rx
+    global pin_modem_power_on
+    global pin_modem_power_key
+    pin_modem_tx = modem_tx
+    pin_modem_rx = modem_rx
+    pin_modem_power_on = power_on
+    pin_modem_power_key = power_key
+
+
+def detect_modem():
     global cellular_model
     if device_info.is_esp32():
         from networking.modem.modem_base import Modem
-        modemInst = Modem(cfg)
+        modemInst = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
+        if not modemInst.is_alive():
+            modemInst.power_on()
         model_name = modemInst.get_model()
-        modemInst = None
-        uart1 = None
-        logging.debug("modem name returned: " + model_name)
+        # logging.debug("modem name returned: " + model_name)
         if not model_name:
             cellular_model = CELLULAR_NO
         elif CELLULAR_MC60_STR in model_name:
@@ -47,33 +65,33 @@ def detect_modem(cfg):
         except Exception as e:
             cellular_model = CELLULAR_NO
 
-    logging.debug("selected modem: " + cellular_model)
+    logging.debug("selected modem: " + str(cellular_model))
     return cellular_model
 
 
-def get_modem_instance(cfg=None):
+def get_modem_instance():
     global modem_instance
     logging.debug("getting modem instance...")
-    if modem_instance is None and cfg is not None:
+    if modem_instance is None:
         modem_id = cellular_model
         if modem_id == CELLULAR_NO_INIT:
-            modem_id = detect_modem(cfg)
+            modem_id = detect_modem()
 
         if modem_id == CELLULAR_MC60 or modem_id == CELLULAR_BG600 or modem_id == CELLULAR_UNKNOWN:
             if modem_id == CELLULAR_MC60:
                 from networking.modem.modem_mc60 import ModemMC60
-                modem_instance = ModemMC60(cfg)
+                modem_instance = ModemMC60(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
             elif modem_id == CELLULAR_BG600:
                 from networking.modem.modem_bg600 import ModemBG600
-                modem_instance = ModemBG600(cfg)
+                modem_instance = ModemBG600(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
             else:
                 from networking.modem.modem_base import Modem
-                modem_instance = Modem(uart1)  # generic
+                modem_instance = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)  # generic
         elif modem_id == CELLULAR_SEQUANS:
             from networking.modem.modem_sequans import ModemSequans
             modem_instance = ModemSequans()
     else:
-        logging.debug("modem_instance is not None ir cfg is None")
+        logging.debug("modem_instance is not None")
 
     return modem_instance
 
@@ -89,16 +107,18 @@ def connect(cfg, dataStateOn=True):
     attachment_duration = -1
     connection_duration = -1
     rssi = -141
+    rsrp = -141
+    rsrq = -40
 
     try:
         logging.debug('Initializing modem')
-        modemInst = get_modem_instance(cfg)
-        modemInst.init(cfg)
+        modemInst = get_modem_instance()
+        modemInst.init(cfg._IP_VERSION, cfg._APN)
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
         start_activation_duration = utime.ticks_ms()
-        if self.wait_for_registration():
+        if modemInst.wait_for_registration():
             # print("Modem activated (AT+CFUN=1), continuing...")
             status = MODEM_ACTIVATED
             activation_duration = utime.ticks_ms() - start_activation_duration

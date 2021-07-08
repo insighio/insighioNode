@@ -4,6 +4,7 @@ from external.kpn_senml.senml_record import SenmlRecord
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
+import device_info
 
 
 # network connection
@@ -12,7 +13,10 @@ def connect(cfg):
     enableDataState = (cfg._IP_VERSION == "IP")
     results = {}
 
-    modem_instance = cellular.get_modem_instance(cfg)
+    if device_info.is_esp32():
+        cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
+
+    modem_instance = cellular.get_modem_instance()
     logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
     if modem_instance is not None:
         (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq) = cellular.connect(cfg, dataStateOn=enableDataState)

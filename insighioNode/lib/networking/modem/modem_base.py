@@ -1,32 +1,27 @@
 import utime
 from machine import Pin, UART
 import ure
+import logging
 # TODO: check if some regexes need to be precompiled: ure.compile('\d+mplam,pla')
 
 
 class Modem:
-    def __init__(self, cfg):
+    def __init__(self, power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx=None, gps_rx=None):
         self.connected = False
         self.ppp = None
         self.uart = None
         self.modem_power_on = None
         self.modem_power_key = None
 
-        if cfg._UC_UART_MODEM_TX is not None and cfg._UC_UART_MODEM_RX is not None:
-            self.uart = UART(1)
-            self.uart.init(115200, bits=8, parity=None, stop=1, tx=cfg._UC_UART_MODEM_TX, rx=cfg._UC_UART_MODEM_RX, timeout=500, timeout_char=1000)
+        if modem_tx is not None and modem_rx is not None:
+            self.uart = UART(1, 115200, tx=modem_tx, rx=modem_rx)
+            self.uart.init(115200, bits=8, parity=None, stop=1, tx=modem_tx, rx=modem_rx, timeout=500, timeout_char=1000)
 
-        if cfg._UC_IO_RADIO_ON:
-            self.modem_power_on = cfg._UC_IO_RADIO_ON
-
-        if cfg._UC_IO_PWRKEY:
-            self.modem_power_key = cfg._UC_IO_PWRKEY
-
-        if not self.is_alive():
-            self.power_on()
+        self.modem_power_on = power_on
+        self.modem_power_key = power_key
 
     def is_alive(self):
-        (status, response) = self.send_at_cmd("AT", 5000)
+        (status, response) = self.send_at_cmd("AT", 1000)
         return status
 
     def print_status(self):
@@ -50,37 +45,43 @@ class Modem:
         # modem boot
         p0 = Pin(self.modem_power_key, Pin.OUT)
         p0.on()
-        print("Output Pin {} {}".format(pinNum, p0.value()))
+        logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
         utime.sleep_ms(1200)
         p0.off()
-        print("Output Pin {} {}".format(pinNum, p0.value()))
+        logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
+        retries = 0
+        while retries < 10:
+            (status, response) = self.send_at_cmd("AT", 500)
+            if status:
+                # disable command echo
+                self.send_at_cmd('ATE0')
+                return
+            retries += 1
 
     def power_off(self):
         p0 = Pin(self.modem_power_key, Pin.OUT)
         p0.on()
-        print("Output Pin {} {}".format(pinNum, p0.value()))
+        logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
         utime.sleep_ms(800)
         p0.off()
         Pin(self.modem_power_on, Pin.OUT).off()
 
-    def init(self, cfg):
+    def init(self, ip_version, apn):
         if self.is_alive():
-            # disable command echo
-            self.send_at_cmd('ATE0')
-
             # set auto-registration
             self.send_at_cmd("AT+CFUN=0")
             # disable unsolicited report of network registration
             self.send_at_cmd("AT+CREG=0")
+            self.send_at_cmd("AT+CFUN=1")
 
-            self.send_at_cmd("AT+CGDCONT=1,\"" + cfg._IP_VERSION + "\",\"" + cfg._APN + "\"")
-            self.set_technology(cfg)
+            self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
 
-            lte.send_at_cmd("AT+CFUN=1")
+            self.set_technology() # placeholder
+
             return True
         return False
 
-    def set_technology(self, cfg):
+    def set_technology(self):
         pass
 
     def wait_for_registration(self, timeoutms=30000):
@@ -109,9 +110,9 @@ class Modem:
         if not status:
             return False
 
-        import network
+        from network import PPP
 
-        self.ppp = network.PPP(self.uart)
+        self.ppp = PPP(self.uart)
         self.ppp.active(True)
         self.ppp.connect()
 
@@ -183,11 +184,15 @@ class Modem:
             responseLines = ['error: ppp connection active']
             return (status, responseLines)
 
+        if self.uart is None:
+            responseLines = ['error: invalid uart']
+            return (status, responseLines)
+
         # clear incoming message buffer
         while self.uart.any():
-            print(self.uart.readline())
+            self.uart.readline()
 
-        print("> " + command)
+        logging.debug("> " + command)
         write_success = self.uart.write(command + '\r\n')
         if not write_success:
             return (status, ['error: can not send command'])
@@ -214,15 +219,15 @@ class Modem:
             try:
                 line = line if line is None else line.decode('utf8').strip()
             except Exception as e:
-                print("! " + str(line))
+                logging.error("! " + str(line))
                 line = ""
 
             if line:
                 if first_line:
-                    print("< " + str(line))
+                    logging.debug("< " + str(line))
                     first_line = False
                 else:
-                    print("  " + str(line))
+                    logging.debug("  " + str(line))
                 responseLines.append(line)
                 if ure.search(success_regex, line) is not None:
                     status = True

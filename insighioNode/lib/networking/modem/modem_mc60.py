@@ -1,12 +1,12 @@
-from modem_base import Modem
+from . import modem_base
 import utime
 import ure
-from micropyGPS.micropyGPS import MicropyGPS
+from external.micropyGPS.micropyGPS import MicropyGPS
 
 
-class ModemMC60(Modem):
-    def __init__(self, cgf):
-        super().__init__(cgf)
+class ModemMC60(modem_base.Modem):
+    def __init__(self, power_on, power_key, modem_tx, modem_rx, gps_tx=None, gps_rx=None):
+        super().__init__(power_on, power_key, modem_tx, modem_rx, gps_tx, gps_rx)
 
     def set_gps_state(self, poweron=True):
         self.send_at_cmd('AT+QGNSSC=' + ("1" if poweron else "0"))
