@@ -42,7 +42,7 @@ class WebServer:
         return False
 
     def extractInsighioIds(self):
-        projectConfig = utils.readFromFile("/flash/apps/demo_console/demo_config.py").strip().split("\n")
+        projectConfig = utils.readFromFile(device_info.get_device_root_folder() + "apps/demo_console/demo_config.py").strip().split("\n")
         linesCount = len(projectConfig)
 
         i = 0
@@ -72,7 +72,7 @@ class WebServer:
         except Exception as e:
             logging.exception(e, "lora deveui")
             pass
-        projectConfig = utils.readFromFile("/flash/apps/demo_console/demo_config.py").strip().split("\n")
+        projectConfig = utils.readFromFile(device_info.get_device_root_folder() + "apps/demo_console/demo_config.py").strip().split("\n")
         linesCount = len(projectConfig)
         i = 0
         euisFilled = 0
