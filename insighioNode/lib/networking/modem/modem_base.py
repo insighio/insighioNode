@@ -69,7 +69,7 @@ class Modem:
     def init(self, ip_version, apn):
         if self.is_alive():
             # set auto-registration
-            self.send_at_cmd("AT+CFUN=0")
+            # self.send_at_cmd("AT+CFUN=0")
             # disable unsolicited report of network registration
             self.send_at_cmd("AT+CREG=0")
             self.send_at_cmd("AT+CFUN=1")
@@ -83,6 +83,29 @@ class Modem:
 
     def set_technology(self):
         pass
+
+    def get_network_date_time(self):
+        (status, lines) = self.send_at_cmd("AT+QLTS")
+        if not status or len(lines) == 0:
+            return None
+
+        regex = '(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):(\\d+):(\\d+)[+-](\\d+)'
+        reg_res = ure.search(regex, lines[0])
+        if reg_res:
+            logging.debug("Setting cellular RTC")
+            try:
+                result = (int("20" + reg_res.group(1)),
+                    int(reg_res.group(2)),
+                    int(reg_res.group(3)),
+                    0,  # day of week
+                    int(reg_res.group(4)) + int(float(reg_res.group(7)) // 4),
+                    int(reg_res.group(5)) + int((float(reg_res.group(7)) % 4) * 15),
+                    int(reg_res.group(6)),
+                    0)  # usec
+                return result
+            except Exception as e:
+                return None
+
 
     def wait_for_registration(self, timeoutms=30000):
         status = False
