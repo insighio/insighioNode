@@ -135,6 +135,27 @@ def default_board_measurements(measurements):
     if cfg._MEAS_ANALOG_DIGITAL_P2 and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2")
 
+    # temporarly placed here till a wizard is made
+    read_scale(cfg._UC_IO_SCALE_CLOCK_PIN, cfg._UC_IO_SCALE_DATA_PIN, measurements)
+
+
+def read_scale(clock_pin, data_pin, measurements):
+    from external.hx711.hx711_gpio import HX711
+    from machine import Pin
+    pin_OUT = Pin(data_pin, Pin.IN, pull=Pin.PULL_DOWN)
+    pin_SCK = Pin(clock_pin, Pin.OUT)
+    hx = HX711(pin_SCK, pin_OUT)
+    hx.set_gain(128)
+    utime.sleep_ms(50)
+    times = 15
+    logging.debug("scale offset: {}, scale: {}".format(hx.OFFSET, hx.SCALE))
+
+    hx.set_offset(79000)
+    hx.set_scale(21.4)
+    hx.read_average(times)
+    weight = (hx.read_average(times) - hx.OFFSET) / hx.SCALE
+    set_value_float(measurements, "scale_weight", weight, SenmlUnits.SENML_UNIT_GRAM)
+
 
 # <option>tsl2561 - luminosity</option>
 # <option>si7021  - temperature / humidity</option>
@@ -173,7 +194,7 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
 
 
 def read_analog_digital_sensor(data_pin, sensor_name, measurements, position):
-    logging.info("read_analog_digital_sensor - Reading Sensor [" + sensor_name + "]")
+    logging.info("read_analog_digital_sensor - Reading Sensor [{}] at pin [{}]".format(sensor_name, data_pin))
     sensor_name = sensor_name.split("-")[0].strip()
     if sensor_name == "generic analog":
         from sensors import analog_generic

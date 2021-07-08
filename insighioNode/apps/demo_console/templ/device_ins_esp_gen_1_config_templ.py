@@ -36,9 +36,8 @@ _UC_IO_LOAD_PWR_SAVE_OFF = 'P4'
 
 """ External Sensors configuration """
 _UC_IO_ANALOG_DIGITAL_P1 = 32
-_UC_IO_ANALOG_DIGITAL_P2 = 'P19'
-_UC_IO_ANALOG_P1 = 'P18'
-_UC_IO_ANALOG_P2 = 'P17'
+_UC_IO_SCALE_CLOCK_PIN = 33
+_UC_IO_SCALE_DATA_PIN = 4
 
 ''' measurements that are controlled by boolean values '''
 _MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>
