@@ -106,9 +106,9 @@ def connect(cfg, dataStateOn=True):
     activation_duration = -1
     attachment_duration = -1
     connection_duration = -1
-    rssi = -141
-    rsrp = -141
-    rsrq = -40
+    rssi = None
+    rsrp = None
+    rsrq = None
 
     try:
         logging.debug('Initializing modem')
