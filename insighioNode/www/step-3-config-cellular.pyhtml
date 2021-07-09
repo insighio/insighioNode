@@ -11,6 +11,7 @@
 
     <body class="body-custom">
       {{ py }}
+      import device_info
       import gc
       gc.collect()
       {{ end }}
@@ -69,6 +70,7 @@
                     </div>
                     <br />
                     <br />
+                    {{ if not device_info.is_esp32() }}
                     <div class="col-3 col-sm-12">
                       <label class="form-label" for="input-example-cellular">Band</label>
                     </div>
@@ -77,6 +79,7 @@
                     </div>
                     <br />
                     <br />
+                    {{ end }}
                     <div class="col-12">
                       <div class="divider text-center" data-content="Generic Configuration"></div>
                     </div>
@@ -187,7 +190,8 @@
             Cookies.set('network', "cellular")
 
             Cookies.set('cell-apn', document.getElementById('input-apn').value.trim())
-            Cookies.set('cell-band', document.getElementById('input-band').value)
+            var band_elem = document.getElementById('input-band')
+            if(band_elem) Cookies.set('cell-band', band_elem.value)
 
             setRadioGroupValue('protocol', 'protocol')
             setRadioGroupValue('ipversion', 'ipversion')
