@@ -122,28 +122,19 @@
                     <br />
                   </div>
                   <!-- board selector -->
-                  <div class="form-group">
-                    <div class="col-4 col-sm-12">
-                      <label class="form-label" for="measurements">Board version</label>
-                    </div>
-                    <div class="col-3 col-sm-12">
-                      <label id="label-board-i2c" class="form-label" for="measurements" style="color:#4CB6AA">I²C / Digital / Analog</label>
-                    </div>
-                    <div class="col-1 col-sm-12">
-                      <div class="form-group">
-                        <label class="form-switch">
-                          <input type="checkbox" id="input-board-selector" onclick="boardChanged()" />
-                          <i class="form-icon"></i>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="col-4 col-sm-12">
-                      <label id="label-board-sdi" class="form-label" for="measurements">SDI-12</label>
-                    </div>
-                    <br />
-                    <br />
+                  <ul class="tab tab-block">
+                    <li class="tab-item" onclick="boardChanged(event, 'i2c-board-options')">
+                      <a class="pointer">I²C / Digital / Analog</a>
+                    </li>
+                    <li class="tab-item" onclick="boardChanged(event, 'sdi-board-options')">
+                      <a class="pointer" >SDI-12</a>
+                    </li>
+                    <li class="tab-item active" onclick="boardChanged(event, 'i2c-scale-board-options')">
+                      <a class="pointer">I²C / Digital / Scale</a>
+                    </li>
+                  </ul>
                     <!-- i2c board related settings -->
-                		<div id="i2c-board-options" style="display: block">
+                		<div id="i2c-board-options" class="tabcontent" style="display: none">
                       <form  class="form-horizontal">
                         <br />
                         <br />
@@ -245,7 +236,7 @@
                 		</div>
 
                     <!-- sdi board related settings -->
-                		<div id="sdi-board-options" style="display: none">
+                		<div id="sdi-board-options" class="tabcontent" style="display: none">
                       <form  class="form-horizontal">
                         <br />
                         <br />
@@ -343,15 +334,87 @@
                         </div>
                       </form>
                 		</div>
+
+                    <div id="i2c-scale-board-options" class="tabcontent" style="display: block">
+                      <form  class="form-horizontal">
+                        <br />
+                        <br />
+                        <div class="form-group">
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">I²C #1</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <select class="form-select" id="input-i2c-1">
+                                <option>disabled</option>
+                                <option>tsl2561 - luminosity</option>
+                                <option>si7021  - temperature / humidity</option>
+                                <option>scd30   - C02 / temperature / humidity</option>
+                                <option>bme680  - gap / temperature / humidity</option>
+                              </select>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">I²C #2</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <select class="form-select"  id="input-i2c-2">
+                                <option>disabled</option>
+                                <option>tsl2561 - luminosity</option>
+                                <option>si7021  - temperature / humidity</option>
+                                <option>scd30   - C02 / temperature / humidity</option>
+                                <option>bme680  - gap / temperature / humidity</option>
+                              </select>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">Analog / Digital P1</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <select class="form-select" id="input-sensor-a-d-p1">
+                                <option>disabled</option>
+                                <option>dht11   - temperature / humidity (digital)</option>
+                                <option>dht22   - temperature / humidity (digital)</option>
+                                <option selected>ds18x20 - temperature (OneWire)</option>
+                                <option>generic analog</option>
+                              </select>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">Weight Scale</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <label class="form-switch">
+                                <input type="checkbox" id="input-weight-scale" checked/>
+                                <i class="form-icon"></i>
+                              </label>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <br />
+                          <br />
+                        </div>
+                      </form>
+                		</div>
+                    <div class="columns">
+                      <div class="column col-4 col-mr-auto"></div>
+                      <div class="column col-1"><button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button></div>
+                      <div class="column col-1"><button class="btn btn-primary float-right" onclick="validateMyForm()" id="save-button">Save</button></div>
+                    </div>
+                    <br />
+                    <br />
                 	</div>
                 </form>
-                <div class="columns">
-                  <div class="column col-4 col-mr-auto"></div>
-                  <div class="column col-1"><button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button></div>
-                  <div class="column col-1"><button class="btn btn-primary float-right" onclick="validateMyForm()" id="save-button">Save</button></div>
-                </div>
-                <br />
-                <br />
               </div>
             </div>
           </div>
@@ -361,6 +424,10 @@
         <script >
           function goBack() {
             window.history.back();
+          }
+
+          function elementIsVisible(elementId) {
+            return document.getElementById(elementId).style.display === "block"
           }
 
           function clearCookies() {
@@ -380,6 +447,7 @@
             Cookies.remove('meas-sdi-2-enabled')
             Cookies.remove('meas-sdi-1-address')
             Cookies.remove('meas-sdi-2-address')
+            Cookies.remove('meas-sensor-scale-enabled')
           }
 
           function storeData(){
@@ -393,8 +461,9 @@
 
             Cookies.set('meas-temp-unit',  document.getElementById('input-temp-unit').value.includes("Fahrenheit") ? "False" : "True")
 
-            if (document.getElementById("input-board-selector").checked) {
-              Cookies.set('selected-board', "sdi12")
+            Cookies.set('selected-board', "sdi12")
+            if (elementIsVisible("sdi-board-options")) {
+              console.log("sdi-board-options")
               var address1_elem = document.getElementById('option-sdi-address-1')
               var address2_elem = document.getElementById('option-sdi-address-2')
 
@@ -405,7 +474,8 @@
 
               Cookies.set('meas-sdi-warmup-time', document.getElementById('input-warmup-time').value)
             }
-            else {
+            else if (elementIsVisible("i2c-board-options")){
+              console.log("i2c-board-options")
               Cookies.set('selected-board', "default")
               Cookies.set('meas-i2c-1', document.getElementById('input-i2c-1').value)
               Cookies.set('meas-i2c-2', document.getElementById('input-i2c-2').value)
@@ -413,6 +483,14 @@
               Cookies.set('meas-sensor-a-p2', document.getElementById('input-sensor-a-p2').value)
               Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-sensor-a-d-p1').value)
               Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-sensor-a-d-p2').value)
+            }
+            else if (elementIsVisible("i2c-scale-board-options")){
+              console.log("selected i2c-scale-board-options")
+              Cookies.set('selected-board', "i2c-scale")
+              Cookies.set('meas-i2c-1', document.getElementById('input-i2c-1').value)
+              Cookies.set('meas-i2c-2', document.getElementById('input-i2c-2').value)
+              Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-sensor-a-d-p1').value)
+              Cookies.set('meas-sensor-scale-enabled', document.getElementById('input-weight-scale').checked ? "True" : "False")
             }
 
             location.href = "step-6-verify.html";
@@ -432,19 +510,23 @@
             }
           }
 
-          function boardChanged(){
-            var checkBox = document.getElementById("input-board-selector")
-            if (checkBox.checked === true){
-              document.getElementById("label-board-sdi").style.color = "#4CB6AA"
-              document.getElementById("label-board-i2c").style.color = "#3b4351"
-              document.getElementById("sdi-board-options").style.display = "block"
-              document.getElementById("i2c-board-options").style.display = "none"
-            } else {
-              document.getElementById("label-board-sdi").style.color="#3b4351"
-              document.getElementById("label-board-i2c").style.color="#4CB6AA"
-              document.getElementById("sdi-board-options").style.display = "none"
-              document.getElementById("i2c-board-options").style.display = "block"
+          function boardChanged(evt, boardDivId){
+            var i, tabcontent, tablinks;
+
+            tabcontent = document.getElementsByClassName("tabcontent");
+            console.log('tabcontent: ', tabcontent)
+            for (i = 0; i < tabcontent.length; i++) {
+              tabcontent[i].style.display = "none";
             }
+
+            tablinks = document.getElementsByClassName("tab-item");
+            console.log('tablinks: ', tablinks)
+            for (i = 0; i < tablinks.length; i++) {
+              tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            document.getElementById(boardDivId).style.display = "block";
+            evt.currentTarget.className += " active";
           }
 
           function validateMyForm(){
