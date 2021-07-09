@@ -108,7 +108,7 @@ class WebServer:
             self.wlan.config(authmode=3)  # 3 -- WPA2-PSK
             self.wlan.config(max_clients=1)  # set how many clients can connect to the network
         else:
-            self.wlan = network.WLAN(mode=WLAN.AP, ssid=self.ssidCustom, auth=(WLAN.WPA2, 'insighiodev'))
+            self.wlan = network.WLAN(mode=network.WLAN.AP, ssid=self.ssidCustom, auth=(network.WLAN.WPA2, 'insighiodev'))
 
         device_info.wdt_reset()
 
