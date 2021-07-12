@@ -119,7 +119,7 @@ class Modem:
                 regex_match = None
                 for line in lines:
                     regex_match = ure.search(regex_creg, line)
-                    if regex_match and regex_match.group(1) == "1" or and regex_match.group(1) == "5":
+                    if regex_match and (regex_match.group(1) == "1" or regex_match.group(1) == "5"):
                         return True
             utime.sleep_ms(100)
         return False
