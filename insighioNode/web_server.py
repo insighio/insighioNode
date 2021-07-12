@@ -165,4 +165,5 @@ class WebServer:
                     del sys.modules[module]
             except Exception as e:
                 sys.print_exception(e)
+        self.wlan.active(False)
         logging.info('Bye\n')
