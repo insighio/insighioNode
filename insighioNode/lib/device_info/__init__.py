@@ -92,11 +92,16 @@ def get_lte_ids():
 def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_boot_timeout_sec=120, bt_on_boot=False):
     """ Sets basic configuration of board """
     # disable/enable heartbeat
+    global wdt
     wdt = None
     if is_esp32():
         import network
         wl = network.WLAN(network.STA_IF)
         wl.active(wifi_on_boot)
+
+        if not wifi_on_boot:
+            ap = network.WLAN(network.AP_IF)
+            ap.active(False)
 
         from ubluetooth import BLE
         BLE().active(bt_on_boot)
