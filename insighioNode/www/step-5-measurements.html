@@ -401,6 +401,19 @@
                           </div>
                           <br />
                           <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">GPS</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <label class="form-switch">
+                                <input type="checkbox" id="input-gps" checked/>
+                                <i class="form-icon"></i>
+                              </label>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
                           <br />
                           <br />
                         </div>
@@ -448,6 +461,7 @@
             Cookies.remove('meas-sdi-1-address')
             Cookies.remove('meas-sdi-2-address')
             Cookies.remove('meas-sensor-scale-enabled')
+            Cookies.remove('meas-gps-enabled')
           }
 
           function storeData(){
@@ -491,6 +505,7 @@
               Cookies.set('meas-i2c-2', document.getElementById('input-i2c-2').value)
               Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-sensor-a-d-p1').value)
               Cookies.set('meas-sensor-scale-enabled', document.getElementById('input-weight-scale').checked ? "True" : "False")
+              Cookies.set('meas-gps-enabled', document.getElementById('input-gps').checked ? "True" : "False")
             }
 
             location.href = "step-6-verify.html";

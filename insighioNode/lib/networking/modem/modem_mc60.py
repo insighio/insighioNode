@@ -2,6 +2,7 @@ from . import modem_base
 import utime
 import ure
 from external.micropyGPS.micropyGPS import MicropyGPS
+import device_info
 
 
 class ModemMC60(modem_base.Modem):
@@ -27,6 +28,9 @@ class ModemMC60(modem_base.Modem):
         my_gps = MicropyGPS()
 
         start_timestamp = utime.ticks_ms()
+        last_valid_gps_lat = None
+        last_valid_gps_lon = None
+        max_satellites = 0
         timeout_timestamp = start_timestamp + timeoutms
         while utime.ticks_ms() < timeout_timestamp:
 
@@ -38,10 +42,18 @@ class ModemMC60(modem_base.Modem):
                 for line in lines:
                     for char in line:
                         my_gps.update(char)
+                    if my_gps.latitude and my_gps.latitude[0] and my_gps.latitude[1]:
+                        last_valid_gps_lat = my_gps.latitude
+                    if my_gps.longitude and my_gps.longitude[0] and my_gps.longitude[1]:
+                        last_valid_gps_lon = my_gps.latitude
+                    if my_gps.satellites_in_use > max_satellites:
+                        max_satellites = my_gps.satellites_in_use
+
                     print("{} Lat: {}, Lon: {}, NumSats: {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use))
                     if my_gps.satellites_in_use >= satelite_number_threshold:
                         gps_fix = True
                         return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use)
+            device_info.wdt_reset()
             utime.sleep_ms(1000)
 
-        return (None, None, None, None)
+        return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites)

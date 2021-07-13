@@ -52,7 +52,12 @@
               </div>
               <p class="empty-title h5">Configuration Applied</p>
               <p class="empty-subtitle">The device will soon reboot to the desired configuration.</p>
-              <button class="btn btn-primary" id="save-button" onclick="startOver()">Start over?</button>
+              <div class="empty-action">
+                <button class="btn btn-primary" type="button" onclick="location.reload()">Re-apply Last Config</button>
+                <button class="btn btn-primary" id="save-button" onclick="startOver()">Start over?</button>
+              </div>
+              <br />
+              <br />
             </div>
           </div>
           <script>
@@ -102,6 +107,9 @@
 
             for param in Request.QueryParams:
               contents = contents.replace('<' + param + '>', Request.QueryParams[param])
+
+            import ure
+            contents = ure.sub('\"<[\w-]+>\"', '\"\"', contents)
 
             file = rootFolder + 'apps/demo_console/demo_config.py'
             utils.writeToFile(file, contents)
