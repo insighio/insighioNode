@@ -31,6 +31,7 @@ class ModemMC60(modem_base.Modem):
         last_valid_gps_lat = None
         last_valid_gps_lon = None
         max_satellites = 0
+        hdop = None
         timeout_timestamp = start_timestamp + timeoutms
         while utime.ticks_ms() < timeout_timestamp:
 
@@ -42,18 +43,17 @@ class ModemMC60(modem_base.Modem):
                 for line in lines:
                     for char in line:
                         my_gps.update(char)
-                    if my_gps.latitude and my_gps.latitude[0] and my_gps.latitude[1]:
+                    if my_gps.latitude and my_gps.latitude[0] and my_gps.latitude[1] and my_gps.longitude and my_gps.longitude[0] and my_gps.longitude[1]:
                         last_valid_gps_lat = my_gps.latitude
-                    if my_gps.longitude and my_gps.longitude[0] and my_gps.longitude[1]:
                         last_valid_gps_lon = my_gps.latitude
-                    if my_gps.satellites_in_use > max_satellites:
                         max_satellites = my_gps.satellites_in_use
+                        hdop = my_gps.hdop
 
                     print("{} Lat: {}, Lon: {}, NumSats: {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use))
                     if my_gps.satellites_in_use >= satelite_number_threshold:
                         gps_fix = True
-                        return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use)
+                        return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
             device_info.wdt_reset()
             utime.sleep_ms(1000)
 
-        return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites)
+        return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)
