@@ -108,9 +108,6 @@
             for param in Request.QueryParams:
               contents = contents.replace('<' + param + '>', Request.QueryParams[param])
 
-            import ure
-            contents = ure.sub('\"<[\w-]+>\"', '\"\"', contents)
-
             file = rootFolder + 'apps/demo_console/demo_config.py'
             utils.writeToFile(file, contents)
 
