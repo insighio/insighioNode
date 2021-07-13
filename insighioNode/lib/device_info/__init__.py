@@ -170,7 +170,14 @@ def get_heap_memory():
 
 def get_cpu_temp(unit_in_celsius=True):
     """ Returns CPU temperature in degrees of Celsius """
-    if unit_in_celsius:
-        return (machine.temperature() - 32) / 1.8
+    temp = None
+    if is_esp32():
+        import esp32
+        temp = esp32.raw_temperature()
     else:
-        return machine.temperature()
+        temp = machine.temperature()
+
+    if unit_in_celsius:
+        return (temp - 32) / 1.8
+    else:
+        return temp
