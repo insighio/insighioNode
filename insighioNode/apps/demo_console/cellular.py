@@ -5,6 +5,7 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 import device_info
+import utime
 
 
 # network connection
@@ -36,6 +37,34 @@ def connect(cfg):
                 results["cell_con_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connection_duration}
 
     return results
+
+
+def coord_to_double(part1, part2, part3):
+    try:
+        direction = {'N': 1, 'S': -1, 'E': 1, 'W': -1}
+        return (int(part1) + int(part2) / 60.0) * direction[part3]
+    except Exception as e:
+        logging.exception(e, "error converting coord {} {} {}".format(part1, part2, part3))
+        return None
+
+
+def get_gps_position(cfg, measurements):
+    if device_info.is_esp32():
+        cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
+
+    modem_instance = cellular.get_modem_instance()
+    if modem_instance is not None:
+        modem_instance.set_gps_state(True)
+        if modem_instance.is_gps_on():
+            start_time = utime.ticks_ms()
+            (_, lat, lon, _) = modem_instance.get_gps_position(780000)
+            measurements["gps_dur"] = {"unit": SenmlUnits.SENML_UNIT_DEGREES_LATITUDE, "value": utime.ticks_ms() - start_time}
+            if lat is not None and lon is not None:
+                latD = coord_to_double(lat[0], lat[1], lat[2])
+                lonD = coord_to_double(lon[0], lon[1], lon[2])
+                measurements["gps_lat"] = {"unit": SenmlUnits.SENML_UNIT_DEGREES_LATITUDE, "value": latD}
+                measurements["gps_lon"] = {"unit": SenmlUnits.SENML_UNIT_DEGREES_LONGITUDE, "value": lonD}
+        modem_instance.set_gps_state(False)
 
 
 def create_message(device_id, measurements):
