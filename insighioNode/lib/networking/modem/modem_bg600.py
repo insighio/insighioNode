@@ -1,5 +1,5 @@
-from modem_base import Modem
+from . import modem_base
 
 
-class ModemBG600(Modem):
+class ModemBG600(modem_base.Modem):
     pass
