@@ -106,7 +106,7 @@ def read_battery_voltage_and_current():
     if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
         gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
     utime.sleep_ms(500)
-    vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, voltage_divider=cfg._BAT_VDIV, attn=cfg._BAT_ATT)
+    vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, cfg._BAT_VDIV, cfg._BAT_ATT)
     if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
         vina_mV = gpio_handler.get_input_voltage(cfg._UC_IO_CUR_READ, voltage_divider=cfg._CUR_VDIV, attn=cfg._CUR_ATT)
         current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
@@ -123,16 +123,16 @@ def default_board_measurements(measurements):
     if cfg._MEAS_I2C_2 and cfg._MEAS_I2C_2 != cfg._CONST_MEAS_DISABLED:
         read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, cfg._MEAS_I2C_2, measurements)
 
-    if cfg._MEAS_ANALOG_P1 and cfg._MEAS_ANALOG_P1 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_P1') and cfg._MEAS_ANALOG_P1 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_P1, cfg._MEAS_ANALOG_P1, measurements, "ap1")
 
-    if cfg._MEAS_ANALOG_P2 and cfg._MEAS_ANALOG_P2 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_P2') and cfg._MEAS_ANALOG_P2 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_P2, cfg._MEAS_ANALOG_P2, measurements, "ap2")
 
-    if cfg._MEAS_ANALOG_DIGITAL_P1 and cfg._MEAS_ANALOG_DIGITAL_P1 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P1') and cfg._MEAS_ANALOG_DIGITAL_P1 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P1, cfg._MEAS_ANALOG_DIGITAL_P1, measurements, "adp1")
 
-    if cfg._MEAS_ANALOG_DIGITAL_P2 and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P2') and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2")
 
     # temporarly placed here till a wizard is made
@@ -198,7 +198,7 @@ def read_analog_digital_sensor(data_pin, sensor_name, measurements, position):
     sensor_name = sensor_name.split("-")[0].strip()
     if sensor_name == "generic analog":
         from sensors import analog_generic
-        volt_analog = analog_generic.get_reading(data_pin)
+        volt_analog = analog_generic.get_reading(data_pin, cfg._BAT_VDIV)
         set_value(measurements, "adc_" + position + "_volt", volt_analog, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
 
     elif sensor_name == "dht11" or sensor_name == "dht22":

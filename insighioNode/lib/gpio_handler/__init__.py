@@ -30,7 +30,7 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
         for i in range(0, measurement_cycles):
             running_avg = (i / (i + 1)) * running_avg + float(adc.read_u16()) / (i + 1)
             utime.sleep_ms(1)
-        return 1000 * running_avg / 65535 * attn_factor
+        return 1000 * running_avg / 65535 * attn_factor * voltage_divider
     else:
         adc = ADC()
 
@@ -64,7 +64,7 @@ def set_pin_value(pin, value):
 # the battery is adequately charged
 def check_minimum_voltage_threshold(pin_enable_battery_meas='P22', pin_battery_voltage='P13'):
     set_pin_value(pin_enable_battery_meas, 1)
-    voltage = get_input_voltage(pin_battery_voltage, voltage_divider=11, attn=0)
+    voltage = get_input_voltage(pin_battery_voltage, voltage_divider=2, attn=0)
     set_pin_value(pin_enable_battery_meas, 0)
     if voltage < 3000:
         import machine
