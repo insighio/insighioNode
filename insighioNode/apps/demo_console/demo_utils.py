@@ -117,22 +117,22 @@ def read_battery_voltage_and_current():
 
 
 def default_board_measurements(measurements):
-    if cfg._MEAS_I2C_1 and cfg._MEAS_I2C_1 != cfg._CONST_MEAS_DISABLED:
+    if cfg._MEAS_I2C_1 and hasattr(cfg, "_UC_IO_I2C_SDA") and hasattr(cfg, "_UC_IO_I2C_SCL") and cfg._MEAS_I2C_1 != cfg._CONST_MEAS_DISABLED:
         read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, cfg._MEAS_I2C_1, measurements)
 
-    if cfg._MEAS_I2C_2 and cfg._MEAS_I2C_2 != cfg._CONST_MEAS_DISABLED:
+    if cfg._MEAS_I2C_2 and hasattr(cfg, "_UC_IO_I2C_SDA") and hasattr(cfg, "_UC_IO_I2C_SCL") and cfg._MEAS_I2C_2 != cfg._CONST_MEAS_DISABLED:
         read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, cfg._MEAS_I2C_2, measurements)
 
-    if hasattr(cfg, '_MEAS_ANALOG_P1') and cfg._MEAS_ANALOG_P1 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_P1') and hasattr(cfg, "_UC_IO_ANALOG_P1") and cfg._MEAS_ANALOG_P1 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_P1, cfg._MEAS_ANALOG_P1, measurements, "ap1")
 
-    if hasattr(cfg, '_MEAS_ANALOG_P2') and cfg._MEAS_ANALOG_P2 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_P2') and hasattr(cfg, "_UC_IO_ANALOG_P2") and cfg._MEAS_ANALOG_P2 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_P2, cfg._MEAS_ANALOG_P2, measurements, "ap2")
 
-    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P1') and cfg._MEAS_ANALOG_DIGITAL_P1 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P1') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P1") and cfg._MEAS_ANALOG_DIGITAL_P1 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P1, cfg._MEAS_ANALOG_DIGITAL_P1, measurements, "adp1")
 
-    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P2') and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P2') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P2") and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2")
 
     # temporarly placed here till a wizard is made
