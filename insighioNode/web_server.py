@@ -27,7 +27,21 @@ class WebServer:
             logging.error("WiFi scan failed. Will provide empty SSID list")
             nets = []
         # nets = list(filter(lambda net: net.rssi > -89, nets))
-        self.available_nets = nets
+        if device_info.is_esp32:
+            self.available_nets = []
+
+            class TmpSSIDELEm:
+                def __init__(self):
+                    self.ssid = None
+                    self.rssi = None
+
+            for net in nets:
+                tmpObj = TmpSSIDELEm()
+                tmpObj.ssid = net[0].decode('UTF-8')
+                tmpObj.rssi = net[3]
+                self.available_nets.append(tmpObj)
+        else:
+            self.available_nets = nets
         self.ssidCustom = "insigh-" + device_info.get_device_id()[0][-4:]
         logging.info("SSID: " + self.ssidCustom)
         logging.info("Original device id: " + device_info.get_device_id()[0])
@@ -96,6 +110,7 @@ class WebServer:
     def storeIds(self):
         self.extractLoRaUIDS()
         self.extractInsighioIds()
+        logging.debug(str(self.available_nets))
         self.pyhtmlMod.SetGlobalVar("wifiAvailableNets", self.available_nets)
 
     def start(self, timeoutMs=-1):
