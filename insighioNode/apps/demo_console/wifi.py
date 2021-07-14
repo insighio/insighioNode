@@ -8,7 +8,7 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 
 def connect(cfg):
-    (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=False)
+    (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True)
     results = {}
     results["status"] = {"value": connOk}
     # if network statistics are enabled
