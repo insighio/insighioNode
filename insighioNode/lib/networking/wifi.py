@@ -1,10 +1,12 @@
-from network import WLAN
+#from network import WLAN
+import network
 import utime
 import machine
 import logging
+import device_info
 
 
-def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=False):
+def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
     """ Connect to WiFi network based on a predefined list of candidates
             Returns a list of a boolean indicating success/failure and connection time
     """
@@ -16,12 +18,15 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=False):
     rssi = -121
     channel = -1
 
-    wl = WLAN(mode=WLAN.STA, antenna=WLAN.INT_ANT)
-    original_ssid = wl.ssid()
-    original_auth = wl.auth()
+    # wl = WLAN(mode=WLAN.STA, antenna=WLAN.INT_ANT)
+    if device_info.is_esp32():
+        wl = network.WLAN(network.STA_IF)
+        wl.active(True)
+    else:
+        wl = network.WLAN(mode=network.WLAN.STA, antenna=network.WLAN.INT_ANT)
 
     try:
-        if not(force_no_scan):
+        if not force_no_scan:
             logging.debug("Scanning for known wifi nets")
             start_time = utime.ticks_ms()
             available_nets = wl.scan()
@@ -50,7 +55,10 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=False):
         # connect
         start_time = utime.ticks_ms()
         connect_timeout = start_time + max_connection_attempt_time_sec * 1000
-        wl.connect(net_to_use, (sec, pwd))
+        if device_info.is_esp32():
+            wl.connect(net_to_use, pwd)
+        else:
+            wl.connect(net_to_use, (sec, pwd))
         while not wl.isconnected() and utime.ticks_ms() < connect_timeout:
             utime.sleep_ms(10)
         conn_attempt_duration = utime.ticks_ms() - start_time
@@ -62,9 +70,13 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=False):
             # update_time_ntp()
 
             # obtain some extra KPIs from joined AP
-            ap_info = wl.joined_ap_info()
-            channel = ap_info[2]
-            rssi = ap_info[3]
+            if device_info.is_esp32():
+                channel = -1
+                rssi = -1
+            else:
+                ap_info = wl.joined_ap_info()
+                channel = ap_info[2]
+                rssi = ap_info[3]
         else:
             logging.debug("Not connected to {}".format(net_to_use))
     except Exception as e:
@@ -82,46 +94,24 @@ def deactivate():
     """ Actions implemented when turning off wifi, before deep sleep """
 
     deactivation_status = False
-    from network import WLAN
     start_time_deactivation = utime.ticks_ms()
 
-    try:
-        logging.debug('WiFi disconnecting...')
-        WLAN().disconnect()
-        logging.debug('WiFi deinitializing...')
-        WLAN().deinit()
-        deactivation_status = True
-    except Exception as e:
-        logging.exception(e, "Error in deactivation")
+    if device_info.is_esp32():
+        wl = network.WLAN(network.STA_IF)
+        wl.disconnect()
+        wl.active(False)
+    else:
+        from network import WLAN
+        try:
+            logging.debug('WiFi disconnecting...')
+            WLAN().disconnect()
+            logging.debug('WiFi deinitializing...')
+            WLAN().deinit()
+            deactivation_status = True
+        except Exception as e:
+            logging.exception(e, "Error in deactivation")
 
     return (deactivation_status, utime.ticks_ms() - start_time_deactivation)
-
-
-# kept for code reference.
-def connect_esp32():
-    connection_status = False
-    conn_attempt_duration = -1
-
-    import network
-    wl = WLAN(network.STA_IF)
-    wl.active(True)
-    wl.scan()
-    start_time = utime.ticks_ms()
-    wl.connect('<ssid>', '<password>')
-    while not wl.isconnected() and ((utime.ticks_ms() - start_time < 60 * 1000)):
-        utime.sleep_ms(10)
-    conn_attempt_duration = (utime.ticks_ms() - start_time) / 1000
-    if wl.isconnected():
-        logging.debug("Connected with IP address: {}".format(wl.ifconfig()[0]))
-        connection_status = True
-        # adjust time
-        '''
-        rtc = machine.RTC()
-        rtc.ntp_sync("pool.ntp.org")
-        utime.sleep_ms(3000)
-        print('\nRTC Set from NTP to UTC:', rtc.now())
-        '''
-    return (connection_status, conn_attempt_duration)
 
 
 def update_time_ntp():
