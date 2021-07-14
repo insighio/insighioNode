@@ -140,11 +140,18 @@ def default_board_measurements(measurements):
 
 
 def read_scale(clock_pin, data_pin, measurements):
-    from external.hx711.hx711_gpio import HX711
-    from machine import Pin
+    from external.hx711.hx711_spi import HX711
+    from machine import Pin, SPI
+
     pin_OUT = Pin(data_pin, Pin.IN, pull=Pin.PULL_DOWN)
     pin_SCK = Pin(clock_pin, Pin.OUT)
-    hx = HX711(pin_SCK, pin_OUT)
+    spi_sck = Pin(12)
+
+    spi = SPI(1, baudrate=1000000, polarity=0,
+          phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
+
+    hx = HX711(pin_SCK, pin_OUT, spi)
+    hx.tare()
     hx.set_gain(128)
     utime.sleep_ms(50)
     times = 15
