@@ -114,10 +114,8 @@ from sensors import hx711
         document.getElementById('save-button').disabled = true
         clearCookies()
 
-        console.log(document.getElementById('idle-weight-value'))
-        console.log(document.getElementById('input-ref-weight'))
         Cookies.set('meas-scale-offset', document.getElementById('idle-weight-value').innerHTML)
-        Cookies.set('meas-scale-reference', document.getElementById('input-ref-weight').value.trim())
+        Cookies.set('meas-scale-reference', document.getElementById('input-ref-weight').value)
 
         location.href = "step-5-3-scale-calibr-res.pyhtml"
       }
