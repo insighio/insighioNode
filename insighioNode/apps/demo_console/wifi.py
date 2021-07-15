@@ -17,6 +17,17 @@ def connect(cfg):
         results["wifi_scan_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": scanDur}
         results["wifi_channel"] = {"value": wifiChannel}
         results["wifi_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": wifiRssi}
+
+    if device_info.is_esp32():
+        import ntptime
+        from machine import RTC
+        logging.info("time before sync: " + str(RTC().datetime()))
+        ntptime.host = "pool.ntp.org"
+        ntptime.settime()
+        logging.info("time after sync: " + str(RTC().datetime()))
+    else:
+        wifi.update_time_ntp()
+
     return results
 
 

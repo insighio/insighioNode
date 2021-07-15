@@ -88,16 +88,39 @@ demo_utils.device_deinit()
 # Finalization Actions
 gc.collect()
 logging.info("Getting into deep sleep...")
-# machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC*1000 - (utime.ticks_ms() - start_time))
+
+#############
+### Time controlled by Web UI defined period
+###
 machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000)
 
-#2021, 7, 8, 3, 16, 8, 45, 890003
-# yy, MM, dd, DD, hh, mm, ss
-# from machine import RTC
-# logging.info("current time: " + str(RTC().datetime()))
-# time_tuple = RTC().datetime()
-# seconds_of_last_ten_min = (time_tuple[5] * 60 + time_tuple[6]) % 300
-# seconds_to_sleep = (300 - seconds_of_last_ten_min)
-# logging.info("will wake up again in " + str(seconds_to_sleep) + " seconds")
-#
-# machine.deepsleep(seconds_to_sleep * 1000)
+
+#############
+### Time controlled by fixed timestamps 5:30 & 21:30
+###
+
+### RTC tuple format
+###2021, 7, 8, 3, 16, 8, 45, 890003
+### yy, MM, dd, DD, hh, mm, ss
+from machine import RTC
+logging.info("current time: " + str(RTC().datetime()))
+time_tuple = RTC().datetime()
+
+# 5:30 => 19800 seconds
+MORNING_MEAS = 19800
+EVENING_MEAS = 77400
+DAY_SECONDS = 86400
+selected_meas_moment = 0
+
+seconds_of_day = (time_tuple[4] * 3600 + time_tuple[5] * 60 + time_tuple[6])
+seconds_of_day = (seconds_of_day + 3 * 3600) % DAY_SECONDS  # temp timezone fix
+
+if seconds_of_day < MORNING_MEAS:
+    time = MORNING_MEAS - seconds_of_day
+elif seconds_of_day < EVENING_MEAS:
+    time = EVENING_MEAS - seconds_of_day
+else:
+    time = DAY_SECONDS - seconds_of_day + MORNING_MEAS
+
+logging.info("will wake up again in {} hours ({} seconds)".format(time / 3600, time))
+machine.deepsleep(time * 1000)
