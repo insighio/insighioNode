@@ -67,14 +67,14 @@ from sensors import hx711
                       <label class="form-label p-centered" for="input-example-1">Reference Weight (g)</label>
                     </div>
                     <div class="col-2 col-sm-12 col-mr-auto">
-                      <input class="form-input p-centered" type="text" id="input-ref-weight" style="width: 300px" placeholder="">
+                      <input class="form-input p-centered" type="number" id="input-ref-weight" style="width: 300px" placeholder="">
                     </div>
                   </div>
                 </form>
               </p>
               <div class="empty-action">
                 <button class="btn btn-primary" id="back-button" onclick="goBack()">Back</button>
-                <button class="btn btn-primary" id="save-button" onclick="storeData()">Measure</button>
+                <button class="btn btn-primary" id="save-button" onclick="validateMyForm()">Measure</button>
               </div>
             </div>
           </div>
@@ -90,11 +90,33 @@ from sensors import hx711
         Cookies.remove('meas-scale-reference')
       }
 
+      function validateField(fieldObj, message) {
+        if(fieldObj.value.trim() == ""){
+            fieldObj.style.borderColor = "red";
+            fieldObj.focus()
+            window.alert("Please enter a valid " + message)
+            return false
+        }
+        fieldObj.style.borderColor = "green";
+        return true
+      }
+
+      function validateMyForm(){
+        var refWeight =  document.getElementById('input-ref-weight')
+        if(!validateField(refWeight, "ref-weight"))
+          return false
+
+        storeData()
+        return true
+      }
+
       function storeData(){
         document.getElementById('save-button').disabled = true
         clearCookies()
 
-        Cookies.set('meas-scale-offset', document.getElementById('idle-weight-value').value.trim())
+        console.log(document.getElementById('idle-weight-value'))
+        console.log(document.getElementById('input-ref-weight'))
+        Cookies.set('meas-scale-offset', document.getElementById('idle-weight-value').innerHTML)
         Cookies.set('meas-scale-reference', document.getElementById('input-ref-weight').value.trim())
 
         location.href = "step-5-3-scale-calibr-res.pyhtml"
