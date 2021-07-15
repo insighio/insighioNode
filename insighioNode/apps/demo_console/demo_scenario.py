@@ -23,7 +23,7 @@ if not hasattr(cfg, '_MEAS_TEMP_UNIT_IS_CELSIUS'):
 start_time = utime.ticks_ms()
 
 # initializations
-device_info.set_defaults(heartbeat=False, wifi_on_boot=False, wdt_on_boot=True, wdt_on_boot_timeout_sec=cfg._WD_PERIOD, bt_on_boot=False)
+device_info.set_defaults(heartbeat=False, wifi_on_boot=False, wdt_on_boot=False, wdt_on_boot_timeout_sec=cfg._WD_PERIOD, bt_on_boot=False)
 device_info.set_led_color('blue')
 _DEVICE_ID = device_info.get_device_id()[0]
 cfg.device_id = _DEVICE_ID
@@ -35,11 +35,19 @@ demo_utils.watchdog_reset()
 # get measurements
 measurements = demo_utils.get_measurements(cfg)
 
+logging.debug("Measurements before network: ")
+logging.debug(str(measurements))
+
 # connect to network
 if cfg.network == "lora":
     from . import lora as network
 elif cfg.network == "cellular":
     from . import cellular as network
+    try:
+        if cfg._MEAS_GPS_ENABLE:
+            network.get_gps_position(cfg, measurements)  # may be it needs relocation
+    except:
+        pass
 elif cfg.network == "wifi":
     from . import wifi as network
 
@@ -82,3 +90,14 @@ gc.collect()
 logging.info("Getting into deep sleep...")
 # machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC*1000 - (utime.ticks_ms() - start_time))
 machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000)
+
+#2021, 7, 8, 3, 16, 8, 45, 890003
+# yy, MM, dd, DD, hh, mm, ss
+# from machine import RTC
+# logging.info("current time: " + str(RTC().datetime()))
+# time_tuple = RTC().datetime()
+# seconds_of_last_ten_min = (time_tuple[5] * 60 + time_tuple[6]) % 300
+# seconds_to_sleep = (300 - seconds_of_last_ten_min)
+# logging.info("will wake up again in " + str(seconds_to_sleep) + " seconds")
+#
+# machine.deepsleep(seconds_to_sleep * 1000)
