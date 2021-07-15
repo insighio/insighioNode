@@ -136,31 +136,17 @@ def default_board_measurements(measurements):
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2")
 
     # temporarly placed here till a wizard is made
-    read_scale(cfg._UC_IO_SCALE_CLOCK_PIN, cfg._UC_IO_SCALE_DATA_PIN, measurements)
+    read_scale(measurements)
 
 
-def read_scale(clock_pin, data_pin, measurements):
-    from external.hx711.hx711_spi import HX711
-    from machine import Pin, SPI
+def read_scale(measurements):
+    from sensors import hx711
 
-    pin_OUT = Pin(data_pin, Pin.IN, pull=Pin.PULL_DOWN)
-    pin_SCK = Pin(clock_pin, Pin.OUT)
-    spi_sck = Pin(12)
-
-    spi = SPI(1, baudrate=1000000, polarity=0,
-          phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
-
-    hx = HX711(pin_SCK, pin_OUT, spi)
-    hx.tare()
-    hx.set_gain(128)
-    utime.sleep_ms(50)
-    times = 15
-    logging.debug("scale offset: {}, scale: {}".format(hx.OFFSET, hx.SCALE))
-
-    hx.set_offset(79000)
-    hx.set_scale(21.4)
-    hx.read_average(times)
-    weight = (hx.read_average(times) - hx.OFFSET) / hx.SCALE
+    weight = hx711.get_reading(cfg._UC_IO_SCALE_DATA_PIN,
+                               cfg._UC_IO_SCALE_CLOCK_PIN,
+                               cfg._UC_IO_SCALE_SPI_PIN,
+                               cfg._UC_IO_SCALE_OFFSET if hasattr(cfg, '_UC_IO_SCALE_OFFSET') else None,
+                               cfg._UC_IO_SCALE_SCALE if hasattr(cfg, '_UC_IO_SCALE_SCALE') else None)
     set_value_float(measurements, "scale_weight", weight, SenmlUnits.SENML_UNIT_GRAM)
 
 
