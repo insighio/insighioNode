@@ -110,7 +110,6 @@ class WebServer:
     def storeIds(self):
         self.extractLoRaUIDS()
         self.extractInsighioIds()
-        logging.debug(str(self.available_nets))
         self.pyhtmlMod.SetGlobalVar("wifiAvailableNets", self.available_nets)
 
     def start(self, timeoutMs=-1):
