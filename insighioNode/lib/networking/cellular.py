@@ -129,7 +129,7 @@ def connect(cfg, dataStateOn=True):
 
             # start attachment
             logging.debug('Attaching...')
-            # lte.attach(band=cfg._BAND, apn=cfg._APN, legacyattach=False)
+            # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
             while not modemInst.is_attached() and (utime.ticks_ms() < attachment_timeout):
                 utime.sleep_ms(10)
 
