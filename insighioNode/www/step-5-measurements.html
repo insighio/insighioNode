@@ -508,7 +508,10 @@
               Cookies.set('meas-gps-enabled', document.getElementById('input-ins-esp-gps').checked ? "True" : "False")
             }
 
-            location.href = "step-6-verify.html";
+            if(elementIsVisible("i2c-scale-board-options") && document.getElementById('input-ins-esp-weight-scale').checked)
+              location.href = "step-5-1-scale-idle.html"
+            else
+              location.href = "step-6-verify.html"
           }
 
           function sensorStatusChanged(sensorId) {

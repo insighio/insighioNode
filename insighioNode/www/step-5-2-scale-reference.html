@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+
+<html>
+
+{{ py }}
+
+import gc
+gc.collect()
+from sensors import hx711
+{{ end }}
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>insigh.io Device</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="css/spectre-icons.min.css" />
+        <link rel="stylesheet" href="css/spectre.min.css" />
+    </head>
+
+    <body class="body-custom">
+
+        <img src="img/logo.png" class="img-responsive img-center">
+
+        <div class="panel panel-custom">
+          <div class="panel-header">
+            <div class="panel-title text-center">Set active measurements</div>
+          </div>
+
+          <div class="panel-nav">
+            <ul class="step">
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 1">Login</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 2">Select Network</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 3">Network Params</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip active" data-tooltip="Step 5">Measurements</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 6">Verify</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="panel-body">
+            <br />
+            <hr />
+            <br />
+            <div class="empty">
+              <!-- <div class="empty-icon">
+                <i class="icon icon-2x icon-minus"></i>
+              </div> -->
+              <p class="empty-title h5">Weight Scale Calibration</p>
+              <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold">{{ hx711.get_reading(4, 33, 12, None, None, 25) }}</span>.</p>
+              <p class="empty-subtitle">Place your reference weight on the scale, fill its exact weight in grams at the following field and press <span class="text-bold">Measure</span> to complete calibration.</p>
+              <p class="empty-subtitle p-centered">
+                <form class="form-horizontal">
+                  <div class="form-group p-centered">
+                    <div class="col-2 col-sm-12 col-ml-auto ">
+                      <label class="form-label p-centered" for="input-example-1">Reference Weight (g)</label>
+                    </div>
+                    <div class="col-2 col-sm-12 col-mr-auto">
+                      <input class="form-input p-centered" type="text" id="input-ref-weight" style="width: 300px" placeholder="">
+                    </div>
+                  </div>
+                </form>
+              </p>
+              <div class="empty-action">
+                <button class="btn btn-primary" id="back-button" onclick="goBack()">Back</button>
+                <button class="btn btn-primary" id="save-button" onclick="storeData()">Measure</button>
+              </div>
+            </div>
+          </div>
+      </div>
+      <script src="js.cookie.min.js"></script>
+      <script>
+      function goBack() {
+        window.history.back();
+      }
+
+      function clearCookies() {
+        Cookies.remove('meas-scale-offset')
+        Cookies.remove('meas-scale-reference')
+      }
+
+      function storeData(){
+        document.getElementById('save-button').disabled = true
+        clearCookies()
+
+        Cookies.set('meas-scale-offset', document.getElementById('idle-weight-value').value.trim())
+        Cookies.set('meas-scale-reference', document.getElementById('input-ref-weight').value.trim())
+
+        location.href = "step-5-3-scale-calibr-res.pyhtml"
+      }
+      </script>
+    </body>
+
+</html>
