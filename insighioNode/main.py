@@ -3,7 +3,7 @@ import sys
 import device_info
 import logging
 
-if device_info.is_esp32:
+if device_info.is_esp32():
     import machine
     machine.freq(240000000)
 
