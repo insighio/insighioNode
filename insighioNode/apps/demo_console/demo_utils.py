@@ -135,8 +135,8 @@ def default_board_measurements(measurements):
     if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P2') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P2") and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2")
 
-    # temporarly placed here till a wizard is made
-    read_scale(measurements)
+    if hasattr(cfg, '_MEAS_SCALE_ENABLED') and cfg._MEAS_SCALE_ENABLED:
+        read_scale(measurements)
 
 
 def read_scale(measurements):

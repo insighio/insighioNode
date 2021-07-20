@@ -50,5 +50,4 @@ _MEAS_BOARD_STAT_ENABLE = <meas-board-stat>
 _MEAS_NETWORK_STAT_ENABLE = <meas-network-stat>
 _MEAS_TEMP_UNIT_IS_CELSIUS = <meas-temp-unit>
 _MEAS_GPS_ENABLE = <meas-gps-enabled>
-
-_CONST_MEAS_DISABLED = "disabled"
+_MEAS_SCALE_ENABLED = <meas-scale-enabled>

@@ -462,6 +462,9 @@
             Cookies.remove('meas-sdi-2-address')
             Cookies.remove('meas-sensor-scale-enabled')
             Cookies.remove('meas-gps-enabled')
+            Cookies.remove('meas-scale-scale')
+            Cookies.remove('meas-scale-offset')
+            Cookies.remove('meas-scale-enabled')
           }
 
           function storeData(){
@@ -475,18 +478,19 @@
 
             Cookies.set('meas-temp-unit',  document.getElementById('input-temp-unit').value.includes("Fahrenheit") ? "False" : "True")
 
-            Cookies.set('selected-board', "sdi12")
             if (elementIsVisible("sdi-board-options")) {
               console.log("sdi-board-options")
               var address1_elem = document.getElementById('option-ins-py-sdi12-1-address')
               var address2_elem = document.getElementById('option-ins-py-sdi12-2-address')
 
+              Cookies.set('selected-board', "sdi12")
               Cookies.set('meas-sdi-1-enabled', document.getElementById('input-ins-py-sdi12-1-enable').checked ? "True" : "False")
               Cookies.set('meas-sdi-2-enabled', document.getElementById('input-ins-py-sdi12-2-enable').checked ? "True" : "False")
               Cookies.set('meas-sdi-1-address', address1_elem !== null ? address1_elem.value : "")
               Cookies.set('meas-sdi-2-address', address2_elem !== null ? address2_elem.value : "")
 
               Cookies.set('meas-sdi-warmup-time', document.getElementById('input-warmup-time').value)
+              location.href = "step-6-verify.html"
             }
             else if (elementIsVisible("i2c-board-options")){
               console.log("i2c-board-options")
@@ -497,21 +501,25 @@
               Cookies.set('meas-sensor-a-p2', document.getElementById('input-ins-py-sensor-a-p2').value)
               Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-py-sensor-a-d-p1').value)
               Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-ins-py-sensor-a-d-p2').value)
+              location.href = "step-6-verify.html"
             }
             else if (elementIsVisible("i2c-scale-board-options")){
               console.log("selected i2c-scale-board-options")
-              Cookies.set('selected-board', "i2c-scale")
+              Cookies.set('selected-board', "ins_esp_gen_1")
               Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-i2c-1').value)
               Cookies.set('meas-i2c-2', document.getElementById('input-ins-esp-i2c-2').value)
               Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
-              Cookies.set('meas-sensor-scale-enabled', document.getElementById('input-ins-esp-weight-scale').checked ? "True" : "False")
+              Cookies.set('meas-scale-enabled', document.getElementById('input-ins-esp-weight-scale').checked ? "True" : "False")
               Cookies.set('meas-gps-enabled', document.getElementById('input-ins-esp-gps').checked ? "True" : "False")
-            }
 
-            if(elementIsVisible("i2c-scale-board-options") && document.getElementById('input-ins-esp-weight-scale').checked)
-              location.href = "step-5-1-scale-idle.html"
-            else
-              location.href = "step-6-verify.html"
+              if(!document.getElementById('input-ins-esp-weight-scale').checked) {
+                  Cookies.set('meas-scale-offset', 0)
+                  Cookies.set('meas-scale-scale', 1)
+                  location.href = "step-6-verify.html"
+              }
+              else
+                location.href = "step-5-1-scale-idle.html"
+            }
           }
 
           function sensorStatusChanged(sensorId) {
