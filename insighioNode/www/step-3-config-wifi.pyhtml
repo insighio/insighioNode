@@ -83,14 +83,6 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-cellular">Sleep Period (seconds)</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-period" value=60 />
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
                       <label class="form-label" for="input-example-cellular">Protocol</label>
                     </div>
                     <div class="col-9 col-sm-12">
@@ -166,7 +158,6 @@
             Cookies.remove('lora-retries')
             Cookies.remove('cell-apn')
             Cookies.remove('cell-band')
-            Cookies.remove('period')
             Cookies.remove('wifi-pass')
             Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
@@ -186,7 +177,6 @@
           function storeData(){
             document.getElementById('save-button').disabled = true
             clearCookies();
-            Cookies.set('period', document.getElementById('input-period').value)
 
             //wifi
             Cookies.set('network', "wifi")
