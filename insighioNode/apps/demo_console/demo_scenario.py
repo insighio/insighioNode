@@ -92,7 +92,7 @@ logging.info("Getting into deep sleep...")
 #############
 ### Time controlled by Web UI defined period
 ###
-machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000)
+#machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000)
 
 
 #############
@@ -103,24 +103,36 @@ machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000)
 ###2021, 7, 8, 3, 16, 8, 45, 890003
 ### yy, MM, dd, DD, hh, mm, ss
 from machine import RTC
-logging.info("current time: " + str(RTC().datetime()))
 time_tuple = RTC().datetime()
+logging.info("current time: " + str(time_tuple))
 
-# 5:30 => 19800 seconds
 MORNING_MEAS = 19800
 EVENING_MEAS = 77400
 DAY_SECONDS = 86400
-selected_meas_moment = 0
+
+def get_seconds_till_next_slot(current_seconds_of_day):
+    # 5:30 => 19800 seconds
+    if current_seconds_of_day < MORNING_MEAS:
+        return MORNING_MEAS - current_seconds_of_day
+    elif current_seconds_of_day < EVENING_MEAS:
+        return EVENING_MEAS - current_seconds_of_day
+    else:
+        return DAY_SECONDS - current_seconds_of_day + MORNING_MEAS
+
 
 seconds_of_day = (time_tuple[4] * 3600 + time_tuple[5] * 60 + time_tuple[6])
 seconds_of_day = (seconds_of_day + 3 * 3600) % DAY_SECONDS  # temp timezone fix
 
-if seconds_of_day < MORNING_MEAS:
-    time = MORNING_MEAS - seconds_of_day
-elif seconds_of_day < EVENING_MEAS:
-    time = EVENING_MEAS - seconds_of_day
-else:
-    time = DAY_SECONDS - seconds_of_day + MORNING_MEAS
+seconds_to_wait = get_seconds_till_next_slot(seconds_of_day)
+MIN_WAIT_THRESHOLD = 900  # 15 minutes
+if seconds_to_wait <= MIN_WAIT_THRESHOLD:
+    seconds_to_wait = get_seconds_till_next_slot(seconds_of_day + seconds_to_wait + 1)  # go to next slot
 
-logging.info("will wake up again in {} hours ({} seconds)".format(time / 3600, time))
-machine.deepsleep(time * 1000)
+RTC_DRIFT_CORRECTION = 1.011
+logging.info("will wake up again in {} hours ({} seconds) <before correction>".format(seconds_to_wait / 3600, seconds_to_wait))
+
+seconds_to_wait = int(seconds_to_wait * RTC_DRIFT_CORRECTION)
+
+logging.info("will wake up again in {} hours ({} seconds) <after correction>".format(seconds_to_wait / 3600, seconds_to_wait))
+
+machine.deepsleep(seconds_to_wait * 1000)  # +0.01% is RTC correction
