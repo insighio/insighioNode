@@ -23,7 +23,17 @@ def connect(cfg):
         from machine import RTC
         logging.info("time before sync: " + str(RTC().datetime()))
         ntptime.host = "pool.ntp.org"
-        ntptime.settime()
+        cnt = 0
+        max_tries = 10
+        while cnt < max_tries:
+            try:
+                ntptime.settime()
+                logging.info("time set")
+                break
+            except:
+                logging.info("time failed")
+                pass
+            cnt += 1
         logging.info("time after sync: " + str(RTC().datetime()))
     else:
         wifi.update_time_ntp()
