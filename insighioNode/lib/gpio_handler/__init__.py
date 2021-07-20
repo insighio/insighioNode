@@ -29,7 +29,7 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
         running_avg = 0.0
         for i in range(0, measurement_cycles):
             running_avg = (i / (i + 1)) * running_avg + float(adc.read_u16()) / (i + 1)
-            utime.sleep_ms(1)
+
         return 1000 * running_avg / 65535 * attn_factor * voltage_divider
     else:
         adc = ADC()
