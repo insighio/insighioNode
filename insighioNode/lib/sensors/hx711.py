@@ -23,7 +23,7 @@ def get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=N
     utime.sleep_ms(50)
     times = 15
 
-    if offset is not None and scale is not None:
+    if offset is not None and scale:
         hx.set_offset(offset)
         hx.set_scale(scale)
     else:
