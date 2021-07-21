@@ -70,6 +70,20 @@
                     </div>
                     <br />
                     <br />
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label" for="measurements">Technology</label>
+                    </div>
+                    <div class="col-9 col-sm-12">
+                      <div class="form-group">
+                        <select class="form-select"  id="input-cell-tech">
+                          <option>auto</option>
+                          <option>GSM</option>
+                          <option>NBIoT</option>
+                        </select>
+                      </div>
+                    </div>
+                    <br />
+                    <br />
                     {{ if not device_info.is_esp32() }}
                     <div class="col-3 col-sm-12">
                       <label class="form-label" for="input-example-cellular">Band</label>
@@ -147,7 +161,11 @@
             Cookies.remove('wifi-pass')
             Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
+            Cookies.remove('cell-tech')
           }
+
+          //_CELLULAR_TECHNOLOGY = "<cell-tech>"
+          //input-cell-tech
 
           function setRadioGroupValue(groupName, cookieName){
             var elems = document.getElementsByName(groupName)
@@ -177,6 +195,9 @@
             document.getElementById('save-button').disabled = true
             clearCookies();
             Cookies.set('network', "cellular")
+
+
+            Cookies.set('cell-tech', document.getElementById('input-cell-tech').value)
 
             Cookies.set('cell-apn', document.getElementById('input-apn').value.trim())
             var band_elem = document.getElementById('input-band')

@@ -120,7 +120,7 @@ def connect(cfg, dataStateOn=True):
     try:
         logging.debug('Initializing modem')
         modemInst = get_modem_instance()
-        modemInst.init(cfg._IP_VERSION, cfg._APN)
+        modemInst.init(cfg._IP_VERSION, cfg._APN, cfg._CELLULAR_TECHNOLOGY)
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4

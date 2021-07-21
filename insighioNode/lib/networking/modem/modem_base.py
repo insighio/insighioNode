@@ -69,7 +69,7 @@ class Modem:
         p0.off()
         logging.debug("Output Pin {} {}".format(self.modem_power_on, p0.value()))
 
-    def init(self, ip_version, apn):
+    def init(self, ip_version, apn, technology):
         if self.is_alive():
             self.apn = apn
             # set auto-registration
@@ -77,15 +77,15 @@ class Modem:
             # disable unsolicited report of network registration
             self.send_at_cmd("AT+CREG=0")
             self.send_at_cmd("AT+CFUN=1")
-            self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
-            self.send_at_cmd("AT+COPS=0")
 
-            self.set_technology() # placeholder
+            self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
+
+            self.set_technology(technology)
 
             return True
         return False
 
-    def set_technology(self):
+    def set_technology(self, technology):
         pass
 
     def get_network_date_time(self):
