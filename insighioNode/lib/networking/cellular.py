@@ -125,7 +125,7 @@ def connect(cfg, dataStateOn=True):
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
         start_activation_duration = utime.ticks_ms()
-        if modemInst.wait_for_registration():
+        if modemInst.wait_for_registration(120000):
             # print("Modem activated (AT+CFUN=1), continuing...")
 
             status = MODEM_ACTIVATED
