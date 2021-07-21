@@ -3,6 +3,7 @@ import utime
 import logging
 from external.micropyGPS.micropyGPS import MicropyGPS
 import ure
+import device_info
 
 class ModemBG600(modem_base.Modem):
     def __init__(self, power_on, power_key, modem_tx, modem_rx, gps_tx=None, gps_rx=None):
@@ -26,6 +27,10 @@ class ModemBG600(modem_base.Modem):
 
             return True
         return False
+
+    def set_technology(self):
+        self.send_at_cmd('AT+QCFG="nwscanmode",3,1')
+        pass
 
     def connect(self, timeoutms=30000):
         for i in range(0, 5):
@@ -82,9 +87,8 @@ class ModemBG600(modem_base.Modem):
         return False
 
     def get_gps_position(self, timeoutms=300000, satelite_number_threshold=5):
-        counter = 0
         gps_fix = False
-        print("Starting query gps")
+        logging.debug("Starting query gps")
         my_gps = MicropyGPS()
 
         start_timestamp = utime.ticks_ms()
@@ -94,8 +98,6 @@ class ModemBG600(modem_base.Modem):
         hdop = None
         timeout_timestamp = start_timestamp + timeoutms
         while utime.ticks_ms() < timeout_timestamp:
-
-            counter += 1
             (status, lines) = self.send_at_cmd('AT+QGPSGNMEA="GGA"')
             if status and len(lines) > 0:
                 if lines[0].startswith('+QGPSGNMEA:'):
@@ -109,9 +111,10 @@ class ModemBG600(modem_base.Modem):
                         max_satellites = my_gps.satellites_in_use
                         hdop = my_gps.hdop
 
-                    print("{} Lat: {}, Lon: {}, NumSats: {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use))
+                    logging.debug("{} Lat: {}, Lon: {}, NumSats: {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use))
                     if my_gps.satellites_in_use >= satelite_number_threshold:
                         gps_fix = True
+                        logging.debug("satelite_number_threshold: ", str(satelite_number_threshold))
                         return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
             device_info.wdt_reset()
             utime.sleep_ms(1000)

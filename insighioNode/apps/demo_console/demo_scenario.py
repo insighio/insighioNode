@@ -46,8 +46,9 @@ elif cfg.network == "cellular":
     try:
         if cfg._MEAS_GPS_ENABLE:
             network.get_gps_position(cfg, measurements)  # may be it needs relocation
-    except:
-        pass
+    except Exception as e:
+        logging.exception(e, "GPS Exception:")
+
 elif cfg.network == "wifi":
     from . import wifi as network
 
