@@ -8,25 +8,7 @@ import device_info
 class ModemBG600(modem_base.Modem):
     def __init__(self, power_on, power_key, modem_tx, modem_rx, gps_tx=None, gps_rx=None):
         super().__init__(power_on, power_key, modem_tx, modem_rx, gps_tx, gps_rx)
-
-    def init(self, ip_version, apn):
-        if self.is_alive():
-            # set auto-registration
-            # self.send_at_cmd("AT+CFUN=0")
-            # disable unsolicited report of network registration
-            self.send_at_cmd("AT+CREG=0")
-            self.send_at_cmd("AT+CFUN=1")
-
-            self.send_at_cmd('AT+QCFG="nwscanmode",1,2')
-
-            self.send_at_cmd('AT+CGDCONT=1,"IP","' + apn + '"')
-
-        #     AT+CGDCONT=1,"PPP","iot.1nce.net"
-
-            self.set_technology() # placeholder
-
-            return True
-        return False
+        self.connection_status = False
 
     def set_technology(self):
         self.send_at_cmd('AT+QCFG="nwscanmode",3,1')
@@ -45,31 +27,35 @@ class ModemBG600(modem_base.Modem):
         # if not status:
         #     return False
 
-        # from network import PPP
-        #
-        # logging.debug("PPP: instantiating...")
-        # self.ppp = PPP(self.uart)
-        # logging.debug("PPP: activating...")
-        # self.ppp.active(True)
-        # logging.debug("PPP: connecting...")
-        # self.ppp.connect()
-        #
-        # start_timestamp = utime.ticks_ms()
-        # timeout_timestamp = start_timestamp + timeoutms
-        # while utime.ticks_ms() < timeout_timestamp:
-        #     self.connected = self.is_connected()
-        #     if self.connected:
-        #         break
-        #     utime.sleep_ms(100)
-        #
-        # logging.debug("PPP successsful: " + str(self.connected))
+        (status1, _) = self.send_at_cmd('AT+QICSGP=1,1,"' + self.apn + '","","",0')
+        (status2, _) = self.send_at_cmd('AT+QIACT=1')
+        (status3, _) = self.send_at_cmd('AT+QMTCFG="pdpcid",1')
 
-        self.connected = True
-
-        return self.connected
+        return status1 and status2 and status3  # self.connected
 
     def is_connected(self):
-        return self.connected
+        (status, lines) = self.send_at_cmd('AT+CGACT?')
+        return status and len(lines) > 0 and "1,1" in lines[0]
+
+    def disconnect(self):
+        self.send_at_cmd("AT+QMTDISC=0")
+
+        self.send_at_cmd("AT+QIDEACT=1")
+
+        return super().disconnect()
+
+    def get_extended_signal_quality(self):
+        rsrp = -141
+        rsrq = -40
+        reg = '\\+QCSQ:\\s+"\\w+",(-?\\d+),(-?\\d+),(-?\\d+),(-?\\d+)'
+        (status, lines) = self.send_at_cmd('AT+QCSQ')
+        if status and len(lines) > 0:
+            res = ure.match(reg, lines[0])
+            if res:
+                rsrp = res.group(2)
+                rsrq = res.group(4)
+
+        return (rsrp, rsrq)
 
     def set_gps_state(self, poweron=True):
         if poweron:

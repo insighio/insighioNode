@@ -57,7 +57,7 @@ def get_gps_position(cfg, measurements):
         modem_instance.set_gps_state(True)
         if modem_instance.is_gps_on():
             start_time = utime.ticks_ms()
-            (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(780000)
+            (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(180000)
             measurements["gps_dur"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": utime.ticks_ms() - start_time}
             if lat is not None and lon is not None:
                 latD = coord_to_double(lat[0], lat[1], lat[2])
@@ -82,8 +82,35 @@ def create_message(device_id, measurements):
 
 
 def send_message(cfg, message):
-    from . import transfer_protocol
-    transfer_protocol.send_packet(cfg, message)
+    modem_instance = cellular.get_modem_instance()
+    if modem_instance is not None and modem_instance.get_model() == 'bg600l-m3':
+        (mqtt_ready, _) = modem_instance.send_at_cmd('AT+QMTOPEN=0,"' + cfg.protocol_config.server_ip + '",' + str(cfg.protocol_config.server_port), 15000, "\\+QMTOPEN:\\s+0,0")
+
+        if not mqtt_ready:
+            logging.error("Mqtt not ready")
+            return
+
+        # mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"client","a93d2353-c664-4487-b52c-ae3bd73b06c4","ed1d8997-a8b1-46c1-8927-04fb35dd93af"')
+        (mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(cfg.protocol_config.thing_id, cfg.protocol_config.thing_id, cfg.protocol_config.thing_token), 15000, "\\+QMTCONN:\\s+0,0,0")
+
+        if not mqtt_conn:
+            logging.error("Mqtt not connected")
+            return
+
+        topic = 'channels/{}/messages/{}'.format(cfg.protocol_config.message_channel_id, cfg.protocol_config.thing_id)
+
+        for i in range(0, 4):
+            (mqtt_send_ready, _) = modem_instance.send_at_cmd('AT+QMTPUB=0,0,0,0,"' + topic + '"', 15000, '>')
+            if mqtt_send_ready:
+                (mqtt_send_ok, _) = modem_instance.send_at_cmd(message + '\x1a')
+                return mqtt_send_ok
+
+            logging.error("Mqtt not ready to send")
+
+        return False
+    else:
+        from . import transfer_protocol
+        transfer_protocol.send_packet(cfg, message)
 
 
 def disconnect():

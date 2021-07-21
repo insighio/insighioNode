@@ -50,6 +50,13 @@ def detect_modem():
             modemInst.power_on()
         model_name = modemInst.get_model()
         # logging.debug("modem name returned: " + model_name)
+        # if modem is still not responding, try power off/on
+        if not model_name:
+            modemInst.power_off()
+            utime.sleep_ms(1000)
+            modemInst.power_on()
+            model_name = modemInst.get_model()
+
         if not model_name:
             cellular_model = CELLULAR_NO
         elif CELLULAR_MC60_STR in model_name:
@@ -149,7 +156,7 @@ def connect(cfg, dataStateOn=True):
                 # logging.debug('IP/Subnet: {}, Primary DNS: {}'.format(pdp_data[3], pdp_data[5]))
                 # signal quality
                 rssi = modemInst.get_rssi()
-                # (rsrp, rsrq) = modemInst.get_extended_signal_quality()
+                (rsrp, rsrq) = modemInst.get_extended_signal_quality()
 
                 logging.debug('Signal Quality - RSSI/RSRP/RSRQ: {}, {}, {}'.format(rssi, rsrp, rsrq))
 

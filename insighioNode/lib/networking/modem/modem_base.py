@@ -12,6 +12,7 @@ class Modem:
         self.uart = None
         self.modem_power_on = None
         self.modem_power_key = None
+        self.apn = None
 
         if modem_tx is not None and modem_rx is not None:
             self.uart = UART(1, 115200, tx=modem_tx, rx=modem_rx)
@@ -64,17 +65,20 @@ class Modem:
         logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
         utime.sleep_ms(800)
         p0.off()
-        Pin(self.modem_power_on, Pin.OUT).off()
+        p0 = Pin(self.modem_power_on, Pin.OUT)
+        p0.off()
+        logging.debug("Output Pin {} {}".format(self.modem_power_on, p0.value()))
 
     def init(self, ip_version, apn):
         if self.is_alive():
+            self.apn = apn
             # set auto-registration
             # self.send_at_cmd("AT+CFUN=0")
             # disable unsolicited report of network registration
             self.send_at_cmd("AT+CREG=0")
             self.send_at_cmd("AT+CFUN=1")
-
             self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
+            self.send_at_cmd("AT+COPS=0")
 
             self.set_technology() # placeholder
 
@@ -176,7 +180,7 @@ class Modem:
     def get_extended_signal_quality(self):
         rsrp = -141
         rsrq = -40
-        (status, lines) = lte.send_at_cmd('AT+CESQ').split(',')
+        (status, lines) = self.send_at_cmd('AT+CESQ').split(',')
         if status and len(lines) > 0:
             cesq_data = lines[0].split(',')
             rsrq_tmp = int(cesq_data[-2])
