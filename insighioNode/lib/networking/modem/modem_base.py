@@ -189,14 +189,17 @@ class Modem:
 
     # to be overriden by children
     def set_gps_state(self, poweron=True):
+        logging.debug("base modem.set_gps_state is empty")
         pass
 
     # to be overriden by children
     def is_gps_on(self):
+        logging.debug("base modem.is_gps_on is empty")
         return False
 
     # to be overriden by children
     def get_gps_position(self, timeoutms=300000):
+        logging.debug("base modem.get_gps_position is empty")
         pass
 
     def send_at_cmd(self, command, timeoutms=30000, success_condition="OK"):
