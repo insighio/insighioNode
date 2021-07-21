@@ -49,8 +49,8 @@ class ModemBG600(modem_base.Modem):
         return super().disconnect()
 
     def get_extended_signal_quality(self):
-        rsrp = -141
-        rsrq = -40
+        rsrp = None
+        rsrq = None
         reg = '\\+QCSQ:\\s+"\\w+",(-?\\d+),(-?\\d+),(-?\\d+),(-?\\d+)'
         (status, lines) = self.send_at_cmd('AT+QCSQ')
         if status and len(lines) > 0:
@@ -97,7 +97,7 @@ class ModemBG600(modem_base.Modem):
                         my_gps.update(char)
                     if my_gps.latitude and my_gps.latitude[0] and my_gps.latitude[1] and my_gps.longitude and my_gps.longitude[0] and my_gps.longitude[1]:
                         last_valid_gps_lat = my_gps.latitude
-                        last_valid_gps_lon = my_gps.latitude
+                        last_valid_gps_lon = my_gps.longitude
                         max_satellites = my_gps.satellites_in_use
                         hdop = my_gps.hdop
 
