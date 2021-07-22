@@ -98,7 +98,10 @@ class Modem:
         if reg_res:
             logging.debug("Setting cellular RTC")
             try:
-                result = (int("20" + reg_res.group(1)),
+                year = int(reg_res.group(1))
+                if year < 100:
+                    year += 2000
+                result = (year,
                     int(reg_res.group(2)),
                     int(reg_res.group(3)),
                     0,  # day of week
