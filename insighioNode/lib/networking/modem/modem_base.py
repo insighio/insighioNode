@@ -54,8 +54,6 @@ class Modem:
         while retries < 10:
             (status, response) = self.send_at_cmd("AT", 500)
             if status:
-                # disable command echo
-                self.send_at_cmd('ATE0')
                 return
             retries += 1
 
@@ -72,6 +70,8 @@ class Modem:
     def init(self, ip_version, apn, technology):
         if self.is_alive():
             self.apn = apn
+            # disable command echo
+            self.send_at_cmd('ATE0')
             # set auto-registration
             # self.send_at_cmd("AT+CFUN=0")
             # disable unsolicited report of network registration
@@ -236,6 +236,7 @@ class Modem:
         success_regex = "^(\\w+\\s+)?(" + success_condition + ")$"
         error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
         first_line = True
+        is_echo_on = True
 
         while True:
             remaining_bytes = self.uart.any()
@@ -256,16 +257,21 @@ class Modem:
                 line = ""
 
             if line:
-                if first_line:
-                    logging.debug("< " + str(line))
-                    first_line = False
+                if line == command:
+                    logging.debug("- <command echo is on - ignoring>")
+                    is_echo_on = False
+                    # possibly deactivate echo through ATE0
                 else:
-                    logging.debug("  " + str(line))
-                responseLines.append(line)
-                if ure.search(success_regex, line) is not None:
-                    status = True
-                elif ure.search(error_regex, line) is not None:
-                    status = False
+                    if first_line:
+                        logging.debug("< " + str(line))
+                        first_line = False
+                    else:
+                        logging.debug("  " + str(line))
+                    responseLines.append(line)
+                    if ure.search(success_regex, line) is not None:
+                        status = True
+                    elif ure.search(error_regex, line) is not None:
+                        status = False
 
             utime.sleep_ms(50)
 
