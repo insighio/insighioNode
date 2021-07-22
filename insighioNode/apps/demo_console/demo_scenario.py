@@ -122,7 +122,7 @@ def get_seconds_till_next_slot(current_seconds_of_day):
 
 
 seconds_of_day = (time_tuple[4] * 3600 + time_tuple[5] * 60 + time_tuple[6])
-seconds_of_day = (seconds_of_day + 3 * 3600) % DAY_SECONDS  # temp timezone fix
+# seconds_of_day = (seconds_of_day + 3 * 3600) % DAY_SECONDS  # temp timezone fix
 
 seconds_to_wait = get_seconds_till_next_slot(seconds_of_day)
 MIN_WAIT_THRESHOLD = 900  # 15 minutes
