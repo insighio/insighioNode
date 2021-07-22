@@ -10,11 +10,25 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 def device_init():
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
-        return
+        bq_charger_setup()
+    else:
+        gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
+        if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
+            gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 1)
 
-    gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
-    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
-        gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 1)
+
+def bq_charger_setup():
+    from machine import I2C
+    p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
+    p_snsr.on()
+    try:
+        i2c = I2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
+        bq_addr = 107
+        i2c.writeto_mem(bq_addr, 5, b'\x84')
+        i2c.writeto_mem(bq_addr, 0, b'\x22')
+    except Exception as e:
+        logging.exception(e, "Error initializing BQ charger")
+    p_snsr.off()
 
 
 def device_deinit():
