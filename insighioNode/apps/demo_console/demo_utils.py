@@ -18,7 +18,7 @@ def device_init():
 
 
 def bq_charger_setup():
-    from machine import I2C
+    from machine import I2C, Pin
     p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
     p_snsr.on()
     try:
