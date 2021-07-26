@@ -101,6 +101,10 @@ class ModemBG600(modem_base.Modem):
                         max_satellites = my_gps.satellites_in_use
                         hdop = my_gps.hdop
 
+                    if my_gps.timestamp and my_gps.date:
+                        self.gps_timestamp = my_gps.timestamp
+                        self.gps_date = my_gps.date
+
                     logging.debug("{} Lat: {}, Lon: {}, NumSats: {} @ {} - {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.timestamp, my_gps.date))
                     if my_gps.satellites_in_use >= satelite_number_threshold:
                         gps_fix = True

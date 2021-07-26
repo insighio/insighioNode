@@ -14,6 +14,8 @@ class Modem:
         self.modem_power_on = None
         self.modem_power_key = None
         self.apn = None
+        self.gps_timestamp = None
+        self.gps_date = None
 
         if modem_tx is not None and modem_rx is not None:
             self.uart = UART(1, 115200, tx=modem_tx, rx=modem_rx)
