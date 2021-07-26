@@ -16,7 +16,7 @@
 
         <div class="panel panel-custom">
           <div class="panel-header">
-            <div class="panel-title text-center">Verify and continue</div>
+            <div class="panel-title text-center">Set active measurements</div>
           </div>
 
           <div class="panel-nav">
@@ -33,11 +33,11 @@
               <li class="step-item">
                 <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
               </li>
-              <li class="step-item">
+              <li class="step-item active">
                 <a href="#" class="tooltip" data-tooltip="Step 5">Measurements</a>
               </li>
               <li class="step-item">
-                <a href="#" class="tooltip active" data-tooltip="Step 6">Verify</a>
+                <a href="#" class="tooltip" data-tooltip="Step 6">Verify</a>
               </li>
             </ul>
           </div>
@@ -47,14 +47,14 @@
             <hr />
             <br />
             <div class="empty">
-              <div class="empty-icon">
-                <i class="icon icon-2x icon-download"></i>
-              </div>
-              <p class="empty-title h5">Configuration Ready</p>
-              <p class="empty-subtitle">The configuration is ready to be applied. By pressing the <span class="text-bold">Finish</span> button the device will reboot and start operating with the desired settings.</p>
+              <!-- <div class="empty-icon">
+                <i class="icon icon-2x icon-minus"></i>
+              </div> -->
+              <p class="empty-title h5">Weight Scale Calibration</p>
+              <p class="empty-subtitle">Ready for weight scale calibration. Remove any weight from the scale and hit <span class="text-bold">Measure</span> button to save the idle state of the scale.</p>
               <div class="empty-action">
                 <button class="btn btn-primary" id="back-button" onclick="goBack()">Back</button>
-                <button class="btn btn-primary" id="save-button" onclick="storeAndReboot()">Finish</button>
+                <button class="btn btn-primary" id="button-measure" onclick="saveIdleWeight()">Measure</button>
               </div>
             </div>
           </div>
@@ -65,24 +65,8 @@
         window.history.back();
       }
 
-      function storeAndReboot() {
-        document.getElementById('save-button').disabled = true
-        var config = Cookies.get()
-        var params = ""
-
-        for (let key in config) {
-           if (config.hasOwnProperty(key)) {
-              params += (key + "=" + config[key] + "&")
-           }
-        }
-        if(params !== "")
-          params = params.slice(0, -1)
-
-        for (let key in config) {
-          Cookies.remove(key)
-        }
-
-        location.href = "step-7-apply.pyhtml?" + params
+      function saveIdleWeight() {
+        location.href = "step-5-2-scale-reference.pyhtml"
       }
       </script>
     </body>

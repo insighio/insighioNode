@@ -56,6 +56,14 @@
                     <br />
                     <br />
                     <div class="col-4 col-sm-12">
+                      <label class="form-label" for="input-example-cellular">Sleep Period (seconds)</label>
+                    </div>
+                    <div class="col-8 col-sm-12">
+                      <input class="form-input constr-field" type="number" id="input-period" value=60 />
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-sm-12">
                       <label class="form-label" for="meas-battery">Battery statistics</label>
                     </div>
                     <div class="col-8 col-sm-12">
@@ -122,28 +130,19 @@
                     <br />
                   </div>
                   <!-- board selector -->
-                  <div class="form-group">
-                    <div class="col-4 col-sm-12">
-                      <label class="form-label" for="measurements">Board version</label>
-                    </div>
-                    <div class="col-3 col-sm-12">
-                      <label id="label-board-i2c" class="form-label" for="measurements" style="color:#4CB6AA">I²C / Digital / Analog</label>
-                    </div>
-                    <div class="col-1 col-sm-12">
-                      <div class="form-group">
-                        <label class="form-switch">
-                          <input type="checkbox" id="input-board-selector" onclick="boardChanged()" />
-                          <i class="form-icon"></i>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="col-4 col-sm-12">
-                      <label id="label-board-sdi" class="form-label" for="measurements">SDI-12</label>
-                    </div>
-                    <br />
-                    <br />
+                  <ul class="tab tab-block">
+                    <li class="tab-item" onclick="boardChanged(event, 'i2c-board-options')">
+                      <a class="pointer">I²C / Digital / Analog</a>
+                    </li>
+                    <li class="tab-item" onclick="boardChanged(event, 'sdi-board-options')">
+                      <a class="pointer" >SDI-12</a>
+                    </li>
+                    <li class="tab-item active" onclick="boardChanged(event, 'i2c-scale-board-options')">
+                      <a class="pointer">I²C / Digital / Scale</a>
+                    </li>
+                  </ul>
                     <!-- i2c board related settings -->
-                		<div id="i2c-board-options" style="display: block">
+                		<div id="i2c-board-options" class="tabcontent" style="display: none">
                       <form  class="form-horizontal">
                         <br />
                         <br />
@@ -153,7 +152,7 @@
                           </div>
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
-                              <select class="form-select" id="input-i2c-1">
+                              <select class="form-select" id="input-ins-py-i2c-1">
                                 <option>disabled</option>
                                 <option>tsl2561 - luminosity</option>
                                 <option>si7021  - temperature / humidity</option>
@@ -169,7 +168,7 @@
                           </div>
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
-                              <select class="form-select"  id="input-i2c-2">
+                              <select class="form-select"  id="input-ins-py-i2c-2">
                                 <option>disabled</option>
                                 <option>tsl2561 - luminosity</option>
                                 <option>si7021  - temperature / humidity</option>
@@ -185,7 +184,7 @@
                           </div>
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
-                              <select class="form-select" id="input-sensor-a-p1">
+                              <select class="form-select" id="input-ins-py-sensor-a-p1">
                                 <option>disabled</option>
                                 <option>generic analog</option>
                               </select>
@@ -198,7 +197,7 @@
                           </div>
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
-                              <select class="form-select" id="input-sensor-a-p2">
+                              <select class="form-select" id="input-ins-py-sensor-a-p2">
                                 <option>disabled</option>
                                 <option>generic analog</option>
                               </select>
@@ -211,7 +210,7 @@
                           </div>
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
-                              <select class="form-select" id="input-sensor-a-d-p1">
+                              <select class="form-select" id="input-ins-py-sensor-a-d-p1">
                                 <option>disabled</option>
                                 <option>dht11   - temperature / humidity (digital)</option>
                                 <option>dht22   - temperature / humidity (digital)</option>
@@ -227,7 +226,7 @@
                           </div>
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
-                              <select class="form-select" id="input-sensor-a-d-p2">
+                              <select class="form-select" id="input-ins-py-sensor-a-d-p2">
                                 <option>disabled</option>
                                 <option>dht11   - temperature / humidity (digital)</option>
                                 <option>dht22   - temperature / humidity (digital)</option>
@@ -245,7 +244,7 @@
                 		</div>
 
                     <!-- sdi board related settings -->
-                		<div id="sdi-board-options" style="display: none">
+                		<div id="sdi-board-options" class="tabcontent" style="display: none">
                       <form  class="form-horizontal">
                         <br />
                         <br />
@@ -256,7 +255,7 @@
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
                               <label class="form-switch">
-                                <input type="checkbox" id="input-sdi12-1-enable" onclick="sensorStatusChanged('sdi12-1')" />
+                                <input type="checkbox" id="input-ins-py-sdi12-1-enable" onclick="sensorStatusChanged('sdi12-1')" />
                                 <i class="form-icon"></i>
                               </label>
                             </div>
@@ -272,7 +271,7 @@
                                 </label>
                               </div>
                               <div class="col-3 col-sm-12">
-                                <select class="form-select" id="option-sdi-address-1">
+                                <select class="form-select" id="option-ins-py-sdi12-1-address">
                                   <option selected="selected">0</option>
                                   <option>1</option>
                                   <option>2</option>
@@ -296,7 +295,7 @@
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
                               <label class="form-switch">
-                                <input type="checkbox" id="input-sdi12-2-enable" onclick="sensorStatusChanged('sdi12-2')" />
+                                <input type="checkbox" id="input-ins-py-sdi12-2-enable" onclick="sensorStatusChanged('sdi12-2')" />
                                 <i class="form-icon"></i>
                               </label>
                             </div>
@@ -312,7 +311,7 @@
                                 </label>
                               </div>
                               <div class="col-3 col-sm-12">
-                                <select class="form-select" id="option-sdi-address-2">
+                                <select class="form-select" id="option-ins-py-sdi12-2-address">
                                   <option>0</option>
                                   <option selected="selected">1</option>
                                   <option>2</option>
@@ -334,7 +333,7 @@
                             <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
                           </div>
                           <div class="col-8 col-sm-12">
-                            <input class="form-input constr-field" type="text" id="input-warmup-time" value=1000 />
+                            <input class="form-input constr-field" type="text" id="input-ins-py-sdi12-warmup-time" value=1000 />
                           </div>
                           <br />
                           <br />
@@ -343,15 +342,100 @@
                         </div>
                       </form>
                 		</div>
+
+                    <div id="i2c-scale-board-options" class="tabcontent" style="display: block">
+                      <form  class="form-horizontal">
+                        <br />
+                        <br />
+                        <div class="form-group">
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">I²C #1</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <select class="form-select" id="input-ins-esp-i2c-1">
+                                <option>disabled</option>
+                                <option>tsl2561 - luminosity</option>
+                                <option>si7021  - temperature / humidity</option>
+                                <option>scd30   - C02 / temperature / humidity</option>
+                                <option>bme680  - gap / temperature / humidity</option>
+                              </select>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">I²C #2</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <select class="form-select"  id="input-ins-esp-i2c-2">
+                                <option>disabled</option>
+                                <option>tsl2561 - luminosity</option>
+                                <option>si7021  - temperature / humidity</option>
+                                <option>scd30   - C02 / temperature / humidity</option>
+                                <option>bme680  - gap / temperature / humidity</option>
+                              </select>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">Analog / Digital P1</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
+                                <option>disabled</option>
+                                <option>dht11   - temperature / humidity (digital)</option>
+                                <option>dht22   - temperature / humidity (digital)</option>
+                                <option selected>ds18x20 - temperature (OneWire)</option>
+                                <option>generic analog</option>
+                              </select>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">Weight Scale</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <label class="form-switch">
+                                <input type="checkbox" id="input-ins-esp-weight-scale" checked/>
+                                <i class="form-icon"></i>
+                              </label>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">GPS</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <label class="form-switch">
+                                <input type="checkbox" id="input-ins-esp-gps" checked/>
+                                <i class="form-icon"></i>
+                              </label>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <br />
+                          <br />
+                        </div>
+                      </form>
+                		</div>
+                    <div class="columns">
+                      <div class="column col-4 col-mr-auto"></div>
+                      <div class="column col-1"><button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button></div>
+                      <div class="column col-1"><button class="btn btn-primary float-right" onclick="validateMyForm()" id="save-button">Save</button></div>
+                    </div>
+                    <br />
+                    <br />
                 	</div>
                 </form>
-                <div class="columns">
-                  <div class="column col-4 col-mr-auto"></div>
-                  <div class="column col-1"><button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button></div>
-                  <div class="column col-1"><button class="btn btn-primary float-right" onclick="validateMyForm()" id="save-button">Save</button></div>
-                </div>
-                <br />
-                <br />
               </div>
             </div>
           </div>
@@ -361,6 +445,10 @@
         <script >
           function goBack() {
             window.history.back();
+          }
+
+          function elementIsVisible(elementId) {
+            return document.getElementById(elementId).style.display === "block"
           }
 
           function clearCookies() {
@@ -380,11 +468,19 @@
             Cookies.remove('meas-sdi-2-enabled')
             Cookies.remove('meas-sdi-1-address')
             Cookies.remove('meas-sdi-2-address')
+            Cookies.remove('meas-sensor-scale-enabled')
+            Cookies.remove('meas-gps-enabled')
+            Cookies.remove('meas-scale-scale')
+            Cookies.remove('meas-scale-offset')
+            Cookies.remove('meas-scale-enabled')
+            Cookies.remove('period')
           }
 
           function storeData(){
             document.getElementById('save-button').disabled = true
             clearCookies();
+
+            Cookies.set('period', document.getElementById('input-period').value)
 
             Cookies.set('meas-battery-stat', document.getElementById('input-battery').checked ? "True" : "False")
             Cookies.set('meas-board-sense', document.getElementById('input-board-sense').checked ? "True" : "False")
@@ -393,29 +489,48 @@
 
             Cookies.set('meas-temp-unit',  document.getElementById('input-temp-unit').value.includes("Fahrenheit") ? "False" : "True")
 
-            if (document.getElementById("input-board-selector").checked) {
-              Cookies.set('selected-board', "sdi12")
-              var address1_elem = document.getElementById('option-sdi-address-1')
-              var address2_elem = document.getElementById('option-sdi-address-2')
+            if (elementIsVisible("sdi-board-options")) {
+              console.log("sdi-board-options")
+              var address1_elem = document.getElementById('option-ins-py-sdi12-1-address')
+              var address2_elem = document.getElementById('option-ins-py-sdi12-2-address')
 
-              Cookies.set('meas-sdi-1-enabled', document.getElementById('input-sdi12-1-enable').checked ? "True" : "False")
-              Cookies.set('meas-sdi-2-enabled', document.getElementById('input-sdi12-2-enable').checked ? "True" : "False")
+              Cookies.set('selected-board', "sdi12")
+              Cookies.set('meas-sdi-1-enabled', document.getElementById('input-ins-py-sdi12-1-enable').checked ? "True" : "False")
+              Cookies.set('meas-sdi-2-enabled', document.getElementById('input-ins-py-sdi12-2-enable').checked ? "True" : "False")
               Cookies.set('meas-sdi-1-address', address1_elem !== null ? address1_elem.value : "")
               Cookies.set('meas-sdi-2-address', address2_elem !== null ? address2_elem.value : "")
 
               Cookies.set('meas-sdi-warmup-time', document.getElementById('input-warmup-time').value)
+              location.href = "step-6-verify.html"
             }
-            else {
+            else if (elementIsVisible("i2c-board-options")){
+              console.log("i2c-board-options")
               Cookies.set('selected-board', "default")
-              Cookies.set('meas-i2c-1', document.getElementById('input-i2c-1').value)
-              Cookies.set('meas-i2c-2', document.getElementById('input-i2c-2').value)
-              Cookies.set('meas-sensor-a-p1', document.getElementById('input-sensor-a-p1').value)
-              Cookies.set('meas-sensor-a-p2', document.getElementById('input-sensor-a-p2').value)
-              Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-sensor-a-d-p1').value)
-              Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-sensor-a-d-p2').value)
+              Cookies.set('meas-i2c-1', document.getElementById('input-ins-py-i2c-1').value)
+              Cookies.set('meas-i2c-2', document.getElementById('input-ins-py-i2c-2').value)
+              Cookies.set('meas-sensor-a-p1', document.getElementById('input-ins-py-sensor-a-p1').value)
+              Cookies.set('meas-sensor-a-p2', document.getElementById('input-ins-py-sensor-a-p2').value)
+              Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-py-sensor-a-d-p1').value)
+              Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-ins-py-sensor-a-d-p2').value)
+              location.href = "step-6-verify.html"
             }
+            else if (elementIsVisible("i2c-scale-board-options")){
+              console.log("selected i2c-scale-board-options")
+              Cookies.set('selected-board', "ins_esp_gen_1")
+              Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-i2c-1').value)
+              Cookies.set('meas-i2c-2', document.getElementById('input-ins-esp-i2c-2').value)
+              Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
+              Cookies.set('meas-scale-enabled', document.getElementById('input-ins-esp-weight-scale').checked ? "True" : "False")
+              Cookies.set('meas-gps-enabled', document.getElementById('input-ins-esp-gps').checked ? "True" : "False")
 
-            location.href = "step-6-verify.html";
+              if(!document.getElementById('input-ins-esp-weight-scale').checked) {
+                  Cookies.set('meas-scale-offset', 0)
+                  Cookies.set('meas-scale-scale', 1)
+                  location.href = "step-6-verify.html"
+              }
+              else
+                location.href = "step-5-1-scale-idle.html"
+            }
           }
 
           function sensorStatusChanged(sensorId) {
@@ -432,19 +547,23 @@
             }
           }
 
-          function boardChanged(){
-            var checkBox = document.getElementById("input-board-selector")
-            if (checkBox.checked === true){
-              document.getElementById("label-board-sdi").style.color = "#4CB6AA"
-              document.getElementById("label-board-i2c").style.color = "#3b4351"
-              document.getElementById("sdi-board-options").style.display = "block"
-              document.getElementById("i2c-board-options").style.display = "none"
-            } else {
-              document.getElementById("label-board-sdi").style.color="#3b4351"
-              document.getElementById("label-board-i2c").style.color="#4CB6AA"
-              document.getElementById("sdi-board-options").style.display = "none"
-              document.getElementById("i2c-board-options").style.display = "block"
+          function boardChanged(evt, boardDivId){
+            var i, tabcontent, tablinks;
+
+            tabcontent = document.getElementsByClassName("tabcontent");
+            console.log('tabcontent: ', tabcontent)
+            for (i = 0; i < tabcontent.length; i++) {
+              tabcontent[i].style.display = "none";
             }
+
+            tablinks = document.getElementsByClassName("tab-item");
+            console.log('tablinks: ', tablinks)
+            for (i = 0; i < tablinks.length; i++) {
+              tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            document.getElementById(boardDivId).style.display = "block";
+            evt.currentTarget.className += " active";
           }
 
           function validateMyForm(){

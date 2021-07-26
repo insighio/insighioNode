@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+
+<html>
+
+{{ py }}
+
+import gc
+gc.collect()
+from sensors import hx711
+{{ end }}
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>insigh.io Device</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="css/spectre-icons.min.css" />
+        <link rel="stylesheet" href="css/spectre.min.css" />
+    </head>
+
+    <body class="body-custom" onload="fillFields()">
+
+        <img src="img/logo.png" class="img-responsive img-center">
+
+        <div class="panel panel-custom">
+          <div class="panel-header">
+            <div class="panel-title text-center">Set active measurements</div>
+          </div>
+
+          <div class="panel-nav">
+            <ul class="step">
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 1">Login</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 2">Select Network</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 3">Network Params</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip active" data-tooltip="Step 5">Measurements</a>
+              </li>
+              <li class="step-item">
+                <a href="#" class="tooltip" data-tooltip="Step 6">Verify</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="panel-body">
+            <br />
+            <hr />
+            <br />
+            <div class="empty">
+              <!-- <div class="empty-icon">
+                <i class="icon icon-2x icon-minus"></i>
+              </div> -->
+              <p class="empty-title h5">Weight Scale Calibration</p>
+              <p class="empty-subtitle">Offset: <span id="idle-weight-value" class="text-bold"></span></p>
+              <p class="empty-subtitle">Measured reference weight: <span id="measured-ref-weight-value" class="text-bold">{{ hx711.get_reading(4, 33, 12, None, None, 25) }}</span></p>
+              <p class="empty-subtitle">Scale: <span id="scale-value" class="text-bold"></span>.</p>
+              <div class="empty-action">
+                <button class="btn btn-primary" id="save-button" onclick="goBack()">Back</button>
+                <button class="btn btn-primary" id="button-measure" onclick="storeData()">Save</button>
+              </div>
+            </div>
+          </div>
+      </div>
+      <script src="js.cookie.min.js"></script>
+      <script>
+      function fillFields() {
+        document.getElementById('idle-weight-value').innerHTML = Cookies.get('meas-scale-offset')
+
+        var offset = parseFloat(Cookies.get('meas-scale-offset'))
+        var reference =parseFloat(document.getElementById('measured-ref-weight-value').innerHTML)
+        var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
+
+        console.log(offset, reference, referenceExpectedWeight)
+        document.getElementById('scale-value').innerHTML = (reference - offset) / referenceExpectedWeight
+      }
+
+      function goBack() {
+        window.history.back();
+      }
+
+      function clearCookies() {
+        Cookies.remove('meas-scale-scale')
+      }
+
+      function storeData() {
+        clearCookies()
+        Cookies.set('meas-scale-scale', document.getElementById('scale-value').innerHTML)
+        location.href = "step-6-verify.html"
+      }
+      </script>
+    </body>
+
+</html>

@@ -9,10 +9,19 @@ import utime
 
 wdt = None
 
-if not sys.platform == 'esp32':
+
+def is_esp32():
+    return sys.platform == 'esp32'
+
+
+if not is_esp32():
     import pycom
     _LORA_COMPATIBLE_PLATFORMS = ["LoPy", "FiPy", "LoPy4"]
     _LTE_COMPATIBLE_PLATFORMS = ["GPy", "FiPy"]
+
+
+def get_device_root_folder():
+    return '/' if is_esp32() else '/flash/'
 
 
 def get_device_fw():
@@ -70,64 +79,83 @@ def get_lte_ids():
     # valid only for lte compatible devices
     if sys.platform in _LTE_COMPATIBLE_PLATFORMS:
         from network import LTE
+        lte = LTE()
         # IMEI and ICCID are exposed directly by the Pycom LTE API, for others we need to parse AT commands
-        imsi = LTE().send_at_cmd('AT+CIMI').split('\r\n')[1].split(',')[-1]
-        modem_version = LTE().send_at_cmd('ATI1').split('\r\n')[1]
-        lte_fw_version = LTE().send_at_cmd('ATI1').split('\r\n')[2]
-        return (LTE().imei(), LTE().iccid(), imsi, modem_version, lte_fw_version)
+        imsi = lte.send_at_cmd('AT+CIMI').split('\r\n')[1].split(',')[-1]
+        modem_version = lte.send_at_cmd('ATI1').split('\r\n')[1]
+        lte_fw_version = lte.send_at_cmd('ATI1').split('\r\n')[2]
+        return (lte.imei(), lte.iccid(), imsi, modem_version, lte_fw_version)
     else:
         return (None, None, None, None, None)
 
 
 def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_boot_timeout_sec=120, bt_on_boot=False):
-    """ Sets basic configuration of pycom board """
+    """ Sets basic configuration of board """
     # disable/enable heartbeat
-    pycom.heartbeat(heartbeat)
-    # disable/enable wifi on boot
-    pycom.wifi_on_boot(wifi_on_boot)
-    # setup watchdog
-    pycom.wdt_on_boot(wdt_on_boot)
-    pycom.wdt_on_boot_timeout(wdt_on_boot_timeout_sec * 1000)  # reboots after X ms if no wdt.feed
-    if(wdt_on_boot):
-        wdt = machine.WDT(timeout=120000)
+    global wdt
+    wdt = None
+    if is_esp32():
+        import network
+        wl = network.WLAN(network.STA_IF)
+        wl.active(wifi_on_boot)
+
+        if not wifi_on_boot:
+            ap = network.WLAN(network.AP_IF)
+            ap.active(False)
+
+        from ubluetooth import BLE
+        BLE().active(bt_on_boot)
+
+        if(wdt_on_boot):
+            wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
     else:
-        wdt = None
-
-    try:
-        pycom.pybytes_on_boot(False)
-    except Exception as e:
-        pass
-
-    # bluetooth disable if requested
-    if not bt_on_boot:
         try:
-            from network import Bluetooth
-            Bluetooth().deinit()
+            import pycom
+            pycom.heartbeat(heartbeat)
+            # disable/enable wifi on boot
+            pycom.wifi_on_boot(wifi_on_boot)
+            # setup watchdog
+            pycom.wdt_on_boot(wdt_on_boot)
+            pycom.wdt_on_boot_timeout(wdt_on_boot_timeout_sec * 1000)  # reboots after X ms if no wdt.feed
+            pycom.pybytes_on_boot(False)
+            if(wdt_on_boot):
+                wdt = machine.WDT(wdt_on_boot_timeout_sec * 1000)
         except Exception as e:
             pass
+
+        # bluetooth disable if requested
+        if not bt_on_boot:
+            try:
+                from network import Bluetooth
+                Bluetooth().deinit()
+            except Exception as e:
+                pass
         # print("Bluetooth disabled")
+
     # garbage collection
-    gc.disable()
+    # TODO: review why the next line existed
+    # gc.disable()
 
 
 def set_led_color(color):
     """ Sets led color """
-    try:
-        if color == 'blue':
-            pycom.rgbled(0x000010)  # blue
-        elif color == 'red':
-            pycom.rgbled(0x100000)  # red
-        elif color == 'yellow':
-            pycom.rgbled(0x101000)  # yellow
-        elif color == 'green':
-            pycom.rgbled(0x001100)  # green
-        elif color == 'white':
-            pycom.rgbled(0x000000)
-        else:
-            # Custom color
-            pycom.rgbled(color)
-    except Exception as e:
-        pass
+    if sys.platform is not 'esp32':
+        try:
+            if color == 'blue':
+                pycom.rgbled(0x000010)  # blue
+            elif color == 'red':
+                pycom.rgbled(0x100000)  # red
+            elif color == 'yellow':
+                pycom.rgbled(0x101000)  # yellow
+            elif color == 'green':
+                pycom.rgbled(0x001100)  # green
+            elif color == 'white':
+                pycom.rgbled(0x000000)
+            else:
+                # Custom color
+                pycom.rgbled(color)
+        except Exception as e:
+            pass
 
 
 def wdt_reset():
@@ -142,7 +170,14 @@ def get_heap_memory():
 
 def get_cpu_temp(unit_in_celsius=True):
     """ Returns CPU temperature in degrees of Celsius """
-    if unit_in_celsius:
-        return (machine.temperature() - 32) / 1.8
+    temp = None
+    if is_esp32():
+        import esp32
+        temp = esp32.raw_temperature()
     else:
-        return machine.temperature()
+        temp = machine.temperature()
+
+    if unit_in_celsius:
+        return (temp - 32) / 1.8
+    else:
+        return temp

@@ -9,12 +9,32 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 
 def device_init():
-    gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
-    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
-        gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 1)
+    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        bq_charger_setup()
+    else:
+        gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
+        if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
+            gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 1)
+
+
+def bq_charger_setup():
+    from machine import I2C, Pin
+    p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
+    p_snsr.on()
+    try:
+        i2c = I2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
+        bq_addr = 107
+        i2c.writeto_mem(bq_addr, 5, b'\x84')
+        i2c.writeto_mem(bq_addr, 0, b'\x22')
+    except Exception as e:
+        logging.exception(e, "Error initializing BQ charger")
+    p_snsr.off()
 
 
 def device_deinit():
+    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        return
+
     gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 0)
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
         gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 0)
@@ -23,8 +43,10 @@ def device_deinit():
 def watchdog_reset():
     # first reset internal hardware watchdog
     device_info.wdt_reset()
+
     # then reset external hardware watchdog
-    gpio_handler.timed_pin_pull_up(cfg._UC_IO_WATCHDOG_RESET, 500)
+    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        gpio_handler.timed_pin_pull_up(cfg._UC_IO_WATCHDOG_RESET, 500)
 
 
 def set_value(measurements, key, value, unit=None):
@@ -54,34 +76,43 @@ def set_value_float(measurements, key, value, unit=None, precision=2):
 def get_measurements(cfg):
     measurements = {}
 
-    if cfg._MEAS_BATTERY_STAT_ENABLE:
-        (vbatt, current) = read_battery_voltage_and_current()
-        set_value_int(measurements, "vbatt", vbatt, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
-        set_value_int(measurements, "current", current, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+    try:
+        if cfg._MEAS_BATTERY_STAT_ENABLE:
+            (vbatt, current) = read_battery_voltage_and_current()
+            set_value_int(measurements, "vbatt", vbatt, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
+            set_value_int(measurements, "current", current, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
-    if cfg._MEAS_BOARD_STAT_ENABLE:
-        (mem_alloc, mem_free) = device_info.get_heap_memory()
-        set_value(measurements, "reset_cause", device_info.get_reset_cause())
-        set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
-        set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
-        if cfg._MEAS_TEMP_UNIT_IS_CELSIUS:
-            set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(), SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-        else:
-            set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+        if cfg._MEAS_BOARD_STAT_ENABLE:
+            (mem_alloc, mem_free) = device_info.get_heap_memory()
+            set_value(measurements, "reset_cause", device_info.get_reset_cause())
+            set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
+            set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
+            if cfg._MEAS_TEMP_UNIT_IS_CELSIUS:
+                set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(), SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+            else:
+                set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+    except Exception as e:
+        logging.error("unable to measure board sensors")
 
     sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_SWITCH_ON)
 
     # read internal temperature and humidity
-    if cfg._MEAS_BOARD_SENSE_ENABLE:
-        from sensors import si7021
-        (board_temp, board_humidity) = si7021.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
-        set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-        set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
+    try:
+        if cfg._MEAS_BOARD_SENSE_ENABLE:
+            if cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._CONST_SENSOR_SI7021:
+                from sensors import si7021 as sens
+            elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._UC_INTERNAL_TEMP_HUM_SENSOR:
+                from sensors import sht40 as sens
+            (board_temp, board_humidity) = sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
+            set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+            set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
-    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
-        sdi12_board_measurements(measurements)
-    else:
-        default_board_measurements(measurements)
+        if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
+            sdi12_board_measurements(measurements)
+        else:
+            default_board_measurements(measurements)
+    except Exception as e:
+        logging.error("unable to complete sensor measurements")
 
     sensors.set_sensor_power_off(cfg._UC_IO_SENSOR_SWITCH_ON)
 
@@ -90,36 +121,55 @@ def get_measurements(cfg):
 
 def read_battery_voltage_and_current():
     # BATT VOLTAGE & CURR measurement
+    current = None
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 1)
-    gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
+    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
     utime.sleep_ms(500)
-    vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, voltage_divider=cfg._BAT_VDIV, attn=cfg._BAT_ATT)
-    vina_mV = gpio_handler.get_input_voltage(cfg._UC_IO_CUR_READ, voltage_divider=cfg._CUR_VDIV, attn=cfg._CUR_ATT)
-    current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
-    # changed the order of the following two lines. evaluate if correct.
-    gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 0)
+    vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, cfg._BAT_VDIV, cfg._BAT_ATT)
+    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+        vina_mV = gpio_handler.get_input_voltage(cfg._UC_IO_CUR_READ, voltage_divider=cfg._CUR_VDIV, attn=cfg._CUR_ATT)
+        current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
+        # changed the order of the following two lines. evaluate if correct.
+        gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 0)
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 0)
     return (vbatt, current)
 
 
 def default_board_measurements(measurements):
-    if cfg._MEAS_I2C_1 and cfg._MEAS_I2C_1 != cfg._CONST_MEAS_DISABLED:
+    if cfg._MEAS_I2C_1 and hasattr(cfg, "_UC_IO_I2C_SDA") and hasattr(cfg, "_UC_IO_I2C_SCL") and cfg._MEAS_I2C_1 != cfg._CONST_MEAS_DISABLED:
         read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, cfg._MEAS_I2C_1, measurements)
 
-    if cfg._MEAS_I2C_2 and cfg._MEAS_I2C_2 != cfg._CONST_MEAS_DISABLED:
+    if cfg._MEAS_I2C_2 and hasattr(cfg, "_UC_IO_I2C_SDA") and hasattr(cfg, "_UC_IO_I2C_SCL") and cfg._MEAS_I2C_2 != cfg._CONST_MEAS_DISABLED:
         read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, cfg._MEAS_I2C_2, measurements)
 
-    if cfg._MEAS_ANALOG_P1 and cfg._MEAS_ANALOG_P1 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_P1') and hasattr(cfg, "_UC_IO_ANALOG_P1") and cfg._MEAS_ANALOG_P1 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_P1, cfg._MEAS_ANALOG_P1, measurements, "ap1")
 
-    if cfg._MEAS_ANALOG_P2 and cfg._MEAS_ANALOG_P2 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_P2') and hasattr(cfg, "_UC_IO_ANALOG_P2") and cfg._MEAS_ANALOG_P2 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_P2, cfg._MEAS_ANALOG_P2, measurements, "ap2")
 
-    if cfg._MEAS_ANALOG_DIGITAL_P1 and cfg._MEAS_ANALOG_DIGITAL_P1 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P1') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P1") and cfg._MEAS_ANALOG_DIGITAL_P1 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P1, cfg._MEAS_ANALOG_DIGITAL_P1, measurements, "adp1")
 
-    if cfg._MEAS_ANALOG_DIGITAL_P2 and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
+    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P2') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P2") and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2")
+
+    if hasattr(cfg, '_MEAS_SCALE_ENABLED') and cfg._MEAS_SCALE_ENABLED:
+        read_scale(measurements)
+
+
+def read_scale(measurements):
+    from sensors import hx711
+
+    weight = hx711.get_reading(cfg._UC_IO_SCALE_DATA_PIN,
+                               cfg._UC_IO_SCALE_CLOCK_PIN,
+                               cfg._UC_IO_SCALE_SPI_PIN,
+                               cfg._UC_IO_SCALE_OFFSET if hasattr(cfg, '_UC_IO_SCALE_OFFSET') else None,
+                               cfg._UC_IO_SCALE_SCALE if hasattr(cfg, '_UC_IO_SCALE_SCALE') else None)
+
+    weight = weight if weight > 0 or weight < -100 else 0
+    set_value_float(measurements, "scale_weight", weight, SenmlUnits.SENML_UNIT_GRAM)
 
 
 # <option>tsl2561 - luminosity</option>
@@ -159,11 +209,11 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
 
 
 def read_analog_digital_sensor(data_pin, sensor_name, measurements, position):
-    logging.info("read_analog_digital_sensor - Reading Sensor [" + sensor_name + "]")
+    logging.info("read_analog_digital_sensor - Reading Sensor [{}] at pin [{}]".format(sensor_name, data_pin))
     sensor_name = sensor_name.split("-")[0].strip()
     if sensor_name == "generic analog":
         from sensors import analog_generic
-        volt_analog = analog_generic.get_reading(data_pin)
+        volt_analog = analog_generic.get_reading(data_pin, cfg._BAT_VDIV)
         set_value(measurements, "adc_" + position + "_volt", volt_analog, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
 
     elif sensor_name == "dht11" or sensor_name == "dht22":
@@ -306,3 +356,20 @@ def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit
                 logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(val))
     except Exception as e:
         logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(responseArray))
+
+
+def loadPendingMessageQueue():
+    try:
+        import utils
+        lines = utils.readFromFile('_message_queue.que')
+        if lines:
+            return lines.split('\n')
+        return []
+    except Exception as e:
+        return []
+
+def savePendingMessageQueue():
+    try:
+        import utils
+    except Exception as e:
+        pass

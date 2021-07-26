@@ -1,4 +1,4 @@
-from network import WLAN
+import network
 
 import sys
 from external.MicroWebSrv2 import *
@@ -14,15 +14,34 @@ class WebServer:
     def __init__(self):
         device_info.set_defaults()
         logging.info("Initializing WiFi APs in range")
-        self.wlan = WLAN(mode=WLAN.STA, antenna=WLAN.INT_ANT)
+        self.wlan = None
+        if device_info.is_esp32():
+            self.wlan = network.WLAN(network.STA_IF)
+        else:
+            self.wlan = network.WLAN(mode=network.WLAN.STA, antenna=network.WLAN.INT_ANT)
         try:
             nets = self.wlan.scan()
+            self.wlan.active(False)
             nets = nets[:min(10, len(nets))]
         except Exception as e:
             logging.error("WiFi scan failed. Will provide empty SSID list")
             nets = []
         # nets = list(filter(lambda net: net.rssi > -89, nets))
-        self.available_nets = nets
+        if device_info.is_esp32:
+            self.available_nets = []
+
+            class TmpSSIDELEm:
+                def __init__(self):
+                    self.ssid = None
+                    self.rssi = None
+
+            for net in nets:
+                tmpObj = TmpSSIDELEm()
+                tmpObj.ssid = net[0].decode('UTF-8')
+                tmpObj.rssi = net[3]
+                self.available_nets.append(tmpObj)
+        else:
+            self.available_nets = nets
         self.ssidCustom = "insigh-" + device_info.get_device_id()[0][-4:]
         logging.info("SSID: " + self.ssidCustom)
         logging.info("Original device id: " + device_info.get_device_id()[0])
@@ -37,8 +56,8 @@ class WebServer:
                 return True
         return False
 
-    def extractInsighioIds(self, project):
-        projectConfig = utils.readFromFile("/flash/apps/demo_console/demo_config.py").strip().split("\n")
+    def extractInsighioIds(self):
+        projectConfig = utils.readFromFile(device_info.get_device_root_folder() + "apps/demo_console/demo_config.py").strip().split("\n")
         linesCount = len(projectConfig)
 
         i = 0
@@ -50,13 +69,13 @@ class WebServer:
         while i < linesCount:
             if (self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.message_channel_id', "insighioChannelId", '"') or
                self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_id', "insighioDeviceId", '"') or
-               self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_token', "insighioDeviceToken", '"')) :
-               euisFilled = euisFilled + 1
+               self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_token', "insighioDeviceToken", '"')):
+                euisFilled = euisFilled + 1
 
             if euisFilled == 3:
                 return True
             else:
-                i = i +1
+                i = i + 1
 
         return False
 
@@ -68,7 +87,7 @@ class WebServer:
         except Exception as e:
             logging.exception(e, "lora deveui")
             pass
-        projectConfig = utils.readFromFile("/flash/apps/demo_console/demo_config.py").strip().split("\n")
+        projectConfig = utils.readFromFile(device_info.get_device_root_folder() + "apps/demo_console/demo_config.py").strip().split("\n")
         linesCount = len(projectConfig)
         i = 0
         euisFilled = 0
@@ -90,14 +109,21 @@ class WebServer:
 
     def storeIds(self):
         self.extractLoRaUIDS()
-        if not self.extractInsighioIds("wifi"):
-            self.extractInsighioIds("nbiot")
+        self.extractInsighioIds()
         self.pyhtmlMod.SetGlobalVar("wifiAvailableNets", self.available_nets)
 
     def start(self, timeoutMs=-1):
         logging.info('\n\n** Init WLAN mode and WAP2')
         device_info.wdt_reset()
-        self.wlan = WLAN(mode=WLAN.AP, ssid=self.ssidCustom, auth=(WLAN.WPA2, 'insighiodev'))
+        if device_info.is_esp32():
+            self.wlan = network.WLAN(network.AP_IF)
+            self.wlan.active(True)
+            self.wlan.config(essid=self.ssidCustom)  # set the ESSID of the access point
+            self.wlan.config(password='insighiodev')
+            self.wlan.config(authmode=3)  # 3 -- WPA2-PSK
+            self.wlan.config(max_clients=1)  # set how many clients can connect to the network
+        else:
+            self.wlan = network.WLAN(mode=network.WLAN.AP, ssid=self.ssidCustom, auth=(network.WLAN.WPA2, 'insighiodev'))
 
         device_info.wdt_reset()
 
@@ -112,6 +138,8 @@ class WebServer:
 
         # Starts the server as easily as possible in managed mode,
         self.mws2.StartManaged()
+
+        logging.info("Web UI started")
 
         purple = 0x4c004c
         device_info.set_led_color(purple)
@@ -152,4 +180,5 @@ class WebServer:
                     del sys.modules[module]
             except Exception as e:
                 sys.print_exception(e)
+        self.wlan.active(False)
         logging.info('Bye\n')

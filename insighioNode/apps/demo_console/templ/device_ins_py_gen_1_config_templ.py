@@ -3,6 +3,7 @@ _WD_PERIOD = 120 # watchdog time for rebooting in seconds
 _BOARD_TYPE = "<selected-board>"
 _CONST_BOARD_TYPE_DEFAULT = "default"
 _CONST_BOARD_TYPE_SDI_12 = "sdi12"
+_CONST_BOARD_TYPE_ESP_GEN_1 = "ins_esp_gen_1"
 
 """ Measurement configuration options """
 _UC_IO_BAT_MEAS_ON = 'P23'
@@ -28,11 +29,20 @@ _UC_IO_SENSOR_SWITCH_ON = 'P11'
 _UC_IO_I2C_SDA = 'P9'
 _UC_IO_I2C_SCL = 'P10'
 
+_UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SI7021
+
+""" Load Regulator configuration """
+_UC_IO_LOAD_PWR_SAVE_OFF = 'P4'
+
+""" External Sensors configuration """
+_UC_IO_ANALOG_DIGITAL_P1 = 'P20'
+_UC_IO_ANALOG_DIGITAL_P2 = 'P19'
+_UC_IO_ANALOG_P1 = 'P18'
+_UC_IO_ANALOG_P2 = 'P17'
+
 ''' measurements that are controlled by boolean values '''
 _MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>
 _MEAS_BOARD_SENSE_ENABLE = <meas-board-sense>
 _MEAS_BOARD_STAT_ENABLE = <meas-board-stat>
 _MEAS_NETWORK_STAT_ENABLE = <meas-network-stat>
 _MEAS_TEMP_UNIT_IS_CELSIUS = <meas-temp-unit>
-
-_CONST_MEAS_DISABLED = "disabled"

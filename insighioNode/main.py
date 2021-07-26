@@ -3,8 +3,12 @@ import sys
 import device_info
 import logging
 
-logging.setLevel(logging.INFO)
-# logging.setLevel(logging.DEBUG)
+if device_info.is_esp32():
+    import machine
+    machine.freq(240000000)
+
+#logging.setLevel(logging.INFO)
+logging.setLevel(logging.DEBUG)
 
 demo_config_exists = False
 try:

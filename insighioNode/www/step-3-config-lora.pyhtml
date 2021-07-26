@@ -80,7 +80,7 @@
                     <br />
 
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">DR</label>
+                      <label class="form-label" for="input-example-cellular">DR</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <input class="form-input constr-field" type="number" id="input-dr" value=5 />
@@ -88,7 +88,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">TX Retries</label>
+                      <label class="form-label" for="input-example-cellular">TX Retries</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <input class="form-input constr-field" type="number" id="input-retries" value=1 />
@@ -96,7 +96,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">ADR</label>
+                      <label class="form-label" for="input-example-cellular">ADR</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <div class="form-group">
@@ -109,7 +109,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Confirmed</label>
+                      <label class="form-label" for="input-example-cellular">Confirmed</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <div class="form-group">
@@ -123,14 +123,6 @@
                     <br />
                     <div class="col-12">
                       <div class="divider text-center" data-content="Generic Configuration"></div>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Sleep Period (seconds)</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-period" value=60 />
                     </div>
                     <br />
                     <br />
@@ -161,9 +153,8 @@
             Cookies.remove('lora-confirmed')
             Cookies.remove('lora-dr')
             Cookies.remove('lora-retries')
-            Cookies.remove('nbiot-apn')
-            Cookies.remove('nbiot-band')
-            Cookies.remove('period')
+            Cookies.remove('cell-apn')
+            Cookies.remove('cell-band')
             Cookies.remove('wifi-pass')
             Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
@@ -172,8 +163,6 @@
           function storeData(){
             document.getElementById('save-button').disabled = true
             clearCookies();
-            Cookies.set('period', document.getElementById('input-period').value)
-
             Cookies.set('network', "lora")
 
             Cookies.set('lora-region', document.getElementById('input-region').value)

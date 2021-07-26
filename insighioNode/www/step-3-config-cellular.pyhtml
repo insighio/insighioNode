@@ -10,6 +10,11 @@
     </head>
 
     <body class="body-custom">
+      {{ py }}
+      import device_info
+      import gc
+      gc.collect()
+      {{ end }}
         <img src="img/logo.png" class="img-responsive img-center">
 
         <div class="panel panel-custom">
@@ -45,7 +50,7 @@
             <hr />
             <br />
             <div class="text-center">
-              Configuration details for: <span class="text-bold">NBIoT</span>
+              Configuration details for: <span class="text-bold">Cellular</span>
             </div>
             <br />
             <div class="columns flex-centered">
@@ -58,7 +63,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">APN</label>
+                      <label class="form-label" for="input-example-cellular">APN</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <input class="form-input constr-field" type="text" id="input-apn" placeholder="" />
@@ -66,28 +71,36 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Band</label>
+                      <label class="form-label" for="measurements">Technology</label>
+                    </div>
+                    <div class="col-9 col-sm-12">
+                      <div class="form-group">
+                        <select class="form-select"  id="input-cell-tech">
+                          <option>auto</option>
+                          <option>GSM</option>
+                          <option>NBIoT</option>
+                        </select>
+                      </div>
+                    </div>
+                    <br />
+                    <br />
+                    {{ if not device_info.is_esp32() }}
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label" for="input-example-cellular">Band</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <input class="form-input constr-field" type="number" id="input-band" value=20 />
                     </div>
                     <br />
                     <br />
+                    {{ end }}
                     <div class="col-12">
                       <div class="divider text-center" data-content="Generic Configuration"></div>
                     </div>
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Sleep Period (seconds)</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-period" value=60 />
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">Protocol</label>
+                      <label class="form-label" for="input-example-cellular">Protocol</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <label class="form-radio">
@@ -102,7 +115,7 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-nbiot">IP version</label>
+                      <label class="form-label" for="input-example-cellular">IP version</label>
                     </div>
                     <div class="col-9 col-sm-12" >
                       <label class="form-radio">
@@ -143,13 +156,16 @@
             Cookies.remove('lora-confirmed')
             Cookies.remove('lora-dr')
             Cookies.remove('lora-retries')
-            Cookies.remove('nbiot-apn')
-            Cookies.remove('nbiot-band')
-            Cookies.remove('period')
+            Cookies.remove('cell-apn')
+            Cookies.remove('cell-band')
             Cookies.remove('wifi-pass')
             Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
+            Cookies.remove('cell-tech')
           }
+
+          //_CELLULAR_TECHNOLOGY = "<cell-tech>"
+          //input-cell-tech
 
           function setRadioGroupValue(groupName, cookieName){
             var elems = document.getElementsByName(groupName)
@@ -178,17 +194,19 @@
           function storeData(){
             document.getElementById('save-button').disabled = true
             clearCookies();
-            Cookies.set('period', document.getElementById('input-period').value)
+            Cookies.set('network', "cellular")
 
-            Cookies.set('network', "nbiot")
 
-            Cookies.set('nbiot-apn', document.getElementById('input-apn').value.trim())
-            Cookies.set('nbiot-band', document.getElementById('input-band').value)
+            Cookies.set('cell-tech', document.getElementById('input-cell-tech').value)
+
+            Cookies.set('cell-apn', document.getElementById('input-apn').value.trim())
+            var band_elem = document.getElementById('input-band')
+            if(band_elem) Cookies.set('cell-band', band_elem.value)
 
             setRadioGroupValue('protocol', 'protocol')
             setRadioGroupValue('ipversion', 'ipversion')
 
-            location.href = "step-4-keys.pyhtml?op=NBIoT";
+            location.href = "step-4-keys.pyhtml?op=Cellular";
           }
 
           function validateMyForm(){

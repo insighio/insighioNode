@@ -53,7 +53,7 @@
                 <div class="column col-8 col-mr-auto img-center">
                   <div class="btn-group btn-group-block img-center">
                     <button class="btn" id="button-wifi" onclick="operationSelected('WiFi')">WiFi</button>
-                    <button class="btn" id="button-nbiot" onclick="operationSelected('NBIoT')">NBIoT</button>
+                    <button class="btn" id="button-cellular" onclick="operationSelected('Cellular')">Cellular</button>
                     <button class="btn" id="button-lora" onclick="operationSelected('LoRa')">LoRa</button>
                   </div>
                 </div>
@@ -62,12 +62,12 @@
             <script>
              function operationSelected(operationName) {
                document.getElementById('button-wifi').disabled = true
-               document.getElementById('button-nbiot').disabled = true
+               document.getElementById('button-cellular').disabled = true
                document.getElementById('button-lora').disabled = true
                if(operationName == "WiFi")
                   location.href = "step-3-config-wifi.pyhtml";
-              else if(operationName == "NBIoT")
-                 location.href = "step-3-config-nbiot.pyhtml";
+              else if(operationName == "Cellular")
+                 location.href = "step-3-config-cellular.pyhtml";
               else if(operationName == "LoRa")
                  location.href = "step-3-config-lora.pyhtml";
              }
