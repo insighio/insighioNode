@@ -76,6 +76,7 @@ class Modem:
             # self.send_at_cmd("AT+CFUN=0")
             # disable unsolicited report of network registration
             self.send_at_cmd("AT+CREG=0")
+            self.send_at_cmd("AT+CTZU=1")  # automatic time update
             self.send_at_cmd("AT+CFUN=1")
 
             self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
@@ -89,29 +90,34 @@ class Modem:
         pass
 
     def get_network_date_time(self):
-        (status, lines) = self.send_at_cmd("AT+QLTS")
-        if not status or len(lines) == 0:
-            return None
-
+        start_timestamp = utime.ticks_ms()
+        timeout_timestamp = start_timestamp + 10000
         regex = '(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):(\\d+):(\\d+)[+-](\\d+)'
-        reg_res = ure.search(regex, lines[0])
-        if reg_res:
-            logging.debug("Setting cellular RTC")
-            try:
-                year = int(reg_res.group(1))
-                if year < 100:
-                    year += 2000
-                result = (year,
-                    int(reg_res.group(2)),
-                    int(reg_res.group(3)),
-                    0,  # day of week
-                    int(reg_res.group(4)) + int(float(reg_res.group(7)) // 4),
-                    int(reg_res.group(5)) + int((float(reg_res.group(7)) % 4) * 15),
-                    int(reg_res.group(6)),
-                    0)  # usec
-                return result
-            except Exception as e:
-                return None
+        while utime.ticks_ms() < timeout_timestamp:
+            (status, lines) = self.send_at_cmd("AT+CCLK?")
+            if status and len(lines) > 0:
+                reg_res = ure.search(regex, lines[0])
+                if reg_res:
+                    logging.debug("Setting cellular RTC")
+                    try:
+                        year = int(reg_res.group(1))
+                        if year < 100:
+                            year += 2000
+                        result = (year,
+                            int(reg_res.group(2)),
+                            int(reg_res.group(3)),
+                            0,  # day of week
+                            int(reg_res.group(4)) + int(float(reg_res.group(7)) // 4),
+                            int(reg_res.group(5)) + int((float(reg_res.group(7)) % 4) * 15),
+                            int(reg_res.group(6)),
+                            0)  # usec
+                        return result
+                    except Exception as e:
+                        logging.exception(e, "Error reading network time")
+                        pass
+                else:
+                    logging.debug("Network time not ready yet")
+            utime.sleep_ms(250)
 
 
     def wait_for_registration(self, timeoutms=30000):
