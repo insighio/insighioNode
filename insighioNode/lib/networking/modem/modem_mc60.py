@@ -2,7 +2,6 @@ from . import modem_base
 import utime
 import ure
 from external.micropyGPS.micropyGPS import MicropyGPS
-import device_info
 
 
 class ModemMC60(modem_base.Modem):
@@ -56,7 +55,6 @@ class ModemMC60(modem_base.Modem):
                     if my_gps.satellites_in_use >= satelite_number_threshold:
                         gps_fix = True
                         return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
-            device_info.wdt_reset()
             utime.sleep_ms(1000)
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)

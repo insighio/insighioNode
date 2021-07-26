@@ -3,7 +3,7 @@ import utime
 import logging
 from external.micropyGPS.micropyGPS import MicropyGPS
 import ure
-import device_info
+
 
 class ModemBG600(modem_base.Modem):
     def __init__(self, power_on, power_key, modem_tx, modem_rx, gps_tx=None, gps_rx=None):
@@ -101,12 +101,11 @@ class ModemBG600(modem_base.Modem):
                         max_satellites = my_gps.satellites_in_use
                         hdop = my_gps.hdop
 
-                    logging.debug("{} Lat: {}, Lon: {}, NumSats: {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use))
+                    logging.debug("{} Lat: {}, Lon: {}, NumSats: {} @ {} - {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.timestamp, my_gps.date))
                     if my_gps.satellites_in_use >= satelite_number_threshold:
                         gps_fix = True
                         logging.debug("satelite_number_threshold: ", str(satelite_number_threshold))
                         return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
-            device_info.wdt_reset()
             utime.sleep_ms(1000)
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)
