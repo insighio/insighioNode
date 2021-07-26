@@ -128,6 +128,8 @@ def connect(cfg, dataStateOn=True):
         if modemInst.wait_for_registration(120000):
             # print("Modem activated (AT+CFUN=1), continuing...")
 
+            update_rtc_from_network_time(modemInst)
+
             status = MODEM_ACTIVATED
             activation_duration = utime.ticks_ms() - start_activation_duration
             # proceed with attachment
@@ -144,8 +146,6 @@ def connect(cfg, dataStateOn=True):
                 status = MODEM_ATTACHED
                 attachment_duration = utime.ticks_ms() - start_attachment_duration
                 logging.debug('Modem attached')
-
-                update_rtc_from_network_time(modemInst)
 
                 # printout/gather some information before activating PDP
                 # check registation status
