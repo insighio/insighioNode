@@ -57,7 +57,10 @@ try:
     logging.info("Connecting to network over: " + cfg.network)
     connection_results = network.connect(cfg)
     measurements.update(connection_results)
+except Exception as e:
+    logging.exception(e, "Exception during connection:")
 
+try:
     if ("status" in measurements) and (measurements["status"]["value"] is True):
         logging.info("Network [" + cfg.network + "] connected")
         # value no longer needed
@@ -75,11 +78,14 @@ try:
         utime.sleep_ms(1000)
     else:
         logging.info("Network [" + cfg.network + "] not connected")
+except Exception as e:
+    logging.exception(e, "Exception while sending data:")
 
+try:
     # disconnect
     network.disconnect()
 except Exception as e:
-    logging.exception(e, "Main Exception:")
+    logging.exception(e, "Exception during disconenction:")
 
 # deinit
 device_info.set_led_color('white')

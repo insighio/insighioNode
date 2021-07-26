@@ -76,37 +76,43 @@ def set_value_float(measurements, key, value, unit=None, precision=2):
 def get_measurements(cfg):
     measurements = {}
 
-    if cfg._MEAS_BATTERY_STAT_ENABLE:
-        (vbatt, current) = read_battery_voltage_and_current()
-        set_value_int(measurements, "vbatt", vbatt, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
-        set_value_int(measurements, "current", current, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+    try:
+        if cfg._MEAS_BATTERY_STAT_ENABLE:
+            (vbatt, current) = read_battery_voltage_and_current()
+            set_value_int(measurements, "vbatt", vbatt, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
+            set_value_int(measurements, "current", current, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
-    if cfg._MEAS_BOARD_STAT_ENABLE:
-        (mem_alloc, mem_free) = device_info.get_heap_memory()
-        set_value(measurements, "reset_cause", device_info.get_reset_cause())
-        set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
-        set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
-        if cfg._MEAS_TEMP_UNIT_IS_CELSIUS:
-            set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(), SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-        else:
-            set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+        if cfg._MEAS_BOARD_STAT_ENABLE:
+            (mem_alloc, mem_free) = device_info.get_heap_memory()
+            set_value(measurements, "reset_cause", device_info.get_reset_cause())
+            set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
+            set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
+            if cfg._MEAS_TEMP_UNIT_IS_CELSIUS:
+                set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(), SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+            else:
+                set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+    except Exception as e:
+        logging.error("unable to measure board sensors")
 
     sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_SWITCH_ON)
 
     # read internal temperature and humidity
-    if cfg._MEAS_BOARD_SENSE_ENABLE:
-        if cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._CONST_SENSOR_SI7021:
-            from sensors import si7021 as sens
-        elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._UC_INTERNAL_TEMP_HUM_SENSOR:
-            from sensors import sht40 as sens
-        (board_temp, board_humidity) = sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
-        set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-        set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
+    try:
+        if cfg._MEAS_BOARD_SENSE_ENABLE:
+            if cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._CONST_SENSOR_SI7021:
+                from sensors import si7021 as sens
+            elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._UC_INTERNAL_TEMP_HUM_SENSOR:
+                from sensors import sht40 as sens
+            (board_temp, board_humidity) = sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
+            set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+            set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
-    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
-        sdi12_board_measurements(measurements)
-    else:
-        default_board_measurements(measurements)
+        if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
+            sdi12_board_measurements(measurements)
+        else:
+            default_board_measurements(measurements)
+    except Exception as e:
+        logging.error("unable to complete sensor measurements")
 
     sensors.set_sensor_power_off(cfg._UC_IO_SENSOR_SWITCH_ON)
 
@@ -348,3 +354,20 @@ def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit
                 logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(val))
     except Exception as e:
         logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(responseArray))
+
+
+def loadPendingMessageQueue():
+    try:
+        import utils
+        lines = utils.readFromFile('_message_queue.que')
+        if lines:
+            return lines.split('\n')
+        return []
+    except Exception as e:
+        return []
+
+def savePendingMessageQueue():
+    try:
+        import utils
+    except Exception as e:
+        pass
