@@ -167,6 +167,8 @@ def read_scale(measurements):
                                cfg._UC_IO_SCALE_SPI_PIN,
                                cfg._UC_IO_SCALE_OFFSET if hasattr(cfg, '_UC_IO_SCALE_OFFSET') else None,
                                cfg._UC_IO_SCALE_SCALE if hasattr(cfg, '_UC_IO_SCALE_SCALE') else None)
+
+    weight = weight if weight > 0 or weight < -100 else 0
     set_value_float(measurements, "scale_weight", weight, SenmlUnits.SENML_UNIT_GRAM)
 
 
