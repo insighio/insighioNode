@@ -40,29 +40,28 @@ class MQTTClientCustom:
     def __sendMessageEx(self, url, message, qos=0, retained=False):
         try:
             self.client.publish(url, message, retained, qos)
-            # self.__check_msg(1000)
+            # if publish fails, exception is thrown, else return True
+            return True
         except Exception as e:
             logging.exception(e, 'Exception during MQTT message sending:')
+            return False
 
     def connect(self):
         self.client.set_callback(self.subscribe_callback)
         try:
             logging.debug("Connecting to MQTT...")
-            status = self.client.connect()
-            # todo: if status is true, send  status message
-            # self.__sendMessageEx(self.statusChannel, '1', 1, True)
-            # self.__check_msg(1000)
-            return status
+            self.client.connect()
+            # if connect fails, exception is thrown, else return True
+            return True
         except Exception as e:
             logging.exception(e, 'Exception during MQTT connect with:')
             return False
 
     def sendMessage(self, message):
-        self.__sendMessageEx(self.messageChannel, message, 1, False)
+        return self.__sendMessageEx(self.messageChannel, message, 1, False)
 
     def disconnect(self):
         try:
-            # self.__sendMessageEx(self.statusChannel, '0', 1, True)
             self.client.disconnect()
             return True
         except Exception as e:

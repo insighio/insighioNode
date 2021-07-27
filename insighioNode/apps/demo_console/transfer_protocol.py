@@ -25,19 +25,25 @@ def send_packet(cfg, message):
             logging.info("stopped")
             coap_cli.stop()
             logging.info("Disconnected")
+            return True
         else:
             print("CoAP not started, idle for this loop")
+            return False
     elif cfg.protocol == 'mqtt':
         from protocols import mqtt_client
         mqtt_cli = mqtt_client.MQTTClientCustom(cfg.protocol_config)
         connectionStatus = mqtt_cli.connect()
+        message_publish_ok = False
         logging.info("Mqtt connection status: " + str(connectionStatus))
-        connectionStatus = 1  # TODO: temp solution till we resolve what values are returned from connect function
-        if connectionStatus != 0:
+        if connectionStatus:
             logging.info("About to send: " + message)
-            mqtt_cli.sendMessage(message)
-            logging.info("Done.")
+            for i in range(0, 3):
+                message_publish_ok = mqtt_cli.sendMessage(message)
+                if message_publish_ok:
+                    logging.info("Done.")
+                    break
             mqtt_cli.disconnect()
             logging.info("Disconnected")
         else:
             logging.info("MQTT not connected, idle for this loop")
+        return message_publish_ok

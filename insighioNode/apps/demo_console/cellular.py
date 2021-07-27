@@ -99,7 +99,7 @@ def send_message(cfg, message):
 
         topic = 'channels/{}/messages/{}'.format(cfg.protocol_config.message_channel_id, cfg.protocol_config.thing_id)
 
-        for i in range(0, 4):
+        for i in range(0, 3):
             (mqtt_send_ready, _) = modem_instance.send_at_cmd('AT+QMTPUB=0,1,1,0,"' + topic + '"', 15000, '>')
             if mqtt_send_ready:
                 (mqtt_send_ok, _) = modem_instance.send_at_cmd(message + '\x1a')
