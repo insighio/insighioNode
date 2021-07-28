@@ -103,8 +103,11 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
             ap = network.WLAN(network.AP_IF)
             ap.active(False)
 
-        from ubluetooth import BLE
-        BLE().active(bt_on_boot)
+        try:
+            from ubluetooth import BLE
+            BLE().active(bt_on_boot)
+        except:
+            pass
 
         if(wdt_on_boot):
             wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
