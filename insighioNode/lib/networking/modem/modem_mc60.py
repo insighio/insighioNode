@@ -2,6 +2,7 @@ from . import modem_base
 import utime
 import ure
 from external.micropyGPS.micropyGPS import MicropyGPS
+import logging
 
 
 class ModemMC60(modem_base.Modem):
