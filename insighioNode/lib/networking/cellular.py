@@ -128,8 +128,6 @@ def connect(cfg, dataStateOn=True):
         if modemInst.wait_for_registration(120000):
             # print("Modem activated (AT+CFUN=1), continuing...")
 
-            update_rtc_from_network_time(modemInst)
-
             status = MODEM_ACTIVATED
             activation_duration = utime.ticks_ms() - start_activation_duration
             # proceed with attachment
@@ -141,6 +139,8 @@ def connect(cfg, dataStateOn=True):
             # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
             while not modemInst.is_attached() and (utime.ticks_ms() < attachment_timeout):
                 utime.sleep_ms(10)
+
+            update_rtc_from_network_time(modemInst)
 
             if modemInst.is_attached():
                 status = MODEM_ATTACHED
