@@ -66,16 +66,18 @@ class WebServer:
         i = 0
         euisFilled = 0
         self.pyhtmlMod.SetGlobalVar("insighioChannelId", "")
+        self.pyhtmlMod.SetGlobalVar("insighioControlChannel", "")
         self.pyhtmlMod.SetGlobalVar("insighioDeviceId", "")
         self.pyhtmlMod.SetGlobalVar("insighioDeviceToken", "")
 
         while i < linesCount:
             if (self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.message_channel_id', "insighioChannelId", '"') or
-               self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_id', "insighioDeviceId", '"') or
-               self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_token', "insighioDeviceToken", '"')):
-                euisFilled = euisFilled + 1
+                self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.control_channel_id', "insighioControlChannel", '"') or
+                self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_id', "insighioDeviceId", '"') or
+                self.saveGlobalVarIfFoundInLine(projectConfig[i], 'protocol_config.thing_token', "insighioDeviceToken", '"')):
+               euisFilled = euisFilled + 1
 
-            if euisFilled == 3:
+            if euisFilled == 4:
                 return True
             else:
                 i = i + 1

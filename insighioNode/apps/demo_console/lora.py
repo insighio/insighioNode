@@ -21,6 +21,10 @@ def connect(cfg):
     return results
 
 
+def disconnect():
+    pass
+
+
 def create_message_cbor(device_id, measurements):
     from external.kpn_senml.senml_pack_cbor import SenmlPackCbor
     from external.kpn_senml.senml_record import SenmlRecord
@@ -49,5 +53,5 @@ def send_message(cfg, message):
     lora.send(cfg, message)
 
 
-def disconnect():
+def checkAndApplyOTA(cfg):
     pass

@@ -76,6 +76,9 @@ try:
 
         # transport finished
         utime.sleep_ms(1000)
+
+        if cfg._CHECK_FOR_OTA:
+            network.checkAndApplyOTA(cfg)
     else:
         logging.info("Network [" + cfg.network + "] not connected")
 except Exception as e:
