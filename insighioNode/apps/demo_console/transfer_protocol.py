@@ -1,5 +1,5 @@
 import logging
-
+import device_info
 
 def send_packet(cfg, message):
     # transport-related functionalities
@@ -35,7 +35,7 @@ def send_packet(cfg, message):
         connectionStatus = mqtt_cli.connect()
         message_publish_ok = False
         logging.info("Mqtt connection status: " + str(connectionStatus))
-        if connectionStatus:
+        if connectionStatus or not device_info.is_esp32():
             logging.info("About to send: " + message)
             for i in range(0, 3):
                 message_publish_ok = mqtt_cli.sendMessage(message)
