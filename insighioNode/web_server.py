@@ -21,7 +21,10 @@ class WebServer:
             self.wlan = network.WLAN(mode=network.WLAN.STA, antenna=network.WLAN.INT_ANT)
         try:
             nets = self.wlan.scan()
-            self.wlan.active(False)
+            if not device_info.is_esp32():
+                self.wlan.deinit()
+            else:
+                self.wlan.active(False)
             nets = nets[:min(10, len(nets))]
         except Exception as e:
             logging.error("WiFi scan failed. Will provide empty SSID list")
@@ -180,5 +183,8 @@ class WebServer:
                     del sys.modules[module]
             except Exception as e:
                 sys.print_exception(e)
-        self.wlan.active(False)
+        if not device_info.is_esp32():
+            self.wlan.deinit()
+        else:
+            self.wlan.active(False)
         logging.info('Bye\n')
