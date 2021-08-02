@@ -87,29 +87,32 @@ class ModemBG600(modem_base.Modem):
         max_satellites = 0
         hdop = None
         timeout_timestamp = start_timestamp + timeoutms
-        while utime.ticks_ms() < timeout_timestamp:
-            (status, lines) = self.send_at_cmd('AT+QGPSGNMEA="GGA"')
-            if status and len(lines) > 0:
-                if lines[0].startswith('+QGPSGNMEA:'):
-                    lines[0] = lines[0].replace('+QGPSGNMEA: ', '')
-                for line in lines:
-                    for char in line:
-                        my_gps.update(char)
-                    if my_gps.latitude and my_gps.latitude[0] and my_gps.latitude[1] and my_gps.longitude and my_gps.longitude[0] and my_gps.longitude[1]:
-                        last_valid_gps_lat = my_gps.latitude
-                        last_valid_gps_lon = my_gps.longitude
-                        max_satellites = my_gps.satellites_in_use
-                        hdop = my_gps.hdop
+        try:
+            while utime.ticks_ms() < timeout_timestamp:
+                (status, lines) = self.send_at_cmd('AT+QGPSGNMEA="GGA"')
+                if status and len(lines) > 0:
+                    if lines[0].startswith('+QGPSGNMEA:'):
+                        lines[0] = lines[0].replace('+QGPSGNMEA: ', '')
+                    for line in lines:
+                        for char in line:
+                            my_gps.update(char)
+                        if my_gps.latitude and my_gps.latitude[0] and my_gps.latitude[1] and my_gps.longitude and my_gps.longitude[0] and my_gps.longitude[1]:
+                            last_valid_gps_lat = my_gps.latitude
+                            last_valid_gps_lon = my_gps.longitude
+                            max_satellites = my_gps.satellites_in_use
+                            hdop = my_gps.hdop
 
-                    if my_gps.timestamp and my_gps.date:
-                        self.gps_timestamp = my_gps.timestamp
-                        self.gps_date = my_gps.date
+                        if my_gps.timestamp and my_gps.date:
+                            self.gps_timestamp = my_gps.timestamp
+                            self.gps_date = my_gps.date
 
-                    logging.debug("{} Lat: {}, Lon: {}, NumSats: {} @ {} - {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.timestamp, my_gps.date))
-                    if my_gps.satellites_in_use >= satelite_number_threshold:
-                        gps_fix = True
-                        logging.debug("satelite_number_threshold: ", str(satelite_number_threshold))
-                        return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
-            utime.sleep_ms(1000)
+                        logging.debug("{} Lat: {}, Lon: {}, NumSats: {} @ {} - {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.timestamp, my_gps.date))
+                        if my_gps.satellites_in_use >= satelite_number_threshold:
+                            gps_fix = True
+                            logging.debug("satelite_number_threshold: ", str(satelite_number_threshold))
+                            return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
+                utime.sleep_ms(1000)
+        except KeyboardInterrupt:
+            pass
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)
