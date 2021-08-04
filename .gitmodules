@@ -22,3 +22,6 @@
 [submodule "lib-external/hx711"]
 	path = lib-external/hx711
 	url = https://github.com/robert-hh/hx711.git
+[submodule "lib-external/MicroWebCli"]
+	path = lib-external/MicroWebCli
+	url = https://github.com/jczic/MicroWebCli.git
