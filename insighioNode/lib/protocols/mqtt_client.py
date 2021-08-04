@@ -37,15 +37,18 @@ class MQTTClientCustom:
     def __check_msg(self, timeout_ms):
         start_time = time.ticks_ms()
         while ((time.ticks_diff(time.ticks_ms(), start_time) < timeout_ms)):
-            self.client.check_msg()
-            # if mutex.test():
-            if self.mutex.acquire(1, 1):  # 1 = wait for lock, 1 = 1 second wait else fail
-                if self.lastReceivedMessage is not None:
-                    message = self.lastReceivedMessage.copy()
-                    self.lastReceivedMessage = None
+            try:
+                self.client.check_msg()
+                # if mutex.test():
+                if self.mutex.acquire(1, 1):  # 1 = wait for lock, 1 = 1 second wait else fail
+                    if self.lastReceivedMessage is not None:
+                        message = self.lastReceivedMessage.copy()
+                        self.lastReceivedMessage = None
+                        self.mutex.release()
+                        return message
                     self.mutex.release()
-                    return message
-                self.mutex.release()
+            except AssertionError:
+                pass
             time.sleep_ms(10)
 
         return None
@@ -70,10 +73,16 @@ class MQTTClientCustom:
             logging.exception(e, 'Exception during MQTT connect with:')
             return False
 
-    def sendMessage(self, message, channel=None, retained=False):
-        if channel is None:
-            channel = self.messageChannel
-        self.__sendMessageEx(channel, message, 1, retained)
+    def sendMessage(self, message, topic=None, retained=False):
+        if topic is None:
+            topic = self.messageChannel
+        return self.__sendMessageEx(topic, message, 1, retained)
+
+    def sendOtaMessage(self, message):
+        return self.sendMessage(message, self.otaChannel, True)
+
+    def clearOtaMessages(self):
+        return self.sendMessage("", self.otaChannel, True)
 
     def subscribe_and_get_first_message(self, channel=None):
         try:

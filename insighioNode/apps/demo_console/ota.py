@@ -10,7 +10,7 @@ def checkAndApply(client):
     message = client.get_control_message()
 
     if message is not None and message["message"] is not None:
-        logging.debug("mqtt messqage received: " + str(message["message"]))
+        logging.debug("mqtt message received: " + str(message["message"]))
 
         from external.kpn_senml.senml_pack_json import SenmlPackJson
         senmlMessage = SenmlPackJson("")

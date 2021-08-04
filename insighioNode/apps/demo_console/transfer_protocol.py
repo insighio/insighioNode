@@ -56,7 +56,7 @@ class TransferProtocol:
         elif self.protocol == 'mqtt':
             logging.info("About to send: " + message)
             for i in range(0, 3):
-                message_publish_ok = mqtt_cli.sendMessage(message)
+                message_publish_ok = self.client.sendMessage(message, channel)
                 if message_publish_ok:
                     logging.info("Done.")
                     return True
@@ -64,7 +64,7 @@ class TransferProtocol:
         return False
 
     def send_control_packet_ota(self, message):
-        return self.send_packet(message, self.protocol_config.control_channel_id)
+        return self.client.sendOtaMessage(message)
 
     def get_control_message(self):
         if not self.connected:
@@ -84,5 +84,6 @@ class TransferProtocol:
 
         if self.protocol == 'mqtt':
             logging.info("About to clear retained messages")
-            self.client.sendMessage("", self.protocol_config.control_channel_id, True)
+            self.client.clearOtaMessages()
+            # self.client.sendMessage("", self.protocol_config.control_channel_id, True)
             logging.info("Done.")
