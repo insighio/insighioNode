@@ -32,10 +32,10 @@ def checkAndApply(client):
                 fileSize = el.value
         # eventId ==0 => pending for installation
         if str(eventId) == "0" and fileId and fileType and fileSize:
-            downloaded = downloadOTA(client, fileId, fileType, fileSize)
-            if downloaded:
+            downloaded_file = downloadOTA(client, fileId, fileType, fileSize)
+            if downloaded_file:
                 from . import apply_ota
-                applied = apply_ota.do_apply()
+                applied = apply_ota.do_apply(downloaded_file)
                 if applied:
                     print("about to reset...")
                     sendStatusMessage(client, fileId, True)
@@ -113,5 +113,5 @@ def downloadOTA(client, fileId, fileType, fileSize):
     if resp.IsSuccess():
         contentType = resp.WriteContentToFile(filename, progressCallback)
         logging.debug('File was saved to "%s"' % (filename))
-        return True
+        return filename
     return False

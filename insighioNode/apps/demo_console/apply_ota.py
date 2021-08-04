@@ -171,19 +171,19 @@ def copyfileobj(src, dest, length=512):
 ###############################
 
 
-def do_apply():
+def do_apply(package_file=None):
     flashRootFolder = device_info.get_device_root_folder()
 
     is_compressed = False
-    package_file = None
-    for f in uos.listdir(flashRootFolder):
-        if f.endswith(".tar"):
-            package_file = flashRootFolder + f
-            break
-        if f.endswith(".tar.gz"):
-            package_file = flashRootFolder + f
-            is_compressed = True
-            break
+    if package_file is None:
+        for f in uos.listdir(flashRootFolder):
+            if f.endswith(".tar"):
+                package_file = flashRootFolder + f
+                break
+            if f.endswith(".tar.gz"):
+                package_file = flashRootFolder + f
+                is_compressed = True
+                break
 
     print("package file found: {}, is_compressed: {}".format(package_file, is_compressed))
 
@@ -224,4 +224,6 @@ def do_apply():
             return True
         except Exception as e:
             logging.exception(e, "error unpacking update package: {}".format(package_file))
+            logging.info("removing tar file...")
+            uos.remove(package_file)
     return False
