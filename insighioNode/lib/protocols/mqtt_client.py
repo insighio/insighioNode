@@ -36,7 +36,8 @@ class MQTTClientCustom:
 
     def __check_msg(self, timeout_ms):
         start_time = time.ticks_ms()
-        while ((time.ticks_diff(time.ticks_ms(), start_time) < timeout_ms)):
+        end_time = start_time + timeout_ms
+        while (time.ticks_ms() < end_time):
             try:
                 self.client.check_msg()
                 # if mutex.test():
@@ -89,7 +90,7 @@ class MQTTClientCustom:
             if channel is None:
                 channel = self.otaChannel
             self.client.subscribe(channel)
-            return self.__check_msg(30000)
+            return self.__check_msg(5000)
         except Exception as e:
             logging.exception(e, 'Exception during MQTT subscribe with:')
             return None

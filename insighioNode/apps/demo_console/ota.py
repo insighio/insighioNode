@@ -8,9 +8,13 @@ def checkAndApply(client):
         logging.debug("OTA check aborted, no active transfer client")
         return False
 
+    logging.info("Waiting for incoming control message (OTA)...")
     message = client.get_control_message()
 
-    if message is not None and message["message"] is not None:
+    if message is None or message["message"] is None:
+        logging.info("No control message received")
+        return
+    else:
         logging.debug("mqtt message received: " + str(message["message"]))
 
         from external.kpn_senml.senml_pack_json import SenmlPackJson
