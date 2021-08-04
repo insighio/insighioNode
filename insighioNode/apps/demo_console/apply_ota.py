@@ -184,6 +184,8 @@ def do_apply(package_file=None):
                 package_file = flashRootFolder + f
                 is_compressed = True
                 break
+    elif package_file.endswith(".tar.gz"):
+        is_compressed = True
 
     print("package file found: {}, is_compressed: {}".format(package_file, is_compressed))
 
