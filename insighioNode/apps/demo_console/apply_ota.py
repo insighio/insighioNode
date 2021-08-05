@@ -171,6 +171,46 @@ def copyfileobj(src, dest, length=512):
 ###############################
 
 
+def decompress_file(compressed_file_name):
+    import uzlib
+
+    CHUNKSIZE = 1024
+
+    # d = uzlib.decompress(16 + uzlib.MAX_WBITS)
+    output_package_file = "{}.tar".format(compressed_file_name.split(".")[0])
+
+    try:
+        success_flag = True
+        fr = open(compressed_file_name, 'rb')
+        fw = open(output_package_file, 'wb')
+
+        try:
+            buffer = fr.read(8)  # ignore headers
+            logging.debug("ignoring header")
+            buffer = fr.read(CHUNKSIZE)
+            logging.debug(".")
+
+            while buffer:
+                # byteChunk = uzlib.decompress(buffer, -8)  # negative number for raw stream
+                byteChunk = uzlib.decompress(buffer, 15)
+                fw.write(byteChunk)
+                buffer = fr.read(CHUNKSIZE)
+                logging.debug(".")
+        except Exception as e:
+            logging.exception(e, "Error decompressing")
+            success_flag = False
+
+        # outstr = d.flush()
+        # print(outstr)
+
+        fw.close()
+        fr.close()
+        return output_package_file if success_flag else None
+    except Exception as e:
+        logging.exception(e, "Error opening files")
+        return None
+
+
 def do_apply(package_file=None):
     flashRootFolder = device_info.get_device_root_folder()
 
@@ -189,43 +229,43 @@ def do_apply(package_file=None):
 
     print("package file found: {}, is_compressed: {}".format(package_file, is_compressed))
 
-    if package_file:
+    if not package_file:
+        return False
+
+    try:
         t = None
-        try:
-            if is_compressed:
-                data = readFromFile(package_file)
-                import uzlib
-                byteData = uzlib.decompress(data[8:])
-                compressed_file_name = package_file
-                package_file = "{}.tar".format(package_file.split(".")[0])
-                if writeToFile(package_file, byteData):
-                    logging.info("removing gzip file...")
-                    uos.remove(compressed_file_name)
-                # clear memory
-                byteData = bytearray(0)
-                logging.info("package file decompressed")
-
-            t = TarFile(name=package_file)
-
-            logging.info("tar file opened: " + package_file)
-
-            for i in t:
-                if i.name != "././@PaxHeader":
-                    print(i)
-                if i.type == DIRTYPE:
-                    mkdir(i.name)
-                else:
-                    f = t.extractfile(i)
-                    copyfileobj(f, open(i.name, "w"))
-            if t:
-                logging.info("removing tar file...")
+        if is_compressed:
+            output_file = decompress_file(package_file)
+            if output_file is not None:
+                logging.info("removing gzip file...")
                 uos.remove(package_file)
+            package_file = output_file
+            logging.info("package file decompressed")
 
-            logging.info("Operation completed.")
+        if package_file is None:
+            logging.info("aborting")
+            return False
 
-            return True
-        except Exception as e:
-            logging.exception(e, "error unpacking update package: {}".format(package_file))
+        t = TarFile(name=package_file)
+
+        logging.info("tar file opened: " + package_file)
+
+        for i in t:
+            if i.name != "././@PaxHeader":
+                print(i)
+            if i.type == DIRTYPE:
+                mkdir(i.name)
+            else:
+                f = t.extractfile(i)
+                copyfileobj(f, open(i.name, "w"))
+        if t:
             logging.info("removing tar file...")
-            uos.remove(package_file)
-    return False
+            #uos.remove(package_file)
+
+        logging.info("Operation completed.")
+
+        return True
+    except Exception as e:
+        logging.exception(e, "error unpacking update package: {}".format(package_file))
+        logging.info("removing tar file...")
+        #uos.remove(package_file)
