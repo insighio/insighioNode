@@ -114,18 +114,6 @@ class TarFile:
         return tarinfo.subf
 
 
-def readFromFile(source):
-    try:
-        f = open(source, "rb")
-        contents = f.read()
-        f.close()
-        logging.info("file [{}] read finished.".format(source))
-        return contents
-    except Exception as e:
-        logging.exception(e, "file [{}] read failed.".format(source))
-        return ""
-
-
 def mkdir(directoryPath):
     try:
         uos.mkdir(directoryPath)
@@ -133,18 +121,6 @@ def mkdir(directoryPath):
     except OSError as e:
         if e.args[0] != uerrno.EEXIST:
             logging.exception(e, "directory {} failed".format(directoryPath))
-
-
-def writeToFile(destination, content):
-    try:
-        out_file = open(destination, "wb")
-        out_file.write(content)
-        out_file.close()
-        return True
-        logging.info("file [{}] write finished.".format(destination))
-    except Exception as e:
-        logging.exception(e, "file [{}] write failed.".format(destination))
-        return False
 
 
 # https://github.com/micropython/micropython-lib/blob/eae01bd4e4cd1b22d9ccfedbd6bf9d879f64d9bd/shutil/shutil.py#L11
@@ -174,7 +150,7 @@ def copyfileobj(src, dest, length=512):
 def decompress_file(compressed_file_name):
     import uzlib
 
-    CHUNKSIZE = 1024
+    CHUNKSIZE = 256
 
     # d = uzlib.decompress(16 + uzlib.MAX_WBITS)
     output_package_file = "{}.tar".format(compressed_file_name.split(".")[0])
@@ -185,16 +161,16 @@ def decompress_file(compressed_file_name):
         fw = open(output_package_file, 'wb')
 
         try:
-            buffer = fr.read(8)  # ignore headers
-            logging.debug("ignoring header")
-            buffer = fr.read(CHUNKSIZE)
-            logging.debug(".")
+            import uzlib
+            f = open("/package-s.tar.gz", "rb")
+            obj = uzlib.DecompIO(f, 24)
+            BUFFER = [0] * CHUNKSIZE
+            buffer = obj.read(CHUNKSIZE)
 
             while buffer:
                 # byteChunk = uzlib.decompress(buffer, -8)  # negative number for raw stream
-                byteChunk = uzlib.decompress(buffer, 15)
-                fw.write(byteChunk)
-                buffer = fr.read(CHUNKSIZE)
+                fw.write(buffer)
+                buffer = obj.read(CHUNKSIZE)
                 logging.debug(".")
         except Exception as e:
             logging.exception(e, "Error decompressing")
@@ -260,7 +236,7 @@ def do_apply(package_file=None):
                 copyfileobj(f, open(i.name, "w"))
         if t:
             logging.info("removing tar file...")
-            #uos.remove(package_file)
+            uos.remove(package_file)
 
         logging.info("Operation completed.")
 
@@ -268,4 +244,4 @@ def do_apply(package_file=None):
     except Exception as e:
         logging.exception(e, "error unpacking update package: {}".format(package_file))
         logging.info("removing tar file...")
-        #uos.remove(package_file)
+        uos.remove(package_file)
