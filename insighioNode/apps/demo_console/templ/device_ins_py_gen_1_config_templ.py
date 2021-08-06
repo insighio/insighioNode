@@ -47,4 +47,4 @@ _MEAS_BOARD_STAT_ENABLE = <meas-board-stat>
 _MEAS_NETWORK_STAT_ENABLE = <meas-network-stat>
 _MEAS_TEMP_UNIT_IS_CELSIUS = <meas-temp-unit>
 
-_CHECK_FOR_OTA = True
+_CHECK_FOR_OTA = <system-enable-ota>

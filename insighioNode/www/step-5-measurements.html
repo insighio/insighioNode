@@ -116,6 +116,19 @@
                     <br />
                     <br />
                     <div class="col-4 col-sm-12">
+                      <label class="form-label" for="measurements">Over the Air Updates</label>
+                    </div>
+                    <div class="col-8 col-sm-12">
+                      <div class="form-group">
+                        <label class="form-switch">
+                          <input type="checkbox" id="input-ota" />
+                          <i class="form-icon"></i>
+                        </label>
+                      </div>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-sm-12">
                       <label class="form-label" for="measurements">Temperature Unit</label>
                     </div>
                     <div class="col-8 col-sm-12">
@@ -473,6 +486,7 @@
             Cookies.remove('meas-scale-scale')
             Cookies.remove('meas-scale-offset')
             Cookies.remove('meas-scale-enabled')
+            Cookies.remove('system-enable-ota')
             Cookies.remove('period')
           }
 
@@ -486,6 +500,7 @@
             Cookies.set('meas-board-sense', document.getElementById('input-board-sense').checked ? "True" : "False")
             Cookies.set('meas-board-stat', document.getElementById('input-board-stat').checked ? "True" : "False")
             Cookies.set('meas-network-stat', document.getElementById('input-network').checked ? "True" : "False")
+            Cookies.set('system-enable-ota', document.getElementById('input-ota').checked ? "True" : "False")
 
             Cookies.set('meas-temp-unit',  document.getElementById('input-temp-unit').value.includes("Fahrenheit") ? "False" : "True")
 
