@@ -147,10 +147,36 @@ def copyfileobj(src, dest, length=512):
 ###############################
 
 
-def decompress_file(compressed_file_name):
+def readFromFile(source):
+    try:
+        f = open(source, "rb")
+        contents = f.read()
+        f.close()
+        print("file [{}] read finished.".format(source))
+        return contents
+    except Exception as e:
+        print("file [{}] read failed.".format(source))
+        sys.print_exception(e)
+        return ""
+
+
+def writeToFile(destination, content):
+    try:
+        out_file = open(destination, "wb")
+        out_file.write(content)
+        out_file.close()
+        return True
+        print("file [{}] write finished.".format(destination))
+    except Exception as e:
+        print("file [{}] write failed.".format(destination))
+        sys.print_exception(e)
+        return False
+
+
+def decompress_file_streamed(compressed_file_name):
     import uzlib
 
-    CHUNKSIZE = 256
+    CHUNKSIZE = 1024
 
     # d = uzlib.decompress(16 + uzlib.MAX_WBITS)
     output_package_file = "{}.tar".format(compressed_file_name.split(".")[0])
@@ -168,7 +194,6 @@ def decompress_file(compressed_file_name):
             buffer = obj.read(CHUNKSIZE)
 
             while buffer:
-                # byteChunk = uzlib.decompress(buffer, -8)  # negative number for raw stream
                 fw.write(buffer)
                 buffer = obj.read(CHUNKSIZE)
                 logging.debug(".")
@@ -210,13 +235,27 @@ def do_apply(package_file=None):
 
     try:
         t = None
+        stream_decompression = False
         if is_compressed:
-            output_file = decompress_file(package_file)
-            if output_file is not None:
-                logging.info("removing gzip file...")
-                uos.remove(package_file)
-            package_file = output_file
-            logging.info("package file decompressed")
+            if stream_decompression:
+                output_file = decompress_file_streamed(package_file)
+                if output_file is not None:
+                    logging.info("removing gzip file...")
+                    uos.remove(package_file)
+                package_file = output_file
+                logging.info("package file decompressed")
+            else:
+                data = readFromFile(package_file)
+                import uzlib
+                byteData = uzlib.decompress(data[8:])
+                compressed_file_name = package_file
+                package_file = "{}.tar".format(package_file.split(".")[0])
+                if writeToFile(package_file, byteData):
+                    print("removing gzip file...")
+                    uos.remove(compressed_file_name)
+                # clear memory
+                byteData = bytearray(0)
+                print("package file decompressed")
 
         if package_file is None:
             logging.info("aborting")
