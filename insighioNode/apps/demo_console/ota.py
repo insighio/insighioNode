@@ -101,9 +101,10 @@ def downloadOTA(client, fileId, fileType, fileSize):
 
     filename = device_info.get_device_root_folder() + fileId + fileType
     # http://<ip>/packages/download?fuid=<file-uid>&did=<device-id>&dk=<device-key>&cid=<control-channel-id>
+    # TODO: fix support of redirections
     URL = 'http://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}'.format(
-        #'192.168.43.27:3003',
-        cfg.protocol_config.server_ip,
+        #cfg.protocol_config.server_ip,
+        "console.insigh.io",
         fileId,
         cfg.protocol_config.thing_id,
         cfg.protocol_config.thing_token,
