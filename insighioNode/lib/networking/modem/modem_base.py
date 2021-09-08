@@ -95,7 +95,7 @@ class Modem:
     def get_network_date_time(self):
         start_timestamp = utime.ticks_ms()
         timeout_timestamp = start_timestamp + 10000
-        regex = '(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):(\\d+):(\\d+)[+-](\\d+)'
+        regex = '(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):(\\d+):(\\d+)([+-]\\d+)'
         while utime.ticks_ms() < timeout_timestamp:
             (status, lines) = self.send_at_cmd("AT+CCLK?")
             if status and len(lines) > 0:
