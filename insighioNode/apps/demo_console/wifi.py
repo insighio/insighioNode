@@ -61,10 +61,13 @@ def disconnect():
 def create_message(device_id, measurements):
     message = SenmlPackJson(device_id + '-')
 
+    if "dt" in measurements:
+        message.base_time = measurements["dt"]["value"]
+
     for key in measurements:
         if "unit" in measurements[key]:
             message.add(SenmlRecord(key, unit=measurements[key]["unit"], value=measurements[key]["value"]))
-        else:
+        elif key != "dt":
             message.add(SenmlRecord(key, value=measurements[key]["value"]))
 
     return message.to_json()

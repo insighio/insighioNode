@@ -10,7 +10,6 @@ import utime
 transfer_client = None
 mqtt_connected = False
 
-
 # network connection
 def connect(cfg):
     logging.info("Connecting to cellular...")
@@ -21,6 +20,7 @@ def connect(cfg):
         cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
     modem_instance = cellular.get_modem_instance()
+
     logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
     if modem_instance is not None:
         (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq) = cellular.connect(cfg, dataStateOn=enableDataState)
@@ -92,10 +92,13 @@ def get_gps_position(cfg, measurements):
 def create_message(device_id, measurements):
     message = SenmlPackJson(device_id + '-')
 
+    if "dt" in measurements:
+        message.base_time = measurements["dt"]["value"]
+
     for key in measurements:
         if "unit" in measurements[key]:
             message.add(SenmlRecord(key, unit=measurements[key]["unit"], value=measurements[key]["value"]))
-        else:
+        elif key != "dt":
             message.add(SenmlRecord(key, value=measurements[key]["value"]))
 
     return message.to_json()
