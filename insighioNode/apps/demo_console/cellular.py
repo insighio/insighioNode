@@ -7,6 +7,8 @@ import logging
 import device_info
 import utime
 
+transfer_client = None
+mqtt_connected = False
 
 # network connection
 def connect(cfg):
@@ -18,6 +20,7 @@ def connect(cfg):
         cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
     modem_instance = cellular.get_modem_instance()
+
     logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
     if modem_instance is not None:
         (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq) = cellular.connect(cfg, dataStateOn=enableDataState)
@@ -35,6 +38,23 @@ def connect(cfg):
                 results["cell_rsrq"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rsrq}
             if not cfg.protocol_config.use_custom_socket:
                 results["cell_con_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connection_duration}
+
+        if status == cellular.MODEM_CONNECTED:
+            if modem_instance.get_model() == 'bg600l-m3':
+                global mqtt_connected
+                (mqtt_ready, _) = modem_instance.send_at_cmd('AT+QMTOPEN=0,"' + cfg.protocol_config.server_ip + '",' + str(cfg.protocol_config.server_port), 15000, "\\+QMTOPEN:\\s+0,0")
+
+                if mqtt_ready:
+                    # mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"client","a93d2353-c664-4487-b52c-ae3bd73b06c4","ed1d8997-a8b1-46c1-8927-04fb35dd93af"')
+                    (mqtt_connected, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(cfg.protocol_config.thing_id, cfg.protocol_config.thing_id, cfg.protocol_config.thing_token), 15000, "\\+QMTCONN:\\s+0,0,0")
+                else:
+                    logging.error("Mqtt not ready")
+
+            else:
+                global transfer_client
+                from . import transfer_protocol
+                transfer_client = transfer_protocol.TransferProtocol(cfg)
+                transfer_client.connect()
 
     return results
 
@@ -72,10 +92,13 @@ def get_gps_position(cfg, measurements):
 def create_message(device_id, measurements):
     message = SenmlPackJson(device_id + '-')
 
+    if "dt" in measurements:
+        message.base_time = measurements["dt"]["value"]
+
     for key in measurements:
         if "unit" in measurements[key]:
             message.add(SenmlRecord(key, unit=measurements[key]["unit"], value=measurements[key]["value"]))
-        else:
+        elif key != "dt":
             message.add(SenmlRecord(key, value=measurements[key]["value"]))
 
     return message.to_json()
@@ -83,19 +106,7 @@ def create_message(device_id, measurements):
 
 def send_message(cfg, message):
     modem_instance = cellular.get_modem_instance()
-    if modem_instance is not None and modem_instance.get_model() == 'bg600l-m3':
-        (mqtt_ready, _) = modem_instance.send_at_cmd('AT+QMTOPEN=0,"' + cfg.protocol_config.server_ip + '",' + str(cfg.protocol_config.server_port), 15000, "\\+QMTOPEN:\\s+0,0")
-
-        if not mqtt_ready:
-            logging.error("Mqtt not ready")
-            return False
-
-        # mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"client","a93d2353-c664-4487-b52c-ae3bd73b06c4","ed1d8997-a8b1-46c1-8927-04fb35dd93af"')
-        (mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(cfg.protocol_config.thing_id, cfg.protocol_config.thing_id, cfg.protocol_config.thing_token), 15000, "\\+QMTCONN:\\s+0,0,0")
-
-        if not mqtt_conn:
-            logging.error("Mqtt not connected")
-            return False
+    if modem_instance is not None and mqtt_connected:
 
         topic = 'channels/{}/messages/{}'.format(cfg.protocol_config.message_channel_id, cfg.protocol_config.thing_id)
 
@@ -108,10 +119,19 @@ def send_message(cfg, message):
             logging.error("Mqtt not ready to send")
 
         return False
-    else:
-        from . import transfer_protocol
-        return transfer_protocol.send_packet(cfg, message)
+    elif transfer_client is not None:
+        transfer_client.send_packet(message)
 
 
 def disconnect():
+    global transfer_client
+    if transfer_client is not None:
+        transfer_client.disconnect()
+        transfer_client = None
     logging.info("Deactivate NB-IOT: {}".format(cellular.deactivate()))
+
+
+def checkAndApplyOTA(cfg):
+    if transfer_client is not None:
+        from . import ota
+        ota.checkAndApply(transfer_client)
