@@ -16,6 +16,7 @@ class Modem:
         self.apn = None
         self.gps_timestamp = None
         self.gps_date = None
+        self.use_timezone_over_gmt = True
 
         if modem_tx is not None and modem_rx is not None:
             self.uart = UART(1, 115200, tx=modem_tx, rx=modem_rx)
@@ -110,8 +111,8 @@ class Modem:
                             int(reg_res.group(2)),
                             int(reg_res.group(3)),
                             0,  # day of week
-                            int(reg_res.group(4)) + int(float(reg_res.group(7)) // 4),
-                            int(reg_res.group(5)) + int((float(reg_res.group(7)) % 4) * 15),
+                            int(reg_res.group(4)) + (int(float(reg_res.group(7)) // 4) if self.use_timezone_over_gmt else 0),
+                            int(reg_res.group(5)) + (int((float(reg_res.group(7)) % 4) * 15) if self.use_timezone_over_gmt else 0),
                             int(reg_res.group(6)),
                             0)  # usec
                         return result
