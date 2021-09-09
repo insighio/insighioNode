@@ -13,6 +13,7 @@ mqtt_connected = False
 # network connection
 def connect(cfg):
     logging.info("Connecting to cellular...")
+    protocol_config = cfg.get_protocol_config()
     enableDataState = (cfg._IP_VERSION == "IP")
     results = {}
 
@@ -42,17 +43,17 @@ def connect(cfg):
                 results["cell_rsrp"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rsrp}
             if rsrq:
                 results["cell_rsrq"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": rsrq}
-            if not cfg.protocol_config.use_custom_socket:
+            if not protocol_config.use_custom_socket:
                 results["cell_con_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connection_duration}
 
         if status == cellular.MODEM_CONNECTED:
             if modem_instance.get_model() == 'bg600l-m3':
                 global mqtt_connected
-                (mqtt_ready, _) = modem_instance.send_at_cmd('AT+QMTOPEN=0,"' + cfg.protocol_config.server_ip + '",' + str(cfg.protocol_config.server_port), 15000, "\\+QMTOPEN:\\s+0,0")
+                (mqtt_ready, _) = modem_instance.send_at_cmd('AT+QMTOPEN=0,"' + protocol_config.server_ip + '",' + str(protocol_config.server_port), 15000, "\\+QMTOPEN:\\s+0,0")
 
                 if mqtt_ready:
                     # mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"client","a93d2353-c664-4487-b52c-ae3bd73b06c4","ed1d8997-a8b1-46c1-8927-04fb35dd93af"')
-                    (mqtt_connected, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(cfg.protocol_config.thing_id, cfg.protocol_config.thing_id, cfg.protocol_config.thing_token), 15000, "\\+QMTCONN:\\s+0,0,0")
+                    (mqtt_connected, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(protocol_config.thing_id, protocol_config.thing_id, protocol_config.thing_token), 15000, "\\+QMTCONN:\\s+0,0,0")
                 else:
                     logging.error("Mqtt not ready")
 
@@ -112,9 +113,10 @@ def create_message(device_id, measurements):
 
 def send_message(cfg, message):
     modem_instance = cellular.get_modem_instance()
+    protocol_config = cfg.get_protocol_config()
     if modem_instance is not None and mqtt_connected:
 
-        topic = 'channels/{}/messages/{}'.format(cfg.protocol_config.message_channel_id, cfg.protocol_config.thing_id)
+        topic = 'channels/{}/messages/{}'.format(protocol_config.message_channel_id, protocol_config.thing_id)
 
         for i in range(0, 3):
             (mqtt_send_ready, _) = modem_instance.send_at_cmd('AT+QMTPUB=0,1,1,0,"' + topic + '"', 15000, '>')

@@ -5,7 +5,7 @@ import device_info
 class TransferProtocol:
     def __init__(self, cfg):
         self.connected = False
-        self.protocol_config = cfg.protocol_config
+        self.protocol_config = cfg.get_protocol_config()
         self.protocol_config.client_name = cfg.device_id
         self.protocol = cfg.protocol
         logging.debug("initializing TransferProtocol for: " + str(self.protocol))
