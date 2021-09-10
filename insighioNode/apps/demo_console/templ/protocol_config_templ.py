@@ -4,7 +4,7 @@ protocol = '<protocol>'
 protocol_config_instance = None
 
 
-def get_protocol_config(protocol):
+def get_protocol_config():
     global protocol_config_instance
     if protocol_config_instance is not None:
         return protocol_config_instance
