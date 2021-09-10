@@ -47,3 +47,18 @@ def deleteFile(destination):
     except Exception as e:
         logging.exception(e, "Error writing to file [{}]".format(destination))
         return False
+
+def countFileLines(fname):
+    lines = 0
+    buf_size = 256
+    has_any_bytes = False
+    try:
+        with open(fname) as f:
+            buf = f.read(buf_size)
+            while buf:
+                lines += buf.count("\n")
+                buf = f.read(buf_size)
+    except:
+        pass
+
+    return lines
