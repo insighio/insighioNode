@@ -2,6 +2,7 @@ network="lora"
 
 """ System-related configuration options """
 _DEEP_SLEEP_PERIOD_SEC = <period>
+_BATCH_UPLOAD_MESSAGE_BUFFER = <batch-upload-buffer-size>
 
 """ LoRa example configuration options """
 _MAX_CONNECTION_ATTEMPT_TIME_SEC = 60

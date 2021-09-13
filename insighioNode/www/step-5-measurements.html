@@ -45,13 +45,13 @@
             <br />
             <hr />
             <br />
-            <div class="text-center">
-              Avaialble measurements
-            </div>
-            <br />
             <div class="columns flex-centered">
               <div class="column col-7">
                 <form class="form-horizontal">
+                  <div class="text-center">
+                    Timing
+                  </div>
+                  <br />
                   <div class="form-group">
                     <br />
                     <br />
@@ -63,6 +63,41 @@
                     </div>
                     <br />
                     <br />
+                    <div class="col-4 col-sm-12">
+                      <label class="form-label" for="measurements">Batch Upload</label>
+                    </div>
+                    <div class="col-8 col-sm-12">
+                      <div class="form-group">
+                        <label class="form-switch">
+                          <input type="checkbox" id="input-ins-batch-upload-enable" onclick="sensorStatusChanged('ins-batch-upload')" />
+                          <i class="form-icon"></i>
+                        </label>
+                      </div>
+                    </div>
+                    <div id="address-ins-batch-upload" class="col-12" style="display:none">
+                      <div class="form-group">
+                        <div class="column col-1 col-mr-auto"></div>
+                        <div class="col-3 col-sm-12">
+                          <label class="form-label" for="measurements">Message Buffer Size
+                            <button class="btn btn-link tooltip" data-tooltip="Defines the number of measurements that&#xa;should be executed before the device&#xa;connects to the network and upload&#xa;Connection period:&#xa;   Sleep Period * Buffer Size">
+                            <i class="icon icon-flag"></i>
+                            </button>
+                          </label>
+                        </div>
+                        <div class="col-3 col-sm-12">
+                          <input class="form-input constr-field" type="number" id="input-message-buffer-size" value=50 />
+                        </div>
+                        <div class="column col-5 col-mr-auto"></div>
+                      </div>
+                    </div>
+                    <br />
+                    <br />
+                  </div>
+                  <div class="text-center">
+                    Avaialble measurements
+                  </div>
+                  <br />
+                  <div class="form-group">
                     <div class="col-4 col-sm-12">
                       <label class="form-label" for="meas-battery">Battery statistics</label>
                     </div>
@@ -268,12 +303,12 @@
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
                               <label class="form-switch">
-                                <input type="checkbox" id="input-ins-py-sdi12-1-enable" onclick="sensorStatusChanged('sdi12-1')" />
+                                <input type="checkbox" id="input-ins-py-sdi12-1-enable" onclick="sensorStatusChanged('ins-py-sdi12-1')" />
                                 <i class="form-icon"></i>
                               </label>
                             </div>
                           </div>
-                          <div id="address-sdi12-1" class="col-12" style="display:none">
+                          <div id="address-ins-py-sdi12-1" class="col-12" style="display:none">
                             <div class="form-group">
                               <div class="column col-1 col-mr-auto"></div>
                               <div class="col-3 col-sm-12">
@@ -308,12 +343,12 @@
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
                               <label class="form-switch">
-                                <input type="checkbox" id="input-ins-py-sdi12-2-enable" onclick="sensorStatusChanged('sdi12-2')" />
+                                <input type="checkbox" id="input-ins-py-sdi12-2-enable" onclick="sensorStatusChanged('ins-py-sdi12-2')" />
                                 <i class="form-icon"></i>
                               </label>
                             </div>
                           </div>
-                          <div id="address-sdi12-2" class="col-12" style="display:none">
+                          <div id="address-ins-py-sdi12-2" class="col-12" style="display:none">
                             <div class="form-group">
                               <div class="column col-1 col-mr-auto"></div>
                               <div class="col-3 col-sm-12">
@@ -488,6 +523,7 @@
             Cookies.remove('meas-scale-enabled')
             Cookies.remove('system-enable-ota')
             Cookies.remove('period')
+            Cookies.remove('batch-upload-buffer-size')
           }
 
           function storeData(){
@@ -495,6 +531,10 @@
             clearCookies();
 
             Cookies.set('period', document.getElementById('input-period').value)
+            if(document.getElementById('input-ins-batch-upload-enable').checked)
+              Cookies.set('batch-upload-buffer-size', document.getElementById('input-message-buffer-size').value)
+            else
+              Cookies.set('batch-upload-buffer-size', "None")
 
             Cookies.set('meas-battery-stat', document.getElementById('input-battery').checked ? "True" : "False")
             Cookies.set('meas-board-sense', document.getElementById('input-board-sense').checked ? "True" : "False")
