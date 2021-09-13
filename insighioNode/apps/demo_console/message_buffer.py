@@ -2,6 +2,7 @@ from . import demo_config as cfg
 import json
 import utils
 import logging
+import utime
 
 storage_file_name = "measurements.log"
 

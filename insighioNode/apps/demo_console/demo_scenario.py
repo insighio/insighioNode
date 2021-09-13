@@ -46,7 +46,7 @@ measurements = demo_utils.get_measurements(cfg)
 if buffered_upload_enabled and not execute_connetion_procedure:
     from . import message_buffer
     message_buffer.timestamp_measurements(measurements)
-    execute_connetion_procedure = not message_buffer.store_measurement_if_needed()
+    execute_connetion_procedure = not message_buffer.store_measurement_if_needed(measurements)
 
 if execute_connetion_procedure:
     from external.kpn_senml.senml_unit import SenmlSecondaryUnits
