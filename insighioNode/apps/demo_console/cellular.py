@@ -137,7 +137,7 @@ def disconnect():
     if transfer_client is not None:
         transfer_client.disconnect()
         transfer_client = None
-    logging.info("Deactivate NB-IOT: {}".format(cellular.deactivate()))
+    logging.info("Deactivate cellular: {}".format(cellular.deactivate()))
 
 
 def checkAndApplyOTA(cfg):
