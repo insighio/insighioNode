@@ -42,6 +42,8 @@ if buffered_upload_enabled and utime.gmtime()[0] < 2021:
 # get measurements
 measurements = demo_utils.get_measurements(cfg)
 
+logging.debug("printing measurements so far: " + str(measurements))
+
 # if the RTC is OK, timestamp message
 if buffered_upload_enabled and not execute_connetion_procedure:
     from . import message_buffer
@@ -83,7 +85,8 @@ if execute_connetion_procedure:
             device_info.set_led_color('green')
 
             # create packet
-            measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": utime.ticks_ms() - start_time}
+            # utime.ticks_ms() is being reset after each deepsleep
+            measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": utime.ticks_ms()}
             message = network.create_message(cfg.device_id, measurements)
 
             # send packet
@@ -113,10 +116,12 @@ demo_utils.device_deinit()
 
 # Finalization Actions
 gc.collect()
-logging.debug("end timestamp: " + str(utime.ticks_ms()))
+# utime.ticks_ms() is being reset after each deepsleep
+utime = utime.ticks_ms()
+logging.debug("end timestamp: " + str(utime))
 logging.info("Getting into deep sleep...")
 
 #############
 ### Time controlled by Web UI defined period
 ###
-machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000)
+machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000 - utime)
