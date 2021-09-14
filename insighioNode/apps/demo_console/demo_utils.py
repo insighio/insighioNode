@@ -103,7 +103,6 @@ def read_battery_voltage_and_current():
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 1)
     if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
         gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
-    utime.sleep_ms(500)
     vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, cfg._BAT_VDIV, cfg._BAT_ATT)
     if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
         vina_mV = gpio_handler.get_input_voltage(cfg._UC_IO_CUR_READ, voltage_divider=cfg._CUR_VDIV, attn=cfg._CUR_ATT)

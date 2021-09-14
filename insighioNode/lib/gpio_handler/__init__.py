@@ -13,6 +13,16 @@ _NUM_ADC_READINGS = const(500)
 def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cycles=_NUM_ADC_READINGS):
     """ Returns input voltage in a specific pin, for a given voltage divider (default is 1) and attenuator level (default 3, i.e. 0-3.3V) """
     if device_info.is_esp32():
+        adc = ADC(Pin(pin))
+        adc.atten(attn)
+        adc.width(ADC.WIDTH_12BIT)
+
+        try:
+            adc.init(attn, ADC.WIDTH_12BIT)
+            return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
+        except:
+            pass
+
         attn_factor = 1
         if attn == ADC.ATTN_11DB:
             attn_factor = 3.548134  # 10**(11/20)
@@ -20,10 +30,6 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
             attn_factor = 1.995262  # 10**(6/20)
         elif attn == ADC.ATTN_2_5DB:
             attn_factor = 1.333521  # 10**(2.5/20)
-
-        adc = ADC(Pin(pin))
-        adc.atten(attn)
-        adc.width(ADC.WIDTH_12BIT)
 
         tmp = 0.0
         running_avg = 0.0
