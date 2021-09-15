@@ -117,11 +117,11 @@ demo_utils.device_deinit()
 # Finalization Actions
 gc.collect()
 # utime.ticks_ms() is being reset after each deepsleep
-utime = utime.ticks_ms()
-logging.debug("end timestamp: " + str(utime))
+uptime = utime.ticks_ms()
+logging.debug("end timestamp: " + str(uptime))
 logging.info("Getting into deep sleep...")
 
 #############
 ### Time controlled by Web UI defined period
 ###
-machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000 - utime)
+machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000 - uptime)
