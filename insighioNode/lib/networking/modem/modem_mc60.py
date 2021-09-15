@@ -1,7 +1,6 @@
 from . import modem_base
 import utime
 import ure
-from external.micropyGPS.micropyGPS import MicropyGPS
 import logging
 
 
@@ -25,6 +24,7 @@ class ModemMC60(modem_base.Modem):
         return False
 
     def get_gps_position(self, timeoutms=300000, satelite_number_threshold=5):
+        from external.micropyGPS.micropyGPS import MicropyGPS
         counter = 0
         gps_fix = False
         print("Starting query gps")
