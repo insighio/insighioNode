@@ -49,14 +49,7 @@ def connect(cfg):
         if status == cellular.MODEM_CONNECTED:
             if modem_instance.get_model() == 'bg600l-m3':
                 global mqtt_connected
-                (mqtt_ready, _) = modem_instance.send_at_cmd('AT+QMTOPEN=0,"' + protocol_config.server_ip + '",' + str(protocol_config.server_port), 15000, "\\+QMTOPEN:\\s+0,0")
-
-                if mqtt_ready:
-                    # mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"client","a93d2353-c664-4487-b52c-ae3bd73b06c4","ed1d8997-a8b1-46c1-8927-04fb35dd93af"')
-                    (mqtt_connected, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(protocol_config.thing_id, protocol_config.thing_id, protocol_config.thing_token), 15000, "\\+QMTCONN:\\s+0,0,0")
-                else:
-                    logging.error("Mqtt not ready")
-
+                mqtt_connected = modem_instance.mqtt_connect(protocol_config.server_ip, protocol_config.server_port, protocol_config.thing_id, protocol_config.thing_token)
             else:
                 global transfer_client
                 from . import transfer_protocol
@@ -81,7 +74,12 @@ def get_gps_position(cfg, measurements):
 
     modem_instance = cellular.get_modem_instance()
     if modem_instance is not None:
-        modem_instance.set_gps_state(True)
+        for i in range(0, 3):
+            if modem_instance.set_gps_state(True):
+                break
+            modem_instance.set_gps_state(False)
+            utime.sleep_ms(500)
+
         if modem_instance.is_gps_on():
             start_time = utime.ticks_ms()
             (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(180000)
@@ -117,17 +115,7 @@ def send_message(cfg, message):
     if modem_instance is not None and mqtt_connected:
 
         topic = 'channels/{}/messages/{}'.format(protocol_config.message_channel_id, protocol_config.thing_id)
-
-        for i in range(0, 3):
-            (mqtt_send_ready, _) = modem_instance.send_at_cmd('AT+QMTPUB=0,1,1,0,"' + topic + '"', 15000, '>')
-            if mqtt_send_ready:
-                (mqtt_send_ok, _) = modem_instance.send_at_cmd(message + '\x1a')
-                return mqtt_send_ok
-            utime.sleep_ms(500)
-
-            logging.error("Mqtt not ready to send")
-
-        return False
+        return modem_instance.mqtt_publish(topic, message)
     elif transfer_client is not None:
         transfer_client.send_packet(message)
 

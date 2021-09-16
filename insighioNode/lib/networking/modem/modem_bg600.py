@@ -32,17 +32,15 @@ class ModemBG600(modem_base.Modem):
 
         (status1, _) = self.send_at_cmd('AT+QICSGP=1,1,"' + self.apn + '","","",0')
         (status2, _) = self.send_at_cmd('AT+QIACT=1')
-        (status3, _) = self.send_at_cmd('AT+QMTCFG="pdpcid",1')
 
-        return status1 and status2 and status3  # self.connected
+        return status1 and status2   # self.connected
 
     def is_connected(self):
         (status, lines) = self.send_at_cmd('AT+CGACT?')
         return status and len(lines) > 0 and "1,1" in lines[0]
 
     def disconnect(self):
-        self.send_at_cmd("AT+QMTDISC=0")
-
+        self.mqtt_disconnect()
         self.send_at_cmd("AT+QIDEACT=1")
 
         return super().disconnect()
@@ -61,10 +59,14 @@ class ModemBG600(modem_base.Modem):
         return (rsrp, rsrq)
 
     def set_gps_state(self, poweron=True):
+        command = ""
         if poweron:
-            self.send_at_cmd('AT+QGPS=1')
+            command = 'AT+QGPS=1'
         else:
-            self.send_at_cmd('AT+QGPSEND')
+            command = 'AT+QGPSEND'
+
+        (status, _) = self.send_at_cmd(command)
+        return status
 
     # to be overriden by children
     def is_gps_on(self):
@@ -116,3 +118,32 @@ class ModemBG600(modem_base.Modem):
             pass
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)
+
+    def mqtt_connect(self, server_ip, server_port, username, password):
+        (context_activated, _) = self.send_at_cmd('AT+QMTCFG="pdpcid",1')
+        if not context_activated:
+            return False
+
+        (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN=0,"' + server_ip + '",' + str(server_port), 15000, "\\+QMTOPEN:\\s+0,0")
+
+        if mqtt_ready:
+            # mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"client","a93d2353-c664-4487-b52c-ae3bd73b06c4","ed1d8997-a8b1-46c1-8927-04fb35dd93af"')
+            (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(username, username, password), 15000, "\\+QMTCONN:\\s+0,0,0")
+            return mqtt_connected
+        else:
+            logging.error("Mqtt not ready")
+        return False
+
+    def mqtt_publish(self, topic, message, num_of_retries=3):
+        for i in range(0, 3):
+            (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,0,"' + topic + '"', 15000, '>')
+            if mqtt_send_ready:
+                (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a')
+                return mqtt_send_ok
+                logging.error("Mqtt not ready to send")
+            utime.sleep_ms(500)
+        return False
+
+    def mqtt_disconnect(self):
+        (status, _) = self.send_at_cmd("AT+QMTDISC=0")
+        return status
