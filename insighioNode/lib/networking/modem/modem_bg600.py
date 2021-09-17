@@ -180,3 +180,92 @@ class ModemBG600(modem_base.Modem):
     def mqtt_disconnect(self):
         (status, _) = self.send_at_cmd("AT+QMTDISC=0")
         return status
+
+    def get_file(self, source, destination, timeoutms=150000):
+        import device_info
+        # read file size
+        (file_found, lines) = self.send_at_cmd('AT+QFLST="' + source + '"')
+        if not file_found:
+            return False
+
+        reg = r'\+QFLST: ".*",(\d+)'
+        res = ure.match(reg, lines[0])
+        if not res:
+            return False
+
+        file_size = int(res.group(1))
+        logging.debug("about to read file: {} of size: {}".format(source, file_size))
+
+        # clear incoming message buffer
+        while self.uart.any():
+            self.uart.readline()
+
+        status = None
+        responseLines = []
+        CHUNKSIZE = 1024
+        is_echo_on = True
+        is_reading_file_data = False
+        start_timestamp = utime.ticks_ms()
+        timeout_timestamp = start_timestamp + timeoutms
+        success_regex = "^([\\w\\s\\+]+)?OK$"
+        error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
+
+        # send command
+        command = 'AT+QFDWL="' + source + '"'
+        logging.debug("> " + command)
+        write_success = self.uart.write(command + '\r\n')
+        if not write_success:
+            return (status, ['error: can not send command'])
+
+        fw = open(destination, 'wb')
+
+        while True:
+            device_info.wdt_reset()
+
+            remaining_bytes = self.uart.any()
+            if(utime.ticks_ms() >= timeout_timestamp):
+                if status is None:
+                    status = False
+                break
+
+            # if OK or ERROR has already been read though there are still
+            # data on the UART, keep reading
+            if status is not None and remaining_bytes == 0:
+                break
+
+            line = self.uart.readline()
+
+            try:
+                line = line if line is None else line.decode('utf8').strip()
+            except Exception as e:
+                logging.error("! " + str(line))
+                line = ""
+
+            if line == command:
+                logging.debug("- <command echo is on - ignoring>")
+                is_echo_on = False
+            elif line == "CONNECT":
+                data_read = 0
+                logging.debug("reading file contents")
+                while data_read < file_size:
+                    data_remaining = file_size - data_read
+                    byte_length_to_request = CHUNKSIZE if data_remaining >= CHUNKSIZE else data_remaining
+                    buffer = self.uart.read(byte_length_to_request)
+                    fw.write(buffer)
+                    data_read += byte_length_to_request
+                logging.debug("file reading done")
+            else:
+                responseLines.append(line)
+                if ure.search(success_regex, line) is not None:
+                    status = True
+                elif ure.search(error_regex, line) is not None:
+                    status = False
+
+            utime.sleep_ms(50)
+
+        if status is None:
+            status = False
+
+        fw.close()
+
+        return (status, responseLines)
