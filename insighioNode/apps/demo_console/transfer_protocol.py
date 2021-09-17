@@ -73,14 +73,28 @@ class TransferProtocol:
         return False
 
     def send_control_packet_ota(self, message):
-        return self.client.sendOtaMessage(message)
+        if not self.connected:
+            logging.info("TransferProtocol not connected")
+            return False
+
+        logging.info("About to send control messages")
+
+        if self.modem_based:
+            topic = 'channels/{}/messages/{}/ota'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+            return self.modem_instance.mqtt_publish(topic, message)
+        elif self.protocol == 'mqtt':
+            return self.client.sendOtaMessage(message)
+            logging.info("Done.")
 
     def get_control_message(self):
         if not self.connected:
             logging.info("TransferProtocol not connected")
             return False
 
-        if self.protocol == 'coap':
+        if self.modem_based:
+            topic = 'channels/{}/messages/{}/ota'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+            return self.modem_instance.mqtt_get_message(topic)
+        elif self.protocol == 'coap':
             return None
         elif self.protocol == 'mqtt':
             return self.client.subscribe_and_get_first_message()
@@ -91,7 +105,10 @@ class TransferProtocol:
             logging.info("TransferProtocol not connected")
             return False
 
-        if self.protocol == 'mqtt':
+        if self.modem_based:
+            topic = 'channels/{}/messages/{}/ota'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+            return self.modem_instance.mqtt_publish(topic, "", 3, True)
+        elif self.protocol == 'mqtt':
             logging.info("About to clear retained messages")
             self.client.clearOtaMessages()
             # self.client.sendMessage("", self.protocol_config.control_channel_id, True)

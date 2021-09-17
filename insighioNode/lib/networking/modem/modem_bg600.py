@@ -9,6 +9,14 @@ class ModemBG600(modem_base.Modem):
         super().__init__(power_on, power_key, modem_tx, modem_rx, gps_tx, gps_rx)
         self.connection_status = False
 
+    # even though this function is correct for BG600, it is normally called
+    # while waiting for the modem to power on, where at that time we are not aware
+    # of the modem's model. So it can not be used as generic
+    # Left for future referece
+    def wait_for_modem_power_on(self):
+        (status, _) = self.send_at_cmd("", 10000, "APP RDY")
+        return status
+
     def set_technology(self, technology):
         if technology == 'NBIoT':
             self.send_at_cmd('AT+QCFG="nwscanmode",3,1')
@@ -134,9 +142,9 @@ class ModemBG600(modem_base.Modem):
             logging.error("Mqtt not ready")
         return False
 
-    def mqtt_publish(self, topic, message, num_of_retries=3):
-        for i in range(0, 3):
-            (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,0,"' + topic + '"', 15000, '>')
+    def mqtt_publish(self, topic, message, num_of_retries=3, retain=False):
+        for i in range(0, num_of_retries):
+            (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,{},"{}"'.format("1" if retain else "0", topic), 15000, '>')
             if mqtt_send_ready:
                 (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a', 15000, r"\+QMTPUB:\s*\d+,\d+,[01]")
                 return mqtt_send_ok
@@ -162,7 +170,10 @@ class ModemBG600(modem_base.Modem):
         if selected_line:
             res = ure.match(reg + "$", selected_line)
             if res:
-                return (topic, res.group(3))
+                message = dict()
+                message["topic"] = topic
+                message["message"] = res.group(3)
+                return message
 
         return (None, None)
 
