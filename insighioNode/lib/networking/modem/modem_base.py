@@ -270,7 +270,8 @@ class Modem:
 
             remaining_bytes = self.uart.any()
             if(utime.ticks_ms() >= timeout_timestamp):
-                status = False
+                if status is None:
+                    status = False
                 break
 
             # if OK or ERROR has already been read though there are still
