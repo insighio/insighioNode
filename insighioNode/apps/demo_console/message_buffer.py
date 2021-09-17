@@ -43,7 +43,7 @@ def parse_stored_measurements_and_upload(network):
     if loaded_measurements and len(loaded_measurements) > 0:
         failed_messages = []
         for past_measurement in loaded_measurements:
-            utime.sleep_ms(500)
+            utime.sleep_ms(100)
             message = network.create_message(cfg.device_id, past_measurement)
             message_send_status = network.send_message(cfg, message)
 
