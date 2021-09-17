@@ -54,13 +54,21 @@ class Modem:
         utime.sleep_ms(1200)
         p0.off()
         logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
+        logging.info("Waiting for the modem to finish power on")
+        status = self.wait_for_modem_power_on()
+        logging.info("Modem ready: " + str(status))
+
+        if status:
+            self.send_at_cmd("at+cmee=2")
+
+    def wait_for_modem_power_on(self):
         retries = 0
         while retries < 10:
             (status, response) = self.send_at_cmd("AT", 500)
             if status:
-                self.send_at_cmd("at+cmee=2")
-                return
+                return True
             retries += 1
+        return False
 
     def power_off(self):
         p0 = Pin(self.modem_power_key, Pin.OUT)
@@ -143,7 +151,7 @@ class Modem:
         return False
 
     def attach(self, do_attach=True):
-        (status, _) = self.send_at_cmd('at+cgatt=' + "1" if do_attach else "0")
+        (status, _) = self.send_at_cmd('at+cgatt={}'.format("1" if do_attach else "0"))
         return status
 
     def detach(self):
@@ -202,7 +210,7 @@ class Modem:
     def get_extended_signal_quality(self):
         rsrp = -141
         rsrq = -40
-        (status, lines) = self.send_at_cmd('AT+CESQ').split(',')
+        (status, lines) = self.send_at_cmd('AT+CESQ')
         if status and len(lines) > 0:
             cesq_data = lines[0].split(',')
             rsrq_tmp = int(cesq_data[-2])
