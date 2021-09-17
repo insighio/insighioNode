@@ -58,6 +58,7 @@ class Modem:
         while retries < 10:
             (status, response) = self.send_at_cmd("AT", 500)
             if status:
+                self.send_at_cmd("at+cmee=2")
                 return
             retries += 1
 
@@ -141,6 +142,13 @@ class Modem:
             utime.sleep_ms(100)
         return False
 
+    def attach(self, do_attach=True):
+        (status, _) = self.send_at_cmd('at+cgatt=' + "1" if do_attach else "0")
+        return status
+
+    def detach(self):
+        return self.attach(False)
+
     def is_attached(self):
         (status, lines) = self.send_at_cmd("at+cgatt?")
         return (status and len(lines) > 0 and '+CGATT: 1' in lines[0])
@@ -177,8 +185,9 @@ class Modem:
             self.ppp.active(False)
 
         self.connected = False
-        (status, _) = self.send_at_cmd("AT+CGACT=0,1")
-        return status
+        (status_act, _) = self.send_at_cmd("AT+CGACT=0,1")
+        status_att = self.detach()
+        return status_att and status_act
 
     def get_rssi(self):
         rssi = -141
@@ -243,7 +252,7 @@ class Modem:
         start_timestamp = utime.ticks_ms()
         timeout_timestamp = start_timestamp + timeoutms
 
-        success_regex = "^(\\w+\\s+)?(" + success_condition + ")$"
+        success_regex = "^([\\w\\s\\+]+)?(" + success_condition + ")$"
         error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
         first_line = True
         is_echo_on = True
