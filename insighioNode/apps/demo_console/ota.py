@@ -102,23 +102,52 @@ def downloadOTA(client, fileId, fileType, fileSize):
     filename = device_info.get_device_root_folder() + fileId + fileType
     # http://<ip>/packages/download?fuid=<file-uid>&did=<device-id>&dk=<device-key>&cid=<control-channel-id>
     # TODO: fix support of redirections
+    protocol_config = cfg.get_protocol_config()
     URL = 'http://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}'.format(
         #cfg.protocol_config.server_ip,
         "console.insigh.io",
         fileId,
-        cfg.protocol_config.thing_id,
-        cfg.protocol_config.thing_token,
-        cfg.protocol_config.control_channel_id
+        protocol_config.thing_id,
+        protocol_config.thing_token,
+        protocol_config.control_channel_id
     )
-    wCli = microWebCli.MicroWebCli(URL)
-    logging.debug('GET file %s' % wCli.URL)
-    wCli.OpenRequest()
-    resp = wCli.GetResponse()
-    logging.debug("Get file response status: {}, message: {}".format(resp.GetStatusCode(), resp.GetStatusMessage()))
-    if resp.IsSuccess():
-        contentType = resp.WriteContentToFile(filename, progressCallback)
-        logging.debug('File was saved to "%s"' % (filename))
-        return filename
+
+    logging.debug("OTA URL: " + URL)
+
+    if client.modem_based:
+        file = fileId + fileType
+        (context_ready, _) = modem.send_at_cmd('AT+QHTTPCFG="contextid",1')
+        modem.send_at_cmd('AT+QHTTPCFG="responseheader",0')
+        (url_ready, _) = modem.send_at_cmd('AT+QHTTPURL=' + str(len(URL)) + ',80', 8000, "CONNECT")
+        if not url_ready:
+            return False
+
+        (url_setup, _) = modem.send_at_cmd(URL, 80)
+        if not url_setup:
+            return False
+
+        (get_requested, _) = modem.send_at_cmd('AT+QHTTPGET=80')
+
+        if not get_requested:
+            return False
+
+        (file_downloaded, _) = modem.send_at_cmd('AT+QHTTPREADFILE="' + file + '"', 250000, r"\+QHTTPREADFILE:.*")
+
+        if not file_downloaded:
+            return False
+        (file_read, lines) = modem.send_at_cmd('AT+QFDWL="' + file + '"')
+        if status:
+            modem.send_at_cmd('AT+QFDEL="' + file + '"')
+    else:
+        wCli = microWebCli.MicroWebCli(URL)
+        logging.debug('GET file %s' % wCli.URL)
+        wCli.OpenRequest()
+        resp = wCli.GetResponse()
+        logging.debug("Get file response status: {}, message: {}".format(resp.GetStatusCode(), resp.GetStatusMessage()))
+        if resp.IsSuccess():
+            contentType = resp.WriteContentToFile(filename, progressCallback)
+            logging.debug('File was saved to "%s"' % (filename))
+            return filename
     return False
 
 
