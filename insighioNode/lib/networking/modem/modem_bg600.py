@@ -138,11 +138,33 @@ class ModemBG600(modem_base.Modem):
         for i in range(0, 3):
             (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,0,"' + topic + '"', 15000, '>')
             if mqtt_send_ready:
-                (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a')
+                (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a', 15000, r"\+QMTPUB:\s*\d+,\d+,[01]")
                 return mqtt_send_ok
                 logging.error("Mqtt not ready to send")
             utime.sleep_ms(500)
         return False
+
+    def mqtt_get_message(self, topic, timeout_ms=5000):
+        reg = r"\+QMTRECV:\s*(\d+),(\d+),\"" + topic + r"\",\"(.*)\""
+        # subscribe and receive message if any
+        (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=0,1,"' + topic + '",1', timeout_ms, reg)
+        # unsubscribe
+        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=0,1,"' + topic + '"')
+
+        selected_line = None
+        for line in lines:
+            line = line.strip()
+            # search for the line that contains the info of the received message
+            if line.startswith("+QMTRECV:"):
+                selected_line = line
+                break
+
+        if selected_line:
+            res = ure.match(reg + "$", selected_line)
+            if res:
+                return (topic, res.group(3))
+
+        return (None, None)
 
     def mqtt_disconnect(self):
         (status, _) = self.send_at_cmd("AT+QMTDISC=0")
