@@ -80,7 +80,7 @@ class MQTTClientCustom:
         return self.__sendMessageEx(topic, message, 1, retained)
 
     def sendOtaMessage(self, message):
-        return self.sendMessage(message, self.otaChannel, True)
+        return self.sendMessage(message, self.otaChannel, False)
 
     def clearOtaMessages(self):
         return self.sendMessage("", self.otaChannel, True)
