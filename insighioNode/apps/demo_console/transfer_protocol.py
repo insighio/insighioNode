@@ -3,13 +3,15 @@ import device_info
 
 
 class TransferProtocol:
-    def __init__(self, cfg):
+    def __init__(self, cfg, modem_instance=None):
         self.connected = False
+        self.modem_instance = modem_instance
+        self.modem_based = (modem_instance is not None)
         self.protocol_config = cfg.get_protocol_config()
         self.protocol_config.client_name = cfg.device_id
         self.protocol = cfg.protocol
         logging.debug("initializing TransferProtocol for: " + str(self.protocol))
-        if self.protocol == 'coap':
+        if not self.modem_based and self.protocol == 'coap':
             from protocols import coap_client
             self.client = coap_client.CoAPClient(self.protocol_config)
             if self.protocol_config.use_custom_socket:
@@ -17,28 +19,32 @@ class TransferProtocol:
                 from network import LTE
                 self.protocol_config.custom_socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
                 self.protocol_config.custom_socket.setModemInstance(LTE())
-        elif self.protocol == 'mqtt':
+        elif not self.modem_based and self.protocol == 'mqtt':
             from protocols import mqtt_client
             self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
 
     def connect(self):
-        if self.protocol == 'coap':
+        if self.connected:
+            return True
+
+        if self.modem_based:
+            self.connected = self.modem_instance.mqtt_connect(self.protocol_config.server_ip, self.protocol_config.server_port, self.protocol_config.thing_id, self.protocol_config.thing_token)
+        elif self.protocol == 'coap':
             connectionStatus = self.client.start()
             logging.info("CoAP connection status: " + str(connectionStatus))
-            self.connected = True
-            return True  # TODO: temp solution till we resolve what values are returned from connect function
-            # return connectionStatus
+            self.connected = True  # TODO: temp solution till we resolve what values are returned from connect function
         elif self.protocol == 'mqtt':
             connectionStatus = self.client.connect()
             logging.info("mqtt connection status: " + str(connectionStatus))
             # connectionStatus is not valid on pycom devices
             self.connected = (connectionStatus or not device_info.is_esp32())
-            return True  # TODO: temp solution till we resolve what values are returned from connect function
-            # return connectionStatus
-        return False
+        return self.connected
 
     def disconnect(self):
-        self.client.disconnect()
+        if self.modem_based:
+            self.modem_instance.mqtt_disconnect()
+        else:
+            self.client.disconnect()
         self.connected = False
         logging.info("Disconnected")
 
@@ -48,7 +54,10 @@ class TransferProtocol:
             logging.info("TransferProtocol not connected")
             return False
 
-        if self.protocol == 'coap':
+        if self.modem_based:
+            topic = 'channels/{}/messages/{}'.format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
+            return self.modem_instance.mqtt_publish(topic, message)
+        elif self.protocol == 'coap':
             logging.info("About to send: " + message)
             self.client.postMessage(message)
             logging.info("Done.")

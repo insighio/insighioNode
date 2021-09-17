@@ -10,6 +10,7 @@ import utime
 transfer_client = None
 mqtt_connected = False
 
+
 # network connection
 def connect(cfg):
     logging.info("Connecting to cellular...")
@@ -47,14 +48,16 @@ def connect(cfg):
                 results["cell_con_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connection_duration}
 
         if status == cellular.MODEM_CONNECTED:
+            global transfer_client
+            from . import transfer_protocol
+
+            # AT command based implementation of communication of Quectel BG600L
             if modem_instance.get_model() == 'bg600l-m3':
-                global mqtt_connected
-                mqtt_connected = modem_instance.mqtt_connect(protocol_config.server_ip, protocol_config.server_port, protocol_config.thing_id, protocol_config.thing_token)
+                transfer_client = transfer_protocol.TransferProtocol(cfg, modem_instance)
             else:
-                global transfer_client
-                from . import transfer_protocol
                 transfer_client = transfer_protocol.TransferProtocol(cfg)
-                transfer_client.connect()
+
+            transfer_client.connect()
 
     return results
 
@@ -110,14 +113,9 @@ def create_message(device_id, measurements):
 
 
 def send_message(cfg, message):
-    modem_instance = cellular.get_modem_instance()
-    protocol_config = cfg.get_protocol_config()
-    if modem_instance is not None and mqtt_connected:
-
-        topic = 'channels/{}/messages/{}'.format(protocol_config.message_channel_id, protocol_config.thing_id)
-        return modem_instance.mqtt_publish(topic, message)
-    elif transfer_client is not None:
-        transfer_client.send_packet(message)
+    if transfer_client is not None:
+        return transfer_client.send_packet(message)
+    return False
 
 
 def disconnect():
