@@ -175,7 +175,7 @@ class ModemBG600(modem_base.Modem):
                 message["message"] = res.group(3)
                 return message
 
-        return (None, None)
+        return None
 
     def mqtt_disconnect(self):
         (status, _) = self.send_at_cmd("AT+QMTDISC=0")
@@ -269,3 +269,27 @@ class ModemBG600(modem_base.Modem):
         fw.close()
 
         return (status, responseLines)
+
+    def delete_file(self, destination):
+        (status, _) = self.send_at_cmd('AT+QFDEL="' + destination + '"')
+        return status
+
+    def http_get_file(self, url, destination_file, timeout_ms=250000):
+        (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
+        self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
+        (url_ready, _) = self.send_at_cmd('AT+QHTTPURL=' + str(len(url)) + ',80', 8000, "CONNECT")
+        if not url_ready:
+            return False
+
+        (url_setup, _) = self.send_at_cmd(url, 80)
+        if not url_setup:
+            return False
+
+        (get_requested, _) = self.send_at_cmd('AT+QHTTPGET=80', 80000, r"\+QHTTPGET:.*")
+
+        if not get_requested:
+            return False
+
+        (file_downloaded, _) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
+
+        return file_downloaded

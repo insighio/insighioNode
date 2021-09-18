@@ -92,7 +92,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
 
     if not hasEnoughFreeSpace(int(fileSize)):
         sendStatusMessage(client, fileId, False, "not enough space")
-        return
+        return None
 
     logging.debug("OTA size check passed")
 
@@ -116,28 +116,14 @@ def downloadOTA(client, fileId, fileType, fileSize):
 
     if client.modem_based:
         file = fileId + fileType
-        (context_ready, _) = modem.send_at_cmd('AT+QHTTPCFG="contextid",1')
-        modem.send_at_cmd('AT+QHTTPCFG="responseheader",0')
-        (url_ready, _) = modem.send_at_cmd('AT+QHTTPURL=' + str(len(URL)) + ',80', 8000, "CONNECT")
-        if not url_ready:
-            return False
-
-        (url_setup, _) = modem.send_at_cmd(URL, 80)
-        if not url_setup:
-            return False
-
-        (get_requested, _) = modem.send_at_cmd('AT+QHTTPGET=80')
-
-        if not get_requested:
-            return False
-
-        (file_downloaded, _) = modem.send_at_cmd('AT+QHTTPREADFILE="' + file + '"', 250000, r"\+QHTTPREADFILE:.*")
-
-        if not file_downloaded:
-            return False
-        (file_read, lines) = modem.send_at_cmd('AT+QFDWL="' + file + '"')
-        if status:
-            modem.send_at_cmd('AT+QFDEL="' + file + '"')
+        # TODO: clear all local files from previous failed attempts?
+        file_downloaded = client.modem_instance.http_get_file(URL, file, 250000)
+        if file_downloaded:
+            local_file_name = device_info.get_device_root_folder() + file
+            is_file_locally = client.modem_instance.get_file(file, local_file_name)
+            client.modem_instance.delete_file(file)
+            return local_file_name
+        return None
     else:
         wCli = microWebCli.MicroWebCli(URL)
         logging.debug('GET file %s' % wCli.URL)
@@ -148,7 +134,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
             contentType = resp.WriteContentToFile(filename, progressCallback)
             logging.debug('File was saved to "%s"' % (filename))
             return filename
-    return False
+    return None
 
 
 def downloadOTAQuectelBG600(client, fileId, fileType, fileSize):
