@@ -96,7 +96,6 @@ def downloadOTA(client, fileId, fileType, fileSize):
 
     logging.debug("OTA size check passed")
 
-    from external.MicroWebCli import microWebCli
     from . import demo_config as cfg
 
     filename = device_info.get_device_root_folder() + fileId + fileType
@@ -126,6 +125,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
                 return local_file_name
         return None
     else:
+        from external.MicroWebCli import microWebCli
         wCli = microWebCli.MicroWebCli(URL)
         logging.debug('GET file %s' % wCli.URL)
         wCli.OpenRequest()
