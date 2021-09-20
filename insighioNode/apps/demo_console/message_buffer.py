@@ -31,28 +31,29 @@ def store_measurement_if_needed(measurements):
 
 def parse_stored_measurements_and_upload(network):
     # load stored measurements
-    loaded_measurements = []
+    failed_messages = []
     stored_measurements_str = utils.readFromFile(storage_file_name)
+    uploaded_measurement_count = 0
     for line in stored_measurements_str.splitlines():
+        utime.sleep_ms(50)
         try:
-            if line:
-                loaded_measurements.append(json.loads(line))
-        except Exception as e:
-            logging.exception(e, "error reading line: ", line)
-
-    if loaded_measurements and len(loaded_measurements) > 0:
-        failed_messages = []
-        for past_measurement in loaded_measurements:
-            utime.sleep_ms(100)
-            message = network.create_message(cfg.device_id, past_measurement)
+            if not line:
+                continue
+            message = network.create_message(cfg.device_id, json.loads(line))
             message_send_status = network.send_message(cfg, message)
 
             logging.debug("Message send status: " + str(message_send_status))
 
             # this only works for BG600 modem since it supports correct message transmission status
             if message_send_status is not None and not message_send_status:
-                logging.info("Failed message appended for future upload: " + str(past_measurement))
-                failed_messages.append(past_measurement)
+                logging.info("Failed message appended for future upload: " + str(line))
+                failed_messages.append(line + "\n")
+            else:
+                uploaded_measurement_count += 1
+        except Exception as e:
+            logging.exception(e, "error reading line: ", line)
+
+    if uploaded_measurement_count > 0:
         utils.deleteFile(storage_file_name)
 
         # if failed messages were logged, recreate the file to upload during next connection
