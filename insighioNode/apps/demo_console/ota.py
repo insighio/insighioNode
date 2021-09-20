@@ -121,8 +121,9 @@ def downloadOTA(client, fileId, fileType, fileSize):
         if file_downloaded:
             local_file_name = device_info.get_device_root_folder() + file
             is_file_locally = client.modem_instance.get_file(file, local_file_name)
-            client.modem_instance.delete_file(file)
-            return local_file_name
+            if is_file_locally:
+                client.modem_instance.delete_file(file)
+                return local_file_name
         return None
     else:
         wCli = microWebCli.MicroWebCli(URL)
