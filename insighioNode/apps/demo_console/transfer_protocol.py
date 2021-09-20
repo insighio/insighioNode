@@ -93,7 +93,7 @@ class TransferProtocol:
 
         if self.modem_based:
             topic = 'channels/{}/messages/{}/ota'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
-            return self.modem_instance.mqtt_get_message(topic)
+            return self.modem_instance.mqtt_get_message(topic, 10000)
         elif self.protocol == 'coap':
             return None
         elif self.protocol == 'mqtt':
