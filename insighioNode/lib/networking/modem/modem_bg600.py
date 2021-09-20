@@ -2,6 +2,7 @@ from . import modem_base
 import utime
 import logging
 import ure
+import device_info
 
 
 class ModemBG600(modem_base.Modem):
@@ -181,43 +182,25 @@ class ModemBG600(modem_base.Modem):
         (status, _) = self.send_at_cmd("AT+QMTDISC=0")
         return status
 
-    def get_file(self, source, destination, timeoutms=150000):
-        import device_info
-        # read file size
-        (file_found, lines) = self.send_at_cmd('AT+QFLST="' + source + '"')
-        if not file_found:
-            return False
-
-        reg = r'\+QFLST: ".*",(\d+)'
-        res = ure.match(reg, lines[0])
-        if not res:
-            return False
-
-        file_size = int(res.group(1))
-        logging.debug("about to read file: {} of size: {} into: {}".format(source, file_size, destination))
-
+    def get_next_bytes_from_file(self, file_handle, num_of_bytes, timeout_ms=2000):
         # clear incoming message buffer
         while self.uart.any():
             self.uart.readline()
 
         status = None
+        buffer = None
         responseLines = []
-        CHUNKSIZE = 128
         is_echo_on = True
-        is_reading_file_data = False
         start_timestamp = utime.ticks_ms()
-        timeout_timestamp = start_timestamp + timeoutms
+        timeout_timestamp = start_timestamp + timeout_ms
         success_regex = "^([\\w\\s\\+]+)?OK$"
         error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
 
         # send command
-        command = 'AT+QFDWL="' + source + '"'
-        logging.debug("> " + command)
+        command = "AT+QFREAD={},{}".format(file_handle, num_of_bytes)
         write_success = self.uart.write(command + '\r\n')
         if not write_success:
-            return (status, ['error: can not send command'])
-
-        fw = open(destination, 'wb')
+            return buffer
 
         while True:
             device_info.wdt_reset()
@@ -242,23 +225,10 @@ class ModemBG600(modem_base.Modem):
                 line = ""
 
             if line == command:
-                logging.debug("- <command echo is on - ignoring>")
                 is_echo_on = False
-            elif line == "CONNECT":
+            elif line == "CONNECT " + str(num_of_bytes):
                 data_read = 0
-                logging.debug("reading file contents")
-                while data_read < file_size:
-                    data_remaining = file_size - data_read
-                    byte_length_to_request = CHUNKSIZE if data_remaining >= CHUNKSIZE else data_remaining
-                    logging.debug("  {}/{}: requesting: {}".format(data_read, file_size, byte_length_to_request))
-                    buffer = self.uart.read(byte_length_to_request)
-                    if not buffer:
-                        logging.error("error reading file from modem")
-                        fw.close()
-                        return False
-                    fw.write(buffer)
-                    data_read += byte_length_to_request
-                logging.debug("file reading done")
+                buffer = self.uart.read(num_of_bytes)
             else:
                 responseLines.append(line)
                 if ure.search(success_regex, line) is not None:
@@ -271,8 +241,51 @@ class ModemBG600(modem_base.Modem):
         if status is None:
             status = False
 
+        return buffer if status else None
+
+    def get_file_size(self, source):
+        # read file size
+        (file_found, lines) = self.send_at_cmd('AT+QFLST="' + source + '"')
+        reg = r'\+QFLST: ".*",(\d+)'
+        res = ure.match(reg, lines[0])
+        return int(res.group(1)) if res else None
+
+    def open_file_read_only(self, source):
+        # If the file exists, it is opened directly and is read only. If the file does not exist, an error is returned.
+        (file_open_status, lines) = self.send_at_cmd('AT+QFOPEN="' + source + '",2')
+        reg = r'\+QFOPEN:\s+(\d+)'
+        res = ure.match(reg, lines[0])
+        return res.group(1) if res else None
+
+    def get_file(self, source, destination, timeoutms=150000):
+        file_size = self.get_file_size(source)
+        if not file_size:
+            return False
+
+        logging.debug("about to read file: {} of size: {} into: {}".format(source, file_size, destination))
+        file_handle = self.open_file_read_only(source)
+        logging.debug("File opened with handle: " + file_handle)
+
+        data_read = 0
+        CHUNKSIZE = 256
+
+        fw = open(destination, 'wb')
+        logging.debug("reading file contents")
+        while data_read < file_size:
+            data_remaining = file_size - data_read
+            byte_length_to_request = CHUNKSIZE if data_remaining >= CHUNKSIZE else data_remaining
+            logging.debug("  {}/{}: requesting: {}".format(data_read, file_size, byte_length_to_request))
+            buffer = self.get_next_bytes_from_file(file_handle, byte_length_to_request)
+            if not buffer:
+                logging.error("error reading file from modem")
+                fw.close()
+                return False
+            fw.write(buffer)
+            data_read += byte_length_to_request
+            utime.sleep_ms(10)
         fw.close()
-        return status
+        (file_close_status, _) = self.send_at_cmd('AT+QFCLOSE=' + file_handle)
+        return data_read == file_size
 
     def delete_file(self, destination):
         (status, _) = self.send_at_cmd('AT+QFDEL="' + destination + '"')
