@@ -87,8 +87,8 @@ class Modem:
             self.send_at_cmd('ATE0')
             # set auto-registration
             # self.send_at_cmd("AT+CFUN=0")
-            # disable unsolicited report of network registration
-            self.send_at_cmd("AT+CREG=0")
+            self.send_at_cmd("AT+COPS=3,2")  # set network name as numeric value
+            self.send_at_cmd("AT+CREG=2")  # enable LAC, CI reporting
             self.send_at_cmd("AT+CTZU=1")  # automatic time update
             self.send_at_cmd("AT+CFUN=1")
 
@@ -220,6 +220,34 @@ class Modem:
             if(rsrp_tmp >= 0 and rsrp_tmp <= 97):
                 rsrp = -141 + rsrp_tmp
         return (rsrp, rsrq)
+
+    def get_lac_n_cell_id(self):
+        regex_creg = r"\+CREG:\s+\d,\d,\"(\w+)\",\"(\w+)\""
+        lac = None
+        ci = None
+        (status, lines) = self.send_at_cmd('AT+CREG?')
+        if status:
+            for line in lines:
+                match_res = ure.search(regex_creg, line)
+                if match_res is not None:
+                    lac = int('0x' + match_res.group(1))
+                    ci = int('0x' + match_res.group(2))
+                    break
+        return (lac, ci)
+
+    def get_registered_mcc_mnc(self):
+        regex_cops = r"\+COPS:\s+\d,2,\"(\d+)"
+        mcc = None
+        mnc = None
+        (status, lines) = self.send_at_cmd('AT+COPS?')
+        if status:
+            for line in lines:
+                match_res = ure.search(regex_cops, line)
+                if match_res is not None:
+                    mcc = match_res.group(1)[0:3]
+                    mnc = match_res.group(1)[3:5]
+                    break
+        return (mcc, mnc)
 
     # to be overriden by children
     def set_gps_state(self, poweron=True):
