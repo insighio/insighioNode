@@ -155,9 +155,9 @@ class ModemBG600(modem_base.Modem):
     def mqtt_get_message(self, topic, timeout_ms=5000):
         reg = r"\+QMTRECV:\s*(\d+),(\d+),\"" + topic + r"\",\"(.*)\""
         # subscribe and receive message if any
-        (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=0,1,"' + topic + '",1', timeout_ms, reg)
+        (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=0,2,"' + topic + '",1', timeout_ms, reg)
         # unsubscribe
-        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=0,1,"' + topic + '"')
+        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=0,2,"' + topic + '"')
 
         selected_line = None
         for line in lines:
@@ -194,7 +194,7 @@ class ModemBG600(modem_base.Modem):
             return False
 
         file_size = int(res.group(1))
-        logging.debug("about to read file: {} of size: {}".format(source, file_size))
+        logging.debug("about to read file: {} of size: {} into: {}".format(source, file_size, destination))
 
         # clear incoming message buffer
         while self.uart.any():
@@ -202,7 +202,7 @@ class ModemBG600(modem_base.Modem):
 
         status = None
         responseLines = []
-        CHUNKSIZE = 1024
+        CHUNKSIZE = 128
         is_echo_on = True
         is_reading_file_data = False
         start_timestamp = utime.ticks_ms()
@@ -250,7 +250,12 @@ class ModemBG600(modem_base.Modem):
                 while data_read < file_size:
                     data_remaining = file_size - data_read
                     byte_length_to_request = CHUNKSIZE if data_remaining >= CHUNKSIZE else data_remaining
+                    logging.debug("  {}/{}: requesting: {}".format(data_read, file_size, byte_length_to_request))
                     buffer = self.uart.read(byte_length_to_request)
+                    if not buffer:
+                        logging.error("error reading file from modem")
+                        fw.close()
+                        return False
                     fw.write(buffer)
                     data_read += byte_length_to_request
                 logging.debug("file reading done")
@@ -267,8 +272,7 @@ class ModemBG600(modem_base.Modem):
             status = False
 
         fw.close()
-
-        return (status, responseLines)
+        return status
 
     def delete_file(self, destination):
         (status, _) = self.send_at_cmd('AT+QFDEL="' + destination + '"')
