@@ -244,8 +244,11 @@ class Modem:
             for line in lines:
                 match_res = ure.search(regex_cops, line)
                 if match_res is not None:
-                    mcc = match_res.group(1)[0:3]
-                    mnc = match_res.group(1)[3:5]
+                    try:
+                        mcc = int(match_res.group(1)[0:3])
+                        mnc = int(match_res.group(1)[3:5])
+                    except:
+                        pass
                     break
         return (mcc, mnc)
 
