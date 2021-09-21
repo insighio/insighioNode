@@ -100,7 +100,19 @@ def get_gps_position(cfg, measurements):
 
         if modem_instance.is_gps_on():
             start_time = utime.ticks_ms()
-            (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(120000)
+
+            timeout_ms = 120000
+            min_satellite_fix_num = 4
+            try:
+                timeout_ms = cfg._MEAS_GPS_TIMEOUT * 1000
+            except:
+                pass
+            try:
+                min_satellite_fix_num = cfg._MEAS_GPS_SATELLITE_FIX_NUM
+            except:
+                pass
+
+            (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(timeout_ms, min_satellite_fix_num)
             add_value_if_valid(measurements, "gps_dur", utime.ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
             if lat is not None and lon is not None:
                 latD = coord_to_double(lat[0], lat[1], lat[2])

@@ -91,7 +91,7 @@ class ModemBG600(modem_base.Modem):
 
     def get_gps_position(self, timeoutms=300000, satelite_number_threshold=5):
         gps_fix = False
-        logging.debug("Starting query gps")
+        logging.info("Starting query gps. Timeout: {}, Min satellite num: {}".format(timeoutms, satelite_number_threshold))
         from external.micropyGPS.micropyGPS import MicropyGPS
         my_gps = MicropyGPS()
 

@@ -421,9 +421,39 @@
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
                               <label class="form-switch">
-                                <input type="checkbox" id="input-ins-esp-gps" checked/>
+                                <input type="checkbox" id="input-ins-esp-gps-enable" checked onclick="sensorStatusChanged('ins-esp-gps')"/>
                                 <i class="form-icon"></i>
                               </label>
+                            </div>
+                          </div>
+                          <div id="address-ins-esp-gps" class="col-12">
+                            <br />
+                            <div id="address-ins-gps-timeout" class="col-12" style="display:block">
+                              <div class="form-group">
+                                <div class="column col-1 col-mr-auto"></div>
+                                <div class="col-3 col-sm-12">
+                                  <label class="form-label" for="measurements">GPS Timeout (seconds)
+                                  </label>
+                                </div>
+                                <div class="col-3 col-sm-12">
+                                  <input class="form-input constr-field" type="number" id="input-ins-gps-timeout" value=120 />
+                                </div>
+                                <div class="column col-5 col-mr-auto"></div>
+                              </div>
+                            </div>
+                            <br />
+                            <div id="address-ins-gps-sat-num" class="col-12" style="display:block">
+                              <div class="form-group">
+                                <div class="column col-1 col-mr-auto"></div>
+                                <div class="col-3 col-sm-12">
+                                  <label class="form-label" for="measurements">Min number of satellites
+                                  </label>
+                                </div>
+                                <div class="col-3 col-sm-12">
+                                  <input class="form-input constr-field" type="number" id="input-ins-gps-sat-num" value=4 />
+                                </div>
+                                <div class="column col-5 col-mr-auto"></div>
+                              </div>
                             </div>
                           </div>
                           <br />
@@ -480,6 +510,8 @@
             Cookies.remove('meas-scale-offset')
             Cookies.remove('meas-scale-enabled')
             Cookies.remove('system-enable-ota')
+            Cookies.remove('meas-gps-timeout')
+            Cookies.remove('meas-gps-sat-num')
           }
 
           function storeData(){
@@ -526,7 +558,11 @@
               Cookies.set('meas-i2c-2', document.getElementById('input-ins-esp-i2c-2').value)
               Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
               Cookies.set('meas-scale-enabled', document.getElementById('input-ins-esp-weight-scale').checked ? "True" : "False")
-              Cookies.set('meas-gps-enabled', document.getElementById('input-ins-esp-gps').checked ? "True" : "False")
+
+              var gps_enabled = document.getElementById('input-ins-esp-gps-enable').checked
+              Cookies.set('meas-gps-enabled', gps_enabled ? "True" : "False")
+              Cookies.set('meas-gps-timeout', gps_enabled ? document.getElementById('input-ins-gps-timeout').value : 0)
+              Cookies.set('meas-gps-sat-num', gps_enabled ? document.getElementById('input-ins-gps-sat-num').value : 0)
 
               if(!document.getElementById('input-ins-esp-weight-scale').checked) {
                   Cookies.set('meas-scale-offset', 0)
