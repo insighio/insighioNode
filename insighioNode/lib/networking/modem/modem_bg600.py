@@ -154,11 +154,13 @@ class ModemBG600(modem_base.Modem):
         return False
 
     def mqtt_get_message(self, topic, timeout_ms=5000):
+        import random
         reg = r"\+QMTRECV:\s*(\d+),(\d+),\"" + topic + r"\",\"(.*)\""
         # subscribe and receive message if any
-        (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=0,2,"' + topic + '",1', timeout_ms, reg)
+        message_id = int(random.random() * 65530) + 1
+        (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=0,{},"{}",1'.format(message_id, topic), timeout_ms, reg)
         # unsubscribe
-        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=0,2,"' + topic + '"')
+        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=0,{},"{}"'.format(message_id, topic))
 
         selected_line = None
         for line in lines:
