@@ -23,6 +23,8 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
         except:
             pass
 
+        logging.debug("fallback ADC without calibration")
+
         attn_factor = 1
         if attn == ADC.ATTN_11DB:
             attn_factor = 3.548134  # 10**(11/20)
