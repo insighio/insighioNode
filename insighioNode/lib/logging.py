@@ -1,4 +1,5 @@
 import sys
+import utime
 
 CRITICAL = 50
 ERROR    = 40
@@ -31,12 +32,10 @@ class Logger(object):
     def log(self, level, msg, *args, **kwargs):
         global _level
         if level >= (self.level or _level):
-            log_format_list = [self._level_str(level), self.name]
-            log_format_msg = ":".join(map(str, log_format_list))
             try:
-                print("[" + log_format_msg + "]", msg % args)
+                print("[{}:{:6d}] {}".format(self._level_str(level), utime.ticks_ms(), msg % args))
             except TypeError as te:
-                print("[" + log_format_msg + "]", msg)
+                print("[{}:{:6d}] {}".format(self._level_str(level), utime.ticks_ms(), msg))
 
     def debug(self, msg, *args, **kwargs):
         self.log(DEBUG, msg, *args, **kwargs)
