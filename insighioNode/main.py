@@ -34,4 +34,5 @@ if rstCause == 0 or rstCause == 1 or not demo_config_exists:
     import gc
     gc.collect()
 
-import apps.demo_console.demo_scenario
+import apps.demo_console.demo_scenario as scenario
+scenario.execute()
