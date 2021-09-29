@@ -8,9 +8,9 @@ _BATCH_UPLOAD_MESSAGE_BUFFER = <batch-upload-buffer-size>
 _MAX_CONNECTION_ATTEMPT_TIME_SEC = 60
 
 """ LoRa-related configuration options """
-_DEV_EUI = '<lora-dev-eui>'
-_APP_EUI = '<lora-app-eui>'
-_APP_KEY = '<lora-app-key>'
+_DEV_EUI = "<lora-dev-eui>"
+_APP_EUI = "<lora-app-eui>"
+_APP_KEY = "<lora-app-key>"
 
 from network import LoRa
 _LORA_REGION = LoRa.<lora-region>

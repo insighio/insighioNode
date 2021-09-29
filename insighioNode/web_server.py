@@ -8,6 +8,7 @@ import utime
 import utils
 import machine
 import logging
+import ure
 
 
 class WebServer:
@@ -51,11 +52,12 @@ class WebServer:
         device_info.set_defaults()
 
     def saveGlobalVarIfFoundInLine(self, line, strToSearch, globalVarName, delimiter):
-        if line.startswith(strToSearch):
+        if ure.match(strToSearch, line):
+        #if line.startswith(strToSearch):
             elems = line.split(delimiter)
-            logging.info(strToSearch + ": " + str(elems))
             if len(elems) > 1 and elems[1] != "":
                 self.pyhtmlMod.SetGlobalVar(globalVarName, elems[1])
+                logging.debug("var '{}' = {}".format(globalVarName, elems[1]))
                 return True
         return False
 
@@ -71,10 +73,10 @@ class WebServer:
         self.pyhtmlMod.SetGlobalVar("insighioDeviceToken", "")
 
         while i < linesCount:
-            if (self.saveGlobalVarIfFoundInLine(projectConfig[i], '    protocol_config.message_channel_id', "insighioChannelId", '"') or
-                self.saveGlobalVarIfFoundInLine(projectConfig[i], '    protocol_config.control_channel_id', "insighioControlChannel", '"') or
-                self.saveGlobalVarIfFoundInLine(projectConfig[i], '    protocol_config.thing_id', "insighioDeviceId", '"') or
-                self.saveGlobalVarIfFoundInLine(projectConfig[i], '    protocol_config.thing_token', "insighioDeviceToken", '"')):
+            if (self.saveGlobalVarIfFoundInLine(projectConfig[i], r'^(\s*\w+\.)?message_channel_id', "insighioChannelId", '"') or
+                self.saveGlobalVarIfFoundInLine(projectConfig[i], r'^(\s*\w+\.)?control_channel_id', "insighioControlChannel", '"') or
+                self.saveGlobalVarIfFoundInLine(projectConfig[i], r'^(\s*\w+\.)?thing_id', "insighioDeviceId", '"') or
+                self.saveGlobalVarIfFoundInLine(projectConfig[i], r'^(\s*\w+\.)?thing_token', "insighioDeviceToken", '"')):
                euisFilled = euisFilled + 1
 
             if euisFilled == 4:
@@ -101,8 +103,8 @@ class WebServer:
         self.pyhtmlMod.SetGlobalVar("loraAppKey", "")
 
         while i < linesCount:
-            if (self.saveGlobalVarIfFoundInLine(projectConfig[i], '_APP_EUI', "loraAppEUI", "'") or
-                self.saveGlobalVarIfFoundInLine(projectConfig[i], '_APP_KEY', "loraAppKey", "'")):
+            if (self.saveGlobalVarIfFoundInLine(projectConfig[i], '_APP_EUI', "loraAppEUI", '"') or
+                self.saveGlobalVarIfFoundInLine(projectConfig[i], '_APP_KEY', "loraAppKey", '"')):
                 euisFilled = euisFilled + 1
 
             if euisFilled == 3:

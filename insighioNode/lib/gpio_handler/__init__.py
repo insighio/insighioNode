@@ -52,8 +52,6 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
         return round((tmp / measurement_cycles) * voltage_divider)
     # typical voltage_divider levels: 3.054 --> Exp Board 2.0, 2 --> Exp Board 3, 11 --> in-house implementation
 
-    # should we use round function since the following division returns millivolt?
-
 
 def get_vin(pin='P16'):
     """ A simple wrapper to take Vin for pycom modules (relevant only when an expansion board is used) """

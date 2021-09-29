@@ -62,7 +62,7 @@ def _try_get_lora_mac_bytes(force_init_region=False):
 def get_lora_mac():
     """ Returns a device id based on lora mac in readable format and in raw format """
     # valid only for lora compatible devices
-    if sys.platform in _LORA_COMPATIBLE_PLATFORMS:
+    if not is_esp32() and sys.platform in _LORA_COMPATIBLE_PLATFORMS:
         mac = _try_get_lora_mac_bytes()
 
         if mac is None:
