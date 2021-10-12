@@ -161,6 +161,10 @@ class Modem:
         (status, lines) = self.send_at_cmd("at+cgatt?")
         return (status and len(lines) > 0 and '+CGATT: 1' in lines[0])
 
+    def has_sim(self):
+        (status, lines) = self.send_at_cmd("at+cimi")
+        return status
+
     def connect(self, timeoutms=30000):
         (status, lines) = self.send_at_cmd('AT+CGDATA="PPP",1', 30000, "CONNECT")
         if not status:

@@ -39,7 +39,7 @@ def connect(cfg):
         pass
 
     logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
-    if modem_instance is not None:
+    if modem_instance is not None and modem_instance.has_sim():
         (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq) = cellular.connect(cfg, dataStateOn=enableDataState)
         add_value_if_valid(results, "status", status == cellular.MODEM_CONNECTED)
 
