@@ -38,7 +38,11 @@ def connect(cfg):
             cnt += 1
         logging.info("time after sync: " + str(RTC().datetime()))
     else:
+        import utime
+        uptimeBeforeNtp = utime.ticks_ms()
         wifi.update_time_ntp()
+        timeDiff = utime.ticks_ms() - uptimeBeforeNtp
+        results["timeDiffAfterNTP"] = timeDiff
 
     if connOk:
         from . import transfer_protocol

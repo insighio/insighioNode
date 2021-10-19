@@ -31,7 +31,7 @@ class WebServer:
             logging.error("WiFi scan failed. Will provide empty SSID list")
             nets = []
         # nets = list(filter(lambda net: net.rssi > -89, nets))
-        if device_info.is_esp32:
+        if device_info.is_esp32():
             self.available_nets = []
 
             class TmpSSIDELEm:

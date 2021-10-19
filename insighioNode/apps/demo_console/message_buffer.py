@@ -3,13 +3,17 @@ import json
 import utils
 import logging
 import utime
+import device_info
 
 storage_file_name = "measurements.log"
 
 
 def timestamp_measurements(measurements):
-    measurements["dt"] = {"value": utime.time() + 946684800}   # time offset 1970 -> 2000
-    return
+    offset = 0
+    if device_info.is_esp32():
+        offset = 946684800
+
+    measurements["dt"] = {"value": utime.time() + offset}   # time offset 1970 -> 2000
 
 
 def store_measurement_if_needed(measurements):
@@ -34,7 +38,7 @@ def parse_stored_measurements_and_upload(network):
     failed_messages = []
     stored_measurements_str = utils.readFromFile(storage_file_name)
     uploaded_measurement_count = 0
-    for line in stored_measurements_str.splitlines():
+    for line in stored_measurements_str.split('\n'):
         utime.sleep_ms(50)
         try:
             if not line:

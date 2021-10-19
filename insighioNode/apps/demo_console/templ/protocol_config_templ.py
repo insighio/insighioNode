@@ -21,6 +21,8 @@ def get_protocol_config():
         protocol_config = mqtt_config.MQTTConfig()
         protocol_config.server_port = 1884 # only for mqtt
         protocol_config.use_custom_socket = False
+        protocol_config.override_measurement_topic = False  #<protocol_override_measurement_topic>
+        protocol_config.expilcit_message_topic = "<protocol_explicit_message_topic>"
     else:
         print('Not supported transport protocol. Choose between CoAP and MQTT')
         return None
