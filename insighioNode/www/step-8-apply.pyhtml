@@ -96,6 +96,9 @@
               contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
             contents += '\n'
 
+            if board == "ins_esp_gen_1":
+              contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_gps_scale.py')
+
             if operation == 'wifi':
               contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/wifi_config_templ.py')
               contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/protocol_config_templ.py')
