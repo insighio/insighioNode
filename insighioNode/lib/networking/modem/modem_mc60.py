@@ -5,8 +5,8 @@ import logging
 
 
 class ModemMC60(modem_base.Modem):
-    def __init__(self, power_on, power_key, modem_tx, modem_rx, gps_tx=None, gps_rx=None):
-        super().__init__(power_on, power_key, modem_tx, modem_rx, gps_tx, gps_rx)
+    def __init__(self, power_on, power_key, modem_tx, modem_rx):
+        super().__init__(power_on, power_key, modem_tx, modem_rx)
 
     def set_gps_state(self, poweron=True):
         self.send_at_cmd('AT+QGNSSC=' + ("1" if poweron else "0"))
@@ -23,7 +23,7 @@ class ModemMC60(modem_base.Modem):
             return res is not None and res.group(1) == "1"
         return False
 
-    def get_gps_position(self, timeoutms=300000, satelite_number_threshold=5):
+    def get_gps_position(self, timeoutms=300000, satellite_number_threshold=5):
         from external.micropyGPS.micropyGPS import MicropyGPS
         counter = 0
         gps_fix = False
@@ -57,7 +57,7 @@ class ModemMC60(modem_base.Modem):
                         self.gps_date = my_gps.date
 
                     logging.debug("{} Lat: {}, Lon: {}, NumSats: {} @ {} - {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.timestamp, my_gps.date))
-                    if my_gps.satellites_in_use >= satelite_number_threshold:
+                    if my_gps.satellites_in_use >= satellite_number_threshold:
                         gps_fix = True
                         return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
             utime.sleep_ms(1000)

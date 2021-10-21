@@ -6,8 +6,8 @@ import device_info
 
 
 class ModemBG600(modem_base.Modem):
-    def __init__(self, power_on, power_key, modem_tx, modem_rx, gps_tx=None, gps_rx=None):
-        super().__init__(power_on, power_key, modem_tx, modem_rx, gps_tx, gps_rx)
+    def __init__(self, power_on, power_key, modem_tx, modem_rx):
+        super().__init__(power_on, power_key, modem_tx, modem_rx)
         self.connection_status = False
 
     # even though this function is correct for BG600, it is normally called
@@ -89,9 +89,9 @@ class ModemBG600(modem_base.Modem):
             return res is not None and res.group(1) == "1"
         return False
 
-    def get_gps_position(self, timeoutms=300000, satelite_number_threshold=5):
+    def get_gps_position(self, timeoutms=300000, satellite_number_threshold=5):
         gps_fix = False
-        logging.info("Starting query gps. Timeout: {}, Min satellite num: {}".format(timeoutms, satelite_number_threshold))
+        logging.info("Starting query gps. Timeout: {}, Min satellite num: {}".format(timeoutms, satellite_number_threshold))
         from external.micropyGPS.micropyGPS import MicropyGPS
         my_gps = MicropyGPS()
 
@@ -121,9 +121,9 @@ class ModemBG600(modem_base.Modem):
                             self.gps_date = my_gps.date
 
                         logging.debug("{} Lat: {}, Lon: {}, NumSats: {} @ {} - {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.timestamp, my_gps.date))
-                        if my_gps.satellites_in_use >= satelite_number_threshold:
+                        if my_gps.satellites_in_use >= satellite_number_threshold:
                             gps_fix = True
-                            logging.debug("satelite_number_threshold: ", str(satelite_number_threshold))
+                            logging.debug("satellite_number_threshold: ", str(satellite_number_threshold))
                             return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
                 utime.sleep_ms(1000)
         except KeyboardInterrupt:

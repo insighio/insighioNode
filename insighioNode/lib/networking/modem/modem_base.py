@@ -7,7 +7,7 @@ import device_info
 
 
 class Modem:
-    def __init__(self, power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx=None, gps_rx=None):
+    def __init__(self, power_on=None, power_key=None, modem_tx=None, modem_rx=None):
         self.connected = False
         self.ppp = None
         self.uart = None
@@ -207,9 +207,8 @@ class Modem:
         if status and len(lines) > 0:
             rssi_tmp = int(lines[0].split(',')[0].split(' ')[-1])
             if(rssi_tmp >= 0 and rssi_tmp <= 31):
-                return -113 + rssi_tmp * 2
-        else:
-            return -141
+                rssi = -113 + rssi_tmp * 2
+        return rssi
 
     def get_extended_signal_quality(self):
         rsrp = -141
@@ -267,7 +266,7 @@ class Modem:
         return False
 
     # to be overriden by children
-    def get_gps_position(self, timeoutms=300000):
+    def get_gps_position(self, timeoutms=300000, satellite_number_threshold=5):
         logging.debug("base modem.get_gps_position is empty")
         pass
 

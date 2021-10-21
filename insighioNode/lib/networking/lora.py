@@ -57,13 +57,16 @@ def join(cfg, lora_keys):
     if not lora.has_joined():
         # set the 3 default channels to the same frequency (must be before sending the OTAA join request)
         config_dr = cfg._LORA_DR if cfg._LORA_DR is not None else 5
-        lora.join(activation=LoRa.OTAA, auth=(lora_keys[0], lora_keys[1], lora_keys[2]), timeout=0, dr=config_dr)
+        try:
+            lora.join(activation=LoRa.OTAA, auth=(lora_keys[0], lora_keys[1], lora_keys[2]), timeout=0, dr=config_dr)
 
-        join_timeout = start_time + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
-        # wait until the module has joined the network
-        while not lora.has_joined() and utime.ticks_ms() < join_timeout:
-            utime.sleep_ms(10)
-            # print('Not yet joined...')
+            join_timeout = start_time + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
+            # wait until the module has joined the network
+            while not lora.has_joined() and utime.ticks_ms() < join_timeout:
+                utime.sleep_ms(10)
+                # print('Not yet joined...')
+        except Exception as e:
+            logging.exception(e, "exception during LoRA join")
 
     conn_attempt_duration = utime.ticks_ms() - start_time
     if lora.has_joined():
