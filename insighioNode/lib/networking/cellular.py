@@ -200,16 +200,16 @@ def update_rtc_from_network_time(modem):
         if time_tuple is None or (time_tuple and time_tuple[0] < 2021 or time_tuple[0] > 2050):
             # wrong time set, try to get time from other source
             now = rtc.datetime()
-            set_gps_date = modem.gps_date is not None and len(modem.gps_date) == 3 and (modem.gps_date[0] != 0 or modem.gps_date[1] != 0 or modem.gps_date[2] != 0)
-            set_gps_time = modem.gps_timestamp is not None and len(modem.gps_timestamp) == 3 and (modem.gps_timestamp[0] != 0 or modem.gps_timestamp[1] != 0 or modem.gps_timestamp[2] != 0)
+            set_gps_date = modem.gps_timestamp is not None and len(modem.gps_timestamp) == 8 and (modem.gps_timestamp[0] != 0 or modem.gps_timestamp[1] != 0 or modem.gps_timestamp[2] != 0)
+            set_gps_time = modem.gps_timestamp is not None and len(modem.gps_timestamp) == 8 and (modem.gps_timestamp[4] != 0 or modem.gps_timestamp[5] != 0 or modem.gps_timestamp[6] != 0)
             time_tuple = (
-                modem.gps_date[0] if set_gps_date else now[0],
-                modem.gps_date[1] if set_gps_date else now[1],
-                modem.gps_date[2] if set_gps_date else now[2],
+                modem.gps_timestamp[0] if set_gps_date else now[0],
+                modem.gps_timestamp[1] if set_gps_date else now[1],
+                modem.gps_timestamp[2] if set_gps_date else now[2],
                 0,
-                modem.gps_timestamp[0] if set_gps_time else now[4],
-                modem.gps_timestamp[1] if set_gps_time else now[5],
-                int(modem.gps_timestamp[2]) if set_gps_time else now[6],
+                modem.gps_timestamp[4] if set_gps_time else now[4],
+                modem.gps_timestamp[5] if set_gps_time else now[5],
+                int(modem.gps_timestamp[6]) if set_gps_time else now[6],
                 0
             )
 

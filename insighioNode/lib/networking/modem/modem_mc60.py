@@ -25,6 +25,7 @@ class ModemMC60(modem_base.Modem):
 
     def get_gps_position(self, timeoutms=300000, satellite_number_threshold=5):
         from external.micropyGPS.micropyGPS import MicropyGPS
+        import math
         counter = 0
         gps_fix = False
         print("Starting query gps")
@@ -53,13 +54,17 @@ class ModemMC60(modem_base.Modem):
                         hdop = my_gps.hdop
 
                     if my_gps.timestamp and my_gps.date:
-                        self.gps_timestamp = my_gps.timestamp
-                        self.gps_date = my_gps.date
+                        self.gps_timestamp = my_gps.date.copy()
+                        self.gps_timestamp += [0]
+                        self.gps_timestamp += my_gps.timestamp
+                        self.gps_timestamp += [0]
+                        # round seconds
+                        self.gps_timestamp[6] = math.floor(self.gps_timestamp[6])
 
-                    logging.debug("{} Lat: {}, Lon: {}, NumSats: {} @ {} - {}".format(my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.timestamp, my_gps.date))
+                    logging.debug("{} {} Lat: {}, Lon: {}, NumSats: {}, hdop: {}".format(my_gps.date, my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop))
                     if my_gps.satellites_in_use >= satellite_number_threshold:
                         gps_fix = True
-                        return (my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
+                        return (self.gps_timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
             utime.sleep_ms(1000)
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)
