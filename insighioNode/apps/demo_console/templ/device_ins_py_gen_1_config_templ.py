@@ -1,6 +1,5 @@
 """ System configuration options """
 _WD_PERIOD = 120 # watchdog time for rebooting in seconds
-_BOARD_TYPE = "<selected-board>"
 
 """ Measurement configuration options """
 _UC_IO_BAT_MEAS_ON = 'P23'

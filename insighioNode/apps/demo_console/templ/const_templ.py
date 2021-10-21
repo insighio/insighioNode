@@ -6,3 +6,5 @@ _CONST_SENSOR_SI7021 = 'si7021'
 _CONST_SENSOR_SHT40 = 'SHT40'
 
 _CONST_MEAS_DISABLED = "disabled"
+
+_BOARD_TYPE = "<selected-board>"

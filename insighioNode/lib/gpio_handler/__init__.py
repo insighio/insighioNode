@@ -61,9 +61,12 @@ def get_vin(pin='P16'):
 
 def set_pin_value(pin, value):
     """ Set pin pernamently to value """
-    tpin = Pin(pin, Pin.OUT)
-    tpin.value(value)
-    logging.debug('Pin {} value set to: {}'.format(pin, value))
+    try:
+        tpin = Pin(pin, Pin.OUT)
+        tpin.value(value)
+        logging.debug('Pin {} value set to: {}'.format(pin, value))
+    except Exception as e:
+        logging.exception(e, "unable to set Pin {} value set to: {}".format(pin, value))
 
 
 # if voltage is undef 3 Volt and this can be used to terminate the process loop till

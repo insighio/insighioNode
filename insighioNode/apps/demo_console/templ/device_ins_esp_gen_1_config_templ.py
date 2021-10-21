@@ -3,8 +3,6 @@ import machine
 """ System configuration options """
 _WD_PERIOD = 120 # watchdog time for rebooting in seconds
 
-_BOARD_TYPE = _CONST_BOARD_TYPE_ESP_GEN_1
-
 """ Measurement configuration options """
 _UC_IO_BAT_MEAS_ON = 27
 _UC_IO_BAT_READ = 36
@@ -23,13 +21,10 @@ _UC_IO_I2C_SCL = 22
 _UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SHT40
 
 """ Load Regulator configuration """
-_UC_IO_LOAD_PWR_SAVE_OFF = 'P4'
+_UC_IO_LOAD_PWR_SAVE_OFF = None
 
 """ External Sensors configuration """
 _UC_IO_ANALOG_DIGITAL_P1 = 32
-_UC_IO_SCALE_CLOCK_PIN = 33
-_UC_IO_SCALE_DATA_PIN = 4
-_UC_IO_SCALE_SPI_PIN = 12
 
 ''' measurements that are controlled by boolean values '''
 _MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>
@@ -37,3 +32,9 @@ _MEAS_BOARD_SENSE_ENABLE = <meas-board-sense>
 _MEAS_BOARD_STAT_ENABLE = <meas-board-stat>
 _MEAS_NETWORK_STAT_ENABLE = <meas-network-stat>
 _MEAS_TEMP_UNIT_IS_CELSIUS = <meas-temp-unit>
+
+_MEAS_GPS_ENABLE = <meas-gps-enabled>
+_MEAS_GPS_TIMEOUT = <meas-gps-timeout>
+_MEAS_GPS_SATELLITE_FIX_NUM = <meas-gps-sat-num>
+
+_CHECK_FOR_OTA = <system-enable-ota>

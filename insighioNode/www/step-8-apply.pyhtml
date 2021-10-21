@@ -92,12 +92,14 @@
 
             if board == "sdi12":
               contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_sdi12_config_templ.py')
+              if not device_info.is_esp32():
+                contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_py_sdi_gen_1_config_templ.py')
             else:
               contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
             contents += '\n'
 
             if board == "ins_esp_gen_1":
-              contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_gps_scale.py')
+              contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_scale.py')
 
             if operation == 'wifi':
               contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/wifi_config_templ.py')
