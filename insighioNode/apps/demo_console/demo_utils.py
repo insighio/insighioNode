@@ -8,6 +8,11 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from apps.demo_console.dictionary_utils import set_value, set_value_int, set_value_float
 
+
+def get_config(key):
+    return getattr(cfg, key) if hasattr(cfg, key) else None
+
+
 def device_init():
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
         bq_charger_setup()

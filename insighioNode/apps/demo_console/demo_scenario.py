@@ -27,11 +27,11 @@ def execute():
 
     # Operations for compatibility with older configurations
     # default temperature unit: Celsius
-    if not hasattr(cfg, '_MEAS_TEMP_UNIT_IS_CELSIUS'):
+    if demo_utils.get_config('_MEAS_TEMP_UNIT_IS_CELSIUS') is None:
         cfg._MEAS_TEMP_UNIT_IS_CELSIUS = True
 
     # initializations
-    device_info.set_defaults(heartbeat=False, wifi_on_boot=False, wdt_on_boot=False, wdt_on_boot_timeout_sec=cfg._WD_PERIOD, bt_on_boot=False)
+    device_info.set_defaults(heartbeat=False, wifi_on_boot=False, wdt_on_boot=False, wdt_on_boot_timeout_sec=demo_utils.get_config("_WD_PERIOD"), bt_on_boot=False)
     device_info.set_led_color('blue')
     _DEVICE_ID = device_info.get_device_id()[0]
     cfg.device_id = _DEVICE_ID
@@ -43,7 +43,7 @@ def execute():
     timeDiffAfterNTP = None
     measurements = {}
 
-    buffered_upload_enabled = cfg._BATCH_UPLOAD_MESSAGE_BUFFER is not None
+    buffered_upload_enabled = demo_utils.get_config("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
     execute_connetion_procedure = not buffered_upload_enabled
 
     # if RTC is invalid, force network connection
@@ -75,7 +75,7 @@ def execute():
         elif cfg.network == "cellular":
             from . import cellular as network
             try:
-                if cfg._MEAS_GPS_ENABLE:
+                if demo_utils.get_config("_MEAS_GPS_ENABLE"):
                     network.get_gps_position(cfg, measurements)  # may be it needs relocation
             except Exception as e:
                 logging.exception(e, "GPS Exception:")
@@ -111,7 +111,7 @@ def execute():
                     from . import message_buffer
                     message_buffer.parse_stored_measurements_and_upload(network)
 
-                if cfg._CHECK_FOR_OTA:
+                if demo_utils.get_config("_CHECK_FOR_OTA"):
                     network.checkAndApplyOTA(cfg)
             else:
                 logging.info("Network [" + cfg.network + "] not connected")
@@ -139,4 +139,6 @@ def execute():
     #############
     ### Time controlled by Web UI defined period
     ###
-    machine.deepsleep(cfg._DEEP_SLEEP_PERIOD_SEC * 1000 - uptime)
+    sleep_period = demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
+    sleep_period = sleep_period if sleep_period not None else 600  # default 10 minute sleep
+    machine.deepsleep(sleep_period * 1000 - uptime)
