@@ -90,7 +90,7 @@ def get_measurements(cfg):
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
         if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
-            import demo_sdi12_utils
+            from . import demo_sdi12_utils
             demo_sdi12_utils.sdi12_board_measurements(measurements)
         else:
             default_board_measurements(measurements)

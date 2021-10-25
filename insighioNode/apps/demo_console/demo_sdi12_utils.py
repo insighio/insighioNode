@@ -1,6 +1,7 @@
 import utime
 from apps.demo_console.dictionary_utils import set_value_float
-
+from . import demo_config as cfg
+import logging
 
 def sdi12_board_measurements(measurements):
     utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)

@@ -140,5 +140,5 @@ def execute():
     ### Time controlled by Web UI defined period
     ###
     sleep_period = demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
-    sleep_period = sleep_period if sleep_period not None else 600  # default 10 minute sleep
+    sleep_period = sleep_period if sleep_period is not None else 600  # default 10 minute sleep
     machine.deepsleep(sleep_period * 1000 - uptime)
