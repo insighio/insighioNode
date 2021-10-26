@@ -40,8 +40,8 @@ from sensors import hx711
               <li class="step-item">
                 <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
               </li>
-              <li class="step-item">
-                <a href="#" class="tooltip active" data-tooltip="Step 5">Measurements</a>
+              <li class="step-item active">
+                <a href="#" class="tooltip" data-tooltip="Step 5">Measurements</a>
               </li>
               <li class="step-item">
                 <a href="#" class="tooltip" data-tooltip="Step 6">Timing</a>
