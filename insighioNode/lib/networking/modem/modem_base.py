@@ -151,7 +151,7 @@ class Modem:
         return False
 
     def attach(self, do_attach=True):
-        (status, _) = self.send_at_cmd('at+cgatt={}'.format("1" if do_attach else "0"))
+        (status, _) = self.send_at_cmd('at+cgatt={}'.format("1" if do_attach else "0"), 144000)
         return status
 
     def detach(self):
