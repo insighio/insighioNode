@@ -141,4 +141,8 @@ def execute():
     ###
     sleep_period = demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
     sleep_period = sleep_period if sleep_period is not None else 600  # default 10 minute sleep
-    machine.deepsleep(sleep_period * 1000 - uptime)
+    remaining_milliseconds = sleep_period * 1000 - uptime
+    if remaining_milliseconds < 0:
+        remaining_milliseconds = 1000  # dummy wait 1 sec before waking up again
+    sleep_period = sleep_period % 86400000  # if sleep period is longer than a day, keep the 24h period as max
+    machine.deepsleep(sleep_period)
