@@ -18,6 +18,10 @@ _UC_IO_SENSOR_SWITCH_ON = 25
 _UC_IO_I2C_SDA = 21
 _UC_IO_I2C_SCL = 22
 
+''' Pins for Sensair Sunrise sensor '''
+_SENSAIR_EN_PIN_NUM = 33
+_SENSAIR_nRDY_PIN_NUM = 4
+
 _UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SHT40
 
 """ Load Regulator configuration """

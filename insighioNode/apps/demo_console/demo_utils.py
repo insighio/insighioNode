@@ -186,6 +186,12 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
         set_value_float(measurements, sensor_name + "_humidity", humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
         set_value_float(measurements, sensor_name + "_temp", temperature, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
         set_value_float(measurements, sensor_name + "_gas", gas, SenmlUnits.SENML_UNIT_OHM)
+    elif sensor_name == "sunrise":
+        # read senseair sunrise sensor
+        from sensors import senseair_sunrise as sens
+        (co2, co2_temp) = sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, cfg._SENSAIR_EN_PIN_NUM, cfg._SENSAIR_nRDY_PIN_NUM)
+        set_value_int(measurements, sensor_name + "_co2", co2, SenmlSecondaryUnits.SENML_SEC_UNIT_PARTS_PER_MILLION)
+        set_value_float(measurements, sensor_name + "_temp", co2_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
     else:
         logging.error("read_i2c_sensor - Sensor not supported: [" + sensor_name + "]")
 

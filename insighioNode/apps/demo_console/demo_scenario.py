@@ -144,5 +144,5 @@ def execute():
     remaining_milliseconds = sleep_period * 1000 - uptime
     if remaining_milliseconds < 0:
         remaining_milliseconds = 1000  # dummy wait 1 sec before waking up again
-    sleep_period = sleep_period % 86400000  # if sleep period is longer than a day, keep the 24h period as max
+    sleep_period = remaining_milliseconds % 86400000  # if sleep period is longer than a day, keep the 24h period as max
     machine.deepsleep(sleep_period)
