@@ -315,7 +315,7 @@ class Modem:
 
             line = self.uart.readline()
             try:
-                line = line if line is None else line.decode('utf8').strip()
+                line = line if line is None else line.decode('utf8', 'ignore').strip()
             except Exception as e:
                 logging.error("! " + str(line))
                 line = ""
