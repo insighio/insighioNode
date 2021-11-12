@@ -6,6 +6,7 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 import device_info
 import utime
+from . import demo_utils
 
 transfer_client = None
 mqtt_connected = False
@@ -24,7 +25,7 @@ def add_value_if_valid(results, key, value, unit=None):
 def connect(cfg):
     logging.info("Connecting to cellular...")
     protocol_config = cfg.get_protocol_config()
-    enableDataState = (cfg._IP_VERSION == "IP")
+    enableDataState = (demo_utils.get_config("_IP_VERSION") == "IP")
     results = {}
 
     if device_info.is_esp32():

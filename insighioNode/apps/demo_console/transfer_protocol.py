@@ -89,7 +89,7 @@ class TransferProtocol:
     def get_control_message(self):
         if not self.connected:
             logging.info("TransferProtocol not connected")
-            return False
+            return None
 
         if self.modem_based:
             topic = 'channels/{}/messages/{}/ota'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
