@@ -102,6 +102,7 @@ def execute():
                 # create packet
                 # utime.ticks_ms() is being reset after each deepsleep
                 measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": getUptime(timeDiffAfterNTP)}
+                measurements["reset_cause"] = {"value": device_info.get_reset_cause()}
                 message = network.create_message(cfg.device_id, measurements)
 
                 # send packet
