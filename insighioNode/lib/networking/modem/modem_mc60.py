@@ -9,7 +9,8 @@ class ModemMC60(modem_base.Modem):
         super().__init__(power_on, power_key, modem_tx, modem_rx)
 
     def set_gps_state(self, poweron=True):
-        self.send_at_cmd('AT+QGNSSC=' + ("1" if poweron else "0"))
+        (status, _) = self.send_at_cmd('AT+QGNSSC=' + ("1" if poweron else "0"))
+        return status
 
     def get_extended_signal_quality(self):
         return (None, None)
