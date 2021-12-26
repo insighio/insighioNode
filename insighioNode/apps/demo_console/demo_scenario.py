@@ -74,11 +74,13 @@ def execute():
             from . import wifi as network
         elif cfg.network == "cellular":
             from . import cellular as network
-            try:
-                if demo_utils.get_config("_MEAS_GPS_ENABLE"):
-                    network.get_gps_position(cfg, measurements)  # may be it needs relocation
-            except Exception as e:
-                logging.exception(e, "GPS Exception:")
+
+        try:
+            if demo_utils.get_config("_MEAS_GPS_ENABLE"):
+                from . import cellular as network_gps
+                network_gps.get_gps_position(cfg, measurements)  # may be it needs relocation
+        except Exception as e:
+            logging.exception(e, "GPS Exception:")
 
         try:
             device_info.set_led_color('red')
