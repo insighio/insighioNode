@@ -79,7 +79,8 @@ def create_message(device_id, measurements):
 
 def send_message(cfg, message):
     if transfer_client is not None:
-        transfer_client.send_packet(message)
+        return transfer_client.send_packet(message)
+    return None
 
 
 def checkAndApplyOTA(cfg):
