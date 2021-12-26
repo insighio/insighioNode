@@ -25,15 +25,19 @@ def device_init():
 def bq_charger_setup():
     from machine import I2C, Pin
     p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
-    p_snsr.on()
     try:
+        p_snsr.on()
         i2c = I2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
         bq_addr = 107
         i2c.writeto_mem(bq_addr, 5, b'\x84')
         i2c.writeto_mem(bq_addr, 0, b'\x22')
     except Exception as e:
         logging.exception(e, "Error initializing BQ charger")
-    p_snsr.off()
+
+    try:
+        p_snsr.off()
+    except Exception as e:
+        pass
 
 
 def device_deinit():
@@ -199,7 +203,7 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
 def read_analog_digital_sensor(data_pin, sensor_name, measurements, position):
     logging.info("read_analog_digital_sensor - Reading Sensor [{}] at pin [{}]".format(sensor_name, data_pin))
     sensor_name = sensor_name.split("-")[0].strip()
-    if sensor_name == "generic analog":
+    if sensor_name == "analog" or sensor_name == "generic analog":  # generic analog is kept for backward compatibility
         from sensors import analog_generic
         volt_analog = analog_generic.get_reading(data_pin, cfg._BAT_VDIV)
         set_value(measurements, "adc_" + position + "_volt", volt_analog, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
