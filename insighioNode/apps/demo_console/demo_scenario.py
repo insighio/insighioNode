@@ -134,18 +134,68 @@ def execute():
 
     # Finalization Actions
     gc.collect()
-    # utime.ticks_ms() is being reset after each deepsleep
-    uptime = getUptime(timeDiffAfterNTP)
-    logging.debug("end timestamp: " + str(uptime))
-    logging.info("Getting into deep sleep...")
 
-    #############
-    ### Time controlled by Web UI defined period
-    ###
-    sleep_period = demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
-    sleep_period = sleep_period if sleep_period is not None else 600  # default 10 minute sleep
-    remaining_milliseconds = sleep_period * 1000 - uptime
-    if remaining_milliseconds < 0:
-        remaining_milliseconds = 1000  # dummy wait 1 sec before waking up again
-    sleep_period = remaining_milliseconds % 86400000  # if sleep period is longer than a day, keep the 24h period as max
-    machine.deepsleep(sleep_period)
+    if(demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") is not None):
+        # utime.ticks_ms() is being reset after each deepsleep
+        uptime = getUptime(timeDiffAfterNTP)
+        logging.debug("end timestamp: " + str(uptime))
+        logging.info("Getting into deep sleep...")
+
+        #############
+        ### Time controlled by Web UI defined period
+        ###
+        sleep_period = demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
+        sleep_period = sleep_period if sleep_period is not None else 600  # default 10 minute sleep
+        remaining_milliseconds = sleep_period * 1000 - uptime
+        if remaining_milliseconds < 0:
+            remaining_milliseconds = 1000  # dummy wait 1 sec before waking up again
+        sleep_period = remaining_milliseconds % 86400000  # if sleep period is longer than a day, keep the 24h period as max
+        machine.deepsleep(sleep_period)
+    elif(demo_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND") is not None and demo_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND") is not None):
+        ### RTC tuple format
+        ###2021, 7, 8, 3, 16, 8, 45, 890003
+        ### yy, MM, dd, DD, hh, mm, ss
+        from machine import RTC
+        if device_info.is_esp32():
+            time_tuple = RTC().datetime()
+        else:
+            time_tuple = RTC().now()
+        logging.info("current time: " + str(time_tuple))
+
+        MORNING_MEAS = demo_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND")
+        EVENING_MEAS = demo_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND")
+
+        if MORNING_MEAS > EVENING_MEAS:
+            MORNING_MEAS = demo_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND")
+            EVENING_MEAS = demo_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND")
+
+        DAY_SECONDS = 86400
+
+        def get_seconds_till_next_slot(current_seconds_of_day):
+            # 5:30 => 19800 seconds
+            if current_seconds_of_day < MORNING_MEAS:
+                return MORNING_MEAS - current_seconds_of_day
+            elif current_seconds_of_day < EVENING_MEAS:
+                return EVENING_MEAS - current_seconds_of_day
+            else:
+                return DAY_SECONDS - current_seconds_of_day + MORNING_MEAS
+
+        if device_info.is_esp32():
+            seconds_of_day = (time_tuple[4] * 3600 + time_tuple[5] * 60 + time_tuple[6])
+        else:
+            seconds_of_day = (time_tuple[3] * 3600 + time_tuple[4] * 60 + time_tuple[5])
+        # seconds_of_day = (seconds_of_day + 3 * 3600) % DAY_SECONDS  # temp timezone fix
+
+        seconds_to_wait = get_seconds_till_next_slot(seconds_of_day)
+        MIN_WAIT_THRESHOLD = 900  # 15 minutes
+        if seconds_to_wait <= MIN_WAIT_THRESHOLD:
+            seconds_to_wait = get_seconds_till_next_slot(seconds_of_day + seconds_to_wait + 1)  # go to next slot
+
+        RTC_DRIFT_CORRECTION = 1.011
+        logging.info("will wake up again in {} hours ({} seconds) <before correction>".format(seconds_to_wait / 3600, seconds_to_wait))
+
+        seconds_to_wait = int(seconds_to_wait * RTC_DRIFT_CORRECTION)
+
+        logging.info("will wake up again in {} hours ({} seconds) <after correction>".format(seconds_to_wait / 3600, seconds_to_wait))
+
+        machine.deepsleep(seconds_to_wait * 1000)  # +0.01% is RTC correction

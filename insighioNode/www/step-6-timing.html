@@ -66,50 +66,69 @@
                   <div id="periodic" class="tabcontent" style="display: block">
                     <br />
                     <br />
-                    <div class="col-4 col-sm-12">
-                      <label class="form-label" for="input-example-cellular">Sleep Period (seconds)</label>
+                    <div class="columns flex-centered">
+                      <div class="col-4 col-sm-12">
+                        <label class="form-label" for="input-example-cellular">Sleep Period (seconds)</label>
+                      </div>
+                      <div class="col-8 col-sm-12">
+                        <input class="form-input constr-field" type="number" id="input-period" value=300 />
+                      </div>
                     </div>
-                    <div class="col-3 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-period" value=300 />
-                    </div>
-                    <div class="column col-3 col-mr-auto"></div>
                   </div>
                   <div id="scheduled" class="tabcontent" style="display: none">
                     <br />
                     <br />
-                    <div class="col-4 col-sm-12">
-                      <label class="form-label" for="input-example-cellular">UNDER CONSTRUCTION</label>
+                    Run two times in a day, at the timestamps defined below:
+                    <br />
+                    <br />
+                    <div class="columns flex-centered">
+                      <div class="col-1 col-sm-12">
+                        <label class="form-label" for="input-scheduled-time-a">A:</label>
+                      </div>
+                      <div class="col-3 col-sm-12">
+                        <input type="time" id="input-scheduled-time-a" name="appt"  value="05:30">
+                      </div>
+                      <div class="col-1 col-sm-12">
+                        <label class="form-label" for="input-scheduled-time-b">B:</label>
+                      </div>
+                      <div class="col-3 col-sm-12">
+                        <input type="time" id="input-scheduled-time-b" name="appt"  value="21:30">
+                      </div>
+                      <div class="column col-4 col-mr-auto"></div>
                     </div>
                   </div>
                   <div>
                     <br />
-                    <br />
                     <hr/>
-                    <div class="col-4 col-sm-12">
-                      <label class="form-label" for="measurements">Batch Upload</label>
-                    </div>
-                    <div class="col-8 col-sm-12">
-                      <div class="form-group">
-                        <label class="form-switch">
-                          <input type="checkbox" id="input-ins-batch-upload-enable" onclick="sensorStatusChanged('ins-batch-upload')" checked/>
-                          <i class="form-icon"></i>
-                        </label>
+                    <div class="columns flex-centered">
+                      <div class="col-4 col-sm-12">
+                        <label class="form-label" for="measurements">Batch Upload</label>
                       </div>
-                    </div>
-                    <div id="address-ins-batch-upload" class="col-12" style="display:block">
-                      <div class="form-group">
-                        <div class="column col-1 col-mr-auto"></div>
-                        <div class="col-3 col-sm-12">
-                          <label class="form-label" for="measurements">Message Buffer Size
-                            <button class="btn btn-link tooltip" data-tooltip="Defines the number of measurements that&#xa;should be executed before the device&#xa;connects to the network and upload&#xa;Connection period:&#xa;   Sleep Period * Buffer Size">
-                            <i class="icon icon-flag"></i>
-                            </button>
+                      <br />
+                      <div class="col-8 col-sm-12">
+                        <div class="form-group">
+                          <label class="form-switch">
+                            <input type="checkbox" id="input-ins-batch-upload-enable" onclick="sensorStatusChanged('ins-batch-upload')" checked/>
+                            <i class="form-icon"></i>
                           </label>
                         </div>
-                        <div class="col-3 col-sm-12">
-                          <input class="form-input constr-field" type="number" id="input-message-buffer-size" value=144 />
+                      </div>
+                      <div id="address-ins-batch-upload" class="col-12" style="display:block">
+                        <br />
+                        <div class="form-group">
+                          <div class="column col-1 col-mr-auto"></div>
+                          <div class="col-3 col-sm-12">
+                            <label class="form-label" for="measurements">Message Buffer Size
+                              <button class="btn btn-link tooltip" data-tooltip="Defines the number of measurements that&#xa;should be executed before the device&#xa;connects to the network and upload&#xa;Connection period:&#xa;   Sleep Period * Buffer Size">
+                              <i class="icon icon-flag"></i>
+                              </button>
+                            </label>
+                          </div>
+                          <div class="col-3 col-sm-12">
+                            <input class="form-input constr-field" type="number" id="input-message-buffer-size" value=144 />
+                          </div>
+                          <div class="column col-5 col-mr-auto"></div>
                         </div>
-                        <div class="column col-5 col-mr-auto"></div>
                       </div>
                     </div>
                     <br />
@@ -141,17 +160,39 @@
           function clearCookies() {
             Cookies.remove('period')
             Cookies.remove('batch-upload-buffer-size')
+            Cookies.remove('scheduled-time-a')
+            Cookies.remove('scheduled-time-b')
+          }
+
+          function stringTimeToSeconds(timeStr){
+            var timeElements = timeStr.split(":")
+            if(timeElements.length !== 2) return -1
+
+            var timeSec = parseInt(timeElements[0]) * 3600 + parseInt(timeElements[1]) * 60
+            console.log(timeStr + " to " +timeSec)
+            return timeSec
           }
 
           function storeData(){
             document.getElementById('save-button').disabled = true
             clearCookies();
 
-            Cookies.set('period', document.getElementById('input-period').value)
+            if(elementIsVisible("periodic")){
+              Cookies.set('period', document.getElementById('input-period').value)
+              Cookies.set('scheduled-time-a', "None")
+              Cookies.set('scheduled-time-b', "None")
+            }
+            else if(elementIsVisible("scheduled")) {
+              Cookies.set('period', "None")
+              Cookies.set('scheduled-time-a', stringTimeToSeconds(document.getElementById('input-scheduled-time-a').value))
+              Cookies.set('scheduled-time-b', stringTimeToSeconds(document.getElementById('input-scheduled-time-b').value))
+            }
+
+
             if(document.getElementById('input-ins-batch-upload-enable').checked)
               Cookies.set('batch-upload-buffer-size', document.getElementById('input-message-buffer-size').value)
             else
-              Cookies.set('batch-upload-buffer-size', "None")
+              Cookies.set('batch-upload-buffer-size', "1")
 
             location.href = "step-7-verify.html"
           }
@@ -186,6 +227,11 @@
             }
 
             document.getElementById(boardDivId).style.display = "block";
+
+            var enableBatchUploadDefault = boardDivId !== 'scheduled'
+            document.getElementById('input-ins-batch-upload-enable').checked = enableBatchUploadDefaultCookies.remove('scheduled-time-a')
+            sensorStatusChanged('ins-batch-upload')
+
             evt.currentTarget.className += " active";
           }
 
