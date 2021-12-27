@@ -19,11 +19,14 @@ class MQTTClientCustom:
 
     def prepareChannelNames(self, mqtt_config):
         controlChannel = "channels/" + mqtt_config.control_channel_id + "/messages"
+        self.controlChannelGeneric = controlChannel + "/" + mqtt_config.thing_id + "/#"
         self.otaChannel = controlChannel + "/" + mqtt_config.thing_id + "/ota"
+        self.configChannel = controlChannel + "/" + mqtt_config.thing_id + "/config"
         self.messageChannel = "channels/" + mqtt_config.message_channel_id + "/messages/" + mqtt_config.thing_id
 
         logging.debug("Selected channels:")
         logging.debug(" ota channel: " + self.otaChannel)
+        logging.debug(" config channel: " + self.configChannel)
         logging.debug(" messageChannel: " + self.messageChannel)
 
     def subscribe_callback(self, topic, message):
@@ -85,10 +88,13 @@ class MQTTClientCustom:
     def clearOtaMessages(self):
         return self.sendMessage("", self.otaChannel, True)
 
+    def clearConfigMessages(self):
+        return self.sendMessage("", self.configChannel, True)
+
     def subscribe_and_get_first_message(self, channel=None):
         try:
             if channel is None:
-                channel = self.otaChannel
+                channel = self.controlChannelGeneric
             self.client.subscribe(channel)
             return self.__check_msg(5000)
         except Exception as e:

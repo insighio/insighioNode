@@ -92,24 +92,33 @@ class TransferProtocol:
             return None
 
         if self.modem_based:
-            topic = 'channels/{}/messages/{}/ota'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+            topic = 'channels/{}/messages/{}/#'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
             return self.modem_instance.mqtt_get_message(topic, 10000)
         elif self.protocol == 'coap':
             return None
         elif self.protocol == 'mqtt':
             return self.client.subscribe_and_get_first_message()
 
-    def clear_control_messages(self):
+    def clear_control_message_ota(self):
+        return self.clear_control_messages("/ota")
+
+    def clear_control_message_config(self):
+        return self.clear_control_messages("/config")
+
+    def clear_control_messages(self, controlMessagePostfix):
 
         if not self.connected:
             logging.info("TransferProtocol not connected")
             return False
 
         if self.modem_based:
-            topic = 'channels/{}/messages/{}/ota'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+            topic = 'channels/{}/messages/{}{}'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, controlMessagePostfix)
             return self.modem_instance.mqtt_publish(topic, "", 3, True)
         elif self.protocol == 'mqtt':
             logging.info("About to clear retained messages")
-            self.client.clearOtaMessages()
+            if controlMessagePostfix == "/ota":
+                self.client.clearOtaMessages()
+            elif controlMessagePostfix == "/config":
+                self.client.clearConfigMessages()
             # self.client.sendMessage("", self.protocol_config.control_channel_id, True)
             logging.info("Done.")

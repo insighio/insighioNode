@@ -15,42 +15,45 @@ def checkAndApply(client):
         logging.info("No control message received")
         return
     else:
-        logging.debug("mqtt message received: " + str(message["message"]))
+        logging.debug("mqtt message received: " + str(message["message"]) + " in topic: " + str(message["topic"]))
 
-        from external.kpn_senml.senml_pack_json import SenmlPackJson
-        senmlMessage = SenmlPackJson("")
-        senmlMessage.from_json(message["message"])
-        eventId = None
-        fileId = None
-        fileType = None
-        fileSize = None
-        for el in senmlMessage:
-            name = str(el.name)
-            if name == "e":
-                eventId = el.value
-            elif name == "i":
-                fileId = el.value
-            elif name == "t":
-                fileType = el.value
-            elif name == "s":
-                fileSize = el.value
-        # eventId ==0 => pending for installation
-        if str(eventId) == "0" and fileId and fileType and fileSize:
-            downloaded_file = downloadOTA(client, fileId, fileType, fileSize)
-            if downloaded_file:
-                from . import apply_ota
-                applied = apply_ota.do_apply(downloaded_file)
-                if applied:
-                    print("about to reset...")
-                    sendStatusMessage(client, fileId, True)
-                    client.clear_control_messages()
-                    import machine
-                    machine.reset()
+        if message["topic"].endswith("/config"):
+            applyDeviceConfiguration(client, message["message"].decode("utf-8"))
+        elif message["topic"] is None or message["topic"].endswith("/ota"):
+            from external.kpn_senml.senml_pack_json import SenmlPackJson
+            senmlMessage = SenmlPackJson("")
+            senmlMessage.from_json(message["message"])
+            eventId = None
+            fileId = None
+            fileType = None
+            fileSize = None
+            for el in senmlMessage:
+                name = str(el.name)
+                if name == "e":
+                    eventId = el.value
+                elif name == "i":
+                    fileId = el.value
+                elif name == "t":
+                    fileType = el.value
+                elif name == "s":
+                    fileSize = el.value
+            # eventId ==0 => pending for installation
+            if str(eventId) == "0" and fileId and fileType and fileSize:
+                downloaded_file = downloadOTA(client, fileId, fileType, fileSize)
+                if downloaded_file:
+                    from . import apply_ota
+                    applied = apply_ota.do_apply(downloaded_file)
+                    if applied:
+                        print("about to reset...")
+                        sendStatusMessage(client, fileId, True)
+                        client.clear_control_message_ota()
+                        import machine
+                        machine.reset()
+                    else:
+                        sendStatusMessage(client, fileId, False, "can not apply")
+                        client.clear_control_message_ota()
                 else:
-                    sendStatusMessage(client, fileId, False, "can not apply")
-                    client.clear_control_messages()
-            else:
-                sendStatusMessage(client, fileId, False, "can not download")
+                    sendStatusMessage(client, fileId, False, "can not download")
 
 
 def hasEnoughFreeSpace(fileSize):
@@ -140,3 +143,29 @@ def downloadOTA(client, fileId, fileType, fileSize):
 
 def downloadOTAQuectelBG600(client, fileId, fileType, fileSize):
     pass
+
+
+def applyDeviceConfiguration(client, configurationParameters):
+    # remove '?' if the string starts with it
+    if configurationParameters.startswith("?"):
+        configurationParameters = str(configurationParameters[1:])
+
+    keyValueDict = dict()
+    keyValueStrings = configurationParameters.split("&")
+    for keyValueStr in keyValueStrings:
+        keyValue = keyValueStr.split("=")
+        if len(keyValue) == 2:
+            if keyValue[1] == "true":
+                keyValue[1] = "True"
+            elif keyValue[1] == "false":
+                keyValue[1] = "False"
+            keyValueDict[keyValue[0]] = keyValue[1]
+            logging.debug("key value added [{}] -> {}".format(keyValue[0], keyValue[1]))
+        else:
+            logging.error("key value error |{}|".format(keyValue))
+
+    from www import configuration_handler
+    configuration_handler.apply_configuration(keyValueDict)
+    client.clear_control_message_config()
+    import machine
+    machine.reset()
