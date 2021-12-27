@@ -83,16 +83,16 @@
                     <br />
                     <div class="columns flex-centered">
                       <div class="col-1 col-sm-12">
-                        <label class="form-label" for="input-scheduled-time-a">A:</label>
+                        <label class="form-label" for="input-scheduled_time_a">A:</label>
                       </div>
                       <div class="col-3 col-sm-12">
-                        <input type="time" id="input-scheduled-time-a" name="appt"  value="05:30">
+                        <input type="time" id="input-scheduled_time_a" name="appt"  value="05:30">
                       </div>
                       <div class="col-1 col-sm-12">
-                        <label class="form-label" for="input-scheduled-time-b">B:</label>
+                        <label class="form-label" for="input-scheduled_time_b">B:</label>
                       </div>
                       <div class="col-3 col-sm-12">
-                        <input type="time" id="input-scheduled-time-b" name="appt"  value="21:30">
+                        <input type="time" id="input-scheduled_time_b" name="appt"  value="21:30">
                       </div>
                       <div class="column col-4 col-mr-auto"></div>
                     </div>
@@ -160,8 +160,8 @@
           function clearCookies() {
             Cookies.remove('period')
             Cookies.remove('batch-upload-buffer-size')
-            Cookies.remove('scheduled-time-a')
-            Cookies.remove('scheduled-time-b')
+            Cookies.remove('scheduled_time_a')
+            Cookies.remove('scheduled_time_b')
           }
 
           function stringTimeToSeconds(timeStr){
@@ -179,13 +179,13 @@
 
             if(elementIsVisible("periodic")){
               Cookies.set('period', document.getElementById('input-period').value)
-              Cookies.set('scheduled-time-a', "None")
-              Cookies.set('scheduled-time-b', "None")
+              Cookies.set('scheduled_time_a', "None")
+              Cookies.set('scheduled_time_b', "None")
             }
             else if(elementIsVisible("scheduled")) {
               Cookies.set('period', "None")
-              Cookies.set('scheduled-time-a', stringTimeToSeconds(document.getElementById('input-scheduled-time-a').value))
-              Cookies.set('scheduled-time-b', stringTimeToSeconds(document.getElementById('input-scheduled-time-b').value))
+              Cookies.set('scheduled_time_a', stringTimeToSeconds(document.getElementById('input-scheduled_time_a').value))
+              Cookies.set('scheduled_time_b', stringTimeToSeconds(document.getElementById('input-scheduled_time_b').value))
             }
 
 
@@ -229,7 +229,7 @@
             document.getElementById(boardDivId).style.display = "block";
 
             var enableBatchUploadDefault = boardDivId !== 'scheduled'
-            document.getElementById('input-ins-batch-upload-enable').checked = enableBatchUploadDefaultCookies.remove('scheduled-time-a')
+            document.getElementById('input-ins-batch-upload-enable').checked = enableBatchUploadDefault
             sensorStatusChanged('ins-batch-upload')
 
             evt.currentTarget.className += " active";
