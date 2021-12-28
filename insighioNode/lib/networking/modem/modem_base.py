@@ -42,7 +42,8 @@ class Modem:
         if not status or len(lines) < 2:
             return None
 
-        return lines[1].lower()
+        new_line = "\n"
+        return new_line.join(lines).lower()
 
     def power_on(self):
         # network registration
