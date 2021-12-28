@@ -15,7 +15,7 @@ def apply_configuration(keyValuePairDictionary):
 
     rootFolder = device_info.get_device_root_folder()
 
-    contents = utils.readFromFile(rootFolder + 'apps/demo_console/templ/const_templ.py')
+    contents = utils.readFromFile(rootFolder + 'apps/demo_console/templ/common_templ.py')
 
     # set project configuration content
     if device_info.is_esp32():

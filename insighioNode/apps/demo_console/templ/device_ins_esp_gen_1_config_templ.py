@@ -30,6 +30,13 @@ _UC_IO_LOAD_PWR_SAVE_OFF = None
 """ External Sensors configuration """
 _UC_IO_ANALOG_DIGITAL_P1 = 32
 
+
+""" Modem/GPS PIN configuration """
+_UC_IO_RADIO_ON = 26
+_UC_IO_PWRKEY = 23
+_UC_UART_MODEM_TX = 19
+_UC_UART_MODEM_RX = 18
+
 ''' measurements that are controlled by boolean values '''
 _MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>
 _MEAS_BOARD_SENSE_ENABLE = <meas-board-sense>
