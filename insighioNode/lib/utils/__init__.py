@@ -1,4 +1,8 @@
 import logging
+import esp32
+
+key_value_storage = esp32.NVS("insighio")
+
 
 def copyFile(source, destination):
     try:
@@ -48,6 +52,7 @@ def deleteFile(destination):
         logging.exception(e, "Error writing to file [{}]".format(destination))
         return False
 
+
 def countFileLines(fname):
     lines = 0
     buf_size = 256
@@ -62,3 +67,33 @@ def countFileLines(fname):
         pass
 
     return lines
+
+
+# key max length: 15 chars
+def getKeyValueInteger(key):
+    try:
+        return key_value_storage.get_i32(key)
+    except:
+        return None
+
+
+def saveKeyValueInteger(key, value):
+    current_value = getKeyValueInteger(key)
+    if current_value != value:
+        logging.debug("key-value storage: saving [{}]={}".format(key, value))
+        try:
+            key_value_storage.set_i32(key, value)
+            key_value_storage.commit()
+        except Exception as e:
+            logging.exception(e, "Error saving key-value [{}]={}".format(key, value))
+
+
+def eraseKeyValue(key):
+    try:
+        key_value_storage.erase_key(key)
+    except Exception as e:
+        logging.exception(e, "Error erasing key [{}]".format(key))
+
+
+def clearCachedStates():
+    eraseKeyValue("tz_sec_offset")

@@ -64,9 +64,6 @@ def execute():
     if execute_connetion_procedure:
         from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
-        # Deactivate timezone to use GMT time when timestamping messages
-        cfg.RTC_USE_TIMEZONE_OVER_GMT = False
-
         # connect to network
         if cfg.network == "lora":
             from . import lora as network

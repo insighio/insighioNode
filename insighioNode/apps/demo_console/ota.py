@@ -47,6 +47,8 @@ def checkAndApply(client):
                         print("about to reset...")
                         sendStatusMessage(client, fileId, True)
                         client.clear_control_message_ota()
+                        import utils
+                        utils.clearCachedStates()
                         import machine
                         machine.reset()
                     else:

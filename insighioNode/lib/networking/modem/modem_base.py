@@ -3,6 +3,7 @@ from machine import Pin, UART
 import ure
 import logging
 import device_info
+import utils
 # TODO: check if some regexes need to be precompiled: ure.compile('\d+mplam,pla')
 
 
@@ -16,7 +17,6 @@ class Modem:
         self.apn = None
         self.gps_timestamp = None
         self.gps_date = None
-        self.use_timezone_over_gmt = True
 
         if modem_tx is not None and modem_rx is not None:
             self.uart = UART(1, 115200, tx=modem_tx, rx=modem_rx)
@@ -117,22 +117,23 @@ class Modem:
                         year = int(reg_res.group(1))
                         if year < 100:
                             year += 2000
+                        timezone_quarter_minute_offset = float(reg_res.group(7))
                         result = (year,
                             int(reg_res.group(2)),
                             int(reg_res.group(3)),
                             0,  # day of week
-                            int(reg_res.group(4)) + (int(float(reg_res.group(7)) // 4) if self.use_timezone_over_gmt else 0),
-                            int(reg_res.group(5)) + (int((float(reg_res.group(7)) % 4) * 15) if self.use_timezone_over_gmt else 0),
+                            int(reg_res.group(4)) + int(timezone_quarter_minute_offset // 4),
+                            int(reg_res.group(5)) + int((timezone_quarter_minute_offset % 4) * 15),
                             int(reg_res.group(6)),
                             0)  # usec
+                        utils.saveKeyValueInteger("tz_sec_offset", int(timezone_quarter_minute_offset * 15 * 60))
                         return result
                     except Exception as e:
-                        logging.exception(e, "Error reading network time")
+                        logging.exception(e, "Error reading network time: ", e)
                         pass
                 else:
                     logging.debug("Network time not ready yet")
             utime.sleep_ms(250)
-
 
     def wait_for_registration(self, timeoutms=30000):
         status = False

@@ -33,12 +33,6 @@ def connect(cfg):
 
     modem_instance = cellular.get_modem_instance()
 
-    try:
-        if cfg.RTC_USE_TIMEZONE_OVER_GMT is not None:
-            modem_instance.use_timezone_over_gmt = cfg.RTC_USE_TIMEZONE_OVER_GMT
-    except Exception as e:
-        pass
-
     logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
     if modem_instance is not None and modem_instance.has_sim():
         (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq) = cellular.connect(cfg, dataStateOn=enableDataState)

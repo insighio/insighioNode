@@ -50,4 +50,7 @@ def apply_configuration(keyValuePairDictionary):
     file = rootFolder + 'apps/demo_console/demo_config.py'
     utils.writeToFile(file, contents)
 
+    import utils
+    utils.clearCachedStates()
+
     gc.collect()

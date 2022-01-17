@@ -13,6 +13,11 @@ def timestamp_measurements(measurements):
     if device_info.is_esp32():
         offset = 946684800
 
+    timezone_offset = utils.getKeyValueInteger("tz_sec_offset")
+
+    if timezone_offset is not None:
+        offset -= timezone_offset
+
     measurements["dt"] = {"value": utime.time() + offset}   # time offset 1970 -> 2000
 
 
