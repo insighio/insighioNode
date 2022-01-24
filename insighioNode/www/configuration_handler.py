@@ -19,7 +19,10 @@ def apply_configuration(keyValuePairDictionary):
 
     # set project configuration content
     if device_info.is_esp32():
-        contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_1_config_templ.py')
+        if board == "ins_esp_gen_1":
+            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_1_config_templ.py')
+        elif board == "ins_esp_gen_s1":
+            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s1_config_templ.py')
     else:
         contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_py_gen_1_config_templ.py')
     contents += '\n'
