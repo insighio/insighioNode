@@ -23,8 +23,8 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
         utime.sleep_ms(20)
         rx_bytes = i2c.readfrom(68, 6)
         if len(rx_bytes) > 4:
-            t_ticks = rx_bytes[0] * 256 + rx_bytes[1]
-            rh_ticks = rx_bytes[3] * 256 + rx_bytes[4]
+            t_ticks = rx_bytes[0] << 8 | rx_bytes[1]
+            rh_ticks = rx_bytes[3] << 8 | rx_bytes[4]
             t_degC = -45 + 175 * t_ticks / 65535
             rh_pRH = -6 + 125 * rh_ticks / 65535
             temp = t_degC

@@ -170,11 +170,16 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
         light = tsl2561.get_reading(i2c_sda_pin, i2c_scl_pin)
         set_value_int(measurements, sensor_name + "_light", light, SenmlUnits.SENML_UNIT_LUX)
 
-    elif sensor_name == "si7021":
-        from sensors import si7021
-        (board_temp, board_humidity) = si7021.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
-        set_value_float(measurements, sensor_name + "_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-        set_value_float(measurements, sensor_name + "_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
+    elif sensor_name == "sht20" or sensor_name == "sht40" or sensor_name == "si7021":
+        if sensor_name == "sht20":
+            from sensors import sht20 as temp_hum_sens
+        elif sensor_name == "sht40":
+            from sensors import sht40 as temp_hum_sens
+        elif sensor_name == "si7021":
+            from sensors import si7021 as temp_hum_sens
+        (temp, humidity) = temp_hum_sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
+        set_value_float(measurements, sensor_name + "_temp", temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+        set_value_float(measurements, sensor_name + "_humidity", humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
     elif sensor_name == "scd30":
         from sensors import scd30
