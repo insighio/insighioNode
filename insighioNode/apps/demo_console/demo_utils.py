@@ -213,7 +213,8 @@ def read_analog_digital_sensor(data_pin, sensor_name, measurements, position, tr
         volt_analog = analog_generic.get_reading(data_pin, cfg._BAT_VDIV)
         meas_name = "adc_" + position + "_volt"
         set_value(measurements, meas_name, volt_analog, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
-        if transformator is not None:
+        default_transformator = "v"
+        if transformator is not None and transformator != default_transformator:
             execute_transformation(measurements, meas_name, volt_analog, transformator)
 
     elif sensor_name == "dht11" or sensor_name == "dht22":
