@@ -505,13 +505,29 @@
                           </div>
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
-                              <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1">
+                              <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
                                 <option>disabled</option>
                                 <option value="dht11">dht11   - temperature / humidity (digital)</option>
                                 <option value="dht22">dht22   - temperature / humidity (digital)</option>
                                 <option value="ds18x20">ds18x20 - temperature (OneWire)</option>
                                 <option value="analog" selected>generic analog</option>
                               </select>
+                            </div>
+                          </div>
+                          <div id="input-ins-esp-s1-sensor-a-d-p1-trans-div" class="col-12" style="display:none">
+                            <div class="form-group">
+                              <div class="column col-1 col-mr-auto"></div>
+                              <div class="col-3  col-sm-12">
+                                <label class="form-label" for="measurements">transformation
+                                  <button class="btn btn-link tooltip" data-tooltip="python script to&#xa;transform raw Value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                                  <i class="icon icon-flag"></i>
+                                  </button>
+                                </label>
+                              </div>
+                              <div class="col-3 col-sm-12">
+                                <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p1-t" value="v" />
+                              </div>
+                              <div class="column col-5 col-mr-auto"></div>
                             </div>
                           </div>
                           <br />
@@ -521,13 +537,29 @@
                           </div>
                           <div class="col-8 col-sm-12">
                             <div class="form-group">
-                              <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2">
+                              <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
                                 <option>disabled</option>
                                 <option value="dht11">dht11   - temperature / humidity (digital)</option>
                                 <option value="dht22">dht22   - temperature / humidity (digital)</option>
                                 <option value="ds18x20">ds18x20 - temperature (OneWire)</option>
                                 <option value="analog">generic analog</option>
                               </select>
+                            </div>
+                          </div>
+                          <div id="input-ins-esp-s1-sensor-a-d-p2-trans-div" class="col-12" style="display:none">
+                            <div class="form-group">
+                              <div class="column col-1 col-mr-auto"></div>
+                              <div class="col-3  col-sm-12">
+                                <label class="form-label" for="measurements">transformation
+                                  <button class="btn btn-link tooltip" data-tooltip="python script to&#xa;transform raw Value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                                  <i class="icon icon-flag"></i>
+                                  </button>
+                                </label>
+                              </div>
+                              <div class="col-3 col-sm-12">
+                                <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" value="v" />
+                              </div>
+                              <div class="column col-5 col-mr-auto"></div>
                             </div>
                           </div>
                           <br />
@@ -565,27 +597,31 @@
             Cookies.remove('meas-battery-stat')
             Cookies.remove('meas-board-sense')
             Cookies.remove('meas-board-stat')
-            Cookies.remove('meas-network-stat')
-            Cookies.remove('meas-temp-unit')
+            Cookies.remove('meas-gps-enabled')
+            Cookies.remove('meas-gps-sat-num')
+            Cookies.remove('meas-gps-timeout')
             Cookies.remove('meas-i2c-1')
             Cookies.remove('meas-i2c-2')
-            Cookies.remove('meas-sensor-a-p1')
-            Cookies.remove('meas-sensor-a-p2')
-            Cookies.remove('meas-sensor-a-d-p1')
-            Cookies.remove('meas-sensor-a-d-p2')
-            Cookies.remove('selected-board')
-            Cookies.remove('meas-sdi-1-enabled')
-            Cookies.remove('meas-sdi-2-enabled')
-            Cookies.remove('meas-sdi-1-address')
-            Cookies.remove('meas-sdi-2-address')
-            Cookies.remove('meas-sensor-scale-enabled')
-            Cookies.remove('meas-gps-enabled')
-            Cookies.remove('meas-scale-scale')
-            Cookies.remove('meas-scale-offset')
+            Cookies.remove('meas-network-stat')
             Cookies.remove('meas-scale-enabled')
+            Cookies.remove('meas-scale-offset')
+            Cookies.remove('meas-scale-scale')
+            Cookies.remove('meas-sdi-1-address')
+            Cookies.remove('meas-sdi-1-enabled')
+            Cookies.remove('meas-sdi-2-address')
+            Cookies.remove('meas-sdi-2-enabled')
+            Cookies.remove('meas-sensor-a-d-p1')
+            Cookies.remove('meas-sensor-a-d-p1-t')
+            Cookies.remove('meas-sensor-a-d-p2')
+            Cookies.remove('meas-sensor-a-d-p2-t')
+            Cookies.remove('meas-sensor-a-p1')
+            Cookies.remove('meas-sensor-a-p1-t')
+            Cookies.remove('meas-sensor-a-p2')
+            Cookies.remove('meas-sensor-a-p2-t')
+            Cookies.remove('meas-sensor-scale-enabled')
+            Cookies.remove('meas-temp-unit')
+            Cookies.remove('selected-board')
             Cookies.remove('system-enable-ota')
-            Cookies.remove('meas-gps-timeout')
-            Cookies.remove('meas-gps-sat-num')
           }
 
           function storeData(){
@@ -650,8 +686,14 @@
               console.log("esp32s2-bg600-i2c-analog-options")
               Cookies.set('selected-board', "ins_esp_gen_s1")
               Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-s1-i2c').value)
-              Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
+              Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-s1-sensor-a-d-p1').value)
               Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-ins-esp-s1-sensor-a-d-p2').value)
+
+              if(elementIsVisible('input-ins-esp-s1-sensor-a-d-p1-trans-div'))
+                Cookies.set('meas-sensor-a-d-p1-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p1-trans-div').value)
+
+              if(elementIsVisible('input-ins-esp-s1-sensor-a-d-p2-trans-div'))
+                Cookies.set('meas-sensor-a-d-p2-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p2-trans-div').value)
             }
           }
 
@@ -662,11 +704,7 @@
             var div = document.getElementById("address-" + sensorId)
 
             // If the checkbox is checked, display the output text
-            if (checkBox.checked == true){
-              div.style.display = "block"
-            } else {
-              div.style.display = "none"
-            }
+            div.style.display = checkBox.checked ? "block" : "none"
           }
 
           function boardChanged(evt, boardDivId){
@@ -689,6 +727,15 @@
           function validateMyForm(){
             storeData()
             return true
+          }
+
+          function selectionChanged(selectObj) {
+            var transformationElem = document.getElementById(selectObj.id + "-trans-div")
+            console.log(selectObj.id, transformationElem)
+            if(!transformationElem)
+              return
+
+            transformationElem.style.display = selectObj.value === "analog" ? "block" : "none"
           }
         </script>
     </body>

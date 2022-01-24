@@ -205,13 +205,16 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
         logging.error("read_i2c_sensor - Sensor not supported: [" + sensor_name + "]")
 
 
-def read_analog_digital_sensor(data_pin, sensor_name, measurements, position):
+def read_analog_digital_sensor(data_pin, sensor_name, measurements, position, transformator=None):
     logging.info("read_analog_digital_sensor - Reading Sensor [{}] at pin [{}]".format(sensor_name, data_pin))
     sensor_name = sensor_name.split("-")[0].strip()
     if sensor_name == "analog" or sensor_name == "generic analog":  # generic analog is kept for backward compatibility
         from sensors import analog_generic
         volt_analog = analog_generic.get_reading(data_pin, cfg._BAT_VDIV)
-        set_value(measurements, "adc_" + position + "_volt", volt_analog, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
+        meas_name = "adc_" + position + "_volt"
+        set_value(measurements, meas_name, volt_analog, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
+        if transformator is not None:
+            execute_transformation(measurements, meas_name, volt_analog, transformator)
 
     elif sensor_name == "dht11" or sensor_name == "dht22":
         from sensors import dht
@@ -226,3 +229,12 @@ def read_analog_digital_sensor(data_pin, sensor_name, measurements, position):
 
     else:
         logging.error("read_analog_digital_sensor - Sensor not supported: [" + sensor_name + "]")
+
+
+def execute_transformation(measurements, name, raw_value, transformator):
+    try:
+        transformator.replace('v', str(raw_value))
+        exec("v_transformed=(" + transformator + ")")
+        set_value(measurements, name + "_trans", v_transformed)
+    except Exception as e:
+        pass
