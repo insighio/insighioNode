@@ -166,14 +166,14 @@ class WebServer:
                 device_info.set_led_color(purple)
                 if not self.wlan.isconnected():
                     utime.sleep_ms(100)
-                    device_info.set_led_color(0x0)
+                    device_info.set_led_color('black')
 
                 device_info.wdt_reset()
                 utime.sleep_ms(1000)
         except KeyboardInterrupt:
             pass
 
-        device_info.set_led_color(0x000000)
+        device_info.set_led_color('black')
 
         self.stop()
 

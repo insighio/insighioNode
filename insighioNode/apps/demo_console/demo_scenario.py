@@ -125,7 +125,7 @@ def execute():
             logging.exception(e, "Exception during disconenction:")
 
     # deinit
-    device_info.set_led_color('white')
+    device_info.set_led_color('black')
 
     demo_utils.device_deinit()
 
