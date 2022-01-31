@@ -22,6 +22,20 @@ def is_esp32():
     return sys.platform == 'esp32'
 
 
+def get_hw_module_verison():
+    hw_info = str(os.uname())
+    hw_info = hw_info.lower()
+    if "esp32s2" in hw_info:
+        return "esp32s2"
+    elif "esp32" in hw_info:
+        return "esp32"
+    return "other"
+
+
+def supports_13bit_adc():
+    return get_hw_module_verison() == "esp32s2"
+
+
 if not is_esp32():
     import pycom
     _LORA_COMPATIBLE_PLATFORMS = ["LoPy", "FiPy", "LoPy4"]

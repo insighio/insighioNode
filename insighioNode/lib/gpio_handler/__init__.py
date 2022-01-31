@@ -15,12 +15,14 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
     if device_info.is_esp32():
         adc = ADC(Pin(pin))
         adc.atten(attn)
-        adc.width(ADC.WIDTH_12BIT)
+        adc_width = ADC.WIDTH_13BIT if device_info.supports_13bit_adc() else ADC.WIDTH_12BIT
+        adc.width(adc_width)
 
         try:
-            adc.init(attn, ADC.WIDTH_12BIT)
+            adc.init(attn, adc_width)
             return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
-        except:
+        except Exception as e:
+            logging.exception(e, "unable to read: pin: {}".format(pin))
             pass
 
         logging.debug("fallback ADC without calibration")
