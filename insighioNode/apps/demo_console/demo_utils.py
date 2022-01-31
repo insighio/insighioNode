@@ -239,8 +239,10 @@ def execute_transformation(measurements, name, raw_value, transformator):
     try:
         transformator = transformator.replace('v', str(raw_value))
         to_execute = "v_transformed=({})".format(transformator)
-        exec(to_execute)
-        set_value(measurements, name + "_trans", v_transformed)
+        namespace = {}
+        exec(to_execute, namespace)
+        print("namespace: " + str(namespace))
+        set_value(measurements, name + "_trans", namespace['v_transformed'])
     except Exception as e:
         logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass

@@ -205,6 +205,12 @@ def set_led_color(color, pin_led_power=36, pin_led_din=35):
             pass
 
 
+def blink_led(color):
+    device_info.set_led_color(color)
+    utime.sleep_ms(100)
+    device_info.set_led_color('black')
+
+
 def wdt_reset():
     if wdt:
         wdt.feed()

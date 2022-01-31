@@ -98,14 +98,11 @@ def get_gps_position(cfg, measurements):
 
             timeout_ms = 120000
             min_satellite_fix_num = 4
-            try:
+            if hasattr(cfg, "_MEAS_GPS_TIMEOUT"):
                 timeout_ms = cfg._MEAS_GPS_TIMEOUT * 1000
-            except:
-                pass
-            try:
+
+            if hasattr(cfg, "_MEAS_GPS_SATELLITE_FIX_NUM"):
                 min_satellite_fix_num = cfg._MEAS_GPS_SATELLITE_FIX_NUM
-            except:
-                pass
 
             (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(timeout_ms, min_satellite_fix_num)
             add_value_if_valid(measurements, "gps_dur", utime.ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
