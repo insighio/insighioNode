@@ -24,9 +24,6 @@ _SENSAIR_nRDY_PIN_NUM = 4
 
 _UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SHT40
 
-""" Load Regulator configuration """
-_UC_IO_LOAD_PWR_SAVE_OFF = None
-
 """ External Sensors configuration """
 _UC_IO_ANALOG_DIGITAL_P1 = 32
 

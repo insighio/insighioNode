@@ -476,7 +476,7 @@
                         </div>
                       </form>
                 		</div>
-                    <div id="esp32s2-bg600-i2c-analog-options" class="tabcontent" style="display: block">
+                    <div id="esp32s2-bg600-i2c-analog-options" class="tabcontent" style="display: none">
                       <form  class="form-horizontal">
                         <br />
                         <br />
@@ -514,6 +514,7 @@
                               </select>
                             </div>
                           </div>
+                          <br />
                           <div id="input-ins-esp-s1-sensor-a-d-p1-trans-div" class="col-12" style="display:block">
                             <div class="form-group">
                               <div class="column col-1 col-mr-auto"></div>
@@ -560,6 +561,49 @@
                                 <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" value="v" />
                               </div>
                               <div class="column col-2 col-mr-auto"></div>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-4 col-sm-12">
+                            <label class="form-label" for="measurements">GPS</label>
+                          </div>
+                          <div class="col-8 col-sm-12">
+                            <div class="form-group">
+                              <label class="form-switch">
+                                <input type="checkbox" id="input-ins-esp-s1-gps-enable" checked onclick="sensorStatusChanged('ins-esp-s1-gps')"/>
+                                <i class="form-icon"></i>
+                              </label>
+                            </div>
+                          </div>
+                          <div id="address-ins-esp-s1-gps" class="col-12">
+                            <br />
+                            <div id="address-ins-s1-gps-timeout" class="col-12" style="display:block">
+                              <div class="form-group">
+                                <div class="column col-1 col-mr-auto"></div>
+                                <div class="col-3 col-sm-12">
+                                  <label class="form-label" for="measurements">GPS Timeout (seconds)
+                                  </label>
+                                </div>
+                                <div class="col-3 col-sm-12">
+                                  <input class="form-input constr-field" type="number" id="input-ins-esp-s1-gps-timeout" value=120 />
+                                </div>
+                                <div class="column col-5 col-mr-auto"></div>
+                              </div>
+                            </div>
+                            <br />
+                            <div id="address-ins-esp-s1-gps-sat-num" class="col-12" style="display:block">
+                              <div class="form-group">
+                                <div class="column col-1 col-mr-auto"></div>
+                                <div class="col-3 col-sm-12">
+                                  <label class="form-label" for="measurements">Min number of satellites
+                                  </label>
+                                </div>
+                                <div class="col-3 col-sm-12">
+                                  <input class="form-input constr-field" type="number" id="input-ins-esp-s1-gps-sat-num" value=4 />
+                                </div>
+                                <div class="column col-5 col-mr-auto"></div>
+                              </div>
                             </div>
                           </div>
                           <br />
@@ -690,10 +734,17 @@
               Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-ins-esp-s1-sensor-a-d-p2').value)
 
               if(elementIsVisible('input-ins-esp-s1-sensor-a-d-p1-trans-div'))
-                Cookies.set('meas-sensor-a-d-p1-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p1-trans-div').value)
+                Cookies.set('meas-sensor-a-d-p1-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p1-t').value)
 
               if(elementIsVisible('input-ins-esp-s1-sensor-a-d-p2-trans-div'))
-                Cookies.set('meas-sensor-a-d-p2-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p2-trans-div').value)
+                Cookies.set('meas-sensor-a-d-p2-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p2-t').value)
+
+              var gps_enabled = document.getElementById('input-ins-esp-s1-gps-enable').checked
+              Cookies.set('meas-gps-enabled', gps_enabled ? "True" : "False")
+              Cookies.set('meas-gps-timeout', gps_enabled ? document.getElementById('input-ins-esp-s1-gps-timeout').value : 0)
+              Cookies.set('meas-gps-sat-num', gps_enabled ? document.getElementById('input-ins-esp-s1-gps-sat-num').value : 0)
+
+              location.href = "step-6-timing.html"
             }
           }
 

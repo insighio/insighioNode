@@ -2,6 +2,7 @@ def apply_configuration(keyValuePairDictionary):
     import gc
     import utils
     import device_info
+    import ure
 
     gc.collect()
 
@@ -49,6 +50,9 @@ def apply_configuration(keyValuePairDictionary):
 
     for param in keyValuePairDictionary:
         contents = contents.replace('<' + param + '>', keyValuePairDictionary[param])
+
+    # replace all unused variables with None values
+    contents = ure.sub(r'\"?<[a-z\-0-9]+>\"?', 'None', contents)
 
     file = rootFolder + 'apps/demo_console/demo_config.py'
     utils.writeToFile(file, contents)

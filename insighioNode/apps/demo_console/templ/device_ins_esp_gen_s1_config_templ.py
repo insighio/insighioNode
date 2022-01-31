@@ -17,9 +17,6 @@ _UC_IO_I2C_SCL = 33
 
 _UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SHT40
 
-""" Load Regulator configuration """
-_UC_IO_LOAD_PWR_SAVE_OFF = None
-
 """ External Sensors configuration """
 _UC_IO_SENSOR_SWITCH_ON = 12
 _UC_IO_ANALOG_DIGITAL_P1 = 4

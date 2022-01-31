@@ -11,7 +11,8 @@ wdt = None
 
 color_map = {}
 color_map['blue'] = 0x0000F0
-color_map['yellow'] = 0xF00000
+color_map['red'] = 0xF00000
+color_map['yellow'] = 0xFFFF00
 color_map['green'] = 0xF0F000
 color_map['white'] = 0xFFFFFF
 color_map['black'] = 0x000000
@@ -154,10 +155,11 @@ def set_led_color(color, pin_led_power=36, pin_led_din=35):
         color_hex = color_map[color]
     except Exception as e:
         pass
+
     if color_hex is None:
         color_hex = color
 
-    if sys.platform is not 'esp32':
+    if sys.platform != 'esp32':
         try:
             pycom.rgbled(color_hex)
         except Exception as e:
@@ -166,7 +168,7 @@ def set_led_color(color, pin_led_power=36, pin_led_din=35):
         # try controlling led's power (for ESP32S2), if called to simple ESP32, it will through exception
         # thus it will ignore call.
         try:
-            pin_pwr = machine.Pin(pin_led_power, Pin.OUT)
+            pin_pwr = machine.Pin(pin_led_power, machine.Pin.OUT)
 
             if color == 0:
                 pin_pwr.off()
@@ -180,10 +182,10 @@ def set_led_color(color, pin_led_power=36, pin_led_din=35):
         # thus it will ignore call.
         try:
             from neopixel import NeoPixel
-            pin_din = machine.Pin(pin_led_din, Pin.OUT)
+            pin_din = machine.Pin(pin_led_din, machine.Pin.OUT)
             np = NeoPixel(pin_din, 1)
 
-            np[0] = ((color & 0xFF0000) >> 16, (color & 0x00FF00) >> 8, (color & 0x0000FF))
+            np[0] = ((color_hex & 0xFF0000) >> 16, (color_hex & 0x00FF00) >> 8, (color_hex & 0x0000FF))
             np.write()
         except Exception as e:
             pass

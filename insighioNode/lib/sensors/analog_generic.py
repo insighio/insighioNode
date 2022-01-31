@@ -14,7 +14,7 @@ def get_reading(data_pin, voltage_divider=1, vcc_pin=None):
 
     # get measurement
     vmeas = gpio_handler.get_input_voltage(data_pin, voltage_divider)
-    logging.debug(str(data_pin) + " voltage reading : {} (mV)".format(vmeas))
+    logging.debug("Pin: [" + str(data_pin) + "] voltage reading : {} (mV)".format(vmeas))
     # here we need to add some calibration processing
 
     sensors.set_sensor_power_off(vcc_pin)

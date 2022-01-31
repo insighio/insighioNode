@@ -17,8 +17,10 @@ def device_init():
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
         bq_charger_setup()
     else:
-        gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
-        if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
+        if hasattr(cfg, "_UC_IO_LOAD_PWR_SAVE_OFF") and cfg._UC_IO_LOAD_PWR_SAVE_OFF is not None:
+            gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
+
+        if hasattr(cfg, "_UC_IO_SENSOR_PWR_SAVE_OFF") and cfg._UC_IO_SENSOR_PWR_SAVE_OFF is not None:
             gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 1)
 
 
@@ -41,11 +43,10 @@ def bq_charger_setup():
 
 
 def device_deinit():
-    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
-        return
+    if hasattr(cfg, "_UC_IO_LOAD_PWR_SAVE_OFF") and cfg._UC_IO_LOAD_PWR_SAVE_OFF is not None:
+        gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 0)
 
-    gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 0)
-    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
+    if hasattr(cfg, "_UC_IO_SENSOR_PWR_SAVE_OFF") and cfg._UC_IO_SENSOR_PWR_SAVE_OFF is not None:
         gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 0)
 
 
@@ -54,7 +55,7 @@ def watchdog_reset():
     device_info.wdt_reset()
 
     # then reset external hardware watchdog
-    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+    if hasattr(cfg, "_UC_IO_WATCHDOG_RESET"):
         gpio_handler.timed_pin_pull_up(cfg._UC_IO_WATCHDOG_RESET, 500)
 
 
@@ -110,10 +111,12 @@ def read_battery_voltage_and_current():
     # BATT VOLTAGE & CURR measurement
     current = None
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 1)
-    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+    if hasattr(cfg, "_UC_IO_CHARGER_OFF"):
         gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
+
     vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, cfg._BAT_VDIV, cfg._BAT_ATT)
-    if cfg._BOARD_TYPE != cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+
+    if hasattr(cfg, "_UC_IO_CHARGER_OFF") and hasattr(cfg, "_UC_IO_CUR_READ"):
         vina_mV = gpio_handler.get_input_voltage(cfg._UC_IO_CUR_READ, voltage_divider=cfg._CUR_VDIV, attn=cfg._CUR_ATT)
         current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
         # changed the order of the following two lines. evaluate if correct.
@@ -136,10 +139,10 @@ def default_board_measurements(measurements):
         read_analog_digital_sensor(cfg._UC_IO_ANALOG_P2, cfg._MEAS_ANALOG_P2, measurements, "ap2")
 
     if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P1') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P1") and cfg._MEAS_ANALOG_DIGITAL_P1 != cfg._CONST_MEAS_DISABLED:
-        read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P1, cfg._MEAS_ANALOG_DIGITAL_P1, measurements, "adp1")
+        read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P1, cfg._MEAS_ANALOG_DIGITAL_P1, measurements, "adp1", cfg._MEAS_ANALOG_DIGITAL_P1_TRANSFORMATION if hasattr(cfg, "_MEAS_ANALOG_DIGITAL_P1_TRANSFORMATION") else None)
 
     if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P2') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P2") and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
-        read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2")
+        read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2", cfg._MEAS_ANALOG_DIGITAL_P2_TRANSFORMATION if hasattr(cfg, "_MEAS_ANALOG_DIGITAL_P2_TRANSFORMATION") else None)
 
     if hasattr(cfg, '_MEAS_SCALE_ENABLED') and cfg._MEAS_SCALE_ENABLED:
         read_scale(measurements)
@@ -234,8 +237,10 @@ def read_analog_digital_sensor(data_pin, sensor_name, measurements, position, tr
 
 def execute_transformation(measurements, name, raw_value, transformator):
     try:
-        transformator.replace('v', str(raw_value))
-        exec("v_transformed=(" + transformator + ")")
+        transformator = transformator.replace('v', str(raw_value))
+        to_execute = "v_transformed=({})".format(transformator)
+        exec(to_execute)
         set_value(measurements, name + "_trans", v_transformed)
     except Exception as e:
+        logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass
