@@ -34,8 +34,13 @@ class Logger(object):
         if level >= (self.level or _level):
             try:
                 print("[{}:{:6d}] {}".format(self._level_str(level), utime.ticks_ms(), msg % args))
+                return
             except TypeError as te:
+                pass
+            try:
                 print("[{}:{:6d}] {}".format(self._level_str(level), utime.ticks_ms(), msg))
+            except TypeError as te:
+                pass
 
     def debug(self, msg, *args, **kwargs):
         self.log(DEBUG, msg, *args, **kwargs)
