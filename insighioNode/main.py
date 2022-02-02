@@ -13,6 +13,17 @@ if device_info.is_esp32():
     import machine
     machine.freq(240000000)
 
+    if device_info.get_hw_module_verison() == "esp32s2":
+        import _thread
+        import time
+
+        def testThread():
+            while True:
+                print(".", end='')
+                utime.sleep_ms(500)
+
+        _thread.start_new_thread(testThread, ())
+
 demo_config_exists = False
 try:
     import apps.demo_console.demo_config as cfg
@@ -24,10 +35,12 @@ except Exception as e:
 
 rstCause = device_info.get_reset_cause()
 logging.info("Reset cause: " + str(rstCause))
-if rstCause == 0 or rstCause == 1 or not demo_config_exists:
+if (rstCause == 0 or rstCause == 1 or not demo_config_exists) and device_info.get_hw_module_verison() != "esp32s2":
     logging.info("Starting Web server")
     from web_server import WebServer
+    print(".", end='')
     server = WebServer()
+    print(".", end='')
     server.start(50000)
     del server
     del sys.modules["web_server"]
