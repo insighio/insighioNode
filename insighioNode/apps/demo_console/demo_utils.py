@@ -213,7 +213,7 @@ def read_analog_digital_sensor(data_pin, sensor_name, measurements, position, tr
     sensor_name = sensor_name.split("-")[0].strip()
     if sensor_name == "analog" or sensor_name == "generic analog":  # generic analog is kept for backward compatibility
         from sensors import analog_generic
-        volt_analog = analog_generic.get_reading(data_pin, cfg._BAT_VDIV)
+        volt_analog = analog_generic.get_reading(data_pin)
         meas_name = "adc_" + position + "_volt"
         set_value(measurements, meas_name, volt_analog, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
         default_transformator = "v"
