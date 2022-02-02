@@ -18,7 +18,13 @@ def checkAndApply(client):
         logging.debug("mqtt message received: " + str(message["message"]) + " in topic: " + str(message["topic"]))
 
         if message["topic"].endswith("/config"):
-            applyDeviceConfiguration(client, message["message"].decode("utf-8"))
+            message_parsed = message["message"]
+            # if message is byte array, decode it, or else ignore and proceed
+            try:
+                message_parsed = message["message"].decode("utf-8")
+            except Exception as e:
+                pass
+            applyDeviceConfiguration(client, message_parsed)
         elif message["topic"] is None or message["topic"].endswith("/ota"):
             from external.kpn_senml.senml_pack_json import SenmlPackJson
             senmlMessage = SenmlPackJson("")

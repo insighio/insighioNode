@@ -140,11 +140,23 @@ class ModemBG600(modem_base.Modem):
         if not context_activated:
             return False
 
-        (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN=0,"' + server_ip + '",' + str(server_port), 15000, "\\+QMTOPEN:\\s+0,0")
+        max_retries = 3
+        retry = 0
+        while retry < max_retries:
+            retry += 1
+            (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN=0,"' + server_ip + '",' + str(server_port), 15000, "\\+QMTOPEN:\\s+0,0")
+            if mqtt_ready:
+                break
+            utime.sleep_ms(1000)
 
         if mqtt_ready:
-            # mqtt_conn, _) = modem_instance.send_at_cmd('AT+QMTCONN=0,"client","a93d2353-c664-4487-b52c-ae3bd73b06c4","ed1d8997-a8b1-46c1-8927-04fb35dd93af"')
-            (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(username, username, password), 15000, "\\+QMTCONN:\\s+0,0,0")
+            retry = 0
+            while retry < max_retries:
+                retry += 1
+                (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(username, username, password), 15000, "\\+QMTCONN:\\s+0,0,0")
+                if mqtt_connected:
+                    break
+                utime.sleep_ms(1000)
             return mqtt_connected
         else:
             logging.error("Mqtt not ready")
@@ -162,7 +174,9 @@ class ModemBG600(modem_base.Modem):
 
     def mqtt_get_message(self, topic, timeout_ms=5000):
         import random
-        reg = r"\+QMTRECV:\s*(\d+),(\d+),\"" + topic + r"\",\"(.*)\""
+        #channels/f1937d78-6745-4b6b-98c3-62e2201c21ab/messages/5de93307-344f-48f2-a66d-1d2f7e359504/#
+        #reg = r"\+QMTRECV:\s*\d+,\d+,\"([a-z\-0-9\/]+)\",\"(.*)\"" -> can not be used as it causes: RuntimeError: maximum recursion depth exceeded
+        reg = r"^\s*\+QMTRECV:"
         # subscribe and receive message if any
         message_id = int(random.random() * 65530) + 1
         (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=0,{},"{}",1'.format(message_id, topic), timeout_ms, reg)
@@ -178,14 +192,45 @@ class ModemBG600(modem_base.Modem):
                 break
 
         if selected_line:
-            res = ure.match(reg + "$", selected_line)
-            if res:
-                message = dict()
-                message["topic"] = topic
-                message["message"] = res.group(3)
-                return message
+            return self.extract_topic_message_without_regex(selected_line)
 
         return None
+
+    def extract_topic_message_without_regex(self, line):
+        topic = ""
+        message = ""
+        topic_reached = False
+        topic_parsed = False
+        message_reached = False
+
+        i = -1
+        last_quote_index = len(line)
+        message_quote_index = 0
+        for c in list(line):
+            i += 1
+            if c == '"':
+                if not topic_reached:
+                    topic_reached = True
+                    continue
+                elif topic_reached and not topic_parsed:
+                    topic_parsed = True
+                    continue
+                elif topic_parsed and not message_reached:
+                    message_reached = True
+                    message_quote_index = i
+                    continue
+                else:
+                    last_quote_index = i
+
+            if topic_reached and not topic_parsed:
+                topic += c
+            elif message_reached:
+                message += c
+
+        res = dict()
+        res["topic"] = topic
+        res["message"] = message[0:(last_quote_index - message_quote_index - 1)]
+        return res
 
     def mqtt_disconnect(self):
         (status, _) = self.send_at_cmd("AT+QMTDISC=0")
