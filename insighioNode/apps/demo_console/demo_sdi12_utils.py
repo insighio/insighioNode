@@ -1,7 +1,11 @@
 import utime
 from apps.demo_console.dictionary_utils import set_value_float
+from external.kpn_senml.senml_unit import SenmlUnits
+from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from . import demo_config as cfg
 import logging
+import device_info
+
 
 def sdi12_board_measurements(measurements):
     utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
@@ -13,6 +17,7 @@ def sdi12_board_measurements(measurements):
 
         try:
             sdi12 = SDI12(cfg._UC_IO_DRV_IN, cfg._UC_IO_RCV_OUT, cfg._UC_IO_DRV_RCV_ON, 1)
+            sdi12.set_wait_after_uart_write(not device_info.is_esp32())
 
             if cfg._SDI12_SENSOR_1_ENABLED:
                 read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_1_ADDRESS, measurements)
