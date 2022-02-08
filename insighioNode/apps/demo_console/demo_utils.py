@@ -22,6 +22,8 @@ def device_init():
 
         if hasattr(cfg, "_UC_IO_SENSOR_PWR_SAVE_OFF") and cfg._UC_IO_SENSOR_PWR_SAVE_OFF is not None:
             gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 1)
+    if hasattr(cfg, "_NOTIFICATION_LED_ENABLED"):
+        device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED)
 
 
 def bq_charger_setup():
@@ -94,7 +96,7 @@ def get_measurements(cfg):
             set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
-        if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12:
+        if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12 or cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12:
             from . import demo_sdi12_utils
             demo_sdi12_utils.sdi12_board_measurements(measurements)
         else:

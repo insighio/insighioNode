@@ -8,6 +8,7 @@ import logging
 import utime
 
 wdt = None
+_led_enabled = True
 
 color_map = {}
 color_map['blue'] = 0x0000F0
@@ -162,7 +163,15 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
     # gc.disable()
 
 
+def set_led_enabled(led_enabled):
+    global _led_enabled
+    _led_enabled = led_enabled
+
+
 def set_led_color(color, pin_led_power=36, pin_led_din=35):
+    if not _led_enabled:
+        return
+
     """ Sets led color """
     color_hex = None
     try:
