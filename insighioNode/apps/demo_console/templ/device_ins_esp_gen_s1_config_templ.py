@@ -19,8 +19,6 @@ _UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SHT40
 
 """ External Sensors configuration """
 _UC_IO_SENSOR_SWITCH_ON = 12
-_UC_IO_ANALOG_DIGITAL_P1 = 1
-_UC_IO_ANALOG_DIGITAL_P2 = 2
 
 """ Modem/GPS PIN configuration """
 _UC_IO_RADIO_ON = 13
@@ -40,3 +38,5 @@ _MEAS_GPS_TIMEOUT = <meas-gps-timeout>
 _MEAS_GPS_SATELLITE_FIX_NUM = <meas-gps-sat-num>
 
 _CHECK_FOR_OTA = <system-enable-ota>
+
+_NOTIFICATION_LED_ENABLED = <meas-led-enabled>
