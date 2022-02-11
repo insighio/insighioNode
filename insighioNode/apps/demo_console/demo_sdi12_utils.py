@@ -5,30 +5,40 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from . import demo_config as cfg
 import logging
 import device_info
+import sensors
 
 
 def sdi12_board_measurements(measurements):
+    if not cfg._SDI12_SENSOR_1_ENABLED and not cfg._SDI12_SENSOR_2_ENABLED:
+        return
+
+    # power on SDI12 regulator
+    if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
+        sensors.set_sensor_power_on(cfg._UC_IO_SNSR_REG_ON)
+
     utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
 
-    if cfg._SDI12_SENSOR_1_ENABLED or cfg._SDI12_SENSOR_2_ENABLED:
-        from external.microsdi12.microsdi12 import SDI12
+    from external.microsdi12.microsdi12 import SDI12
 
-        sdi12 = None
+    sdi12 = None
 
-        try:
-            sdi12 = SDI12(cfg._UC_IO_DRV_IN, cfg._UC_IO_RCV_OUT, cfg._UC_IO_DRV_RCV_ON, 1)
-            sdi12.set_wait_after_uart_write(not device_info.is_esp32())
+    try:
+        sdi12 = SDI12(cfg._UC_IO_DRV_IN, cfg._UC_IO_RCV_OUT, cfg._UC_IO_DRV_RCV_ON, 1)
+        sdi12.set_wait_after_uart_write(not device_info.is_esp32())
 
-            if cfg._SDI12_SENSOR_1_ENABLED:
-                read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_1_ADDRESS, measurements)
+        if cfg._SDI12_SENSOR_1_ENABLED:
+            read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_1_ADDRESS, measurements)
 
-            if cfg._SDI12_SENSOR_2_ENABLED:
-                read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_2_ADDRESS, measurements)
-        except Exception as e:
-            logging.exception(e, "Exception while reading SDI-12 data")
-        finally:
-            if sdi12:
-                sdi12.close()
+        if cfg._SDI12_SENSOR_2_ENABLED:
+            read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_2_ADDRESS, measurements)
+    except Exception as e:
+        logging.exception(e, "Exception while reading SDI-12 data")
+    if sdi12:
+        sdi12.close()
+
+    # power off SDI12 regulator
+    if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
+        sensors.set_sensor_power_on(cfg._UC_IO_SNSR_REG_ON)
 
 
 def read_sdi12_sensor(sdi12, address, measurements):
