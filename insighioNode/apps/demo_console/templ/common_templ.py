@@ -11,9 +11,11 @@ _CONST_MEAS_DISABLED = "disabled"
 
 _BOARD_TYPE = "<selected-board>"
 
-
 """ System-related configuration options """
 _DEEP_SLEEP_PERIOD_SEC = <period>  # tx period in secs
 _BATCH_UPLOAD_MESSAGE_BUFFER = <batch-upload-buffer-size>
 _SCHEDULED_TIMESTAMP_A_SECOND = <scheduled-time-a>
 _SCHEDULED_TIMESTAMP_B_SECOND = <scheduled-time-b>
+
+""" Explicit Key-Value Pairs """
+_MEAS_KEYVALUE=<meas-keyvalue>

@@ -149,6 +149,14 @@ def default_board_measurements(measurements):
     if hasattr(cfg, '_MEAS_SCALE_ENABLED') and cfg._MEAS_SCALE_ENABLED:
         read_scale(measurements)
 
+    if hasattr(cfg, '_MEAS_KEYVALUE') and cfg._MEAS_KEYVALUE:
+        add_explicit_key_values(measurements)
+
+
+def add_explicit_key_values(measurements):
+    for key in cfg._MEAS_KEYVALUE:
+        set_value(measurements, key, cfg._MEAS_KEYVALUE[key])
+
 
 def read_scale(measurements):
     from sensors import hx711
