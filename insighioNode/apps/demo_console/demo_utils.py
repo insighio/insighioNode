@@ -28,8 +28,8 @@ def device_init():
 
 def bq_charger_setup():
     from machine import I2C, Pin
-    p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
     try:
+        p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
         p_snsr.on()
         i2c = I2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
         bq_addr = 107
