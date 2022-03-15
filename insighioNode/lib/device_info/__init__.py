@@ -20,7 +20,7 @@ color_map['black'] = 0x000000
 
 
 def is_esp32():
-    return sys.platform == 'esp32'
+    return sys.platform == 'esp32' or 'esp8266'
 
 
 def get_hw_module_verison():
@@ -30,6 +30,8 @@ def get_hw_module_verison():
         return "esp32s2"
     elif "esp32" in hw_info:
         return "esp32"
+    elif "esp8266" in hw_info:
+        return "esp8266"
     return "other"
 
 
