@@ -62,7 +62,8 @@ def connect(cfg):
             from . import transfer_protocol
 
             # AT command based implementation of communication of Quectel BG600L
-            if 'bg600l-m3' in modem_instance.get_model():
+            modem_model = modem_instance.get_model()
+            if modem_model and 'bg600l-m3' in modem_model:
                 transfer_client = transfer_protocol.TransferProtocol(cfg, modem_instance)
             else:
                 transfer_client = transfer_protocol.TransferProtocol(cfg)
