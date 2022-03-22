@@ -58,6 +58,11 @@ def apply_configuration(keyValuePairDictionary):
     contents = ure.sub(r'\"?<[a-z\-0-9]+>\"?', 'None', contents)
 
     file = rootFolder + 'apps/demo_console/demo_config.py'
+
+    # backup old Configuration
+    utils.copyFile(file, file + ".prev")
+
+    # create new
     utils.writeToFile(file, contents)
 
     import utils
