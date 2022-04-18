@@ -15,6 +15,10 @@ _BAT_ATT = machine.ADC.ATTN_11DB
 _UC_IO_I2C_SDA = 34
 _UC_IO_I2C_SCL = 33
 
+_UC_IO_ONB_SNSR_ON = 35
+_UC_IO_RGB_DIN = 36
+_UC_RGB_VDD = 37
+
 _UC_INTERNAL_TEMP_HUM_SENSOR = _CONST_SENSOR_SHT40
 
 """ External Sensors configuration """

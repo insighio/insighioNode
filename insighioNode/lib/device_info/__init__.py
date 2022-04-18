@@ -9,6 +9,8 @@ import utime
 
 wdt = None
 _led_enabled = True
+_led_pin_vdd = 37
+_led_pin_din = 36
 
 color_map = {}
 color_map['blue'] = 0x0000F0
@@ -165,12 +167,16 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
     # gc.disable()
 
 
-def set_led_enabled(led_enabled):
+def set_led_enabled(led_enabled, led_pin_vdd=37, led_pin_din=36):
     global _led_enabled
+    global _led_pin_vdd
+    global _led_pin_din
     _led_enabled = led_enabled
+    _led_pin_vdd = led_pin_vdd
+    _led_pin_din = led_pin_din
 
 
-def set_led_color(color, pin_led_power=36, pin_led_din=35):
+def set_led_color(color):
     if not _led_enabled:
         return
 
@@ -193,7 +199,7 @@ def set_led_color(color, pin_led_power=36, pin_led_din=35):
         # try controlling led's power (for ESP32S2), if called to simple ESP32, it will through exception
         # thus it will ignore call.
         try:
-            pin_pwr = machine.Pin(pin_led_power, machine.Pin.OUT)
+            pin_pwr = machine.Pin(_led_pin_vdd, machine.Pin.OUT)
 
             if color == 0:
                 pin_pwr.off()
@@ -207,7 +213,7 @@ def set_led_color(color, pin_led_power=36, pin_led_din=35):
         # thus it will ignore call.
         try:
             from neopixel import NeoPixel
-            pin_din = machine.Pin(pin_led_din, machine.Pin.OUT)
+            pin_din = machine.Pin(_led_pin_din, machine.Pin.OUT)
             np = NeoPixel(pin_din, 1)
 
             np[0] = ((color_hex & 0xFF0000) >> 16, (color_hex & 0x00FF00) >> 8, (color_hex & 0x0000FF))

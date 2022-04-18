@@ -17,13 +17,17 @@ def device_init():
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
         bq_charger_setup()
     else:
-        if hasattr(cfg, "_UC_IO_LOAD_PWR_SAVE_OFF") and cfg._UC_IO_LOAD_PWR_SAVE_OFF is not None:
+        if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
             gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
 
-        if hasattr(cfg, "_UC_IO_SENSOR_PWR_SAVE_OFF") and cfg._UC_IO_SENSOR_PWR_SAVE_OFF is not None:
+        if get_config("_UC_IO_SENSOR_PWR_SAVE_OFF") is not None:
             gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 1)
+
     if hasattr(cfg, "_NOTIFICATION_LED_ENABLED"):
-        device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED)
+        if hasattr(cfg, "_UC_IO_RGB_DIN") and hasattr(cfg, "_UC_RGB_VDD"):
+            device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED, cfg._UC_RGB_VDD, cfg._UC_IO_RGB_DIN)
+        else:
+            device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED)
 
 
 def bq_charger_setup():
@@ -45,10 +49,10 @@ def bq_charger_setup():
 
 
 def device_deinit():
-    if hasattr(cfg, "_UC_IO_LOAD_PWR_SAVE_OFF") and cfg._UC_IO_LOAD_PWR_SAVE_OFF is not None:
+    if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
         gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 0)
 
-    if hasattr(cfg, "_UC_IO_SENSOR_PWR_SAVE_OFF") and cfg._UC_IO_SENSOR_PWR_SAVE_OFF is not None:
+    if get_config("_UC_IO_SENSOR_PWR_SAVE_OFF") is not None:
         gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_PWR_SAVE_OFF, 0)
 
 
@@ -85,6 +89,9 @@ def get_measurements(cfg):
 
     sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_SWITCH_ON)
 
+    if get_config("_UC_IO_ONB_SNSR_ON") is not None:
+        sensors.set_sensor_power_on(cfg._UC_IO_ONB_SNSR_ON)
+
     # read internal temperature and humidity
     try:
         if cfg._MEAS_BOARD_SENSE_ENABLE:
@@ -92,6 +99,7 @@ def get_measurements(cfg):
                 from sensors import si7021 as sens
             elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._UC_INTERNAL_TEMP_HUM_SENSOR:
                 from sensors import sht40 as sens
+
             (board_temp, board_humidity) = sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
             set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
@@ -104,7 +112,13 @@ def get_measurements(cfg):
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
 
+    if get_config("_UC_IO_ONB_SNSR_ON") is not None:
+        sensors.set_sensor_power_off(cfg._UC_IO_ONB_SNSR_ON)
+
     sensors.set_sensor_power_off(cfg._UC_IO_SENSOR_SWITCH_ON)
+
+    if get_config("_UC_IO_ONB_SNSR_ON") is not None:
+        sensors.set_sensor_power_off(cfg._UC_IO_ONB_SNSR_ON)
 
     return measurements
 
@@ -128,23 +142,26 @@ def read_battery_voltage_and_current():
 
 
 def default_board_measurements(measurements):
-    if cfg._MEAS_I2C_1 and hasattr(cfg, "_UC_IO_I2C_SDA") and hasattr(cfg, "_UC_IO_I2C_SCL") and cfg._MEAS_I2C_1 != cfg._CONST_MEAS_DISABLED:
-        read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, cfg._MEAS_I2C_1, measurements)
+    # up to 2 I2C sensors
+    for n in range(1, 3):
+        i2c_config = get_config("_MEAS_I2C_" + str(n))
+        if i2c_config and hasattr(cfg, "_UC_IO_I2C_SDA") and hasattr(cfg, "_UC_IO_I2C_SCL") and i2c_config != cfg._CONST_MEAS_DISABLED:
+            read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, i2c_config, measurements)
 
-    if cfg._MEAS_I2C_2 and hasattr(cfg, "_UC_IO_I2C_SDA") and hasattr(cfg, "_UC_IO_I2C_SCL") and cfg._MEAS_I2C_2 != cfg._CONST_MEAS_DISABLED:
-        read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, cfg._MEAS_I2C_2, measurements)
+    # up to 3 Analog sensors
+    for n in range(1, 4):
+        meas_key_name = "_MEAS_ANALOG_P" + str(n)
+        pin_name = "_UC_IO_ANALOG_P" + str(n)
+        if hasattr(cfg, meas_key_name) and hasattr(cfg, pin_name) and getattr(cfg, meas_key_name) != cfg._CONST_MEAS_DISABLED:
+            read_analog_digital_sensor(getattr(cfg, pin_name), getattr(cfg, meas_key_name), measurements, "ap" + str(n))
 
-    if hasattr(cfg, '_MEAS_ANALOG_P1') and hasattr(cfg, "_UC_IO_ANALOG_P1") and cfg._MEAS_ANALOG_P1 != cfg._CONST_MEAS_DISABLED:
-        read_analog_digital_sensor(cfg._UC_IO_ANALOG_P1, cfg._MEAS_ANALOG_P1, measurements, "ap1")
-
-    if hasattr(cfg, '_MEAS_ANALOG_P2') and hasattr(cfg, "_UC_IO_ANALOG_P2") and cfg._MEAS_ANALOG_P2 != cfg._CONST_MEAS_DISABLED:
-        read_analog_digital_sensor(cfg._UC_IO_ANALOG_P2, cfg._MEAS_ANALOG_P2, measurements, "ap2")
-
-    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P1') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P1") and cfg._MEAS_ANALOG_DIGITAL_P1 != cfg._CONST_MEAS_DISABLED:
-        read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P1, cfg._MEAS_ANALOG_DIGITAL_P1, measurements, "adp1", cfg._MEAS_ANALOG_DIGITAL_P1_TRANSFORMATION if hasattr(cfg, "_MEAS_ANALOG_DIGITAL_P1_TRANSFORMATION") else None)
-
-    if hasattr(cfg, '_MEAS_ANALOG_DIGITAL_P2') and hasattr(cfg, "_UC_IO_ANALOG_DIGITAL_P2") and cfg._MEAS_ANALOG_DIGITAL_P2 != cfg._CONST_MEAS_DISABLED:
-        read_analog_digital_sensor(cfg._UC_IO_ANALOG_DIGITAL_P2, cfg._MEAS_ANALOG_DIGITAL_P2, measurements, "adp2", cfg._MEAS_ANALOG_DIGITAL_P2_TRANSFORMATION if hasattr(cfg, "_MEAS_ANALOG_DIGITAL_P2_TRANSFORMATION") else None)
+    # up to 3 Digital/Analog sensors
+    for n in range(1, 4):
+        meas_key_name = "_MEAS_ANALOG_DIGITAL_P" + str(n)
+        pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
+        transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
+        if hasattr(cfg, meas_key_name) and hasattr(cfg, pin_name) and getattr(cfg, meas_key_name) != cfg._CONST_MEAS_DISABLED:
+            read_analog_digital_sensor(getattr(cfg, pin_name), getattr(cfg, meas_key_name), measurements, "adp" + str(n), get_config(transformation_key))
 
     if hasattr(cfg, '_MEAS_SCALE_ENABLED') and cfg._MEAS_SCALE_ENABLED:
         read_scale(measurements)

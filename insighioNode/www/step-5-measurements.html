@@ -375,6 +375,39 @@
                   </div>
                   <br />
                   <br />
+                  <div class="col-4 col-sm-12">
+                    <label class="form-label" for="measurements">Analog / Digital P3</label>
+                  </div>
+                  <div class="col-8 col-sm-12">
+                    <div class="form-group">
+                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
+                        <option>disabled</option>
+                        <option value="dht11">dht11 - temperature / humidity (digital)</option>
+                        <option value="dht22">dht22 - temperature / humidity (digital)</option>
+                        <option value="ds18x20">ds18x20 - temperature (OneWire)</option>
+                        <option value="analog">generic analog</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="input-ins-esp-s1-sensor-a-d-p3-trans-div" class="col-12" style="display:none">
+                    <div class="form-group">
+                      <div class="column col-1 col-mr-auto"></div>
+                      <div class="col-3  col-sm-12">
+                        <label class="form-label" for="measurements">transformation
+                          <button class="btn btn-link tooltip"
+                            data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                            <i class="icon icon-flag"></i>
+                          </button>
+                        </label>
+                      </div>
+                      <div class="col-6 col-sm-12">
+                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p3-t" value="v" />
+                      </div>
+                      <div class="column col-2 col-mr-auto"></div>
+                    </div>
+                  </div>
+                  <br />
+                  <br />
                   <br />
                   <br />
                 </div>
@@ -559,6 +592,8 @@
       Cookies.remove('meas-sensor-a-d-p1-t')
       Cookies.remove('meas-sensor-a-d-p2')
       Cookies.remove('meas-sensor-a-d-p2-t')
+      Cookies.remove('meas-sensor-a-d-p3')
+      Cookies.remove('meas-sensor-a-d-p3-t')
       Cookies.remove('meas-sensor-a-p1')
       Cookies.remove('meas-sensor-a-p1-t')
       Cookies.remove('meas-sensor-a-p2')
@@ -624,12 +659,16 @@
         Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-s1-i2c').value)
         Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-s1-sensor-a-d-p1').value)
         Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-ins-esp-s1-sensor-a-d-p2').value)
+        Cookies.set('meas-sensor-a-d-p3', document.getElementById('input-ins-esp-s1-sensor-a-d-p3').value)
 
         if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p1-trans-div'))
           Cookies.set('meas-sensor-a-d-p1-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p1-t').value)
 
         if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p2-trans-div'))
           Cookies.set('meas-sensor-a-d-p2-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p2-t').value)
+
+        if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p3-trans-div'))
+          Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p3-t').value)
 
         location.href = "step-6-timing.html"
       }
