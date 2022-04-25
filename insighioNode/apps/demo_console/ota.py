@@ -1,6 +1,7 @@
 import logging
 from . import transfer_protocol
 import device_info
+import utils
 
 
 def checkAndApply(client):
@@ -17,13 +18,34 @@ def checkAndApply(client):
     else:
         logging.debug("mqtt message received: " + str(message["message"]) + " in topic: " + str(message["topic"]))
 
+        # if it is a device configuration with content
         if message["topic"].endswith("/config"):
+            # if modem based, clear message and ignore
+            if client.modem_based:
+                client.clearConfigMessages()
+                return
+
             message_parsed = message["message"]
             # if message is byte array, decode it, or else ignore and proceed
             try:
                 message_parsed = message["message"].decode("utf-8")
             except Exception as e:
                 pass
+
+            applyDeviceConfiguration(client, message_parsed)
+        # if it is a configuration request without content
+        elif message["topic"].endswith("/configRequest"):
+            if not client.modem_based:
+                client.clearConfigRequestMessages()
+                return
+
+            message_parsed = downloadDeviceConfigurationHTTP(client)
+            # if message is byte array, decode it, or else ignore and proceed
+            try:
+                message_parsed = message["message"].decode("utf-8")
+            except Exception as e:
+                pass
+
             applyDeviceConfiguration(client, message_parsed)
         elif message["topic"] is None or message["topic"].endswith("/ota"):
             from external.kpn_senml.senml_pack_json import SenmlPackJson
@@ -98,6 +120,42 @@ def progressCallback(microWebCli, progressSize, totalSize):
         print('Progress: %d bytes downloaded...' % progressSize)
 
 
+def downloadDeviceConfigurationHTTP(client):
+    logging.info("About to download device configuration over HTTP...")
+    from . import demo_config as cfg
+    protocol_config = cfg.get_protocol_config()
+    URL_base = "console.insigh.io"
+    URL_PATH = '/mf-rproxy/device/config'
+    URL_QUERY_PARAMS = 'id={}&channel={}'.format(
+        protocol_config.thing_id,
+        protocol_config.control_channel_id
+    )
+    if client.modem_based:
+        return client.modem_instance.http_get_with_auth_header(URL_base, URL_PATH + "?" + URL_QUERY_PARAMS, protocol_config.thing_token)
+    else:
+        from external.MicroWebCli import microWebCli
+        auth = MicroWebCli.AuthToken(protocol_config.thing_token)
+        wCli = microWebCli.MicroWebCli('http://' + URL_base + URL_PATH, 'GET', auth)
+        wCli.QueryParams['id'] = protocol_config.thing_id
+        wCli.QueryParams['channel'] = protocol_config.control_channel_id
+        logging.debug('GET file %s' % wCli.URL)
+        wCli.OpenRequest()
+        resp = wCli.GetResponse()
+        logging.debug("Get file response status: {}, message: {}".format(resp.GetStatusCode(), resp.GetStatusMessage()))
+        if resp.IsSuccess():
+            buf = memoryview(bytearray(2048))
+            while not resp.IsClosed():
+                x = resp.ReadContentInto(buf)
+                if x < len(buf):
+                    buf = buf[:x]
+            try:
+                return buf.decode()
+            except Exception as e:
+                pass
+
+    return None
+
+
 def downloadOTA(client, fileId, fileType, fileSize):
     logging.info("About to download OTA package: " + fileId + fileType)
 
@@ -114,7 +172,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
     # TODO: fix support of redirections
     protocol_config = cfg.get_protocol_config()
     URL = 'http://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}'.format(
-        #cfg.protocol_config.server_ip,
+        # cfg.protocol_config.server_ip,
         "console.insigh.io",
         fileId,
         protocol_config.thing_id,
@@ -149,11 +207,9 @@ def downloadOTA(client, fileId, fileType, fileSize):
     return None
 
 
-def downloadOTAQuectelBG600(client, fileId, fileType, fileSize):
-    pass
-
-
 def applyDeviceConfiguration(client, configurationParameters):
+    if configurationParameters is None:
+        return
     # remove '?' if the string starts with it
     if configurationParameters.startswith("?"):
         configurationParameters = str(configurationParameters[1:])

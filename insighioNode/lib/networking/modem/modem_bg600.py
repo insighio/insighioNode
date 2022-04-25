@@ -347,6 +347,7 @@ class ModemBG600(modem_base.Modem):
 
     def http_get_file(self, url, destination_file, timeout_ms=250000):
         (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
+        self.send_at_cmd('AT+QHTTPCFG="requestheader",0')
         self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
         (url_ready, _) = self.send_at_cmd('AT+QHTTPURL=' + str(len(url)) + ',80', 8000, "CONNECT")
         if not url_ready:
@@ -364,3 +365,43 @@ class ModemBG600(modem_base.Modem):
         (file_downloaded, _) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
 
         return file_downloaded
+
+    # url_base = "console.insigh.io"
+    # url_request_route = /mf-rproxy/channels/list
+    def http_get_with_auth_header(self, url_base, url_request_route, auth_token, destination_file, timeout_ms=60000):
+        (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
+        # enable executing http request with custom headers
+        self.send_at_cmd('AT+QHTTPCFG="requestheader",1')
+        self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
+        url = 'http://' + url_base  #"http://console.insigh.io/mf-rproxy/channels/list"
+        requestHeader = (
+            "GET " + url_request_route + " HTTP/1.1\r\n"
+            "Host: " + url_base + "\r\n"
+            "User-Agent: curl/7.74.0\r\n"
+            "Accept: */*\r\n"
+            "Content-Type: application/json\r\n"
+            "Authorization: " + auth_token + "\r\n"
+            "\r\n")
+
+        (url_ready, _) = self.send_at_cmd('AT+QHTTPURL=' + str(len(url)) + ',80', 8000, "CONNECT")
+        if not url_ready:
+            return None
+
+        (url_setup, _) = self.send_at_cmd(url, 80)
+        if not url_setup:
+            return None
+
+        (url_req_ready, _) = self.send_at_cmd('AT+QHTTPGET=80,' + str(len(requestHeader)), 8000, "CONNECT")
+        if not url_req_ready:
+            return None
+
+        (url_req_body_ready, _) = self.send_at_cmd(requestHeader, timeout_ms, r"\+QHTTPGET:.*")
+        if not url_req_body_ready:
+            return None
+
+        response = None
+        (url_resp_received, lines) = self.send_at_cmd('AT+QHTTPREAD=120')
+        if url_resp_received and len(lines) > 1:
+            response = lines[1]
+        #(file_downloaded, _) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
+        return response

@@ -22,6 +22,7 @@ class MQTTClientCustom:
         self.controlChannelGeneric = controlChannel + "/" + mqtt_config.thing_id + "/#"
         self.otaChannel = controlChannel + "/" + mqtt_config.thing_id + "/ota"
         self.configChannel = controlChannel + "/" + mqtt_config.thing_id + "/config"
+        self.configResponseChannel = controlChannel + "/" + mqtt_config.thing_id + "/configResponse"
         self.messageChannel = "channels/" + mqtt_config.message_channel_id + "/messages/" + mqtt_config.thing_id
 
         logging.debug("Selected channels:")
@@ -90,6 +91,9 @@ class MQTTClientCustom:
 
     def clearConfigMessages(self):
         return self.sendMessage("", self.configChannel, True)
+
+    def clearConfigRequestMessages(self):
+        return self.sendMessage("", self.configResponseChannel, True)
 
     def subscribe_and_get_first_message(self, channel=None):
         try:

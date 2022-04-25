@@ -103,7 +103,8 @@ class TransferProtocol:
         return self.clear_control_messages("/ota")
 
     def clear_control_message_config(self):
-        return self.clear_control_messages("/config")
+        statusDefault = self.clear_control_messages("/config")
+        statusHTTP = self.clear_control_messages("/configRequest")
 
     def clear_control_messages(self, controlMessagePostfix):
 
