@@ -144,7 +144,7 @@ class ModemBG600(modem_base.Modem):
         retry = 0
         while retry < max_retries:
             retry += 1
-            (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN=0,"' + server_ip + '",' + str(server_port), 15000, "\\+QMTOPEN:\\s+0,0")
+            (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN=0,"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s+0,0")
             if mqtt_ready:
                 break
             utime.sleep_ms(1000)
@@ -400,8 +400,8 @@ class ModemBG600(modem_base.Modem):
             return None
 
         response = None
-        (url_resp_received, lines) = self.send_at_cmd('AT+QHTTPREAD=120')
-        if url_resp_received and len(lines) > 1:
-            response = lines[1]
-        #(file_downloaded, _) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
-        return response
+        # (url_resp_received, lines) = self.send_at_cmd('AT+QHTTPREAD=120')
+        # if url_resp_received and len(lines) > 1:
+        #     response = lines[1]
+        (file_downloaded, _) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
+        return file_downloaded

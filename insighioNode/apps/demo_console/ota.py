@@ -131,7 +131,19 @@ def downloadDeviceConfigurationHTTP(client):
         protocol_config.control_channel_id
     )
     if client.modem_based:
-        return client.modem_instance.http_get_with_auth_header(URL_base, URL_PATH + "?" + URL_QUERY_PARAMS, protocol_config.thing_token)
+        file = "tmpconfig"
+        file_downloaded = client.modem_instance.http_get_with_auth_header(URL_base, URL_PATH + "?" + URL_QUERY_PARAMS, protocol_config.thing_token, file)
+        if file_downloaded:
+            local_file_name = device_info.get_device_root_folder() + file
+            is_file_locally = client.modem_instance.get_file(file, local_file_name)
+            if is_file_locally:
+                client.modem_instance.delete_file(file)
+                configContent = utils.readFromFile(local_file_name)
+                logging.debug("config content: |" + configContent + "|")
+                if configContent.startswith('"') and configContent.endswith('"'):
+                    configContent = configContent[1:-1]
+
+                return configContent
     else:
         from external.MicroWebCli import microWebCli
         auth = MicroWebCli.AuthToken(protocol_config.thing_token)
@@ -231,5 +243,6 @@ def applyDeviceConfiguration(client, configurationParameters):
     from www import configuration_handler
     configuration_handler.apply_configuration(keyValueDict)
     client.clear_control_message_config()
+    client.disconnect()
     import machine
     machine.reset()
