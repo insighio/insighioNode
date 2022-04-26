@@ -144,8 +144,11 @@ class ModemBG600(modem_base.Modem):
         retry = 0
         while retry < max_retries:
             retry += 1
-            (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN=0,"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s+0,0")
+            (mqtt_ready, lines) = self.send_at_cmd('AT+QMTOPEN=0,"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s+0,\d")
             if mqtt_ready:
+                # if MQTT already connected
+                if len(lines) > 0 and lines[-1].endswith ("0,2"):
+                    return True
                 break
             utime.sleep_ms(1000)
 
