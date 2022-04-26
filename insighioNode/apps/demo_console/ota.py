@@ -10,80 +10,87 @@ def checkAndApply(client):
         return False
 
     logging.info("Waiting for incoming control message (OTA)...")
-    message = client.get_control_message()
+    messageDict = client.get_control_message()
 
-    if message is None or message["message"] is None:
+    if messageDict is None or messageDict["topic"] is None or messageDict["message"] is None:
         logging.info("No control message received")
         return
-    else:
-        logging.debug("mqtt message received: " + str(message["message"]) + " in topic: " + str(message["topic"]))
 
-        # if it is a device configuration with content
-        if message["topic"].endswith("/config"):
-            # if modem based, clear message and ignore
-            if client.modem_based:
-                client.clearConfigMessages()
-                return
+    topic = messageDict["topic"]
+    message = messageDict["message"]
+    # if message is byte array, decode it, or else ignore and proceed
+    try:
+        topic = topic.decode("utf-8")
+    except Exception as e:
+        pass
+    try:
+        message = message.decode("utf-8")
+    except Exception as e:
+        pass
 
-            message_parsed = message["message"]
-            # if message is byte array, decode it, or else ignore and proceed
-            try:
-                message_parsed = message["message"].decode("utf-8")
-            except Exception as e:
-                pass
+    logging.debug("mqtt message received: " + str(message) + " in topic: " + str(topic))
 
-            applyDeviceConfiguration(client, message_parsed)
-        # if it is a configuration request without content
-        elif message["topic"].endswith("/configRequest"):
-            if not client.modem_based:
-                client.clearConfigRequestMessages()
-                return
+    # if it is a device configuration with content
+    if topic.endswith("/config"):
+        # if modem based, clear message and ignore
+        if client.modem_based:
+            client.clear_retained(topic)
+            checkAndApply(client)
+            return
 
-            message_parsed = downloadDeviceConfigurationHTTP(client)
-            # if message is byte array, decode it, or else ignore and proceed
-            try:
-                message_parsed = message["message"].decode("utf-8")
-            except Exception as e:
-                pass
+        # first clear non-modem based config request
+        client.clear_retained(topic + "Request")
+        applyDeviceConfiguration(client, message, topic)
+    # if it is a configuration request without content
+    elif topic.endswith("/configRequest") and message == "pending":
+        if not client.modem_based:
+            client.clear_retained(topic)
+            checkAndApply(client)
+            return
 
-            applyDeviceConfiguration(client, message_parsed)
-        elif message["topic"] is None or message["topic"].endswith("/ota"):
-            from external.kpn_senml.senml_pack_json import SenmlPackJson
-            senmlMessage = SenmlPackJson("")
-            senmlMessage.from_json(message["message"])
-            eventId = None
-            fileId = None
-            fileType = None
-            fileSize = None
-            for el in senmlMessage:
-                name = str(el.name)
-                if name == "e":
-                    eventId = el.value
-                elif name == "i":
-                    fileId = el.value
-                elif name == "t":
-                    fileType = el.value
-                elif name == "s":
-                    fileSize = el.value
-            # eventId ==0 => pending for installation
-            if str(eventId) == "0" and fileId and fileType and fileSize:
-                downloaded_file = downloadOTA(client, fileId, fileType, fileSize)
-                if downloaded_file:
-                    from . import apply_ota
-                    applied = apply_ota.do_apply(downloaded_file)
-                    if applied:
-                        print("about to reset...")
-                        sendStatusMessage(client, fileId, True)
-                        client.clear_control_message_ota()
-                        import utils
-                        utils.clearCachedStates()
-                        import machine
-                        machine.reset()
-                    else:
-                        sendStatusMessage(client, fileId, False, "can not apply")
-                        client.clear_control_message_ota()
+        # first clear non-modem based config request
+        client.clear_retained(topic.replace("Request", ""))
+        config_content = downloadDeviceConfigurationHTTP(client)
+
+        applyDeviceConfiguration(client, config_content, topic)
+    # topic is None ? why is this?
+    elif topic is None or topic.endswith("/ota"):
+        from external.kpn_senml.senml_pack_json import SenmlPackJson
+        senmlMessage = SenmlPackJson("")
+        senmlMessage.from_json(message)
+        eventId = None
+        fileId = None
+        fileType = None
+        fileSize = None
+        for el in senmlMessage:
+            name = str(el.name)
+            if name == "e":
+                eventId = el.value
+            elif name == "i":
+                fileId = el.value
+            elif name == "t":
+                fileType = el.value
+            elif name == "s":
+                fileSize = el.value
+        # eventId ==0 => pending for installation
+        if str(eventId) == "0" and fileId and fileType and fileSize:
+            downloaded_file = downloadOTA(client, fileId, fileType, fileSize)
+            if downloaded_file:
+                from . import apply_ota
+                applied = apply_ota.do_apply(downloaded_file)
+                if applied:
+                    print("about to reset...")
+                    sendStatusMessage(client, fileId, True)
+                    client.clear_retained(topic)
+                    import utils
+                    utils.clearCachedStates()
+                    import machine
+                    machine.reset()
                 else:
-                    sendStatusMessage(client, fileId, False, "can not download")
+                    sendStatusMessage(client, fileId, False, "can not apply")
+                    client.clear_retained(topic)
+            else:
+                sendStatusMessage(client, fileId, False, "can not download")
 
 
 def hasEnoughFreeSpace(fileSize):
@@ -161,7 +168,7 @@ def downloadDeviceConfigurationHTTP(client):
                 if x < len(buf):
                     buf = buf[:x]
             try:
-                return buf.decode()
+                return buf.decode("utf-8")
             except Exception as e:
                 pass
 
@@ -219,7 +226,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
     return None
 
 
-def applyDeviceConfiguration(client, configurationParameters):
+def applyDeviceConfiguration(client, configurationParameters, topic):
     if configurationParameters is None:
         return
     # remove '?' if the string starts with it
@@ -242,7 +249,7 @@ def applyDeviceConfiguration(client, configurationParameters):
 
     from www import configuration_handler
     configuration_handler.apply_configuration(keyValueDict)
-    client.clear_control_message_config()
+    client.clear_retained(topic)
     client.disconnect()
     import machine
     machine.reset()

@@ -21,13 +21,10 @@ class MQTTClientCustom:
         controlChannel = "channels/" + mqtt_config.control_channel_id + "/messages"
         self.controlChannelGeneric = controlChannel + "/" + mqtt_config.thing_id + "/#"
         self.otaChannel = controlChannel + "/" + mqtt_config.thing_id + "/ota"
-        self.configChannel = controlChannel + "/" + mqtt_config.thing_id + "/config"
-        self.configResponseChannel = controlChannel + "/" + mqtt_config.thing_id + "/configResponse"
         self.messageChannel = "channels/" + mqtt_config.message_channel_id + "/messages/" + mqtt_config.thing_id
 
         logging.debug("Selected channels:")
         logging.debug(" ota channel: " + self.otaChannel)
-        logging.debug(" config channel: " + self.configChannel)
         logging.debug(" messageChannel: " + self.messageChannel)
 
     def subscribe_callback(self, topic, message):
@@ -85,15 +82,6 @@ class MQTTClientCustom:
 
     def sendOtaMessage(self, message):
         return self.sendMessage(message, self.otaChannel, False)
-
-    def clearOtaMessages(self):
-        return self.sendMessage("", self.otaChannel, True)
-
-    def clearConfigMessages(self):
-        return self.sendMessage("", self.configChannel, True)
-
-    def clearConfigRequestMessages(self):
-        return self.sendMessage("", self.configResponseChannel, True)
 
     def subscribe_and_get_first_message(self, channel=None):
         try:

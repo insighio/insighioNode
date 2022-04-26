@@ -99,27 +99,12 @@ class TransferProtocol:
         elif self.protocol == 'mqtt':
             return self.client.subscribe_and_get_first_message()
 
-    def clear_control_message_ota(self):
-        return self.clear_control_messages("/ota")
-
-    def clear_control_message_config(self):
-        statusDefault = self.clear_control_messages("/config")
-        statusHTTP = self.clear_control_messages("/configRequest")
-
-    def clear_control_messages(self, controlMessagePostfix):
-
-        if not self.connected:
-            logging.info("TransferProtocol not connected")
-            return False
-
+    def clear_retained(self, topic):
+        logging.info("About to clear retained message of topic: " + topic)
         if self.modem_based:
-            topic = 'channels/{}/messages/{}{}'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, controlMessagePostfix)
             return self.modem_instance.mqtt_publish(topic, "", 3, True)
         elif self.protocol == 'mqtt':
-            logging.info("About to clear retained messages")
-            if controlMessagePostfix == "/ota":
-                self.client.clearOtaMessages()
-            elif controlMessagePostfix == "/config":
-                self.client.clearConfigMessages()
-            # self.client.sendMessage("", self.protocol_config.control_channel_id, True)
-            logging.info("Done.")
+            return self.client.sendMessage("", topic, True)
+        else:
+            logging.error("clear_retained: protocol not supported")
+            return False
