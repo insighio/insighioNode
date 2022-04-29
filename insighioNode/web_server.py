@@ -51,73 +51,18 @@ class WebServer:
         logging.info("Original device id: " + device_info.get_device_id()[0])
         device_info.set_defaults()
 
-    def saveGlobalVarIfFoundInLine(self, line, strToSearch, globalVarName, delimiter):
-        if ure.match(strToSearch, line):
-        #if line.startswith(strToSearch):
-            elems = line.split(delimiter)
-            if len(elems) > 1 and elems[1] != "":
-                self.pyhtmlMod.SetGlobalVar(globalVarName, elems[1])
-                logging.debug("var '{}' = {}".format(globalVarName, elems[1]))
-                return True
-        return False
-
-    def extractInsighioIds(self):
-        projectConfig = utils.readFromFile(device_info.get_device_root_folder() + "apps/demo_console/demo_config.py").strip().split("\n")
-        linesCount = len(projectConfig)
-
-        i = 0
-        euisFilled = 0
-        self.pyhtmlMod.SetGlobalVar("insighioChannelId", "")
-        self.pyhtmlMod.SetGlobalVar("insighioControlChannel", "")
-        self.pyhtmlMod.SetGlobalVar("insighioDeviceId", "")
-        self.pyhtmlMod.SetGlobalVar("insighioDeviceToken", "")
-
-        while i < linesCount:
-            if (self.saveGlobalVarIfFoundInLine(projectConfig[i], r'^(\s*\w+\.)?message_channel_id', "insighioChannelId", '"') or
-                self.saveGlobalVarIfFoundInLine(projectConfig[i], r'^(\s*\w+\.)?control_channel_id', "insighioControlChannel", '"') or
-                self.saveGlobalVarIfFoundInLine(projectConfig[i], r'^(\s*\w+\.)?thing_id', "insighioDeviceId", '"') or
-                self.saveGlobalVarIfFoundInLine(projectConfig[i], r'^(\s*\w+\.)?thing_token', "insighioDeviceToken", '"')):
-               euisFilled = euisFilled + 1
-
-            if euisFilled == 4:
-                return True
-            else:
-                i = i + 1
-
-        return False
-
-    def extractLoRaUIDS(self):
-        loraDevEUI = ""
-        try:
-            logging.debug("Lora MAC: " + str(device_info.get_lora_mac()))
-            loraDevEUI = device_info.get_lora_mac()[0]
-        except Exception as e:
-            logging.exception(e, "lora deveui")
-            pass
-        projectConfig = utils.readFromFile(device_info.get_device_root_folder() + "apps/demo_console/demo_config.py").strip().split("\n")
-        linesCount = len(projectConfig)
-        i = 0
-        euisFilled = 0
-        self.pyhtmlMod.SetGlobalVar("loraDevEUI", loraDevEUI)
+    def storeIds(self):
         self.pyhtmlMod.SetGlobalVar("loraAppEUI", "")
         self.pyhtmlMod.SetGlobalVar("loraAppKey", "")
-
-        while i < linesCount:
-            if (self.saveGlobalVarIfFoundInLine(projectConfig[i], '_APP_EUI', "loraAppEUI", '"') or
-                self.saveGlobalVarIfFoundInLine(projectConfig[i], '_APP_KEY', "loraAppKey", '"')):
-                euisFilled = euisFilled + 1
-
-            if euisFilled == 3:
-                return True
-            else:
-                i = i + 1
-
-        return False
-
-    def storeIds(self):
-        self.extractLoRaUIDS()
-        self.extractInsighioIds()
         self.pyhtmlMod.SetGlobalVar("wifiAvailableNets", self.available_nets)
+        from www import stored_config_utils
+        try:
+            keyValues = stored_config_utils.get_config_values()
+            for key in keyValues:
+                self.pyhtmlMod.SetGlobalVar(key, keyValues[key])
+        except:
+            logging.error("Unable to retrieve old configuration")
+            pass
 
     def start(self, timeoutMs=-1):
         logging.info('\n\n** Init WLAN mode and WAP2')
