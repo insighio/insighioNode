@@ -63,11 +63,8 @@
           </div>
       </div>
       <script src="js.cookie.min.js"></script>
+      <script src="utils.js"></script>
       <script>
-      function goBack() {
-        window.history.back();
-      }
-
       function storeAndReboot() {
         document.getElementById('save-button').disabled = true
         var config = Cookies.get()

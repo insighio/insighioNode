@@ -72,6 +72,7 @@ from sensors import hx711
           </div>
       </div>
       <script src="js.cookie.min.js"></script>
+      <script src="utils.js"></script>
       <script>
       function fillFields() {
         document.getElementById('idle-weight-value').innerHTML = Cookies.get('meas-scale-offset')
@@ -82,10 +83,6 @@ from sensors import hx711
 
         console.log(offset, reference, referenceExpectedWeight)
         document.getElementById('scale-value').innerHTML = (reference - offset) / referenceExpectedWeight
-      }
-
-      function goBack() {
-        window.history.back();
       }
 
       function clearCookies() {

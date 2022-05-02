@@ -70,7 +70,7 @@
                       <label class="form-label" for="input-example-cellular">APN</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-apn" placeholder="" value="{{ cell_apn }}"/>
+                      <input class="form-input constr-field" type="text" id="input-apn"/>
                     </div>
                     <br />
                     <br />
@@ -80,9 +80,9 @@
                     <div class="col-9 col-sm-12">
                       <div class="form-group">
                         <select class="form-select"  id="input-cell-tech">
-                          <option selected={{ cell_tech === "GSM" }}>GSM</option>
-                          <option selected={{ cell_tech === "NBIoT" }}>NBIoT</option>
-                          <option selected={{ cell_tech === "auto" }}>auto</option>
+                          <option selected>GSM</option>
+                          <option>NBIoT</option>
+                          <option>auto</option>
                         </select>
                       </div>
                     </div>
@@ -93,7 +93,7 @@
                       <label class="form-label" for="input-example-cellular">Band</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-band" value={{ cell_band }} />
+                      <input class="form-input constr-field" type="number" id="input-band"/>
                     </div>
                     <br />
                     <br />
@@ -108,11 +108,11 @@
                     </div>
                     <div class="col-9 col-sm-12">
                       <label class="form-radio">
-                        <input type="radio" name="protocol" onclick="showIpVersion(false)"  value="mqtt" checked={{ protocol === "mqtt" }}>
+                        <input type="radio" name="protocol" onclick="showIpVersion(false)"  value="mqtt" checked>
                         <i class="form-icon"></i> MQTT
                       </label>
                       <label class="form-radio">
-                        <input type="radio" name="protocol" onclick="showIpVersion(true)" value="coap" checked={{ protocol === "coap" }}>
+                        <input type="radio" name="protocol" onclick="showIpVersion(true)" value="coap" checked>
                         <i class="form-icon"></i> CoAP
                       </label>
                     </div>
@@ -123,11 +123,11 @@
                     </div>
                     <div class="col-9 col-sm-12" >
                       <label class="form-radio">
-                        <input type="radio" name="ipversion" value="IP" id="ipv4Option" checked={{ ipversion === "IP" }}>
+                        <input type="radio" name="ipversion" value="IP" id="ipv4Option" checked>
                         <i class="form-icon"></i> IPv4
                       </label>
                       <label class="form-radio">
-                        <input type="radio" name="ipversion" value="IPV6" id="ipv6Option" disabled={{ ipversion === "IP" }} checked={{ ipversion === "IPV6" }}>
+                        <input type="radio" name="ipversion" value="IPV6" id="ipv6Option" disabled>
                         <i class="form-icon"></i> IPv6
                       </label>
                     </div>
@@ -148,9 +148,24 @@
         </div>
 
         <script src="js.cookie.min.js"></script>
+        <script src="utils.js"></script>
         <script >
-          function goBack() {
-            window.history.back();
+          function initializeValues() {
+            var technology = "{{ cell_tech }}"
+            var protocol = "{{ protocol }}"
+            var ipv = "{{ ipversion }}"
+            var apn = "{{ cell_apn }}"
+            var band = cell_band
+
+            //input-band" value={{ cell_band }}
+
+            document.getElementById('input-cell-tech').value = technology ? technology : "GSM"
+            document.getElementById('input-apn').value = apn ? apn : "iot.1nce.net"
+            setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
+            setRadioGroupValue('ipversion', ipv ? ipv : "IP")
+
+            if(document.getElementById('input-band'))
+              document.getElementById('input-band').value = band ? band : 20
           }
 
           function clearCookies() {
@@ -166,25 +181,6 @@
             Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
             Cookies.remove('cell-tech')
-          }
-
-          //_CELLULAR_TECHNOLOGY = "<cell-tech>"
-          //input-cell-tech
-
-          function setRadioGroupValue(groupName, cookieName){
-            var elems = document.getElementsByName(groupName)
-
-            for (var i = 0, length = elems.length; i < length; i++) {
-              if (elems[i].checked) {
-                Cookies.set(cookieName, elems[i].value)
-                break;
-              }
-            }
-          }
-
-          function enableElement(id, status) {
-            var elem = document.getElementById(id)
-            elem.disabled = !status
           }
 
           function showIpVersion(status){
@@ -207,8 +203,8 @@
             var band_elem = document.getElementById('input-band')
             if(band_elem) Cookies.set('cell-band', band_elem.value)
 
-            setRadioGroupValue('protocol', 'protocol')
-            setRadioGroupValue('ipversion', 'ipversion')
+            readRadioGroupValue('protocol', 'protocol')
+            readRadioGroupValue('ipversion', 'ipversion')
 
             location.href = "step-4-keys.pyhtml?op=Cellular";
           }
@@ -226,6 +222,8 @@
             storeData()
             return true
           }
+
+          initializeValues()
         </script>
     </body>
 </html>

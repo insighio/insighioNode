@@ -173,11 +173,8 @@
           </div>
       </div>
       <script src="js.cookie.min.js"></script>
+      <script src="utils.js"></script>
       <script>
-        function goBack() {
-          window.history.back();
-        }
-
         function fillClipboardData(field) {
           setTimeout( function() {
             try {

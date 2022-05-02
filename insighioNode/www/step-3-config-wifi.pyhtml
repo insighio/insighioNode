@@ -68,7 +68,7 @@
                       <label class="form-label" for="input-example-1">SSID</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-ssid" placeholder="" />
+                      <input class="form-input constr-field" type="text" id="input-ssid"></input>
                     </div>
                     <br />
                     <br />
@@ -76,7 +76,7 @@
                       <label class="form-label" for="input-example-1">Password</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-ssid-pass" placeholder="" />
+                      <input class="form-input constr-field" type="text" id="input-ssid-pass"></input>
                     </div>
                     <br />
                     <br />
@@ -147,10 +147,17 @@
         </div>
 
         <script src="js.cookie.min.js"></script>
+        <script src="utils.js"></script>
         <script >
-          function goBack() {
-            window.history.back();
-          }
+        function initializeValues() {
+          var protocol = "{{ protocol }}"
+          var ssid = "{{ wifi_ssid }}"
+          var pass = "{{ wifi_pass }}"
+
+          document.getElementById('input-ssid').value = ssid ? ssid : ""
+          document.getElementById('input-ssid').value = pass ? pass : ""
+          setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
+        }
 
           function clearCookies() {
             Cookies.remove('lora-region')
@@ -221,6 +228,8 @@
             storeData()
             return true
           }
+
+          initializeValues()
         </script>
     </body>
 </html>

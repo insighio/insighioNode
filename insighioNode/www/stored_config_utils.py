@@ -69,7 +69,12 @@ def get_config_values():
         value = getattr(cfg, key)
         if not isinstance(value, (int, float, str, bool, NoneType, dict)):
             logging.debug("  value not of accepted type [{}], ignoring".format(type(value)))
-        configKeyValues[webUIKey] = value
+        elif isinstance(value, bool):
+            configKeyValues[webUIKey] = str(value).lower()
+        elif isinstance(value, bool):
+            configKeyValues[webUIKey] = ""
+        else:
+            configKeyValues[webUIKey] = str(value)
 
     try:
         proto_config = cfg.get_protocol_config()

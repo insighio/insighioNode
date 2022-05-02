@@ -108,7 +108,7 @@
                       <div class="col-8 col-sm-12">
                         <div class="form-group">
                           <label class="form-switch">
-                            <input type="checkbox" id="input-ins-batch-upload-enable" onclick="sensorStatusChanged('ins-batch-upload')" checked/>
+                            <input type="checkbox" id="input-ins-batch-upload-enable" onclick="batchUploadChanged('ins-batch-upload')" checked/>
                             <i class="form-icon"></i>
                           </label>
                         </div>
@@ -148,14 +148,8 @@
         </div>
 
         <script src="js.cookie.min.js"></script>
+        <script src="utils.js"></script>
         <script >
-          function goBack() {
-            window.history.back();
-          }
-
-          function elementIsVisible(elementId) {
-            return document.getElementById(elementId).style.display === "block"
-          }
 
           function clearCookies() {
             Cookies.remove('period')
@@ -197,7 +191,7 @@
             location.href = "step-7-verify.html"
           }
 
-          function sensorStatusChanged(sensorId) {
+          function batchUploadChanged(sensorId) {
             // Get the checkbox
             var checkBox = document.getElementById("input-" + sensorId + "-enable")
             // Get the output text
@@ -230,7 +224,7 @@
 
             var enableBatchUploadDefault = boardDivId !== 'scheduled'
             document.getElementById('input-ins-batch-upload-enable').checked = enableBatchUploadDefault
-            sensorStatusChanged('ins-batch-upload')
+            batchUploadChanged('ins-batch-upload')
 
             evt.currentTarget.className += " active";
           }

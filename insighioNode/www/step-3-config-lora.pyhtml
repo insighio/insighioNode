@@ -72,7 +72,7 @@
                         <select class="form-select" id="input-region">
                           <option>AS923</option>
                           <option>AU915</option>
-                          <option selected="selected">EU868</option>
+                          <option selected>EU868</option>
                           <option>US915</option>
                           <option>CN470</option>
                           <option>IN865</option>
@@ -86,7 +86,7 @@
                       <label class="form-label" for="input-example-cellular">DR</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-dr" value=5 />
+                      <input class="form-input constr-field" type="number" id="input-dr"></input>
                     </div>
                     <br />
                     <br />
@@ -94,7 +94,7 @@
                       <label class="form-label" for="input-example-cellular">TX Retries</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-retries" value=1 />
+                      <input class="form-input constr-field" type="number" id="input-retries"></input>
                     </div>
                     <br />
                     <br />
@@ -104,7 +104,7 @@
                     <div class="col-9 col-sm-12">
                       <div class="form-group">
                         <label class="form-switch">
-                          <input type="checkbox" id="input-adr" checked />
+                          <input type="checkbox" id="input-adr"/>
                           <i class="form-icon"></i>
                         </label>
                       </div>
@@ -124,11 +124,6 @@
                     </div>
                     <br />
                     <br />
-                    <div class="col-12">
-                      <div class="divider text-center" data-content="Generic Configuration"></div>
-                    </div>
-                    <br />
-                    <br />
                   </div>
                 </form>
                 <div class="columns">
@@ -144,10 +139,21 @@
         </div>
 
         <script src="js.cookie.min.js"></script>
+        <script src="utils.js"></script>
         <script >
-          function goBack() {
-            window.history.back();
-          }
+        function initializeValues() {
+          var region = "{{ lora_region }}"
+          var dr = {{ lora_dr }}
+          var retries = {{ lora_retries }}
+          var adr = {{ lora_adr }}
+          var confirmed = {{ lora_confirmed }}
+
+          document.getElementById('input-region').value = region ? region : "EU868"
+          document.getElementById('input-dr').value = dr ? dr : 5
+          document.getElementById('input-retries').value = retries ? retries : 1
+          document.getElementById('input-adr').checked = adr === "" ? true : adr
+          document.getElementById('input-confirmed').checked = confirmed
+        }
 
           function clearCookies() {
             Cookies.remove('lora-region')
@@ -181,6 +187,8 @@
             storeData()
             return true
           }
+
+          initializeValues()
         </script>
     </body>
 </html>
