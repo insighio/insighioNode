@@ -17,7 +17,7 @@ from sensors import hx711
         <link rel="stylesheet" href="css/spectre.min.css" />
     </head>
 
-    <body class="body-custom" onload="fillFields()">
+    <body class="body-custom">
 
         <img src="img/logo.png" class="img-responsive img-center">
 
@@ -57,9 +57,6 @@ from sensors import hx711
             <hr />
             <br />
             <div class="empty">
-              <!-- <div class="empty-icon">
-                <i class="icon icon-2x icon-minus"></i>
-              </div> -->
               <p class="empty-title h5">Weight Scale Calibration</p>
               <p class="empty-subtitle">Offset: <span id="idle-weight-value" class="text-bold"></span></p>
               <p class="empty-subtitle">Measured reference weight: <span id="measured-ref-weight-value" class="text-bold">{{ hx711.get_reading(4, 33, 12, None, None, 25) }}</span></p>
@@ -74,15 +71,25 @@ from sensors import hx711
       <script src="js.cookie.min.js"></script>
       <script src="utils.js"></script>
       <script>
-      function fillFields() {
-        document.getElementById('idle-weight-value').innerHTML = Cookies.get('meas-scale-offset')
-
+      function initializeValues() {
+        var scale = {{ meas_scale_offset }}
         var offset = parseFloat(Cookies.get('meas-scale-offset'))
-        var reference =parseFloat(document.getElementById('measured-ref-weight-value').innerHTML)
-        var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
 
-        console.log(offset, reference, referenceExpectedWeight)
-        document.getElementById('scale-value').innerHTML = (reference - offset) / referenceExpectedWeight
+        document.getElementById('idle-weight-value').innerHTML = offset
+
+        //if setting scale for the first time
+        if(!scale) {
+          var reference = {{ hx711.get_reading(4, 33, 12, None, None, 25) }}
+          document.getElementById('measured-ref-weight-value').innerHTML = reference
+          var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
+
+          console.log(offset, reference, referenceExpectedWeight)
+          document.getElementById('scale-value').innerHTML = (reference - offset) / referenceExpectedWeight
+        }
+        else {
+          document.getElementById('scale-value').innerHTML = scale
+        }
+
       }
 
       function clearCookies() {
@@ -94,6 +101,8 @@ from sensors import hx711
         Cookies.set('meas-scale-scale', document.getElementById('scale-value').innerHTML)
         location.href = "step-6-timing.html"
       }
+
+      initializeValues()
       </script>
     </body>
 

@@ -149,15 +149,15 @@
         <script src="js.cookie.min.js"></script>
         <script src="utils.js"></script>
         <script >
-        function initializeValues() {
-          var protocol = "{{ protocol }}"
-          var ssid = "{{ wifi_ssid }}"
-          var pass = "{{ wifi_pass }}"
+          function initializeValues() {
+            var protocol = "{{ protocol }}"
+            var ssid = "{{ wifi_ssid }}"
+            var pass = "{{ wifi_pass }}"
 
-          document.getElementById('input-ssid').value = ssid ? ssid : ""
-          document.getElementById('input-ssid').value = pass ? pass : ""
-          setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
-        }
+            document.getElementById('input-ssid').value = ssid ? ssid : ""
+            document.getElementById('input-ssid').value = pass ? pass : ""
+            setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
+          }
 
           function clearCookies() {
             Cookies.remove('lora-region')

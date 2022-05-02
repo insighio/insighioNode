@@ -643,8 +643,17 @@
           Cookies.set('meas-scale-scale', 1)
           location.href = "step-6-timing.html"
         }
-        else
-          location.href = "step-5-1-scale-idle.html"
+        else {
+          var scale = {{ meas_scale_offset }}
+          var offset = {{ meas_scale_scale }}
+
+          if(scale && offset) {
+            Cookies.set('meas-scale-offset', offset)
+            location.href = "step-5-3-scale-calibr-res.pyhtml"
+          }
+          else
+            location.href = "step-5-1-scale-idle.html"
+        }
       }
       else if (elementIsVisible("esp32s2-bg600-i2c-analog-options")) {
         console.log("esp32s2-bg600-i2c-analog-options")
