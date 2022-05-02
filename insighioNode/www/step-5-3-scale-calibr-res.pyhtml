@@ -62,6 +62,7 @@ from sensors import hx711
               <p class="empty-subtitle">Measured reference weight: <span id="measured-ref-weight-value" class="text-bold">{{ hx711.get_reading(4, 33, 12, None, None, 25) }}</span></p>
               <p class="empty-subtitle">Scale: <span id="scale-value" class="text-bold"></span>.</p>
               <div class="empty-action">
+                <button class="btn btn-primary" id="save-button" onclick="recalibrate()">Recalibrate</button>
                 <button class="btn btn-primary" id="save-button" onclick="goBack()">Back</button>
                 <button class="btn btn-primary" id="button-measure" onclick="storeData()">Save</button>
               </div>
@@ -94,6 +95,12 @@ from sensors import hx711
 
       function clearCookies() {
         Cookies.remove('meas-scale-scale')
+      }
+
+      function recalibrate() {
+        Cookies.remove('meas-scale-offset')
+        Cookies.remove('meas-scale-scale')
+        location.href = "step-5-1-scale-idle.html"
       }
 
       function storeData() {
