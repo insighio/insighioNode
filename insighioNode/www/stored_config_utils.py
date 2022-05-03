@@ -21,6 +21,8 @@ configDict["_MEAS_ANALOG_DIGITAL_P1"] = "meas_sensor_a_d_p1"
 configDict["_MEAS_ANALOG_DIGITAL_P1_TRANSFORMATION"] = "meas_sensor_a_d_p1_t"
 configDict["_MEAS_ANALOG_DIGITAL_P2"] = "meas_sensor_a_d_p2"
 configDict["_MEAS_ANALOG_DIGITAL_P2_TRANSFORMATION"] = "meas_sensor_a_d_p2_t"
+configDict["_MEAS_ANALOG_DIGITAL_P3"] = "meas_sensor_a_d_p3"
+configDict["_MEAS_ANALOG_DIGITAL_P3_TRANSFORMATION"] = "meas_sensor_a_d_p3_t"
 configDict["_MEAS_ANALOG_P1"] = "meas_sensor_a_p1"
 configDict["_MEAS_ANALOG_P1_TRANSFORMATION"] = "meas_sensor_a_p1_t"
 configDict["_MEAS_ANALOG_P2"] = "meas_sensor_a_p2"
@@ -71,7 +73,7 @@ def get_config_values():
             logging.debug("  value not of accepted type [{}], ignoring".format(type(value)))
         elif isinstance(value, bool):
             configKeyValues[webUIKey] = str(value).lower()
-        elif isinstance(value, bool):
+        elif isinstance(value, NoneType):
             configKeyValues[webUIKey] = ""
         else:
             configKeyValues[webUIKey] = str(value)
@@ -92,5 +94,12 @@ def get_config_values():
             configKeyValues["wifi_pass"] = cfg._CONF_NETS[ssid]['pwd']
     except:
         pass
+
+    # for any value that has not been set by the config
+    # fill with empty values
+    for key in dir(configDict):
+        sec_key = configDict[key]
+        if not configKeyValues.has_key(sec_key):
+            configKeyValues[sec_key] = ""
 
     return configKeyValues
