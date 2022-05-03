@@ -71,7 +71,7 @@
                         <label class="form-label" for="input-example-cellular">Sleep Period (seconds)</label>
                       </div>
                       <div class="col-8 col-sm-12">
-                        <input class="form-input constr-field" type="number" id="input-period" value=300 />
+                        <input class="form-input constr-field" type="number" id="input-period" />
                       </div>
                     </div>
                   </div>
@@ -125,7 +125,7 @@
                             </label>
                           </div>
                           <div class="col-3 col-sm-12">
-                            <input class="form-input constr-field" type="number" id="input-message-buffer-size" value=144 />
+                            <input class="form-input constr-field" type="number" id="input-message-buffer-size" />
                           </div>
                           <div class="column col-5 col-mr-auto"></div>
                         </div>
@@ -150,6 +150,25 @@
         <script src="js.cookie.min.js"></script>
         <script src="utils.js"></script>
         <script >
+
+          function initializeValues() {
+            var batchBufferSize = {{ batch_upload_buffer_size }}
+            var period = {{ period }}
+            var timeA = "{{ scheduled_time_a }}"
+            var timeB = "{{ scheduled_time_b }}"
+
+            if(timeA && timeB) {
+              timingChanged(undefined, 'scheduled')
+
+              document.getElementById('input-scheduled-time-a').value = timeA
+              document.getElementById('input-scheduled-time-b').value = timeB
+            }
+            else {
+              timingChanged(undefined, 'periodic')
+              document.getElementById('input-period').value = period ? period : 300
+              document.getElementById('input-ins-batch-upload-enable').checked = true
+              document.getElementById('input-message-buffer-size').value = batchBufferSize ? batchBufferSize : 1
+          }
 
           function clearCookies() {
             Cookies.remove('period')
@@ -233,6 +252,8 @@
             storeData()
             return true
           }
+
+          initializeValues()
         </script>
     </body>
 </html>
