@@ -19,7 +19,7 @@ class MQTTClientCustom:
 
     def prepareChannelNames(self, mqtt_config):
         controlChannel = "channels/" + mqtt_config.control_channel_id + "/messages"
-        self.controlChannelGeneric = controlChannel + "/" + mqtt_config.thing_id + "/#"
+        self.controlChannelGeneric = controlChannel + "/" + mqtt_config.thing_id
         self.otaChannel = controlChannel + "/" + mqtt_config.thing_id + "/ota"
         self.messageChannel = "channels/" + mqtt_config.message_channel_id + "/messages/" + mqtt_config.thing_id
 
@@ -80,13 +80,16 @@ class MQTTClientCustom:
             topic = self.messageChannel
         return self.__sendMessageEx(topic, message, 1, retained)
 
+    def sendControlMessage(self, message, subtopic):
+        return self.sendMessage(message, self.controlChannelGeneric + subtopic, False)
+
     def sendOtaMessage(self, message):
         return self.sendMessage(message, self.otaChannel, False)
 
     def subscribe_and_get_first_message(self, channel=None):
         try:
             if channel is None:
-                channel = self.controlChannelGeneric
+                channel = self.controlChannelGeneric + "/#"
             self.client.subscribe(channel)
             return self.__check_msg(5000)
         except Exception as e:

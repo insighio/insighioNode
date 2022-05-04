@@ -72,6 +72,20 @@ class TransferProtocol:
         logging.info("Failed.")
         return False
 
+    def send_control_packet(self, message, subtopic):
+        if not self.connected:
+            logging.info("TransferProtocol not connected")
+            return False
+
+        logging.info("About to send control message")
+
+        if self.modem_based:
+            topic = 'channels/{}/messages/{}/{}'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, subtopic)
+            return self.modem_instance.mqtt_publish(topic, message)
+        elif self.protocol == 'mqtt':
+            return self.client.sendControlMessage(message, subtopic)
+            logging.info("Done.")
+
     def send_control_packet_ota(self, message):
         if not self.connected:
             logging.info("TransferProtocol not connected")

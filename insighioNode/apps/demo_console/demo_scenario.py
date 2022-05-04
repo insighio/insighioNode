@@ -111,6 +111,14 @@ def execute():
                     from . import message_buffer
                     message_buffer.parse_stored_measurements_and_upload(network)
 
+                # check for configuration pending for upload
+                configUploadFileContent = utils.readFromFile("/configLog")
+                if configUploadFileContent:
+                    network.send_config_message(cfg, configUploadFileContent, "/configResponse")
+                    utils.deleteFile() "/configLog"
+
+
+
                 if demo_utils.get_config("_CHECK_FOR_OTA"):
                     network.checkAndApplyOTA(cfg)
             else:

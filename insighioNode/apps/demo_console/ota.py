@@ -252,4 +252,6 @@ def applyDeviceConfiguration(client, configurationParameters, topic):
     client.clear_retained(topic)
     client.disconnect()
     import machine
+    logging.info("about to reset to use new configuration")
     machine.reset()
+    logging.info("why am I here?")
