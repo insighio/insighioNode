@@ -52,6 +52,9 @@ def send_message(cfg, message):
     logging.info("Sending byte packet of {} bytes length".format(len(message)))
     lora.send(cfg, message)
 
+def send_config_message(cfg, message, subtopic):
+    logging.error("Config message not yet supported for LoRA")
 
-def checkAndApplyOTA(cfg):
+def check_and_apply_ota(cfg):
+    logging.error("OTA not yet supported for LoRA")
     pass

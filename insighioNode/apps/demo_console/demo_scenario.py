@@ -115,12 +115,10 @@ def execute():
                 configUploadFileContent = utils.readFromFile("/configLog")
                 if configUploadFileContent:
                     network.send_config_message(cfg, configUploadFileContent, "/configResponse")
-                    utils.deleteFile() "/configLog"
-
-
+                    utils.deleteFile("/configLog")
 
                 if demo_utils.get_config("_CHECK_FOR_OTA"):
-                    network.checkAndApplyOTA(cfg)
+                    network.check_and_apply_ota(cfg)
             else:
                 logging.info("Network [" + cfg.network + "] not connected")
         except Exception as e:
@@ -204,3 +202,6 @@ def execute():
         logging.info("will wake up again in {} hours ({} seconds) <after correction>".format(seconds_to_wait / 3600, seconds_to_wait))
 
         machine.deepsleep(seconds_to_wait * 1000)  # +0.01% is RTC correction
+    else:
+        logging.error("Timing neither periodic nor scheduled, will sleep for a minute")
+        machine.deepsleep(sleep_period)

@@ -68,7 +68,7 @@
           {{ py }}
             from www import configuration_handler
             import utils
-            utils.writeToFile("/configLog", str(Request.QueryParams))
+            utils.writeToFile("/configLog", Request.QueryString)
             configuration_handler.apply_configuration(Request.QueryParams)
           {{ end }}
 

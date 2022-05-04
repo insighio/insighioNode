@@ -80,17 +80,17 @@ def checkAndApply(client):
                 applied = apply_ota.do_apply(downloaded_file)
                 if applied:
                     print("about to reset...")
-                    sendStatusMessage(client, fileId, True)
+                    sendOtaStatusMessage(client, fileId, True)
                     client.clear_retained(topic)
                     import utils
                     utils.clearCachedStates()
                     import machine
                     machine.reset()
                 else:
-                    sendStatusMessage(client, fileId, False, "can not apply")
+                    sendOtaStatusMessage(client, fileId, False, "can not apply")
                     client.clear_retained(topic)
             else:
-                sendStatusMessage(client, fileId, False, "can not download")
+                sendOtaStatusMessage(client, fileId, False, "can not download")
 
 
 def hasEnoughFreeSpace(fileSize):
@@ -106,7 +106,7 @@ def hasEnoughFreeSpace(fileSize):
 # 1: Applied
 # 2: Failed
 # 3: Canceled
-def sendStatusMessage(client, fileId, success, reason_measage=None):
+def sendOtaStatusMessage(client, fileId, success, reason_measage=None):
     from . import transfer_protocol
     from external.kpn_senml.senml_pack_json import SenmlPackJson
     from external.kpn_senml.senml_record import SenmlRecord
@@ -117,7 +117,7 @@ def sendStatusMessage(client, fileId, success, reason_measage=None):
     if reason_measage is not None:
         message.add(SenmlRecord("m", value=reason_measage))
 
-    client.send_control_packet_ota(message.to_json())
+    client.send_control_packet(message.to_json(), "/ota")
 
 
 def progressCallback(microWebCli, progressSize, totalSize):
@@ -151,7 +151,7 @@ def downloadDeviceConfigurationHTTP(client):
                     configContent = configContent[1:-1]
 
                 return configContent
-    else:
+    else: # not tested
         from external.MicroWebCli import microWebCli
         auth = MicroWebCli.AuthToken(protocol_config.thing_token)
         wCli = microWebCli.MicroWebCli('http://' + URL_base + URL_PATH, 'GET', auth)
@@ -179,7 +179,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
     logging.info("About to download OTA package: " + fileId + fileType)
 
     if not hasEnoughFreeSpace(int(fileSize)):
-        sendStatusMessage(client, fileId, False, "not enough space")
+        sendOtaStatusMessage(client, fileId, False, "not enough space")
         return None
 
     logging.debug("OTA size check passed")

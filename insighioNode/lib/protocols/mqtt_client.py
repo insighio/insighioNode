@@ -83,9 +83,6 @@ class MQTTClientCustom:
     def sendControlMessage(self, message, subtopic):
         return self.sendMessage(message, self.controlChannelGeneric + subtopic, False)
 
-    def sendOtaMessage(self, message):
-        return self.sendMessage(message, self.otaChannel, False)
-
     def subscribe_and_get_first_message(self, channel=None):
         try:
             if channel is None:

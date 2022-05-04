@@ -83,7 +83,12 @@ def send_message(cfg, message):
     return None
 
 
-def checkAndApplyOTA(cfg):
+def send_config_message(cfg, message, subtopic):
+    if transfer_client is not None:
+        return transfer_client.send_control_packet(message, subtopic)
+    return None
+
+def check_and_apply_ota(cfg):
     if transfer_client is not None:
         from . import ota
         ota.checkAndApply(transfer_client)
