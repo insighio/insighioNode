@@ -60,8 +60,8 @@ class WebServer:
             keyValues = stored_config_utils.get_config_values()
             for key in keyValues:
                 self.pyhtmlMod.SetGlobalVar(key, keyValues[key])
-        except:
-            logging.error("Unable to retrieve old configuration")
+        except Exception as e:
+            logging.exception(e, "Unable to retrieve old configuration")
             pass
 
     def start(self, timeoutMs=-1):

@@ -114,7 +114,7 @@ def execute():
                 # check for configuration pending for upload
                 configUploadFileContent = utils.readFromFile("/configLog")
                 if configUploadFileContent:
-                    network.send_config_message(cfg, configUploadFileContent, "/configResponse")
+                    network.send_config_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
                     utils.deleteFile("/configLog")
 
                 if demo_utils.get_config("_CHECK_FOR_OTA"):

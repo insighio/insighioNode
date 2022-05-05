@@ -106,7 +106,7 @@ from sensors import hx711
       function storeData() {
         clearCookies()
         Cookies.set('meas-scale-scale', document.getElementById('scale-value').innerHTML)
-        location.href = "step-6-timing.html"
+        location.href = "step-6-timing.pyhtml"
       }
 
       initializeValues()

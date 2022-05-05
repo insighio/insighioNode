@@ -74,7 +74,7 @@ def get_config_values():
         elif isinstance(value, bool):
             configKeyValues[webUIKey] = str(value).lower()
         elif isinstance(value, NoneType):
-            configKeyValues[webUIKey] = ""
+            configKeyValues[webUIKey] = "undefined"
         else:
             configKeyValues[webUIKey] = str(value)
 
@@ -97,9 +97,11 @@ def get_config_values():
 
     # for any value that has not been set by the config
     # fill with empty values
-    for key in dir(configDict):
+    for key in configDict.keys():
         sec_key = configDict[key]
-        if not configKeyValues.has_key(sec_key):
-            configKeyValues[sec_key] = ""
+        try:
+            configKeyValues[sec_key]
+        except KeyError:
+            configKeyValues[sec_key] = "undefined"
 
     return configKeyValues

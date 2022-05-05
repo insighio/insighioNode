@@ -585,8 +585,8 @@
       document.getElementById('input-network').checked = Boolean({{ meas_network_stat }})
       document.getElementById('input-ota').checked = Boolean({{ system_enable_ota }})
       document.getElementById('input-gps-enable').checked = gps
-      document.getElementById('input-temp-unit').value = Boolean {{ meas_temp_unit }}
-      document.getElementById('input-ins-esp-weight-scale').checked = Boolean{{ meas_scale_enabled }}
+      document.getElementById('input-temp-unit').value = Boolean({{ meas_temp_unit }})
+      document.getElementById('input-ins-esp-weight-scale').checked = Boolean({{ meas_scale_enabled }})
 
       sensorStatusChanged('gps')
       var gpsTimeout = {{ meas_gps_timeout }}
@@ -706,7 +706,7 @@
         Cookies.set('meas-sdi-2-address', address2_elem !== null ? address2_elem.value : "")
 
         Cookies.set('meas-sdi-warmup-time', document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value)
-        location.href = "step-6-timing.html"
+        location.href = "step-6-timing.pyhtml"
       }
       else if (elementIsVisible("i2c-scale-board-options")) {
         Cookies.set('selected-board', boardNamePerTab["i2c-scale-board-options"] )
@@ -718,7 +718,7 @@
         if (!document.getElementById('input-ins-esp-weight-scale').checked) {
           Cookies.set('meas-scale-offset', 0)
           Cookies.set('meas-scale-scale', 1)
-          location.href = "step-6-timing.html"
+          location.href = "step-6-timing.pyhtml"
         }
         else {
           var scale = {{ meas_scale_offset }}
@@ -748,7 +748,7 @@
         if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p3-trans-div'))
           Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p3-t').value)
 
-        location.href = "step-6-timing.html"
+        location.href = "step-6-timing.pyhtml"
       }
 
       Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))

@@ -104,7 +104,7 @@
                       <label class="form-label" for="input-dev-eui">DEV_EUI</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-dev-eui" value="{{ loraDevEUI }}" />
+                      <input class="form-input constr-field" type="text" id="input-dev-eui" value="{{ lora_dev_eui }}" />
                     </div>
                     <br />
                     <br />
@@ -112,7 +112,7 @@
                       <label class="form-label" for="input-app-eui">APP_EUI</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-app-eui" value="{{ loraAppEUI }}" />
+                      <input class="form-input constr-field" type="text" id="input-app-eui" value="{{ lora_app_eui }}" />
                     </div>
                     <br />
                     <br />
@@ -120,14 +120,14 @@
                       <label class="form-label" for="input-app-key">APP_KEY</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-app-key" value="{{ loraAppKey }}" />
+                      <input class="form-input constr-field" type="text" id="input-app-key" value="{{ lora_app_key }}" />
                     </div>
                     {{ else }}
                     <div class="col-3 col-sm-12">
                       <label class="form-label" for="input-id">ID</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-id" onpaste="fillClipboardData('id')" value="{{ insighioDeviceId }}" />
+                      <input class="form-input constr-field" type="text" id="input-id" onpaste="fillClipboardData('id')" value="{{ insighio_id }}" />
                     </div>
                     <br />
                     <br />
@@ -135,7 +135,7 @@
                       <label class="form-label" for="input-key">KEY</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-key" onpaste="fillClipboardData('key')" value="{{ insighioDeviceToken }}" />
+                      <input class="form-input constr-field" type="text" id="input-key" onpaste="fillClipboardData('key')" value="{{ insighio_key }}" />
                     </div>
                     <br />
                     <br />
@@ -143,7 +143,7 @@
                       <label class="form-label" for="input-channel">Data Channel</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-channel" onpaste="fillClipboardData('channel')" value="{{ insighioChannelId }}" />
+                      <input class="form-input constr-field" type="text" id="input-channel" onpaste="fillClipboardData('channel')" value="{{ insighio_channel }}" />
                     </div>
                     <br />
                     <br />
@@ -151,7 +151,7 @@
                       <label class="form-label" for="input-controlChannel">Control Channel</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-control-channel" onpaste="fillClipboardData('control-channel')" value="{{ insighioControlChannel }}" />
+                      <input class="form-input constr-field" type="text" id="input-control-channel" onpaste="fillClipboardData('control-channel')" value="{{ insighio_control_channel }}" />
                     </div>
                     {{ end }}
                     <br />
@@ -216,7 +216,7 @@
             Cookies.set('insighio-control-channel', document.getElementById('input-control-channel').value.trim())
           }
 
-          location.href = "step-5-measurements.html"
+          location.href = "step-5-measurements.pyhtml"
         }
 
         function validateField(fieldObj, message, regex=undefined) {

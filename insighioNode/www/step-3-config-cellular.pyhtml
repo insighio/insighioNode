@@ -155,7 +155,7 @@
             var protocol = "{{ protocol }}"
             var ipv = "{{ ipversion }}"
             var apn = "{{ cell_apn }}"
-            var band = cell_band
+            var band = {{ cell_band }}
 
             //input-band" value={{ cell_band }}
 
