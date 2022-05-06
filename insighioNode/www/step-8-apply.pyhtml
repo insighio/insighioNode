@@ -21,24 +21,13 @@
 
           <div class="panel-nav">
             <ul class="step">
-              <li class="step-item">
-                <a href="#" class="tooltip" data-tooltip="Step 1">Login</a>
-              </li>
-              <li class="step-item">
-                <a href="#" class="tooltip" data-tooltip="Step 2">Select Network</a>
-              </li>
-              <li class="step-item">
-                <a href="#" class="tooltip" data-tooltip="Step 3">Network Params</a>
-              </li>
-              <li class="step-item">
-                <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
-              </li>
-              <li class="step-item">
-                <a href="#" class="tooltip" data-tooltip="Step 5">Measurements</a>
-              </li>
-              <li class="step-item">
-                <a href="#" class="tooltip" data-tooltip="Step 6">Verify</a>
-              </li>
+              <li class="step-item"><a>Login</a></li>
+              <li class="step-item"><a>Select Network</a></li>
+              <li class="step-item"><a>Network Params</a></li>
+              <li class="step-item"><a>API Keys</a></li>
+              <li class="step-item"><a>Measurements</a></li>
+              <li class="step-item"><a>Timing</a></li>
+              <li class="step-item"><a>Verify</a></li>
             </ul>
           </div>
 

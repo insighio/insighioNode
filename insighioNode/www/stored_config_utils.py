@@ -61,25 +61,25 @@ def get_config_values():
 
     try:
         import apps.demo_console.demo_config as cfg
+
+        for key in dir(cfg):
+            try:
+                webUIKey = configDict[key]
+            except:
+                continue
+
+            value = getattr(cfg, key)
+            if isinstance(value, (int, float, str)):
+                configKeyValues[webUIKey] = str(value)
+            elif isinstance(value, bool):
+                configKeyValues[webUIKey] = str(value).lower()
+            elif isinstance(value, NoneType):
+                configKeyValues[webUIKey] = "undefined"
+            elif isinstance(value, dict):
+                import ujson
+                configKeyValues[webUIKey] = ujson.dumps(value)
     except:
-        return configKeyValues
-
-    for key in dir(cfg):
-        try:
-            webUIKey = configDict[key]
-        except:
-            continue
-
-        value = getattr(cfg, key)
-        if isinstance(value, (int, float, str)):
-            configKeyValues[webUIKey] = str(value)
-        elif isinstance(value, bool):
-            configKeyValues[webUIKey] = str(value).lower()
-        elif isinstance(value, NoneType):
-            configKeyValues[webUIKey] = "undefined"
-        elif isinstance(value, dict):
-            import ujson
-            configKeyValues[webUIKey] = ujson.dumps(value)
+        pass
 
     logging.debug("Loading insigh.io authentication keys")
 
@@ -94,18 +94,14 @@ def get_config_values():
         configKeyValues["insighio_control_channel"] = ""
         configKeyValues["insighio_id"] = ""
         configKeyValues["insighio_key"] = ""
-        pass
 
     try:
-        if hasattr(cfg, "_CONF_NETS"):
-            ssid = list(cfg._CONF_NETS.keys())[0]
-            configKeyValues["wifi_ssid"] = ssid
-            configKeyValues["wifi_pass"] = cfg._CONF_NETS[ssid]['pwd']
-        else:
-            configKeyValues["wifi_ssid"] = ""
-            configKeyValues["wifi_pass"] = ""
+        ssid = list(cfg._CONF_NETS.keys())[0]
+        configKeyValues["wifi_ssid"] = ssid
+        configKeyValues["wifi_pass"] = cfg._CONF_NETS[ssid]['pwd']
     except:
-        pass
+        configKeyValues["wifi_ssid"] = ""
+        configKeyValues["wifi_pass"] = ""
 
     logging.debug("Marking all unused configuration variables")
 

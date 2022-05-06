@@ -20,27 +20,13 @@
 
     <div class="panel-nav">
       <ul class="step">
-        <li class="step-item">
-          <a href="#" class="tooltip" data-tooltip="Step 1">Login</a>
-        </li>
-        <li class="step-item">
-          <a href="#" class="tooltip" data-tooltip="Step 2">Select Network</a>
-        </li>
-        <li class="step-item">
-          <a href="#" class="tooltip" data-tooltip="Step 3">Network Params</a>
-        </li>
-        <li class="step-item">
-          <a href="#" class="tooltip" data-tooltip="Step 4">API Keys</a>
-        </li>
-        <li class="step-item active">
-          <a href="#" class="tooltip" data-tooltip="Step 5">Measurements</a>
-        </li>
-        <li class="step-item">
-          <a href="#" class="tooltip" data-tooltip="Step 6">Timing</a>
-        </li>
-        <li class="step-item">
-          <a href="#" class="tooltip" data-tooltip="Step 7">Verify</a>
-        </li>
+        <li class="step-item"><a>Login</a></li>
+        <li class="step-item"><a>Select Network</a></li>
+        <li class="step-item active"><a>Network Params</a></li>
+        <li class="step-item"><a>API Keys</a></li>
+        <li class="step-item"><a>Measurements</a></li>
+        <li class="step-item"><a>Timing</a></li>
+        <li class="step-item"><a>Verify</a></li>
       </ul>
     </div>
 
@@ -622,15 +608,19 @@
       var index = 0
       var keyValueDict = '{{ meas_keyvalue }}'
       // bypass issue of html encoding that is enforced by an unknown module
-      keyValueDict = keyValueDict.replaceAll('&apos;', '\'')
-      keyValueDict = keyValueDict.replaceAll('&quot;', '"')
-      keyValueDict = JSON.parse(keyValueDict)
-      for(i in keyValueDict) {
-          document.getElementById('key' + index).value = i
-          document.getElementById('value' + index).value = keyValueDict[i]
-          addKeyValue()
-          index += 1
-      }
+      try {
+        if(keyValueDict !== 'undefined') {
+          keyValueDict = keyValueDict.replaceAll('&apos;', '\'')
+          keyValueDict = keyValueDict.replaceAll('&quot;', '"')
+          keyValueDict = JSON.parse(keyValueDict)
+          for(i in keyValueDict) {
+              document.getElementById('key' + index).value = i
+              document.getElementById('value' + index).value = keyValueDict[i]
+              addKeyValue()
+              index += 1
+          }
+        }
+      } catch(e) {}
 
       showElement('loader', false)
     }
