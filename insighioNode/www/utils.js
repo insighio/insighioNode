@@ -44,5 +44,5 @@ function showElement(elementId, status) {
 function setElementValueIfNotUndefined(elementId, newValue, defaultValue=""){
   var elem = document.getElementById(elementId)
   if(elem)
-    elem.value = newValue !== "undefined" ? newValue : defaultValue
+    elem.value = newValue !== "undefined" && newValue !== undefined ? newValue : defaultValue
 }

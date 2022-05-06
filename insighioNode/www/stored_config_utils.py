@@ -90,6 +90,10 @@ def get_config_values():
         configKeyValues["insighio_id"] = proto_config.thing_id
         configKeyValues["insighio_key"] = proto_config.thing_token
     except:
+        configKeyValues["insighio_channel"] = ""
+        configKeyValues["insighio_control_channel"] = ""
+        configKeyValues["insighio_id"] = ""
+        configKeyValues["insighio_key"] = ""
         pass
 
     try:
@@ -97,6 +101,9 @@ def get_config_values():
             ssid = list(cfg._CONF_NETS.keys())[0]
             configKeyValues["wifi_ssid"] = ssid
             configKeyValues["wifi_pass"] = cfg._CONF_NETS[ssid]['pwd']
+        else:
+            configKeyValues["wifi_ssid"] = ""
+            configKeyValues["wifi_pass"] = ""
     except:
         pass
 

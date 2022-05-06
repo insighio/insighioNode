@@ -151,25 +151,32 @@
         <script src="js.cookie.min.js"></script>
         <script src="utils.js"></script>
         <script >
+          function secondsToStringTime(seconds){
+            var hours = Math.floor(seconds/3600)
+            var minutes = (seconds % 3600) / 60
+
+            return `${hours < 10 ? "0":""}${hours}:${minutes < 10 ? "0":""}${minutes}`
+          }
 
           function initializeValues() {
             var batchBufferSize = {{ batch_upload_buffer_size }}
             var period = {{ period }}
-            var timeA = "{{ scheduled_time_a }}"
-            var timeB = "{{ scheduled_time_b }}"
+            var timeA = {{ scheduled_time_a }}
+            var timeB = {{ scheduled_time_b }}
 
-            if(timeA !== "undefined" && timeB !== "undefined") {
+            if(timeA !== undefined && timeB !== undefined) {
               timingChanged(undefined, 'scheduled')
 
-              document.getElementById('input-scheduled-time-a').value = timeA
-              document.getElementById('input-scheduled-time-b').value = timeB
+              document.getElementById('input-scheduled-time-a').value = secondsToStringTime(timeA)
+              document.getElementById('input-scheduled-time-b').value = secondsToStringTime(timeB)
             }
-            else {
+            else
               timingChanged(undefined, 'periodic')
-              document.getElementById('input-period').value = period ? period : 300
-            }
+
+            setElementValueIfNotUndefined('input-period', {{ period }}, 300)
+            setElementValueIfNotUndefined('input-message-buffer-size', batchBufferSize, 1)
             document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
-            document.getElementById('input-message-buffer-size').value = batchBufferSize ? batchBufferSize : 1
+
             checkboxStatusChanged('ins-batch-upload')
             showElement('loader', false)
           }

@@ -574,7 +574,6 @@
       checkboxStatusChanged('gps')
       var gpsTimeout = {{ meas_gps_timeout }}
       var gpsSatNum = {{ meas_gps_sat_num }}
-      var tempUnitIsCelsius = Boolean({{ meas_temp_unit }})
       var boardType = "{{ selected_board }}"
       var sdi1Enabled = Boolean({{ meas_sdi_1_enabled }})
       var sdi2Enabled = Boolean({{ meas_sdi_2_enabled }})
@@ -594,6 +593,9 @@
       document.getElementById('option-ins-esp-gen-sdi12-2-address').value = sdi12Addr2 ? sdi12Addr2 : 1
       document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value = sdi12WarmupTime ? sdi12WarmupTime : 1000
 
+      checkboxStatusChanged('ins-esp-gen-sdi12-1')
+      checkboxStatusChanged('ins-esp-gen-sdi12-2')
+
       var adp1 = "{{ meas_sensor_a_d_p1 }}"
       var adp2 = "{{ meas_sensor_a_d_p2 }}"
       var adp3 = "{{ meas_sensor_a_d_p3 }}"
@@ -602,6 +604,7 @@
       var adp3trans = "{{ meas_sensor_a_d_p3_t }}"
 
       setElementValueIfNotUndefined('input-ins-esp-i2c-1', "{{ meas_i2c_1 }}", "disabled")
+      setElementValueIfNotUndefined('input-ins-esp-s1-i2c', "{{ meas_i2c_1 }}", "disabled")
       setElementValueIfNotUndefined('input-ins-esp-i2c-2', "{{ meas_i2c_2 }}", "disabled")
       setElementValueIfNotUndefined('input-ins-esp-sensor-a-d-p1', adp1 , "disabled")
       setElementValueIfNotUndefined('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
@@ -806,7 +809,7 @@
         var elemKey = document.getElementById("key" + cnt);
         var elemValue = document.getElementById("value" + cnt);
 
-        if (!elemKey || !elemValue)
+        if (!elemKey && !elemValue)
           break
 
         if (elemKey.value !== '' && elemValue.value !== '')

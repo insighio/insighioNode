@@ -152,21 +152,16 @@
         <script src="utils.js"></script>
         <script >
           function initializeValues() {
-            var technology = "{{ cell_tech }}"
             var protocol = "{{ protocol }}"
             var ipv = "{{ ipversion }}"
-            var apn = "{{ cell_apn }}"
-            var band = {{ cell_band }}
 
             //input-band" value={{ cell_band }}
+            setElementValueIfNotUndefined('input-cell-tech', "{{ cell_tech }}", "GSM")
+            setElementValueIfNotUndefined('input-apn', "{{ cell_apn }}", "internet")
+            setElementValueIfNotUndefined('input-band', {{ cell_band }}, 20)
 
-            document.getElementById('input-cell-tech').value = technology ? technology : "GSM"
-            document.getElementById('input-apn').value = apn ? apn : "iot.1nce.net"
-            setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
-            setRadioGroupValue('ipversion', ipv ? ipv : "IP")
-
-            if(document.getElementById('input-band'))
-              document.getElementById('input-band').value = band ? band : 20
+            setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
+            setRadioGroupValue('ipversion', ipv !== "undefined" ? ipv : "IP")
 
             showElement('loader', false)
           }

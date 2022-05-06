@@ -156,8 +156,8 @@
             var pass = "{{ wifi_pass }}"
 
             document.getElementById('input-ssid').value = ssid ? ssid : ""
-            document.getElementById('input-ssid').value = pass ? pass : ""
-            setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
+            document.getElementById('input-ssid-pass').value = pass ? pass : ""
+            setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
 
             showElement('loader', false)
           }

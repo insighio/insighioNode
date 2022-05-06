@@ -71,12 +71,12 @@
                     <div class="col-9 col-sm-12">
                       <div class="form-group">
                         <select class="form-select" id="input-region">
-                          <option>AS923</option>
-                          <option>AU915</option>
-                          <option selected>EU868</option>
-                          <option>US915</option>
-                          <option>CN470</option>
-                          <option>IN865</option>
+                          <option value="AS923">AS923</option>
+                          <option value="AU915">AU915</option>
+                          <option value="EU868">EU868</option>
+                          <option value="US915">US915</option>
+                          <option value="CN470">CN470</option>
+                          <option value="IN865">IN865</option>
                         </select>
                       </div>
                     </div>
@@ -143,17 +143,15 @@
         <script src="utils.js"></script>
         <script >
         function initializeValues() {
-          var region = "{{ lora_region }}"
-          var dr = {{ lora_dr }}
-          var retries = {{ lora_retries }}
           var adr = {{ lora_adr }}
           var confirmed = {{ lora_confirmed }}
 
-          document.getElementById('input-region').value = region ? region : "EU868"
-          document.getElementById('input-dr').value = dr ? dr : 5
-          document.getElementById('input-retries').value = retries ? retries : 1
-          document.getElementById('input-adr').checked = adr === "" ? true : adr
-          document.getElementById('input-confirmed').checked = confirmed
+          setElementValueIfNotUndefined('input-region', "{{ lora_region }}", "EU868")
+          setElementValueIfNotUndefined('input-dr', {{ lora_dr }}, 5)
+          setElementValueIfNotUndefined('input-retries', {{ lora_retries }}, 1)
+
+          document.getElementById('input-adr').checked = adr !== undefined ? adr : true
+          document.getElementById('input-confirmed').checked = confirmed !== undefined ? confirmed : false
 
           showElement('loader', false)
         }
