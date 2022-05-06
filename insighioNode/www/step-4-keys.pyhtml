@@ -61,6 +61,7 @@
             <br />
             <hr />
             <br />
+            <div id="loader" class="loading loading-lg"></div>
             <div class="text-center">
               {{ if operation == "LoRa" }}
                 Set keys provided by the LoRa Server.
@@ -104,7 +105,7 @@
                       <label class="form-label" for="input-dev-eui">DEV_EUI</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-dev-eui" value="{{ lora_dev_eui }}" />
+                      <input class="form-input constr-field" type="text" id="input-dev-eui"/>
                     </div>
                     <br />
                     <br />
@@ -112,7 +113,7 @@
                       <label class="form-label" for="input-app-eui">APP_EUI</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-app-eui" value="{{ lora_app_eui }}" />
+                      <input class="form-input constr-field" type="text" id="input-app-eui" />
                     </div>
                     <br />
                     <br />
@@ -120,14 +121,14 @@
                       <label class="form-label" for="input-app-key">APP_KEY</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-app-key" value="{{ lora_app_key }}" />
+                      <input class="form-input constr-field" type="text" id="input-app-key" />
                     </div>
                     {{ else }}
                     <div class="col-3 col-sm-12">
                       <label class="form-label" for="input-id">ID</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-id" onpaste="fillClipboardData('id')" value="{{ insighio_id }}" />
+                      <input class="form-input constr-field" type="text" id="input-id" onpaste="fillClipboardData('id')"/>
                     </div>
                     <br />
                     <br />
@@ -135,7 +136,7 @@
                       <label class="form-label" for="input-key">KEY</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-key" onpaste="fillClipboardData('key')" value="{{ insighio_key }}" />
+                      <input class="form-input constr-field" type="text" id="input-key" onpaste="fillClipboardData('key')"/>
                     </div>
                     <br />
                     <br />
@@ -143,7 +144,7 @@
                       <label class="form-label" for="input-channel">Data Channel</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-channel" onpaste="fillClipboardData('channel')" value="{{ insighio_channel }}" />
+                      <input class="form-input constr-field" type="text" id="input-channel" onpaste="fillClipboardData('channel')"/>
                     </div>
                     <br />
                     <br />
@@ -151,7 +152,7 @@
                       <label class="form-label" for="input-controlChannel">Control Channel</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-control-channel" onpaste="fillClipboardData('control-channel')" value="{{ insighio_control_channel }}" />
+                      <input class="form-input constr-field" type="text" id="input-control-channel" onpaste="fillClipboardData('control-channel')"/>
                     </div>
                     {{ end }}
                     <br />
@@ -175,6 +176,18 @@
       <script src="js.cookie.min.js"></script>
       <script src="utils.js"></script>
       <script>
+        function initializeValues() {
+          setElementValueIfNotUndefined("input-dev-eui", "{{ lora_dev_eui }}")
+          setElementValueIfNotUndefined("input-app-eui", "{{ lora_app_eui }}")
+          setElementValueIfNotUndefined("input-app-key", "{{ lora_app_key }}")
+          setElementValueIfNotUndefined("input-id", "{{ insighio_id }}")
+          setElementValueIfNotUndefined("input-key", "{{ insighio_key }}")
+          setElementValueIfNotUndefined("input-channel", "{{ insighio_channel }}")
+          setElementValueIfNotUndefined("input-control-channel", "{{ insighio_control_channel }}")
+
+          showElement('loader', false)
+        }
+
         function fillClipboardData(field) {
           setTimeout( function() {
             try {
@@ -257,6 +270,8 @@
           storeData()
           return true
         }
+
+        initializeValues()
       </script>
     </body>
 

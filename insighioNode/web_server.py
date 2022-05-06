@@ -52,8 +52,6 @@ class WebServer:
         device_info.set_defaults()
 
     def storeIds(self):
-        self.pyhtmlMod.SetGlobalVar("loraAppEUI", "")
-        self.pyhtmlMod.SetGlobalVar("loraAppKey", "")
         self.pyhtmlMod.SetGlobalVar("wifiAvailableNets", self.available_nets)
         from www import stored_config_utils
         try:

@@ -48,6 +48,7 @@
             <br />
             <hr />
             <br />
+            <div id="loader" class="loading loading-lg"></div>
             <div class="columns flex-centered">
               <div class="column col-7">
                 <form class="form-horizontal">
@@ -56,10 +57,10 @@
                   </div>
                   <br />
                   <ul class="tab tab-block">
-                    <li class="tab-item active" onclick="timingChanged(event, 'periodic')">
+                    <li id="tab-periodic" class="tab-item active" onclick="timingChanged(event, 'periodic')">
                       <a class="pointer">Periodic</a>
                     </li>
-                    <li class="tab-item" onclick="timingChanged(event, 'scheduled')">
+                    <li id="tab-scheduled" class="tab-item" onclick="timingChanged(event, 'scheduled')">
                       <a class="pointer">Time Scheduled</a>
                     </li>
                   </ul>
@@ -108,7 +109,7 @@
                       <div class="col-8 col-sm-12">
                         <div class="form-group">
                           <label class="form-switch">
-                            <input type="checkbox" id="input-ins-batch-upload-enable" onclick="batchUploadChanged('ins-batch-upload')" checked/>
+                            <input type="checkbox" id="input-ins-batch-upload-enable" onclick="checkboxStatusChanged('ins-batch-upload')"/>
                             <i class="form-icon"></i>
                           </label>
                         </div>
@@ -157,7 +158,7 @@
             var timeA = "{{ scheduled_time_a }}"
             var timeB = "{{ scheduled_time_b }}"
 
-            if(timeA && timeB) {
+            if(timeA !== "undefined" && timeB !== "undefined") {
               timingChanged(undefined, 'scheduled')
 
               document.getElementById('input-scheduled-time-a').value = timeA
@@ -166,8 +167,11 @@
             else {
               timingChanged(undefined, 'periodic')
               document.getElementById('input-period').value = period ? period : 300
-              document.getElementById('input-ins-batch-upload-enable').checked = true
-              document.getElementById('input-message-buffer-size').value = batchBufferSize ? batchBufferSize : 1
+            }
+            document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
+            document.getElementById('input-message-buffer-size').value = batchBufferSize ? batchBufferSize : 1
+            checkboxStatusChanged('ins-batch-upload')
+            showElement('loader', false)
           }
 
           function clearCookies() {
@@ -210,20 +214,6 @@
             location.href = "step-7-verify.html"
           }
 
-          function batchUploadChanged(sensorId) {
-            // Get the checkbox
-            var checkBox = document.getElementById("input-" + sensorId + "-enable")
-            // Get the output text
-            var div = document.getElementById("address-" + sensorId)
-
-            // If the checkbox is checked, display the output text
-            if (checkBox.checked == true){
-              div.style.display = "block"
-            } else {
-              div.style.display = "none"
-            }
-          }
-
           function timingChanged(evt, boardDivId){
             var i, tabcontent, tablinks;
 
@@ -234,18 +224,17 @@
             }
 
             tablinks = document.getElementsByClassName("tab-item");
-            console.log('tablinks: ', tablinks)
             for (i = 0; i < tablinks.length; i++) {
               tablinks[i].className = tablinks[i].className.replace(" active", "");
             }
 
-            document.getElementById(boardDivId).style.display = "block";
+            showElement(boardDivId, true)
 
             var enableBatchUploadDefault = boardDivId !== 'scheduled'
             document.getElementById('input-ins-batch-upload-enable').checked = enableBatchUploadDefault
-            batchUploadChanged('ins-batch-upload')
+            checkboxStatusChanged('ins-batch-upload')
 
-            evt.currentTarget.className += " active";
+            document.getElementById("tab-" + boardDivId).className += " active";
           }
 
           function validateMyForm(){

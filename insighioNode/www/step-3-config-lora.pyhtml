@@ -51,6 +51,7 @@
             <br />
             <hr />
             <br />
+            <div id="loader" class="loading loading-lg"></div>
             <div class="text-center">
               Configuration details for: <span class="text-bold">LoRa</span>
             </div>
@@ -153,6 +154,8 @@
           document.getElementById('input-retries').value = retries ? retries : 1
           document.getElementById('input-adr').checked = adr === "" ? true : adr
           document.getElementById('input-confirmed').checked = confirmed
+
+          showElement('loader', false)
         }
 
           function clearCookies() {

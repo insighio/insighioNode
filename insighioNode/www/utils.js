@@ -29,3 +29,20 @@ function enableElement(id, status) {
 function elementIsVisible(elementId) {
   return document.getElementById(elementId).style.display === "block"
 }
+
+function checkboxStatusChanged(sensorId) {
+  var checkBox = document.getElementById("input-" + sensorId + "-enable")
+  showElement("address-" + sensorId, checkBox.checked)
+}
+
+function showElement(elementId, status) {
+  var elem = document.getElementById(elementId)
+  if(elem)
+    elem.style.display = status ? "block" : "none"
+}
+
+function setElementValueIfNotUndefined(elementId, newValue, defaultValue=""){
+  var elem = document.getElementById(elementId)
+  if(elem)
+    elem.value = newValue !== "undefined" ? newValue : defaultValue
+}

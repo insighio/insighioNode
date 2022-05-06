@@ -51,6 +51,7 @@
             <br />
             <hr />
             <br />
+            <div id="loader" class="loading loading-lg"></div>
             <div class="text-center">
               Configuration details for: <span class="text-bold">WiFi</span>
             </div>
@@ -157,6 +158,8 @@
             document.getElementById('input-ssid').value = ssid ? ssid : ""
             document.getElementById('input-ssid').value = pass ? pass : ""
             setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
+
+            showElement('loader', false)
           }
 
           function clearCookies() {

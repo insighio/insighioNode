@@ -56,6 +56,7 @@ from sensors import hx711
             <br />
             <hr />
             <br />
+            <div id="loader" class="loading loading-lg"></div>
             <div class="empty">
               <p class="empty-title h5">Weight Scale Calibration</p>
               <p class="empty-subtitle">Offset: <span id="idle-weight-value" class="text-bold"></span></p>
@@ -90,7 +91,7 @@ from sensors import hx711
         else {
           document.getElementById('scale-value').innerHTML = scale
         }
-
+        showElement('loader', false)
       }
 
       function clearCookies() {

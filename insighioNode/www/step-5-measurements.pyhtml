@@ -48,6 +48,7 @@
       <br />
       <hr />
       <br />
+      <div id="loader" class="loading loading-lg"></div>
       <div class="columns flex-centered">
         <div class="column col-7">
           <form class="form-horizontal">
@@ -152,7 +153,7 @@
               <div class="col-8 col-sm-12">
                 <div class="form-group">
                   <label class="form-switch">
-                    <input type="checkbox" id="input-gps-enable" checked onclick="sensorStatusChanged('gps')" />
+                    <input type="checkbox" id="input-gps-enable" checked onclick="checkboxStatusChanged('gps')" />
                     <i class="form-icon"></i>
                   </label>
                 </div>
@@ -196,13 +197,13 @@
             <br />
             <!-- board selector -->
             <ul class="tab tab-block">
-              <li class="tab-item active" onclick="boardChanged(event, 'i2c-scale-board-options')">
+              <li id="tab-i2c-scale-board-options" class="tab-item active" onclick="boardChanged(event, 'i2c-scale-board-options')">
                 <a class="pointer">Cellular Digital/Scale</a>
               </li>
-              <li class="tab-item" onclick="boardChanged(event, 'esp32s2-bg600-i2c-analog-options')">
+              <li id="tab-esp32s2-bg600-i2c-analog-options" class="tab-item" onclick="boardChanged(event, 'esp32s2-bg600-i2c-analog-options')">
                 <a class="pointer">Cellular + Shield I²C/Analog</a>
               </li>
-              <li class="tab-item" onclick="boardChanged(event, 'ins-esp-gen-sdi12-board-options')">
+              <li id="tab-ins-esp-gen-sdi12-board-options" class="tab-item" onclick="boardChanged(event, 'ins-esp-gen-sdi12-board-options')">
                 <a class="pointer">Cellular + Shield SDI-12</a>
               </li>
             </ul>
@@ -335,7 +336,7 @@
                         </label>
                       </div>
                       <div class="col-6 col-sm-12">
-                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p1-t" value="v" />
+                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p1-t" />
                       </div>
                       <div class="column col-2 col-mr-auto"></div>
                     </div>
@@ -368,7 +369,7 @@
                         </label>
                       </div>
                       <div class="col-6 col-sm-12">
-                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" value="v" />
+                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" />
                       </div>
                       <div class="column col-2 col-mr-auto"></div>
                     </div>
@@ -401,7 +402,7 @@
                         </label>
                       </div>
                       <div class="col-6 col-sm-12">
-                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p3-t" value="v" />
+                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p3-t" />
                       </div>
                       <div class="column col-2 col-mr-auto"></div>
                     </div>
@@ -425,7 +426,7 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <label class="form-switch">
-                        <input type="checkbox" id="input-ins-esp-gen-sdi12-1-enable" onclick="sensorStatusChanged('ins-esp-gen-sdi12-1')" />
+                        <input type="checkbox" id="input-ins-esp-gen-sdi12-1-enable" onclick="checkboxStatusChanged('ins-esp-gen-sdi12-1')" />
                         <i class="form-icon"></i>
                       </label>
                     </div>
@@ -442,16 +443,7 @@
                       </div>
                       <div class="col-3 col-sm-12">
                         <select class="form-select" id="option-ins-esp-gen-sdi12-1-address">
-                          <option selected="selected">0</option>
-                          <option>1</option>
-                          <option>2</option>
-                          <option>3</option>
-                          <option>4</option>
-                          <option>5</option>
-                          <option>6</option>
-                          <option>7</option>
-                          <option>8</option>
-                          <option>9</option>
+                          {{ for i in range(0,10) }} <option> {{ i }}</option> {{ end }}
                         </select>
                       </div>
                       <div class="column col-5 col-mr-auto"></div>
@@ -465,7 +457,7 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <label class="form-switch">
-                        <input type="checkbox" id="input-ins-esp-gen-sdi12-2-enable" onclick="sensorStatusChanged('ins-esp-gen-sdi12-2')" />
+                        <input type="checkbox" id="input-ins-esp-gen-sdi12-2-enable" onclick="checkboxStatusChanged('ins-esp-gen-sdi12-2')" />
                         <i class="form-icon"></i>
                       </label>
                     </div>
@@ -482,16 +474,7 @@
                       </div>
                       <div class="col-3 col-sm-12">
                         <select class="form-select" id="option-ins-esp-gen-sdi12-2-address">
-                          <option>0</option>
-                          <option selected="selected">1</option>
-                          <option>2</option>
-                          <option>3</option>
-                          <option>4</option>
-                          <option>5</option>
-                          <option>6</option>
-                          <option>7</option>
-                          <option>8</option>
-                          <option>9</option>
+                          {{ for i in range(0,10) }} <option> {{ i }}</option> {{ end }}
                         </select>
                       </div>
                       <div class="column col-5 col-mr-auto"></div>
@@ -503,7 +486,7 @@
                     <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
                   </div>
                   <div class="col-8 col-sm-12">
-                    <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time" value=1000 />
+                    <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time"/>
                   </div>
                   <br />
                   <br />
@@ -588,34 +571,29 @@
       document.getElementById('input-temp-unit').value = Boolean({{ meas_temp_unit }})
       document.getElementById('input-ins-esp-weight-scale').checked = Boolean({{ meas_scale_enabled }})
 
-      sensorStatusChanged('gps')
+      checkboxStatusChanged('gps')
       var gpsTimeout = {{ meas_gps_timeout }}
       var gpsSatNum = {{ meas_gps_sat_num }}
-      var tempUnitIsCelsius = Boolean {{ meas_temp_unit }}
-      var boardType = {{ selected_board }}
+      var tempUnitIsCelsius = Boolean({{ meas_temp_unit }})
+      var boardType = "{{ selected_board }}"
       var sdi1Enabled = Boolean({{ meas_sdi_1_enabled }})
       var sdi2Enabled = Boolean({{ meas_sdi_2_enabled }})
+      var sdi12Addr1 = {{ meas_sdi_1_address }}
+      var sdi12Addr2 = {{ meas_sdi_2_address }}
+      var sdi12WarmupTime = {{ meas_sdi_warmup_time }}
 
       document.getElementById('input-gps-timeout').value = gpsTimeout ? gpsTimeout : 120
       document.getElementById('input-gps-sat-num').value = gpsSatNum = gpsSatNum ? gpsSatNum : 4
 
-      if(boardType && tabNamePerBoard[boardType]) {
+      if(boardType && tabNamePerBoard[boardType])
         boardChanged(undefined, tabNamePerBoard[boardType])
-      }
 
       document.getElementById('input-ins-esp-gen-sdi12-1-enable').checked = sdi1Enabled
       document.getElementById('input-ins-esp-gen-sdi12-2-enable').checked = sdi2Enabled
+      document.getElementById('option-ins-esp-gen-sdi12-1-address').value = sdi12Addr1 ? sdi12Addr1 : 0
+      document.getElementById('option-ins-esp-gen-sdi12-2-address').value = sdi12Addr2 ? sdi12Addr2 : 1
+      document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value = sdi12WarmupTime ? sdi12WarmupTime : 1000
 
-      if(sdi1Enabled)
-        document.getElementById('option-ins-esp-gen-sdi12-1-address').value = {{ meas_sdi_1_address }}
-
-      if(sdi2Enabled)
-        document.getElementById('option-ins-esp-gen-sdi12-2-address').value = {{ meas_sdi_2_address }}
-
-      document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value = {{ meas_sdi_warmup_time }}
-
-      var i2c1 = "{{ meas_i2c_1 }}"
-      var i2c2 = "{{ meas_i2c_2 }}"
       var adp1 = "{{ meas_sensor_a_d_p1 }}"
       var adp2 = "{{ meas_sensor_a_d_p2 }}"
       var adp3 = "{{ meas_sensor_a_d_p3 }}"
@@ -623,26 +601,35 @@
       var adp2trans = "{{ meas_sensor_a_d_p2_t }}"
       var adp3trans = "{{ meas_sensor_a_d_p3_t }}"
 
-      document.getElementById('input-ins-esp-i2c-1').value = i2c1 ? i2c1 : "disabled"
-      document.getElementById('input-ins-esp-i2c-2').value = i2c2 ? i2c2 : "disabled"
+      setElementValueIfNotUndefined('input-ins-esp-i2c-1', "{{ meas_i2c_1 }}", "disabled")
+      setElementValueIfNotUndefined('input-ins-esp-i2c-2', "{{ meas_i2c_2 }}", "disabled")
+      setElementValueIfNotUndefined('input-ins-esp-sensor-a-d-p1', adp1 , "disabled")
+      setElementValueIfNotUndefined('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
+      setElementValueIfNotUndefined('input-ins-esp-s1-sensor-a-d-p2', adp2, "disabled")
+      setElementValueIfNotUndefined('input-ins-esp-s1-sensor-a-d-p3', adp3, "disabled")
 
-      document.getElementById('input-ins-esp-sensor-a-d-p1').value = adp1 ? adp1 : "disabled"
-      document.getElementById('input-ins-esp-s1-sensor-a-d-p1').value = adp1 ? adp1 : "disabled"
+      setElementValueIfNotUndefined("input-ins-esp-s1-sensor-a-d-p1-t", "{{ meas_sensor_a_d_p1_t }}", "v")
+      setElementValueIfNotUndefined("input-ins-esp-s1-sensor-a-d-p2-t", "{{ meas_sensor_a_d_p2_t }}", "v")
+      setElementValueIfNotUndefined("input-ins-esp-s1-sensor-a-d-p3-t", "{{ meas_sensor_a_d_p3_t }}", "v")
 
-      document.getElementById('input-ins-esp-sensor-a-d-p2').value = adp2 ? adp2 : "disabled"
-      document.getElementById('input-ins-esp-sensor-a-d-p3').value = adp3 ? adp3 : "disabled"
-
-      document.getElementById('input-ins-esp-s1-sensor-a-d-p1-trans-div').style.display = adp1 === "analog" ? "block" : "none"
-      document.getElementById('input-ins-esp-s1-sensor-a-d-p2-trans-div').style.display = adp2 === "analog" ? "block" : "none"
-      document.getElementById('input-ins-esp-s1-sensor-a-d-p3-trans-div').style.display = adp3 === "analog" ? "block" : "none"
+      showElement('input-ins-esp-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
+      showElement('input-ins-esp-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
+      showElement('input-ins-esp-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
 
       var index = 0
-      for(i in {{ meas_keyvalue }}) {
+      var keyValueDict = '{{ meas_keyvalue }}'
+      // bypass issue of html encoding that is enforced by an unknown module
+      keyValueDict = keyValueDict.replaceAll('&apos;', '\'')
+      keyValueDict = keyValueDict.replaceAll('&quot;', '"')
+      keyValueDict = JSON.parse(keyValueDict)
+      for(i in keyValueDict) {
           document.getElementById('key' + index).value = i
-          document.getElementById('value' + index).value = meas_keyvalue[i]
+          document.getElementById('value' + index).value = keyValueDict[i]
           addKeyValue()
           index += 1
       }
+
+      showElement('loader', false)
     }
 
     function clearCookies() {
@@ -754,17 +741,6 @@
       Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
     }
 
-    function sensorStatusChanged(sensorId) {
-      console.log("chaning: ", sensorId)
-      // Get the checkbox
-      var checkBox = document.getElementById("input-" + sensorId + "-enable")
-      // Get the output text
-      var div = document.getElementById("address-" + sensorId)
-
-      // If the checkbox is checked, display the output text
-      div.style.display = checkBox.checked ? "block" : "none"
-    }
-
     function boardChanged(evt, boardDivId) {
       var i, tabcontent, tablinks;
 
@@ -778,8 +754,8 @@
         tablinks[i].className = tablinks[i].className.replace(" active", "");
       }
 
-      document.getElementById(boardDivId).style.display = "block";
-      evt.currentTarget.className += " active";
+      showElement(boardDivId, true)
+      document.getElementById("tab-" + boardDivId).className += " active";
     }
 
     function validateMyForm() {
@@ -788,12 +764,7 @@
     }
 
     function selectionChanged(selectObj) {
-      var transformationElem = document.getElementById(selectObj.id + "-trans-div")
-      console.log(selectObj.id, transformationElem)
-      if (!transformationElem)
-        return
-
-      transformationElem.style.display = selectObj.value === "analog" ? "block" : "none"
+      showElement(selectObj.id + "-trans-div", selectObj.value === "analog")
     }
 
     let keyValuePairCnt = 1

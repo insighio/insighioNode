@@ -53,6 +53,7 @@
             <br />
             <hr />
             <br />
+            <div id="loader" class="loading loading-lg"></div>
             <div class="text-center">
               Configuration details for: <span class="text-bold">Cellular</span>
             </div>
@@ -166,6 +167,8 @@
 
             if(document.getElementById('input-band'))
               document.getElementById('input-band').value = band ? band : 20
+
+            showElement('loader', false)
           }
 
           function clearCookies() {
