@@ -25,7 +25,7 @@ def readFromFile(source):
         f.close()
         return contents
     except Exception as e:
-        logging.exception(e, "Error reading file [{}]".format(source))
+        logging.error("Error reading file [{}]".format(source))
         return ""
 
 

@@ -8,6 +8,7 @@ import machine
 import device_info
 from . import demo_utils
 import gc
+import utils
 
 
 def getUptime(timeOffset=None):
@@ -114,7 +115,8 @@ def execute():
                 # check for configuration pending for upload
                 configUploadFileContent = utils.readFromFile("/configLog")
                 if configUploadFileContent:
-                    network.send_config_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
+                    logging.info("New configuration found, abou to upload it.")
+                    network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
                     utils.deleteFile("/configLog")
 
                 if demo_utils.get_config("_CHECK_FOR_OTA"):

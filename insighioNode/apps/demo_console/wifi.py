@@ -83,7 +83,7 @@ def send_message(cfg, message):
     return None
 
 
-def send_config_message(cfg, message, subtopic):
+def send_control_message(cfg, message, subtopic):
     if transfer_client is not None:
         return transfer_client.send_control_packet(message, subtopic)
     return None
