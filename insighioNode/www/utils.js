@@ -51,6 +51,16 @@ function setElemValue(elementId, newValue, defaultValue=""){
   elem.value = (newValue !== "undefined" && newValue !== undefined) ? newValue : defaultValue
 }
 
+function setElemValueBool(elementId, newValue, defaultValue="", boolField="checked"){
+  var elem = document.getElementById(elementId)
+  if(!elem) {
+    console.log("Element not found: ", elementId)
+    return
+  }
+
+  elem[boolField] = (newValue !== "undefined" && newValue !== undefined) ? Boolean(newValue) : defaultValue
+}
+
 function validateElemValue(elemId, message, regex=undefined) {
   var fieldObj = document.getElementById(elemId)
   if(!fieldObj) {

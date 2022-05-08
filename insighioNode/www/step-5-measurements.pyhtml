@@ -47,7 +47,7 @@
               <div class="col-8 col-sm-12">
                 <div class="form-group" name="meas-led">
                   <label class="form-switch">
-                    <input type="checkbox" id="input-led-enabled" checked />
+                    <input type="checkbox" id="input-led-enabled" />
                     <i class="form-icon"></i>
                   </label>
                 </div>
@@ -60,7 +60,7 @@
               <div class="col-8 col-sm-12">
                 <div class="form-group" name="meas-battery">
                   <label class="form-switch">
-                    <input type="checkbox" id="input-battery" checked />
+                    <input type="checkbox" id="input-battery" />
                     <i class="form-icon"></i>
                   </label>
                 </div>
@@ -73,7 +73,7 @@
               <div class="col-8 col-sm-12">
                 <div class="form-group">
                   <label class="form-switch">
-                    <input type="checkbox" id="input-board-sense" checked />
+                    <input type="checkbox" id="input-board-sense" />
                     <i class="form-icon"></i>
                   </label>
                 </div>
@@ -99,7 +99,7 @@
               <div class="col-8 col-sm-12">
                 <div class="form-group">
                   <label class="form-switch">
-                    <input type="checkbox" id="input-network" checked />
+                    <input type="checkbox" id="input-network" />
                     <i class="form-icon"></i>
                   </label>
                 </div>
@@ -112,7 +112,7 @@
               <div class="col-8 col-sm-12">
                 <div class="form-group">
                   <label class="form-switch">
-                    <input type="checkbox" id="input-ota" checked />
+                    <input type="checkbox" id="input-ota" />
                     <i class="form-icon"></i>
                   </label>
                 </div>
@@ -139,7 +139,7 @@
               <div class="col-8 col-sm-12">
                 <div class="form-group">
                   <label class="form-switch">
-                    <input type="checkbox" id="input-gps-enable" checked onclick="checkboxStatusChanged('gps')" />
+                    <input type="checkbox" id="input-gps-enable" onclick="checkboxStatusChanged('gps')" />
                     <i class="form-icon"></i>
                   </label>
                 </div>
@@ -547,15 +547,16 @@
     function initializeValues() {
       var gps = Boolean({{ meas_gps_enabled }})
 
-      document.getElementById('input-led-enabled').checked = Boolean({{ meas_led_enabled }})
-      document.getElementById('input-battery').checked = Boolean({{ meas_battery_stat }})
-      document.getElementById('input-board-sense').checked = Boolean({{ meas_board_sense }})
-      document.getElementById('input-board-stat').checked = Boolean({{ meas_board_stat }})
-      document.getElementById('input-network').checked = Boolean({{ meas_network_stat }})
-      document.getElementById('input-ota').checked = Boolean({{ system_enable_ota }})
-      document.getElementById('input-gps-enable').checked = gps
-      document.getElementById('input-temp-unit').value = Boolean({{ meas_temp_unit }})
-      document.getElementById('input-ins-esp-weight-scale').checked = Boolean({{ meas_scale_enabled }})
+      setElemValueBool('input-led-enabled'. {{ meas_led_enabled }}, true)
+      setElemValueBool('input-battery', {{ meas_battery_stat }}, true)
+      setElemValueBool('input-board-sense', {{ meas_board_sense }}, true)
+      setElemValueBool('input-board-stat', {{ meas_board_stat }}, false)
+      setElemValueBool('input-network', {{ meas_network_stat }}, true)
+      setElemValueBool('input-ota', {{ system_enable_ota }}, true)
+      setElemValueBool('input-ins-esp-weight-scale', {{ meas_scale_enabled }}, false)
+
+      setElemValueBool('input-gps-enable', gps, true)
+      setElemValueBool('input-temp-unit', {{ meas_temp_unit }}, true, "value")
 
       checkboxStatusChanged('gps')
       var boardType = "{{ selected_board }}"
@@ -565,8 +566,8 @@
       setElemValue('input-gps-timeout', {{ meas_gps_timeout }}, 120)
       setElemValue('input-gps-sat-num', {{ meas_gps_sat_num }}, 4)
 
-      document.getElementById('input-ins-esp-gen-sdi12-1-enable').checked = Boolean({{ meas_sdi_1_enabled }})
-      document.getElementById('input-ins-esp-gen-sdi12-2-enable').checked = Boolean({{ meas_sdi_2_enabled }})
+      setElemValueBool('input-ins-esp-gen-sdi12-1-enable', {{ meas_sdi_1_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-2-enable', {{ meas_sdi_2_enabled }}, false)
 
       setElemValue('option-ins-esp-gen-sdi12-1-address', {{ meas_sdi_1_address }}, 0)
       setElemValue('option-ins-esp-gen-sdi12-2-address', {{ meas_sdi_2_address }}, 1)
