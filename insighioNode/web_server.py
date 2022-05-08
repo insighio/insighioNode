@@ -87,7 +87,7 @@ class WebServer:
         self.mws2.BindAddress = ('192.168.4.1', 80)
 
         # Starts the server as easily as possible in managed mode,
-        self.mws2.StartManaged()
+        self.mws2.StartManaged(0, 32*1024)
 
         logging.info("Web UI started")
 
