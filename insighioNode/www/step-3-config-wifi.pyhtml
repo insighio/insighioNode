@@ -10,10 +10,6 @@
     </head>
 
     <body class="body-custom">
-      {{ py }}
-      import gc
-      gc.collect()
-      {{ end }}
         <img src="img/logo.png" class="img-responsive img-center">
 
         <div class="panel panel-custom">
@@ -138,11 +134,9 @@
         <script >
           function initializeValues() {
             var protocol = "{{ protocol }}"
-            var ssid = "{{ wifi_ssid }}"
-            var pass = "{{ wifi_pass }}"
 
-            document.getElementById('input-ssid').value = ssid ? ssid : ""
-            document.getElementById('input-ssid-pass').value = pass ? pass : ""
+            setElemValue('input-ssid', "{{ wifi_ssid }}")
+            setElemValue('input-ssid-pass', "{{ wifi_pass }}")
             setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
 
             showElement('loader', false)
@@ -184,7 +178,7 @@
 
             setProtocolCookie();
 
-            location.href = "step-4-keys.pyhtml?op=WiFi";
+            location.href = "step-4-keys-console.pyhtml";
           }
 
           function ssidSelected(event) {
@@ -196,22 +190,9 @@
             document.getElementById('input-ssid').value = event.srcElement.parentElement.children[0].textContent
           }
 
-          function validateField(fieldObj, message) {
-            if(fieldObj.value.trim() == ""){
-                fieldObj.style.borderColor = "red";
-                fieldObj.focus()
-                window.alert("Please enter a valid " + message)
-                return false
-            }
-            fieldObj.style.borderColor = "green";
-            return true
-          }
-
           function validateMyForm(){
-            var ssid =  document.getElementById('input-ssid')
-            var ssid_pass =  document.getElementById('input-ssid-pass')
-            if(!validateField(ssid, "SSID") ||
-               !validateField(ssid_pass, "password")
+            if(!validateElemValue('input-ssid', "SSID") ||
+               !validateElemValue('input-ssid-pass', "password")
             ) return false
 
             storeData()

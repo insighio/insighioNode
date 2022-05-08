@@ -22,10 +22,10 @@
             <ul class="step">
               <li class="step-item"><a>Login</a></li>
               <li class="step-item"><a>Select Network</a></li>
-              <li class="step-item active"><a>Network Params</a></li>
+              <li class="step-item"><a>Network Params</a></li>
               <li class="step-item"><a>API Keys</a></li>
               <li class="step-item"><a>Measurements</a></li>
-              <li class="step-item"><a>Timing</a></li>
+              <li class="step-item active"><a>Timing</a></li>
               <li class="step-item"><a>Verify</a></li>
             </ul>
           </div>
@@ -159,8 +159,8 @@
             else
               timingChanged(undefined, 'periodic')
 
-            setElementValueIfNotUndefined('input-period', {{ period }}, 300)
-            setElementValueIfNotUndefined('input-message-buffer-size', batchBufferSize, 1)
+            setElemValue('input-period', {{ period }}, 300)
+            setElemValue('input-message-buffer-size', batchBufferSize, 1)
             document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
 
             checkboxStatusChanged('ins-batch-upload')

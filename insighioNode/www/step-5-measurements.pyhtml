@@ -22,9 +22,9 @@
       <ul class="step">
         <li class="step-item"><a>Login</a></li>
         <li class="step-item"><a>Select Network</a></li>
-        <li class="step-item active"><a>Network Params</a></li>
+        <li class="step-item"><a>Network Params</a></li>
         <li class="step-item"><a>API Keys</a></li>
-        <li class="step-item"><a>Measurements</a></li>
+        <li class="step-item active"><a>Measurements</a></li>
         <li class="step-item"><a>Timing</a></li>
         <li class="step-item"><a>Verify</a></li>
       </ul>
@@ -558,26 +558,19 @@
       document.getElementById('input-ins-esp-weight-scale').checked = Boolean({{ meas_scale_enabled }})
 
       checkboxStatusChanged('gps')
-      var gpsTimeout = {{ meas_gps_timeout }}
-      var gpsSatNum = {{ meas_gps_sat_num }}
       var boardType = "{{ selected_board }}"
-      var sdi1Enabled = Boolean({{ meas_sdi_1_enabled }})
-      var sdi2Enabled = Boolean({{ meas_sdi_2_enabled }})
-      var sdi12Addr1 = {{ meas_sdi_1_address }}
-      var sdi12Addr2 = {{ meas_sdi_2_address }}
-      var sdi12WarmupTime = {{ meas_sdi_warmup_time }}
-
-      document.getElementById('input-gps-timeout').value = gpsTimeout ? gpsTimeout : 120
-      document.getElementById('input-gps-sat-num').value = gpsSatNum = gpsSatNum ? gpsSatNum : 4
-
       if(boardType && tabNamePerBoard[boardType])
         boardChanged(undefined, tabNamePerBoard[boardType])
 
-      document.getElementById('input-ins-esp-gen-sdi12-1-enable').checked = sdi1Enabled
-      document.getElementById('input-ins-esp-gen-sdi12-2-enable').checked = sdi2Enabled
-      document.getElementById('option-ins-esp-gen-sdi12-1-address').value = sdi12Addr1 ? sdi12Addr1 : 0
-      document.getElementById('option-ins-esp-gen-sdi12-2-address').value = sdi12Addr2 ? sdi12Addr2 : 1
-      document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value = sdi12WarmupTime ? sdi12WarmupTime : 1000
+      setElemValue('input-gps-timeout', {{ meas_gps_timeout }}, 120)
+      setElemValue('input-gps-sat-num', {{ meas_gps_sat_num }}, 4)
+
+      document.getElementById('input-ins-esp-gen-sdi12-1-enable').checked = Boolean({{ meas_sdi_1_enabled }})
+      document.getElementById('input-ins-esp-gen-sdi12-2-enable').checked = Boolean({{ meas_sdi_2_enabled }})
+
+      setElemValue('option-ins-esp-gen-sdi12-1-address', {{ meas_sdi_1_address }}, 0)
+      setElemValue('option-ins-esp-gen-sdi12-2-address', {{ meas_sdi_2_address }}, 1)
+      setElemValue('input-ins-esp-gen-sdi12-warmup-time', {{ meas_sdi_warmup_time }}, 1000)
 
       checkboxStatusChanged('ins-esp-gen-sdi12-1')
       checkboxStatusChanged('ins-esp-gen-sdi12-2')
@@ -585,21 +578,18 @@
       var adp1 = "{{ meas_sensor_a_d_p1 }}"
       var adp2 = "{{ meas_sensor_a_d_p2 }}"
       var adp3 = "{{ meas_sensor_a_d_p3 }}"
-      var adp1trans = "{{ meas_sensor_a_d_p1_t }}"
-      var adp2trans = "{{ meas_sensor_a_d_p2_t }}"
-      var adp3trans = "{{ meas_sensor_a_d_p3_t }}"
 
-      setElementValueIfNotUndefined('input-ins-esp-i2c-1', "{{ meas_i2c_1 }}", "disabled")
-      setElementValueIfNotUndefined('input-ins-esp-s1-i2c', "{{ meas_i2c_1 }}", "disabled")
-      setElementValueIfNotUndefined('input-ins-esp-i2c-2', "{{ meas_i2c_2 }}", "disabled")
-      setElementValueIfNotUndefined('input-ins-esp-sensor-a-d-p1', adp1 , "disabled")
-      setElementValueIfNotUndefined('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
-      setElementValueIfNotUndefined('input-ins-esp-s1-sensor-a-d-p2', adp2, "disabled")
-      setElementValueIfNotUndefined('input-ins-esp-s1-sensor-a-d-p3', adp3, "disabled")
+      setElemValue('input-ins-esp-i2c-1', "{{ meas_i2c_1 }}", "disabled")
+      setElemValue('input-ins-esp-s1-i2c', "{{ meas_i2c_1 }}", "disabled")
+      setElemValue('input-ins-esp-i2c-2', "{{ meas_i2c_2 }}", "disabled")
+      setElemValue('input-ins-esp-sensor-a-d-p1', adp1 , "disabled")
+      setElemValue('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
+      setElemValue('input-ins-esp-s1-sensor-a-d-p2', adp2, "disabled")
+      setElemValue('input-ins-esp-s1-sensor-a-d-p3', adp3, "disabled")
 
-      setElementValueIfNotUndefined("input-ins-esp-s1-sensor-a-d-p1-t", "{{ meas_sensor_a_d_p1_t }}", "v")
-      setElementValueIfNotUndefined("input-ins-esp-s1-sensor-a-d-p2-t", "{{ meas_sensor_a_d_p2_t }}", "v")
-      setElementValueIfNotUndefined("input-ins-esp-s1-sensor-a-d-p3-t", "{{ meas_sensor_a_d_p3_t }}", "v")
+      setElemValue("input-ins-esp-s1-sensor-a-d-p1-t", "{{ meas_sensor_a_d_p1_t }}", "v")
+      setElemValue("input-ins-esp-s1-sensor-a-d-p2-t", "{{ meas_sensor_a_d_p2_t }}", "v")
+      setElemValue("input-ins-esp-s1-sensor-a-d-p3-t", "{{ meas_sensor_a_d_p3_t }}", "v")
 
       showElement('input-ins-esp-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
       showElement('input-ins-esp-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
@@ -660,28 +650,26 @@
       document.getElementById('save-button').disabled = true
       clearCookies();
 
-      Cookies.set('meas-led-enabled', document.getElementById('input-led-enabled').checked ? "True" : "False")
-      Cookies.set('meas-battery-stat', document.getElementById('input-battery').checked ? "True" : "False")
-      Cookies.set('meas-board-sense', document.getElementById('input-board-sense').checked ? "True" : "False")
-      Cookies.set('meas-board-stat', document.getElementById('input-board-stat').checked ? "True" : "False")
-      Cookies.set('meas-network-stat', document.getElementById('input-network').checked ? "True" : "False")
-      Cookies.set('system-enable-ota', document.getElementById('input-ota').checked ? "True" : "False")
+      Cookies.set('meas-led-enabled', boolElemToPyStr('input-led-enabled'))
+      Cookies.set('meas-battery-stat', boolElemToPyStr('input-battery'))
+      Cookies.set('meas-board-sense', boolElemToPyStr('input-board-sense'))
+      Cookies.set('meas-board-stat', boolElemToPyStr('input-board-stat'))
+      Cookies.set('meas-network-stat', boolElemToPyStr('input-network'))
+      Cookies.set('system-enable-ota', boolElemToPyStr('input-ota'))
+      Cookies.set('meas-gps-enabled', boolElemToPyStr('input-gps-enable'))
 
-      //to check
-      Cookies.set('meas-temp-unit', document.getElementById('input-temp-unit').value ? "False" : "True")
+      Cookies.set('meas-temp-unit', boolElemToPyStr('input-temp-unit', 'value'))
 
-      var gps_enabled = document.getElementById('input-gps-enable').checked
-      Cookies.set('meas-gps-enabled', gps_enabled ? "True" : "False")
-      Cookies.set('meas-gps-timeout', gps_enabled ? document.getElementById('input-gps-timeout').value : 0)
-      Cookies.set('meas-gps-sat-num', gps_enabled ? document.getElementById('input-gps-sat-num').value : 0)
+      Cookies.set('meas-gps-timeout', document.getElementById('input-gps-timeout').value)
+      Cookies.set('meas-gps-sat-num', document.getElementById('input-gps-sat-num').value)
 
       if (elementIsVisible("ins-esp-gen-sdi12-board-options")) {
         Cookies.set('selected-board', boardNamePerTab["ins-esp-gen-sdi12-board-options"] )
         var address1_elem = document.getElementById('option-ins-esp-gen-sdi12-1-address')
         var address2_elem = document.getElementById('option-ins-esp-gen-sdi12-2-address')
 
-        Cookies.set('meas-sdi-1-enabled', document.getElementById('input-ins-esp-gen-sdi12-1-enable').checked ? "True" : "False")
-        Cookies.set('meas-sdi-2-enabled', document.getElementById('input-ins-esp-gen-sdi12-2-enable').checked ? "True" : "False")
+        Cookies.set('meas-sdi-1-enabled', boolElemToPyStr('input-ins-esp-gen-sdi12-1-enable'))
+        Cookies.set('meas-sdi-2-enabled', boolElemToPyStr('input-ins-esp-gen-sdi12-2-enable'))
         Cookies.set('meas-sdi-1-address', address1_elem !== null ? address1_elem.value : "")
         Cookies.set('meas-sdi-2-address', address2_elem !== null ? address2_elem.value : "")
 
@@ -693,7 +681,7 @@
         Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-i2c-1').value)
         Cookies.set('meas-i2c-2', document.getElementById('input-ins-esp-i2c-2').value)
         Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
-        Cookies.set('meas-scale-enabled', document.getElementById('input-ins-esp-weight-scale').checked ? "True" : "False")
+        Cookies.set('meas-scale-enabled', boolElemToPyStr('input-ins-esp-weight-scale'))
 
         if (!document.getElementById('input-ins-esp-weight-scale').checked) {
           Cookies.set('meas-scale-offset', 0)
@@ -770,7 +758,6 @@
       NodeList.prototype.forEach = Array.prototype.forEach;
       var children = requiredElement.childNodes;
       children.forEach(function (item) {
-        console.log("about to clone: ", item, ", of type: ", item.tagName)
         var cln = item.cloneNode(true);
         if (item.tagName && cln.tagName.toLowerCase() === "div") {
           clearAndMarkAllInputFields(cln, keyValuePairCnt++)

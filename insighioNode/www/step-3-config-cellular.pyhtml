@@ -10,12 +10,6 @@
     </head>
 
     <body class="body-custom">
-      {{ py }}
-      import device_info
-      import gc
-      gc.collect()
-
-      {{ end }}
         <img src="img/logo.png" class="img-responsive img-center">
 
         <div class="panel panel-custom">
@@ -142,9 +136,9 @@
             var ipv = "{{ ipversion }}"
 
             //input-band" value={{ cell_band }}
-            setElementValueIfNotUndefined('input-cell-tech', "{{ cell_tech }}", "GSM")
-            setElementValueIfNotUndefined('input-apn', "{{ cell_apn }}", "internet")
-            setElementValueIfNotUndefined('input-band', {{ cell_band }}, 20)
+            setElemValue('input-cell-tech', "{{ cell_tech }}", "GSM")
+            setElemValue('input-apn', "{{ cell_apn }}", "internet")
+            setElemValue('input-band', {{ cell_band }}, 20)
 
             setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
             setRadioGroupValue('ipversion', ipv !== "undefined" ? ipv : "IP")
@@ -190,7 +184,7 @@
             readRadioGroupValue('protocol', 'protocol')
             readRadioGroupValue('ipversion', 'ipversion')
 
-            location.href = "step-4-keys.pyhtml?op=Cellular";
+            location.href = "step-4-keys-console.pyhtml";
           }
 
           function validateMyForm(){

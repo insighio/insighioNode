@@ -30,9 +30,9 @@ from sensors import hx711
             <ul class="step">
               <li class="step-item"><a>Login</a></li>
               <li class="step-item"><a>Select Network</a></li>
-              <li class="step-item active"><a>Network Params</a></li>
+              <li class="step-item"><a>Network Params</a></li>
               <li class="step-item"><a>API Keys</a></li>
-              <li class="step-item"><a>Measurements</a></li>
+              <li class="step-item active"><a>Measurements</a></li>
               <li class="step-item"><a>Timing</a></li>
               <li class="step-item"><a>Verify</a></li>
             </ul>
@@ -43,9 +43,6 @@ from sensors import hx711
             <hr />
             <br />
             <div class="empty">
-              <!-- <div class="empty-icon">
-                <i class="icon icon-2x icon-minus"></i>
-              </div> -->
               <p class="empty-title h5">Weight Scale Calibration</p>
               <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold">{{ hx711.get_reading(4, 33, 12, None, None, 25) }}</span>.</p>
               <p class="empty-subtitle">Place your reference weight on the scale, fill its exact weight in grams at the following field and press <span class="text-bold">Measure</span> to complete calibration.</p>
@@ -76,20 +73,8 @@ from sensors import hx711
         Cookies.remove('meas-scale-reference')
       }
 
-      function validateField(fieldObj, message) {
-        if(fieldObj.value.trim() == ""){
-            fieldObj.style.borderColor = "red";
-            fieldObj.focus()
-            window.alert("Please enter a valid " + message)
-            return false
-        }
-        fieldObj.style.borderColor = "green";
-        return true
-      }
-
       function validateMyForm(){
-        var refWeight =  document.getElementById('input-ref-weight')
-        if(!validateField(refWeight, "ref-weight"))
+        if(!validateElemValue('input-ref-weight', "ref-weight"))
           return false
 
         storeData()
