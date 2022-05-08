@@ -46,7 +46,7 @@ from sensors import hx711
             <div class="empty">
               <p class="empty-title h5">Weight Scale Calibration</p>
               <p class="empty-subtitle">Offset: <span id="idle-weight-value" class="text-bold"></span></p>
-              <p class="empty-subtitle">Measured reference weight: <span id="measured-ref-weight-value" class="text-bold">{{ hx711.get_reading(4, 33, 12, None, None, 25) }}</span></p>
+              <p class="empty-subtitle">Measured reference weight: <span id="measured-ref-weight-value" class="text-bold"></span></p>
               <p class="empty-subtitle">Scale: <span id="scale-value" class="text-bold"></span>.</p>
               <div class="empty-action">
                 <button class="btn btn-primary" id="save-button" onclick="recalibrate()">Recalibrate</button>
@@ -60,23 +60,20 @@ from sensors import hx711
       <script src="utils.js"></script>
       <script>
       function initializeValues() {
-        var scale = {{ meas_scale_offset }}
         var offset = parseFloat(Cookies.get('meas-scale-offset'))
-
         document.getElementById('idle-weight-value').innerHTML = offset
+        var current = {{ hx711.get_reading(4, 33, 12, None, None, 25) }}
 
-        //if setting scale for the first time
-        if(!scale) {
-          var reference = {{ hx711.get_reading(4, 33, 12, None, None, 25) }}
-          document.getElementById('measured-ref-weight-value').innerHTML = reference
-          var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
+        {{ if meas_scale_scale }}
+        document.getElementById('scale-value').innerHTML = {{ meas_scale_scale }}
+        {{ else }}
+        document.getElementById('measured-ref-weight-value').innerHTML = current
+        var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
 
-          console.log(offset, reference, referenceExpectedWeight)
-          document.getElementById('scale-value').innerHTML = (reference - offset) / referenceExpectedWeight
-        }
-        else {
-          document.getElementById('scale-value').innerHTML = scale
-        }
+        console.log(offset, current, referenceExpectedWeight)
+        document.getElementById('scale-value').innerHTML = (current - offset) / referenceExpectedWeight
+        {{ end }}
+
         showElement('loader', false)
       }
 
