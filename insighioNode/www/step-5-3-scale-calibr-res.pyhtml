@@ -60,19 +60,22 @@ from sensors import hx711
       <script src="utils.js"></script>
       <script>
       function initializeValues() {
-        var offset = parseFloat(Cookies.get('meas-scale-offset'))
+        var offset = Cookies.get('meas-scale-offset')
+        var scale = Cookies.get('meas-scale-scale')
+
+        var offset = offset !== undefined ? parseFloat(offset) : undefined
+        var scale = scale !== undefined ? parseFloat(scale) : undefined
+
         document.getElementById('idle-weight-value').innerHTML = offset
-        var current = {{ hx711.get_reading(4, 33, 12, None, None, 25) }}
 
-        {{ if meas_scale_scale }}
-        document.getElementById('scale-value').innerHTML = {{ meas_scale_scale }}
-        {{ else }}
-        document.getElementById('measured-ref-weight-value').innerHTML = current
-        var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
+        if(offset === undefined || scale === undefined) {
+          var current = {{ hx711.get_reading(4, 33, 12, None, None, 25) }}
+          document.getElementById('measured-ref-weight-value').innerHTML = current
+          var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
+          scale = (current - offset) / referenceExpectedWeight
+        }
 
-        console.log(offset, current, referenceExpectedWeight)
-        document.getElementById('scale-value').innerHTML = (current - offset) / referenceExpectedWeight
-        {{ end }}
+        document.getElementById('scale-value').innerHTML = scale
 
         showElement('loader', false)
       }

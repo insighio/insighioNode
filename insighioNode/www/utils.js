@@ -44,7 +44,7 @@ function showElement(elementId, status) {
 function setElemValue(elementId, newValue, defaultValue=""){
   var elem = document.getElementById(elementId)
   if(!elem) {
-    console.log("Element not found: ", elementId)
+    console.log("setElemValue: Element not found: ", elementId)
     return
   }
 
@@ -54,7 +54,7 @@ function setElemValue(elementId, newValue, defaultValue=""){
 function setElemValueBool(elementId, newValue, defaultValue="", boolField="checked"){
   var elem = document.getElementById(elementId)
   if(!elem) {
-    console.log("Element not found: ", elementId)
+    console.log("setElemValueBool: Element not found: ", elementId)
     return
   }
 
@@ -64,7 +64,7 @@ function setElemValueBool(elementId, newValue, defaultValue="", boolField="check
 function validateElemValue(elemId, message, regex=undefined) {
   var fieldObj = document.getElementById(elemId)
   if(!fieldObj) {
-    console.log("Element not found: ", elemId)
+    console.log("validateElemValue: Element not found: ", elemId)
     return false
   }
 
@@ -82,7 +82,7 @@ function validateElemValue(elemId, message, regex=undefined) {
 function boolElemToPyStr(elemId, boolField="checked") {
   var fieldObj = document.getElementById(elemId)
   if(!fieldObj) {
-    console.log("Element not found: ", elemId)
+    console.log("boolElemToPyStr: Element not found: ", elemId)
     return false
   }
 

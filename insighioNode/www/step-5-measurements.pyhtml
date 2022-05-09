@@ -547,7 +547,7 @@
     function initializeValues() {
       var gps = Boolean({{ meas_gps_enabled }})
 
-      setElemValueBool('input-led-enabled'. {{ meas_led_enabled }}, true)
+      setElemValueBool('input-led-enabled', {{ meas_led_enabled }}, true)
       setElemValueBool('input-battery', {{ meas_battery_stat }}, true)
       setElemValueBool('input-board-sense', {{ meas_board_sense }}, true)
       setElemValueBool('input-board-stat', {{ meas_board_stat }}, false)
@@ -690,11 +690,12 @@
           location.href = "step-6-timing.pyhtml"
         }
         else {
-          var scale = {{ meas_scale_offset }}
-          var offset = {{ meas_scale_scale }}
+          var scale = {{ meas_scale_scale }}
+          var offset = {{ meas_scale_offset }}
 
           if(scale && offset) {
             Cookies.set('meas-scale-offset', offset)
+            Cookies.set('meas-scale-scale', scale)
             location.href = "step-5-3-scale-calibr-res.pyhtml"
           }
           else
