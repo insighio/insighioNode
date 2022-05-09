@@ -31,11 +31,18 @@ git submodule update --init --recursive
 
 ```bash
 cd insighioNode/insighioNode
-# for Pycom devices
-sudo  ampy -p /dev/ttyUSB0 -b 115200 put . /flash
 
 # for ESP32 devices
-sudo  ampy -p /dev/ttyUSB0 -b 115200 put . /
+ROOT_PATH=""
+# for Pycom devices
+#ROOT_PATH="/flash"
+
+ampy -p /dev/ttyUSB0 -b 115200 put apps $ROOT_PATH/apps
+ampy -p /dev/ttyUSB0 -b 115200 put boot.py $ROOT_PATH/boot.py
+ampy -p /dev/ttyUSB0 -b 115200 put lib $ROOT_PATH/lib
+ampy -p /dev/ttyUSB0 -b 115200 put main.py $ROOT_PATH/main.py
+ampy -p /dev/ttyUSB0 -b 115200 put web_server.py $ROOT_PATH/web_server.py
+ampy -p /dev/ttyUSB0 -b 115200 put www $ROOT_PATH/www
 ```
 
 ## Configure
@@ -46,7 +53,6 @@ After following the [Getting Started](https://docs.insigh.io/gettingstarted/) st
 
 # Future Work
 
-* Over-The-Air update support
 * Security enhancements (TLS)
 * < Name your desired feature! >
 
