@@ -47,6 +47,42 @@ def bq_charger_setup():
     except Exception as e:
         pass
 
+def bq_charger_set_charging_state(is_on):
+    from machine import I2C, Pin
+    try:
+        p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
+        p_snsr.on()
+        i2c = I2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
+        bq_addr = 107
+        i2c.writeto_mem(bq_addr, 1, b'\x3B' if is_on else b'\x2B')
+    except Exception as e:
+        logging.exception(e, "Error initializing BQ charger")
+    try:
+        p_snsr.off()
+    except Exception as e:
+        pass
+
+def bq_charger_is_on_external_power():
+    from machine import SoftI2C, Pin
+    status = False
+    try:
+        p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
+        p_snsr.on()
+        i2c = SoftI2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
+        bq_addr = 107
+        val = i2c.readfrom_mem(bq_addr, 8, 1)
+
+        power_good = val & 0x4
+        is_charging = val & 0x30
+        status = power_good && is_charging
+    except Exception as e:
+        logging.exception(e, "Error initializing BQ charger")
+    try:
+        p_snsr.off()
+    except Exception as e:
+        pass
+    return status
+
 
 def device_deinit():
     if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
@@ -127,8 +163,12 @@ def read_battery_voltage_and_current():
     # BATT VOLTAGE & CURR measurement
     current = None
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 1)
+
+    bq_charger_set_charging_state(False)
     if hasattr(cfg, "_UC_IO_CHARGER_OFF"):
         gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
+
+    utime.sleep_ms(50)
 
     vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, cfg._BAT_VDIV, cfg._BAT_ATT)
 
@@ -137,6 +177,7 @@ def read_battery_voltage_and_current():
         current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
         # changed the order of the following two lines. evaluate if correct.
         gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 0)
+    bq_charger_set_charging_state(True)
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 0)
     return (vbatt, current)
 
