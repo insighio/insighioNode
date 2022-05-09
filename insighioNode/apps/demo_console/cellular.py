@@ -73,6 +73,11 @@ def connect(cfg):
     return results
 
 
+def is_connected():
+    modem_instance = cellular.get_modem_instance()
+    return modem_instance.is_connected()
+
+
 def coord_to_double(part1, part2, part3):
     try:
         direction = {'N': 1, 'S': -1, 'E': 1, 'W': -1}

@@ -89,6 +89,11 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
 
     return (connection_status, conn_attempt_duration, scan_attempt_duration, channel, rssi)
 
+def is_connected():
+    if not device_info.is_esp32():
+        return False
+
+    return network.WLAN(network.STA_IF).isconnected()
 
 def deactivate():
     """ Actions implemented when turning off wifi, before deep sleep """

@@ -51,86 +51,98 @@ def execute():
     if buffered_upload_enabled and utime.gmtime()[0] < 2021:
         execute_connetion_procedure = True
 
-    # get measurements
-    measurements = demo_utils.get_measurements(cfg)
+    always_on_connection = demo_utils.bq_charger_is_on_external_power() && demo_utils.get_config("_ALWAYS_ON_CONNECTION")
 
-    logging.debug("printing measurements so far: " + str(measurements))
+    while True:
+        # get measurements
+        measurements = demo_utils.get_measurements(cfg)
+        measurements["reset_cause"] = {"value": device_info.get_reset_cause()}
 
-    # if the RTC is OK, timestamp message
-    if buffered_upload_enabled and not execute_connetion_procedure:
-        from . import message_buffer
-        message_buffer.timestamp_measurements(measurements)
-        execute_connetion_procedure = not message_buffer.store_measurement_if_needed(measurements)
+        logging.debug("printing measurements so far: " + str(measurements))
 
-    if execute_connetion_procedure:
-        from external.kpn_senml.senml_unit import SenmlSecondaryUnits
+        # if the RTC is OK, timestamp message
+        if buffered_upload_enabled and not execute_connetion_procedure:
+            from . import message_buffer
+            message_buffer.timestamp_measurements(measurements)
+            execute_connetion_procedure = not message_buffer.store_measurement_if_needed(measurements)
 
-        # connect to network
-        if cfg.network == "lora":
-            from . import lora as network
-        elif cfg.network == "wifi":
-            from . import wifi as network
-        elif cfg.network == "cellular":
-            from . import cellular as network
+        if execute_connetion_procedure:
+            from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
-        try:
-            if demo_utils.get_config("_MEAS_GPS_ENABLE"):
-                from . import cellular as network_gps
-                network_gps.get_gps_position(cfg, measurements)  # may be it needs relocation
-        except Exception as e:
-            logging.exception(e, "GPS Exception:")
+            # connect to network
+            if cfg.network == "lora":
+                from . import lora as network
+            elif cfg.network == "wifi":
+                from . import wifi as network
+            elif cfg.network == "cellular":
+                from . import cellular as network
 
-        try:
-            device_info.set_led_color('red')
-            logging.info("Connecting to network over: " + cfg.network)
-            connection_results = network.connect(cfg)
-            if "timeDiffAfterNTP" in connection_results:
-                timeDiffAfterNTP = connection_results["timeDiffAfterNTP"]
-                del connection_results["timeDiffAfterNTP"]
-            logging.info("Local time after data connection: {}".format(utime.gmtime()))
-            measurements.update(connection_results)
-        except Exception as e:
-            logging.exception(e, "Exception during connection:")
+            try:
+                device_info.set_led_color('red')
 
-        try:
-            if ("status" in measurements) and (measurements["status"]["value"] is True):
-                logging.info("Network [" + cfg.network + "] connected")
-                # value no longer needed
-                del measurements["status"]
-                device_info.set_led_color('green')
+                if not network.is_connected():
+                    try:
+                        if demo_utils.get_config("_MEAS_GPS_ENABLE"):
+                            from . import cellular as network_gps
+                            network_gps.get_gps_position(cfg, measurements)  # may be it needs relocation
+                    except Exception as e:
+                        logging.exception(e, "GPS Exception:")
+                    #
+                    network.disconnect()
+                    logging.info("Connecting to network over: " + cfg.network)
+                    connection_results = network.connect(cfg)
+                    if "timeDiffAfterNTP" in connection_results:
+                        timeDiffAfterNTP = connection_results["timeDiffAfterNTP"]
+                        del connection_results["timeDiffAfterNTP"]
+                    logging.info("Local time after data connection: {}".format(utime.gmtime()))
+                    measurements.update(connection_results)
+                else:
+                    measurements["status"]["value"] = True
+            except Exception as e:
+                logging.exception(e, "Exception during connection:")
 
-                # create packet
-                # utime.ticks_ms() is being reset after each deepsleep
-                measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": getUptime(timeDiffAfterNTP)}
-                measurements["reset_cause"] = {"value": device_info.get_reset_cause()}
-                message = network.create_message(cfg.device_id, measurements)
+            try:
+                if ("status" in measurements) and (measurements["status"]["value"] is True):
+                    logging.info("Network [" + cfg.network + "] connected")
+                    # value no longer needed
+                    del measurements["status"]
+                    device_info.set_led_color('green')
 
-                # send packet
-                network.send_message(cfg, message)
+                    # create packet
+                    # utime.ticks_ms() is being reset after each deepsleep
+                    measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": getUptime(timeDiffAfterNTP)}
 
-                if buffered_upload_enabled:
-                    from . import message_buffer
-                    message_buffer.parse_stored_measurements_and_upload(network)
+                    message = network.create_message(cfg.device_id, measurements)
 
-                # check for configuration pending for upload
-                configUploadFileContent = utils.readFromFile("/configLog")
-                if configUploadFileContent:
-                    logging.info("New configuration found, abou to upload it.")
-                    network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
-                    utils.deleteFile("/configLog")
+                    # send packet
+                    network.send_message(cfg, message)
 
-                if demo_utils.get_config("_CHECK_FOR_OTA"):
-                    network.check_and_apply_ota(cfg)
-            else:
-                logging.info("Network [" + cfg.network + "] not connected")
-        except Exception as e:
-            logging.exception(e, "Exception while sending data:")
+                    if buffered_upload_enabled:
+                        from . import message_buffer
+                        message_buffer.parse_stored_measurements_and_upload(network)
 
-        try:
-            # disconnect
-            network.disconnect()
-        except Exception as e:
-            logging.exception(e, "Exception during disconenction:")
+                    # check for configuration pending for upload
+                    configUploadFileContent = utils.readFromFile("/configLog")
+                    if configUploadFileContent:
+                        logging.info("New configuration found, abou to upload it.")
+                        network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
+                        utils.deleteFile("/configLog")
+
+                    if demo_utils.get_config("_CHECK_FOR_OTA"):
+                        network.check_and_apply_ota(cfg)
+                else:
+                    logging.info("Network [" + cfg.network + "] not connected")
+            except Exception as e:
+                logging.exception(e, "Exception while sending data:")
+
+            if not always_on_connection:
+                try:
+                    # disconnect
+                    network.disconnect()
+                except Exception as e:
+                    logging.exception(e, "Exception during disconenction:")
+                break
+        machine.lightsleep(demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC"))
 
     # deinit
     device_info.set_led_color('black')
@@ -155,6 +167,7 @@ def execute():
         if remaining_milliseconds < 0:
             remaining_milliseconds = 1000  # dummy wait 1 sec before waking up again
         sleep_period = remaining_milliseconds % 86400000  # if sleep period is longer than a day, keep the 24h period as max
+        logging.info("will sleep for {}ms".format(sleep_period))
         machine.deepsleep(sleep_period)
     elif(demo_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND") is not None and demo_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND") is not None):
         ### RTC tuple format
@@ -206,4 +219,4 @@ def execute():
         machine.deepsleep(seconds_to_wait * 1000)  # +0.01% is RTC correction
     else:
         logging.error("Timing neither periodic nor scheduled, will sleep for a minute")
-        machine.deepsleep(sleep_period)
+        machine.deepsleep(60000)

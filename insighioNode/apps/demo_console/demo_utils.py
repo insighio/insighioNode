@@ -73,7 +73,7 @@ def bq_charger_is_on_external_power():
         val = i2c.readfrom_mem(bq_addr, 8, 1)
 
         power_good = val & 0x4
-        is_charging = val & 0x30
+        is_charging = True  # val & 0x30
         status = power_good && is_charging
     except Exception as e:
         logging.exception(e, "Error initializing BQ charger")

@@ -75,6 +75,13 @@ class MQTTClientCustom:
             logging.exception(e, 'Exception during MQTT connect with:')
             return False
 
+    def is_connected(self):
+        logging.debug("Sending MQTT ping")
+        try:
+            return self.client.ping()
+        except:
+            return False
+
     def sendMessage(self, message, topic=None, retained=False):
         if topic is None:
             topic = self.messageChannel
