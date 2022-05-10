@@ -15,7 +15,7 @@ def get_config(key):
 
 def device_init():
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
-        bq_charger_setup()
+        bq_charger_exec(bq_charger_setup)
     else:
         if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
             gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
@@ -29,52 +29,14 @@ def device_init():
         else:
             device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED)
 
-
-def bq_charger_setup():
-    from machine import I2C, Pin
-    try:
-        p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
-        p_snsr.on()
-        i2c = I2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
-        bq_addr = 107
-        i2c.writeto_mem(bq_addr, 5, b'\x84')
-        i2c.writeto_mem(bq_addr, 0, b'\x22')
-    except Exception as e:
-        logging.exception(e, "Error initializing BQ charger")
-
-    try:
-        p_snsr.off()
-    except Exception as e:
-        pass
-
-def bq_charger_set_charging_state(is_on):
-    from machine import I2C, Pin
-    try:
-        p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
-        p_snsr.on()
-        i2c = I2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
-        bq_addr = 107
-        i2c.writeto_mem(bq_addr, 1, b'\x3B' if is_on else b'\x2B')
-    except Exception as e:
-        logging.exception(e, "Error initializing BQ charger")
-    try:
-        p_snsr.off()
-    except Exception as e:
-        pass
-
-def bq_charger_is_on_external_power():
+def bq_charger_exec(bq_func):
     from machine import SoftI2C, Pin
     status = False
     try:
         p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
         p_snsr.on()
-        i2c = SoftI2C(0, scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
-        bq_addr = 107
-        val = i2c.readfrom_mem(bq_addr, 8, 1)
-
-        power_good = val & 0x4
-        is_charging = True  # val & 0x30
-        status = power_good && is_charging
+        i2c = SoftI2C(scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
+        status = bq_func(i2c, 107)
     except Exception as e:
         logging.exception(e, "Error initializing BQ charger")
     try:
@@ -83,6 +45,21 @@ def bq_charger_is_on_external_power():
         pass
     return status
 
+def bq_charger_setup(i2c, bq_addr):
+    i2c.writeto_mem(bq_addr, 5, b'\x84')
+    i2c.writeto_mem(bq_addr, 0, b'\x22')
+
+def bq_charger_set_charging_on(i2c, bq_addr):
+    i2c.writeto_mem(bq_addr, 1, b'\x3B')
+
+def bq_charger_set_charging_off(i2c, bq_addr):
+    i2c.writeto_mem(bq_addr, 1, b'\x2B')
+
+def bq_charger_is_on_external_power(i2c, bq_addr):
+    val = i2c.readfrom_mem(bq_addr, 8, 1)
+    power_good = int.from_bytes(val, "big") & 0x4
+    is_charging = True  # val & 0x30
+    return power_good and is_charging
 
 def device_deinit():
     if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
@@ -164,7 +141,7 @@ def read_battery_voltage_and_current():
     current = None
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 1)
 
-    bq_charger_set_charging_state(False)
+    bq_charger_exec(bq_charger_set_charging_off)
     if hasattr(cfg, "_UC_IO_CHARGER_OFF"):
         gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
 
@@ -177,7 +154,7 @@ def read_battery_voltage_and_current():
         current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
         # changed the order of the following two lines. evaluate if correct.
         gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 0)
-    bq_charger_set_charging_state(True)
+    bq_charger_exec(bq_charger_set_charging_on)
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 0)
     return (vbatt, current)
 
@@ -228,11 +205,6 @@ def read_scale(measurements):
     weight = weight if weight > 0 or weight < -100 else 0
     set_value_float(measurements, "scale_weight", weight, SenmlUnits.SENML_UNIT_GRAM)
 
-
-# <option>tsl2561 - luminosity</option>
-# <option>si7021  - temperature / humidity</option>
-# <option>scd30   - C02 / temperature / humidity</option>
-# <option>bme680  - gap / temperature / humidity</option>
 def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
     sensor_name = sensor_name.split("-")[0].strip()
 
