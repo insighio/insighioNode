@@ -47,13 +47,19 @@ def connect(cfg):
     if connOk:
         from . import transfer_protocol
         global transfer_client
-        transfer_client = transfer_protocol.TransferProtocol(cfg)
+        if cfg.protocol == 'coap':
+            transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
+        elif cfg.protocol == 'mqtt':
+            transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
+        else:
+            transfer_client = None
         transfer_client.connect()
 
     return results
 
 
 def is_connected():
+    global transfer_client
     return wifi.is_connected()
 
 
