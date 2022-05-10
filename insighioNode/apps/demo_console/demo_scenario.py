@@ -9,6 +9,7 @@ import device_info
 from . import demo_utils
 import gc
 import utils
+from math import floor
 
 
 def getUptime(timeOffset=None):
@@ -51,7 +52,9 @@ def execute():
     if buffered_upload_enabled and utime.gmtime()[0] < 2021:
         execute_connetion_procedure = True
 
-    always_on_connection = demo_utils.bq_charger_is_on_external_power() && demo_utils.get_config("_ALWAYS_ON_CONNECTION")
+    always_on_connection = demo_utils.bq_charger_exec(demo_utils.bq_charger_is_on_external_power) and demo_utils.get_config("_ALWAYS_ON_CONNECTION")
+
+    logging.info("Always on connection activated: " + str(always_on_connection))
 
     while True:
         # get measurements
@@ -167,7 +170,7 @@ def execute():
         if remaining_milliseconds < 0:
             remaining_milliseconds = 1000  # dummy wait 1 sec before waking up again
         sleep_period = remaining_milliseconds % 86400000  # if sleep period is longer than a day, keep the 24h period as max
-        logging.info("will sleep for {}ms".format(sleep_period))
+        logging.info("will sleep for {} hours and {} minutes".format(floor((sleep_period/1000)/3600), floor(((sleep_period/1000) % 3600)/60)))
         machine.deepsleep(sleep_period)
     elif(demo_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND") is not None and demo_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND") is not None):
         ### RTC tuple format
