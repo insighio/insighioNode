@@ -102,9 +102,12 @@ def deactivate():
     start_time_deactivation = utime.ticks_ms()
 
     if device_info.is_esp32():
-        wl = network.WLAN(network.STA_IF)
-        wl.disconnect()
-        wl.active(False)
+        try:
+            wl = network.WLAN(network.STA_IF)
+            wl.disconnect()
+            wl.active(False)
+        except:
+            logging.debug('WiFi disconnecting ignored.')
     else:
         from network import WLAN
         try:
