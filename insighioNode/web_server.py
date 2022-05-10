@@ -82,6 +82,7 @@ class WebServer:
         self.pyhtmlMod.ShowDebug = True
         self.storeIds()
 
+        MicroWebSrv2._HTML_ESCAPE_CHARS={}
         self.mws2 = MicroWebSrv2()
         self.mws2.SetEmbeddedConfig()
         self.mws2.BindAddress = ('192.168.4.1', 80)

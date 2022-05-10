@@ -41,14 +41,14 @@ function showElement(elementId, status) {
     elem.style.display = status ? "block" : "none"
 }
 
-function setElemValue(elementId, newValue, defaultValue=""){
+function setElemValue(elementId, newValue, defaultValue="", intZeroAccepted=true){
   var elem = document.getElementById(elementId)
   if(!elem) {
     console.log("setElemValue: Element not found: ", elementId)
     return
   }
 
-  elem.value = (newValue !== "undefined" && newValue !== undefined) ? newValue : defaultValue
+  elem.value = (newValue !== "undefined" && newValue !== undefined && (intZeroAccepted || (!intZeroAccepted && newValue !== 0))) ? newValue : defaultValue
 }
 
 function setElemValueBool(elementId, newValue, defaultValue="", boolField="checked"){
