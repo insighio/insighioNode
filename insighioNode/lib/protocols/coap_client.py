@@ -27,6 +27,7 @@ class CoAPClient:
 
     def __init__(self, coap_config):
         self.client = None
+        self.connected = False
         self.config = coap_config
         self.bufferedIncomingMessages = []
         self.prepareChannelNames(coap_config)
@@ -46,10 +47,15 @@ class CoAPClient:
             # todo: if status is true, send  status message
             # self.__sendMessageEx(self.statusChannel, '1', 1, True)
             # self.__check_msg(1000)
+            self.connected = status
             return status
         except Exception as e:
             logging.exception(e, 'Exception during CoAP start: ')
+            self.connected = False
             return False
+
+    def is_connected():
+        return self.connected
 
     def postMessage(self, message):
         buffer = bytearray()
@@ -89,8 +95,13 @@ class CoAPClient:
     #         print('[postAndWaitForReply] ACK not found, retrying...')
 
     def stop(self):
+        status = False
         try:
             self.client.stop()
+            self.connected = False
+            status = True
         except Exception as e:
             logging.exception(e, 'Exception during CoAP stop: ')
-            return False
+
+        self.connected = False
+        return status

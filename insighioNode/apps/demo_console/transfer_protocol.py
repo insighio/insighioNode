@@ -10,10 +10,11 @@ class TransferProtocol:
         self.protocol = cfg.protocol
         logging.debug("initializing TransferProtocol for: " + str(self.protocol))
 
+    def is_connected(self):
+        return False
+
     def disconnect(self):
-        self.client.disconnect()
-        self.connected = False
-        logging.info("Disconnected")
+        return False
 
     def send_packet(self, message, channel=None):
         return False
@@ -40,6 +41,9 @@ class TransferProtocolModemAT(TransferProtocol):
 
         self.connected = self.modem_instance.mqtt_connect(self.protocol_config.server_ip, self.protocol_config.server_port, self.protocol_config.thing_id, self.protocol_config.thing_token)
         return self.connected
+
+    def is_connected(self):
+        return self.modem_instance.mqtt_is_connected()
 
     def disconnect(self):
         self.modem_instance.mqtt_disconnect()
@@ -82,6 +86,7 @@ class TransferProtocolMQTT(TransferProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         from protocols import mqtt_client
+        # add keep alive setting
         self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
 
     def connect(self):
@@ -93,6 +98,14 @@ class TransferProtocolMQTT(TransferProtocol):
         # connectionStatus is not valid on pycom devices
         self.connected = (connectionStatus or not device_info.is_esp32())
         return self.connected
+
+    def is_connected(self):
+        return self.client.is_connected()
+
+    def disconnect(self):
+        self.client.disconnect()
+        self.connected = False
+        logging.info("Disconnected")
 
     def send_packet(self, message, channel=None):
         # transport-related functionalities
@@ -147,6 +160,14 @@ class TransferProtocolCoAP(TransferProtocol):
         connectionStatus = self.client.start()
         logging.info("CoAP connection status: " + str(connectionStatus))
         self.connected = True  # TODO: temp solution till we resolve what values are returned from connect function
+
+    def is_connected(self):
+        return self.client.is_connected()
+
+    def disconnect(self):
+        self.client.stop()
+        self.connected = False
+        logging.info("Disconnected")
 
     def send_packet(self, message, channel=None):
         # transport-related functionalities

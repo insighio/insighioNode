@@ -20,6 +20,8 @@ def connect(cfg):
 
     return results
 
+def is_connected():
+    return True
 
 def disconnect():
     pass

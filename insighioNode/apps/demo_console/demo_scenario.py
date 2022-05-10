@@ -22,6 +22,8 @@ def getUptime(timeOffset=None):
         uptime -= start_time
     return uptime
 
+def isAlwaysOnScenario():
+    return (demo_utils.bq_charger_exec(demo_utils.bq_charger_is_on_external_power) and demo_utils.get_config("_ALWAYS_ON_CONNECTION")) or demo_utils.get_config("_FORCE_ALWAYS_ON_CONNECTION")
 
 def execute():
     global sleep_period
@@ -55,15 +57,16 @@ def execute():
     if buffered_upload_enabled and utime.gmtime()[0] < 2021:
         execute_connetion_procedure = True
 
-    # check power state
-    always_on_connection = (demo_utils.bq_charger_exec(demo_utils.bq_charger_is_on_external_power) and demo_utils.get_config("_ALWAYS_ON_CONNECTION")) or demo_utils.get_config("_FORCE_ALWAYS_ON_CONNECTION")
-
-    logging.info("Always on connection activated: " + str(always_on_connection))
+    cnt = 0
 
     while True:
+        measurement_run_start_timestamp = utime.ticks_ms()
+        logging.info("Always on connection activated: " + str(isAlwaysOnScenario()))
         # get measurements
+        logging.debug("Starting getting measurements...")
         measurements = demo_utils.get_measurements(cfg)
-        measurements["reset_cause"] = {"value": device_info.get_reset_cause()}
+        if cnt == 0:
+            measurements["reset_cause"] = {"value": device_info.get_reset_cause()}
 
         logging.debug("printing measurements so far: " + str(measurements))
 
@@ -95,15 +98,19 @@ def execute():
                 device_info.set_led_color('red')
 
                 if not network.is_connected():
-                    # precautionary cleanup
-                    network.disconnect()
-                    logging.info("Connecting to network over: " + cfg.network)
-                    connection_results = network.connect(cfg)
-                    if "timeDiffAfterNTP" in connection_results:
-                        timeDiffAfterNTP = connection_results["timeDiffAfterNTP"]
-                        del connection_results["timeDiffAfterNTP"]
-                    logging.info("Local time after data connection: {}".format(utime.gmtime()))
-                    measurements.update(connection_results)
+                    # if it is the first time, try to connect
+                    if cnt == 0:
+                        logging.info("Connecting to network over: " + cfg.network)
+                        connection_results = network.connect(cfg)
+                        if "timeDiffAfterNTP" in connection_results:
+                            timeDiffAfterNTP = connection_results["timeDiffAfterNTP"]
+                            del connection_results["timeDiffAfterNTP"]
+                        logging.info("Local time after data connection: {}".format(utime.gmtime()))
+                        measurements.update(connection_results)
+                    # else do an instantanious deepsleep to do a cleanup and restart
+                    else:
+                        logging.info("Network disconnected, executing reset and retrying...")
+                        machine.deepsleep(1000)
                 else:
                     measurements["status"] = {}
                     measurements["status"]["value"] = True
@@ -121,7 +128,8 @@ def execute():
 
                     # create packet
                     # utime.ticks_ms() is being reset after each deepsleep
-                    measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": getUptime(timeDiffAfterNTP)}
+                    uptime = getUptime(timeDiffAfterNTP)
+                    measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": uptime if cnt == 0 else (uptime - measurement_run_start_timestamp)}
 
                     network.send_message(cfg, network.create_message(cfg.device_id, measurements))
 
@@ -148,13 +156,14 @@ def execute():
 
             device_info.set_led_color('black')
 
-            if not always_on_connection:
+            if not isAlwaysOnScenario():
                 try:
                     # disconnect
                     network.disconnect()
                 except Exception as e:
                     logging.exception(e, "Exception during disconenction:")
                 break
+        cnt += 1
         logging.info("light sleeping for: " + str(sleep_period/1000) + "s")
         gc.collect()
         utime.sleep_ms(sleep_period)

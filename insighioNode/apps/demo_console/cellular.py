@@ -79,7 +79,7 @@ def connect(cfg):
 
 def is_connected():
     modem_instance = cellular.get_modem_instance()
-    return modem_instance.is_connected()
+    return modem_instance and modem_instance.is_connected() and transfer_client.is_connected()
 
 
 def coord_to_double(part1, part2, part3):

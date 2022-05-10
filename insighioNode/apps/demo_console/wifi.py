@@ -59,8 +59,7 @@ def connect(cfg):
 
 
 def is_connected():
-    global transfer_client
-    return wifi.is_connected()
+    return wifi and transfer_client and transfer_client.is_connected() and wifi.is_connected()
 
 
 def disconnect():

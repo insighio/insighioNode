@@ -7,3 +7,4 @@ class MQTTConfig:
         self.thing_id = ""
         self.thing_token = ""
         self.client_name = ""
+        self.keepalive = 0

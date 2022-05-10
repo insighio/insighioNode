@@ -59,7 +59,7 @@ def bq_charger_set_charging_off(i2c, bq_addr):
 def bq_charger_is_on_external_power(i2c, bq_addr):
     val = i2c.readfrom_mem(bq_addr, 8, 1)
     logging.debug("BQ charger state: {}".format(ubinascii.hexlify(val)))
-    power_good = int.from_bytes(val, "big") & 0x4
+    power_good = (int.from_bytes(val, "big") & 0x4) > 0
     is_charging = True  # val & 0x30
     return is_charging and power_good
 
