@@ -88,3 +88,11 @@ function boolElemToPyStr(elemId, boolField="checked") {
 
   return fieldObj[boolField] ? "True" : "False"
 }
+
+function addElemChild(parentElem, txt, val){
+    var elem = document.createElement("option")
+    if(val)
+        elem.value = val
+    elem.innerHTML = txt
+    parentElem.appendChild(elem)
+}

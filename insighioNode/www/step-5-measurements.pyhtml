@@ -205,14 +205,6 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-i2c-1">
-                        <option>disabled</option>
-                        <option value="tsl2561">tsl2561 - luminosity</option>
-                        <option value="sht20">sht20 - temperature / humidity</option>
-                        <option value="sht40">sht40 - temperature / humidity</option>
-                        <option value="si7021">si7021 - temperature / humidity</option>
-                        <option value="scd30">scd30 - C02 / temperature / humidity</option>
-                        <option value="bme680">bme680 - gap / temperature / humidity</option>
-                        <option value="sunrise">sunrise - CO2 / temperature</option>
                       </select>
                     </div>
                   </div>
@@ -224,14 +216,6 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-i2c-2">
-                        <option>disabled</option>
-                        <option value="tsl2561">tsl2561 - luminosity</option>
-                        <option value="sht20">sht20 - temperature / humidity</option>
-                        <option value="sht40">sht40 - temperature / humidity</option>
-                        <option value="si7021">si7021 - temperature / humidity</option>
-                        <option value="scd30">scd30 - C02 / temperature / humidity</option>
-                        <option value="bme680">bme680 - gap / temperature / humidity</option>
-                        <option value="sunrise">sunrise - CO2 / temperature</option>
                       </select>
                     </div>
                   </div>
@@ -243,11 +227,6 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
-                        <option>disabled</option>
-                        <option value="dht11">dht11 - temperature / humidity (digital)</option>
-                        <option value="dht22">dht22 - temperature / humidity (digital)</option>
-                        <option value="ds18x20" selected>ds18x20 - temperature (OneWire)</option>
-                        <option value="analog">generic analog</option>
                       </select>
                     </div>
                   </div>
@@ -282,14 +261,6 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-i2c">
-                        <option>disabled</option>
-                        <option value="tsl2561">tsl2561 - luminosity</option>
-                        <option value="sht20" selected>sht20 - temperature / humidity</option>
-                        <option value="sht40">sht40 - temperature / humidity</option>
-                        <option value="si7021">si7021 - temperature / humidity</option>
-                        <option value="scd30">scd30 - C02 / temperature / humidity</option>
-                        <option value="bme680">bme680 - gap / temperature / humidity</option>
-                        <option value="sunrise">sunrise - CO2 / temperature</option>
                       </select>
                     </div>
                   </div>
@@ -301,11 +272,6 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
-                        <option>disabled</option>
-                        <option value="dht11">dht11 - temperature / humidity (digital)</option>
-                        <option value="dht22">dht22 - temperature / humidity (digital)</option>
-                        <option value="ds18x20">ds18x20 - temperature (OneWire)</option>
-                        <option value="analog" selected>generic analog</option>
                       </select>
                     </div>
                   </div>
@@ -335,11 +301,6 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
-                        <option>disabled</option>
-                        <option value="dht11">dht11 - temperature / humidity (digital)</option>
-                        <option value="dht22">dht22 - temperature / humidity (digital)</option>
-                        <option value="ds18x20">ds18x20 - temperature (OneWire)</option>
-                        <option value="analog">generic analog</option>
                       </select>
                     </div>
                   </div>
@@ -368,11 +329,6 @@
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
-                        <option>disabled</option>
-                        <option value="dht11">dht11 - temperature / humidity (digital)</option>
-                        <option value="dht22">dht22 - temperature / humidity (digital)</option>
-                        <option value="ds18x20">ds18x20 - temperature (OneWire)</option>
-                        <option value="analog">generic analog</option>
                       </select>
                     </div>
                   </div>
@@ -544,7 +500,42 @@
         "ins_esp_gen_s1" : "esp32s2-bg600-i2c-analog-options"
       }
 
+      var i2cOptions = {
+        "disabled": "" ,
+        "tsl2561 - luminosity": "tsl2561",
+        "sht20 - temperature / humidity": "sht20",
+        "sht40 - temperature / humidity": "sht40",
+        "si7021 - temperature / humidity": "si7021",
+        "scd30 - C02 / temperature / humidity": "scd30",
+        "bme680 - gap / temperature / humidity": "bme680",
+        "sunrise - CO2 / temperature": "sunrise"
+      }
+
+      var adcOptions = {
+        "disabled": "",
+        "dht11 - temperature / humidity (digital)": "dht11",
+        "dht22 - temperature / humidity (digital)": "dht22",
+        "ds18x20 - temperature (OneWire)": "ds18x20",
+        "generic analog": "analog"
+      }
+
+      function populateSelect(selectElemId, dict) {
+        var elem = document.getElementById(selectElemId)
+        if(!elem) return
+        for key in dict.keys():
+          addElemChild(elem, key, dict[key])
+      }
+
+
     function initializeValues() {
+      populateSelect("input-ins-esp-i2c-1", i2cOptions)
+      populateSelect("input-ins-esp-i2c-2", i2cOptions)
+      populateSelect("input-ins-esp-s1-i2c", i2cOptions)
+      populateSelect("input-ins-esp-s1-sensor-a-d-p3", adcOptions)
+      populateSelect("input-ins-esp-s1-sensor-a-d-p2", adcOptions)
+      populateSelect("input-ins-esp-s1-sensor-a-d-p1", adcOptions)
+      populateSelect("input-ins-esp-sensor-a-d-p1", adcOptions)
+
       var gps = Boolean({{ meas_gps_enabled }})
 
       setElemValueBool('input-led-enabled', {{ meas_led_enabled }}, true)
