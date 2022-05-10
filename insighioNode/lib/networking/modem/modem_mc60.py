@@ -69,6 +69,6 @@ class ModemMC60(modem_base.Modem):
                             return (self.gps_timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
                 utime.sleep_ms(1000)
         except KeyboardInterrupt:
-            pass
+            logging.debug("modem_mc60: gps explicitly interupted")
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)

@@ -39,6 +39,7 @@ class TransferProtocolModemAT(TransferProtocol):
         if self.connected:
             return True
 
+        #TODO: use the keepalive setting
         self.connected = self.modem_instance.mqtt_connect(self.protocol_config.server_ip, self.protocol_config.server_port, self.protocol_config.thing_id, self.protocol_config.thing_token)
         return self.connected
 
@@ -86,7 +87,9 @@ class TransferProtocolMQTT(TransferProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         from protocols import mqtt_client
-        # add keep alive setting
+
+        if self.protocol_config.keepalive is None:
+             self.protocol_config.keepalive = 0
         self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
 
     def connect(self):

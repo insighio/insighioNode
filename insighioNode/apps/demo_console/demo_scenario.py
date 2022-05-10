@@ -61,7 +61,11 @@ def execute():
 
     while True:
         measurement_run_start_timestamp = utime.ticks_ms()
-        logging.info("Always on connection activated: " + str(isAlwaysOnScenario()))
+        always_on = isAlwaysOnScenario()
+        logging.info("Always on connection activated: " + str(always_on))
+        proto_cfg_instance = cfg.get_protocol_config()
+        proto_cfg_instance.keepalive = int(sleep_period/1000 * 2) if always_on else 0
+
         # get measurements
         logging.debug("Starting getting measurements...")
         measurements = demo_utils.get_measurements(cfg)

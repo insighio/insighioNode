@@ -270,7 +270,6 @@ class Modem:
     # to be overriden by children
     def get_gps_position(self, timeoutms=300000, satellite_number_threshold=5):
         logging.debug("base modem.get_gps_position is empty")
-        pass
 
     def send_at_cmd(self, command, timeoutms=30000, success_condition="OK"):
         status = None
