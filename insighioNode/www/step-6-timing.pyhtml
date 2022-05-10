@@ -2,6 +2,27 @@
 
 <html>
 
+{{ py }}
+def addSwitch(switchId, switchLabel, onClickOpt=""):
+    return '''
+    <div class="col-6 col-sm-12">
+      <label class="form-label">
+    ''' + switchLabel + '''
+    </label>
+    </div>
+    <div class="col-6 col-sm-12">
+      <div class="form-group">
+        <label class="form-switch">
+          <input type="checkbox" id="''' + switchId + '''" ''' + onClickOpt + '''/>
+          <i class="form-icon"></i>
+        </label>
+      </div>
+    </div>
+    <br />
+    <br />
+    '''
+{{ end }}
+
     <head>
         <meta charset="UTF-8" />
         <title>insigh.io Device</title>
@@ -54,11 +75,19 @@
                     <br />
                     <br />
                     <div class="columns flex-centered">
-                      <div class="col-4 col-sm-12">
-                        <label class="form-label" for="input-example-cellular">Sleep Period (seconds)</label>
+                      <div class="col-6 col-sm-12">
+                        <label class="form-label" for="input-example-cellular">Sleep Period (s)</label>
                       </div>
-                      <div class="col-8 col-sm-12">
+                      <div class="col-6 col-sm-12">
                         <input class="form-input constr-field" type="number" id="input-period" />
+                      </div>
+                      {{ addSwitch("input-ins-always-on", "Always-On Connection (main current plugged)") }}
+                      {{ addSwitch("input-ins-force-always-on", "Force Always-On (ignore power mode)") }}
+                      <div class="col-6 col-sm-12">
+                        <label class="form-label" for="input-example-cellular">Always-on measurement period (s)</label>
+                      </div>
+                      <div class="col-6 col-sm-12">
+                        <input class="form-input constr-field" type="number" id="input-always-on-period" />
                       </div>
                     </div>
                   </div>
@@ -81,25 +110,14 @@
                       <div class="col-3 col-sm-12">
                         <input type="time" id="input-scheduled-time-b" name="appt"  value="21:30">
                       </div>
-                      <div class="column col-4 col-mr-auto"></div>
+                      <div class="column col-6 col-mr-auto"></div>
                     </div>
                   </div>
                   <div>
                     <br />
                     <hr/>
                     <div class="columns flex-centered">
-                      <div class="col-4 col-sm-12">
-                        <label class="form-label" for="measurements">Batch Upload</label>
-                      </div>
-                      <br />
-                      <div class="col-8 col-sm-12">
-                        <div class="form-group">
-                          <label class="form-switch">
-                            <input type="checkbox" id="input-ins-batch-upload-enable" onclick="checkboxStatusChanged('ins-batch-upload')"/>
-                            <i class="form-icon"></i>
-                          </label>
-                        </div>
-                      </div>
+                      {{ addSwitch("input-ins-batch-upload-enable", "Batch Upload", 'onclick="checkboxStatusChanged(\'ins-batch-upload\')"') }}
                       <div id="address-ins-batch-upload" class="col-12" style="display:block">
                         <br />
                         <div class="form-group">
@@ -163,6 +181,10 @@
             setElemValue('input-message-buffer-size', batchBufferSize, 1)
             document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
 
+            setElemValueBool('input-ins-always-on', {{ always_on_connection }}, false)
+            setElemValueBool('input-ins-force-always-on', {{ force_always_on_connection }}, false)
+            setElemValue('input-always-on-period', {{ always_on_period }}, 60)
+
             checkboxStatusChanged('ins-batch-upload')
             showElement('loader', false)
           }
@@ -172,6 +194,9 @@
             Cookies.remove('batch-upload-buffer-size')
             Cookies.remove('scheduled-time-a')
             Cookies.remove('scheduled-time-b')
+            Cookies.remove('always-on-connection')
+            Cookies.remove('force-always-on-connection')
+            Cookies.remove('always-on-period')
           }
 
           function stringTimeToSeconds(timeStr){
@@ -189,6 +214,9 @@
 
             if(elementIsVisible("periodic")){
               Cookies.set('period', document.getElementById('input-period').value)
+              Cookies.set('always-on-period', document.getElementById('input-always-on-period').value)
+              Cookies.set('always-on-connection', boolElemToPyStr('input-ins-always-on'))
+              Cookies.set('force-always-on-connection', boolElemToPyStr('input-ins-force-always-on'))
               Cookies.set('scheduled-time-a', "None")
               Cookies.set('scheduled-time-b', "None")
             }

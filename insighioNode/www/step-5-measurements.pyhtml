@@ -11,7 +11,7 @@
 </head>
 
 {{ py }}
-def addSwitch(switchId, switchLabel):
+def addSwitch(switchId, switchLabel, onClickOpt=""):
     return '''
     <div class="col-4 col-sm-12">
       <label class="form-label">
@@ -21,7 +21,7 @@ def addSwitch(switchId, switchLabel):
     <div class="col-8 col-sm-12">
       <div class="form-group">
         <label class="form-switch">
-          <input type="checkbox" id="''' + switchId + '''" />
+          <input type="checkbox" id="''' + switchId + '''" ''' + onClickOpt + '''/>
           <i class="form-icon"></i>
         </label>
       </div>
@@ -107,17 +107,7 @@ def generateOptions(optionsDict):
               <div class="column col-5 col-mr-auto"></div>
               <br />
               <br />
-              <div class="col-4 col-sm-12">
-                <label class="form-label" for="measurements">GPS</label>
-              </div>
-              <div class="col-8 col-sm-12">
-                <div class="form-group">
-                  <label class="form-switch">
-                    <input type="checkbox" id="input-gps-enable" onclick="checkboxStatusChanged('gps')" />
-                    <i class="form-icon"></i>
-                  </label>
-                </div>
-              </div>
+              {{ addSwitch("input-gps-enable", "GPS", 'onclick="checkboxStatusChanged(\'gps\')"') }}
               <div id="address-gps" class="col-12">
                 <br />
                 <div id="address-gps-timeout" class="col-12" style="display:block">

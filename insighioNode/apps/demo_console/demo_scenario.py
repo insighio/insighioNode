@@ -172,9 +172,10 @@ def execute():
                     logging.exception(e, "Exception during disconenction:")
                 break
         cnt += 1
-        logging.info("light sleeping for: " + str(sleep_period/1000) + "s")
+
+        logging.info("light sleeping for: " + str(demo_utils.get_config("_ALWAYS_ON_PERIOD")) + "s")
         gc.collect()
-        utime.sleep_ms(sleep_period)
+        utime.sleep_ms(demo_utils.get_config("_ALWAYS_ON_PERIOD") * 1000)
 
     demo_utils.device_deinit()
 
