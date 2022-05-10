@@ -166,15 +166,15 @@ class ModemBG600(modem_base.Modem):
         return False
 
     def mqtt_is_connected(self):
-         (mqtt_ready, lines) = self.send_at_cmd('AT+QMTOPEN?', 15000, r"\+QMTOPEN:\s+0")
-         (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN?', 15000, r"\+QMTCONN:\s+0")
+         (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN?', 15000, r"\+QMTOPEN:\s+0.*")
+         (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN?', 15000, r"\+QMTCONN:\s+0.*")
          return mqtt_ready and mqtt_connected
 
     def mqtt_publish(self, topic, message, num_of_retries=3, retain=False):
         for i in range(0, num_of_retries):
             (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,{},"{}"'.format("1" if retain else "0", topic), 15000, '>.*')
             if mqtt_send_ready:
-                (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a', 15000, r"\+QMTPUB:\s*\d+,\d+,[01]")
+                (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a', 30000, r"\+QMTPUB:\s*\d+,\d+,[01]")
                 return mqtt_send_ok
                 logging.error("Mqtt not ready to send")
             utime.sleep_ms(500)

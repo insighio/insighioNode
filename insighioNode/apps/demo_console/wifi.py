@@ -8,6 +8,8 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 transfer_client = None
 
+def init(cfg):
+    pass
 
 def connect(cfg):
     (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True)

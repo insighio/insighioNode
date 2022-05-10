@@ -83,13 +83,7 @@ def execute():
         if execute_connetion_procedure:
             from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
-            try:
-                if demo_utils.get_config("_MEAS_GPS_ENABLE"):
-                    from . import cellular as network_gps
-                    network_gps.get_gps_position(cfg, measurements)  # may be it needs relocation
-            except Exception as e:
-                logging.exception(e, "GPS Exception:")
-
+            logging.debug("loading network modules...")
             # connect to network
             if cfg.network == "lora":
                 from . import lora as network
@@ -97,6 +91,16 @@ def execute():
                 from . import wifi as network
             elif cfg.network == "cellular":
                 from . import cellular as network
+
+            network.init(cfg)
+            logging.debug("Network modules loaded")
+
+            try:
+                if demo_utils.get_config("_MEAS_GPS_ENABLE"):
+                    from . import cellular as network_gps
+                    network_gps.get_gps_position(cfg, measurements)  # may be it needs relocation
+            except Exception as e:
+                logging.exception(e, "GPS Exception:")
 
             try:
                 device_info.set_led_color('red')

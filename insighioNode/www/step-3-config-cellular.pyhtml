@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 
+{{ py }}
+import device_info
+{{ end }}
+
 <html>
 
     <head>
