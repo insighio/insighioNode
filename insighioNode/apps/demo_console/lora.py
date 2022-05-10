@@ -6,6 +6,8 @@ from . import lora_custom_encoding
 from networking import lora
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
+def init(cfg):
+    pass
 
 def connect(cfg):
     # network connectivity & transmission
@@ -20,6 +22,8 @@ def connect(cfg):
 
     return results
 
+def is_connected():
+    return True
 
 def disconnect():
     pass

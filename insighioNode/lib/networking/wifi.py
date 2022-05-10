@@ -89,6 +89,11 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
 
     return (connection_status, conn_attempt_duration, scan_attempt_duration, channel, rssi)
 
+def is_connected():
+    if not device_info.is_esp32():
+        return False
+
+    return network.WLAN(network.STA_IF).isconnected()
 
 def deactivate():
     """ Actions implemented when turning off wifi, before deep sleep """
@@ -97,9 +102,12 @@ def deactivate():
     start_time_deactivation = utime.ticks_ms()
 
     if device_info.is_esp32():
-        wl = network.WLAN(network.STA_IF)
-        wl.disconnect()
-        wl.active(False)
+        try:
+            wl = network.WLAN(network.STA_IF)
+            wl.disconnect()
+            wl.active(False)
+        except:
+            logging.debug('WiFi disconnecting ignored.')
     else:
         from network import WLAN
         try:

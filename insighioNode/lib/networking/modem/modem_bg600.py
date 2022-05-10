@@ -131,7 +131,7 @@ class ModemBG600(modem_base.Modem):
                             return (self.gps_timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
                 utime.sleep_ms(1000)
         except KeyboardInterrupt:
-            pass
+            logging.debug("modem_bg600: gps explicitly interupted")
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)
 
@@ -165,11 +165,16 @@ class ModemBG600(modem_base.Modem):
             logging.error("Mqtt not ready")
         return False
 
+    def mqtt_is_connected(self):
+         (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN?', 15000, r"\+QMTOPEN:\s+0.*")
+         (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN?', 15000, r"\+QMTCONN:\s+0.*")
+         return mqtt_ready and mqtt_connected
+
     def mqtt_publish(self, topic, message, num_of_retries=3, retain=False):
         for i in range(0, num_of_retries):
             (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,{},"{}"'.format("1" if retain else "0", topic), 15000, '>.*')
             if mqtt_send_ready:
-                (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a', 15000, r"\+QMTPUB:\s*\d+,\d+,[01]")
+                (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a', 30000, r"\+QMTPUB:\s*\d+,\d+,[01]")
                 return mqtt_send_ok
                 logging.error("Mqtt not ready to send")
             utime.sleep_ms(500)

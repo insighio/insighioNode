@@ -11,7 +11,6 @@ from . import demo_utils
 transfer_client = None
 mqtt_connected = False
 
-
 def add_value_if_valid(results, key, value, unit=None):
     if value is None:
         return
@@ -20,6 +19,9 @@ def add_value_if_valid(results, key, value, unit=None):
     else:
         results[key] = {"value": value}
 
+def init(cfg):
+    if device_info.is_esp32():
+        cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
 # network connection
 def connect(cfg):
@@ -27,9 +29,6 @@ def connect(cfg):
     protocol_config = cfg.get_protocol_config()
     enableDataState = (demo_utils.get_config("_IP_VERSION") == "IP")
     results = {}
-
-    if device_info.is_esp32():
-        cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
     modem_instance = cellular.get_modem_instance()
 
@@ -63,14 +62,23 @@ def connect(cfg):
 
             # AT command based implementation of communication of Quectel BG600L
             modem_model = modem_instance.get_model()
-            if modem_model and 'bg600l-m3' in modem_model:
-                transfer_client = transfer_protocol.TransferProtocol(cfg, modem_instance)
+            if modem_model and 'bg600' in modem_model:
+                transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
+            elif cfg.protocol == 'coap':
+                transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
+            elif cfg.protocol == 'mqtt':
+                transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
             else:
-                transfer_client = transfer_protocol.TransferProtocol(cfg)
+                transfer_client = None
 
             transfer_client.connect()
 
     return results
+
+
+def is_connected():
+    modem_instance = cellular.get_modem_instance()
+    return modem_instance and transfer_client and modem_instance.is_connected() and transfer_client.is_connected()
 
 
 def coord_to_double(part1, part2, part3):
@@ -83,9 +91,6 @@ def coord_to_double(part1, part2, part3):
 
 
 def get_gps_position(cfg, measurements):
-    if device_info.is_esp32():
-        cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
-
     modem_instance = cellular.get_modem_instance()
     if modem_instance is not None:
         for i in range(0, 3):

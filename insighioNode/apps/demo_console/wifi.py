@@ -8,6 +8,8 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 transfer_client = None
 
+def init(cfg):
+    pass
 
 def connect(cfg):
     (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True)
@@ -47,10 +49,19 @@ def connect(cfg):
     if connOk:
         from . import transfer_protocol
         global transfer_client
-        transfer_client = transfer_protocol.TransferProtocol(cfg)
+        if cfg.protocol == 'coap':
+            transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
+        elif cfg.protocol == 'mqtt':
+            transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
+        else:
+            transfer_client = None
         transfer_client.connect()
 
     return results
+
+
+def is_connected():
+    return wifi and transfer_client and transfer_client.is_connected() and wifi.is_connected()
 
 
 def disconnect():

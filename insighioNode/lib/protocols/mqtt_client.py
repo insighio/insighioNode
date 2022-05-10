@@ -10,7 +10,7 @@ import _thread
 class MQTTClientCustom:
     def __init__(self, mqtt_config):
         self.client = uMQTTClient(mqtt_config.client_name, mqtt_config.server_ip, mqtt_config.server_port,
-                                  mqtt_config.thing_id, mqtt_config.thing_token)
+                                  mqtt_config.thing_id, mqtt_config.thing_token, mqtt_config.keepalive)
         self.config = mqtt_config
         self.prepareChannelNames(mqtt_config)
         self.lastReceivedMessage = None
@@ -73,6 +73,14 @@ class MQTTClientCustom:
             return True
         except Exception as e:
             logging.exception(e, 'Exception during MQTT connect with:')
+            return False
+
+    def is_connected(self):
+        logging.debug("Sending MQTT ping")
+        try:
+            self.client.ping()
+            return True
+        except:
             return False
 
     def sendMessage(self, message, topic=None, retained=False):
