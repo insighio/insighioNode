@@ -7,6 +7,7 @@ from . import demo_config as cfg
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from apps.demo_console.dictionary_utils import set_value, set_value_int, set_value_float
+import ubinascii
 
 
 def get_config(key):
@@ -57,9 +58,10 @@ def bq_charger_set_charging_off(i2c, bq_addr):
 
 def bq_charger_is_on_external_power(i2c, bq_addr):
     val = i2c.readfrom_mem(bq_addr, 8, 1)
+    logging.debug("BQ charger state: {}".format(ubinascii.hexlify(val)))
     power_good = int.from_bytes(val, "big") & 0x4
     is_charging = True  # val & 0x30
-    return power_good and is_charging
+    return is_charging and power_good
 
 def device_deinit():
     if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
