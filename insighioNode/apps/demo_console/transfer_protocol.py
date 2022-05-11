@@ -8,6 +8,7 @@ class TransferProtocol:
         self.protocol_config = cfg.get_protocol_config()
         self.protocol_config.client_name = cfg.device_id
         self.protocol = cfg.protocol
+        self.modem_based = False
         logging.debug("initializing TransferProtocol for: " + str(self.protocol))
 
     def is_connected(self):
