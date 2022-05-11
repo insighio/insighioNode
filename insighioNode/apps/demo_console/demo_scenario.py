@@ -60,6 +60,7 @@ def execute():
     cnt = 0
 
     while True:
+        device_info.wdt_reset()
         measurement_run_start_timestamp = utime.ticks_ms()
         always_on = isAlwaysOnScenario()
         always_on_period = demo_utils.get_config("_ALWAYS_ON_PERIOD")
@@ -150,7 +151,7 @@ def execute():
                     # check for configuration pending for upload
                     configUploadFileContent = utils.readFromFile("/configLog")
                     if configUploadFileContent:
-                        logging.info("New configuration found, abou to upload it.")
+                        logging.info("New configuration found, about to upload it.")
                         network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
                         utils.deleteFile("/configLog")
 
@@ -176,9 +177,18 @@ def execute():
         if always_on and always_on_period:
             cnt += 1
 
-            logging.info("light sleeping for: " + str(always_on_period) + "s")
+            logging.info("light sleeping for: " + str(always_on_period) + " seconds")
             gc.collect()
-            utime.sleep_ms(always_on_period * 1000)
+
+            if not device_info.is_wdt_enabled() or device_info.wdt_timeout > always_on_period:
+                utime.sleep_ms(always_on_period * 1000)
+            else:
+                start_sleep_time = utime.ticks_ms()
+                end_sleep_time = start_sleep_time + always_on_period * 1000
+                while utime.ticks_ms() < end_sleep_time:
+                    device_info.wdt_reset()
+                    utime.sleep_ms(1000)
+
         else:
             break
 

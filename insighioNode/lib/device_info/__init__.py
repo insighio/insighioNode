@@ -8,6 +8,8 @@ import logging
 import utime
 
 wdt = None
+wdt_timeout = None
+
 _led_enabled = True
 _led_pin_vdd = 37
 _led_pin_din = 36
@@ -24,6 +26,9 @@ color_map['black'] = 0x000000
 def is_esp32():
     return sys.platform == 'esp32' or 'esp8266'
 
+
+def is_wdt_enabled():
+    return wdt is not None
 
 def get_hw_module_verison():
     hw_info = str(os.uname())
@@ -120,6 +125,7 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
     """ Sets basic configuration of board """
     # disable/enable heartbeat
     global wdt
+    global wdt_timeout
     wdt = None
     if is_esp32():
         import network
@@ -138,6 +144,7 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
 
         if(wdt_on_boot):
             wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
+            wdt_timeout = wdt_on_boot_timeout_sec
     else:
         try:
             import pycom
@@ -150,6 +157,7 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
             pycom.pybytes_on_boot(False)
             if(wdt_on_boot):
                 wdt = machine.WDT(wdt_on_boot_timeout_sec * 1000)
+                wdt_timeout = wdt_on_boot_timeout_sec
         except Exception as e:
             pass
 
