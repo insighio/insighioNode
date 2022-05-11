@@ -39,7 +39,7 @@ def bq_charger_exec(bq_func):
         i2c = SoftI2C(scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
         status = bq_func(i2c, 107)
     except Exception as e:
-        logging.exception(e, "Error initializing BQ charger")
+        logging.error("No BQ charger detected")
     try:
         p_snsr.off()
     except Exception as e:
