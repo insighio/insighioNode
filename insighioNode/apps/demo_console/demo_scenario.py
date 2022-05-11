@@ -62,9 +62,11 @@ def execute():
     while True:
         measurement_run_start_timestamp = utime.ticks_ms()
         always_on = isAlwaysOnScenario()
+        always_on_period = demo_utils.get_config("_ALWAYS_ON_PERIOD")
         logging.info("Always on connection activated: " + str(always_on))
-        proto_cfg_instance = cfg.get_protocol_config()
-        proto_cfg_instance.keepalive = int(sleep_period/1000 * 2) if always_on else 0
+        if always_on_period:
+            proto_cfg_instance = cfg.get_protocol_config()
+            proto_cfg_instance.keepalive = int(always_on_period * 1.5) if always_on else 0
 
         # get measurements
         logging.debug("Starting getting measurements...")
@@ -174,9 +176,9 @@ def execute():
                 break
         cnt += 1
 
-        logging.info("light sleeping for: " + str(demo_utils.get_config("_ALWAYS_ON_PERIOD")) + "s")
+        logging.info("light sleeping for: " + str(always_on_period) + "s")
         gc.collect()
-        utime.sleep_ms(demo_utils.get_config("_ALWAYS_ON_PERIOD") * 1000)
+        utime.sleep_ms(always_on_period * 1000)
 
     demo_utils.device_deinit()
 
@@ -197,7 +199,7 @@ def execute():
         if remaining_milliseconds < 0:
             remaining_milliseconds = 1000  # dummy wait 1 sec before waking up again
         sleep_period = remaining_milliseconds % 86400000  # if sleep period is longer than a day, keep the 24h period as max
-        logging.info("will sleep for {} hours and {} minutes".format(floor((sleep_period/1000)/3600), floor(((sleep_period/1000) % 3600)/60)))
+        logging.info("will sleep for {} hours, {} minutes, {} seconds".format(floor((sleep_period/1000)/3600), floor(((sleep_period/1000) % 3600)/60), floor(((sleep_period/1000) % 60))))
         machine.deepsleep(sleep_period)
     elif(demo_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND") is not None and demo_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND") is not None):
         ### RTC tuple format
