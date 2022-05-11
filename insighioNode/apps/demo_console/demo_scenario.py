@@ -167,18 +167,20 @@ def execute():
 
             device_info.set_led_color('black')
 
-            if not isAlwaysOnScenario():
+            if not always_on:
                 try:
-                    # disconnect
                     network.disconnect()
                 except Exception as e:
                     logging.exception(e, "Exception during disconenction:")
                 break
-        cnt += 1
+        if always_on and always_on_period:
+            cnt += 1
 
-        logging.info("light sleeping for: " + str(always_on_period) + "s")
-        gc.collect()
-        utime.sleep_ms(always_on_period * 1000)
+            logging.info("light sleeping for: " + str(always_on_period) + "s")
+            gc.collect()
+            utime.sleep_ms(always_on_period * 1000)
+        else:
+            break
 
     demo_utils.device_deinit()
 
