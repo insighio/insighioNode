@@ -16,6 +16,13 @@ jobs:
       - name: Build project # This would actually build your project, using zip for an example artifact
         run: |
           zip --junk-paths my-artifact README.md
+      - uses: actions/checkout@master
+        with:
+          repository: ElegantNetworking/ElegantNetworkingRoot
+          path: ./ElegantNetworkingRoot
+          submodules: 'true'
+          token: ${{ secrets.PAT_TOKEN }}
+        
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
