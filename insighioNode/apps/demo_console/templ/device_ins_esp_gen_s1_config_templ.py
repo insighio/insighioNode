@@ -29,18 +29,3 @@ _UC_IO_RADIO_ON = 13
 _UC_IO_PWRKEY = 14
 _UC_UART_MODEM_TX = 15
 _UC_UART_MODEM_RX = 16
-
-''' measurements that are controlled by boolean values '''
-_MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>
-_MEAS_BOARD_SENSE_ENABLE = <meas-board-sense>
-_MEAS_BOARD_STAT_ENABLE = <meas-board-stat>
-_MEAS_NETWORK_STAT_ENABLE = <meas-network-stat>
-_MEAS_TEMP_UNIT_IS_CELSIUS = <meas-temp-unit>
-
-_MEAS_GPS_ENABLE = <meas-gps-enabled>
-_MEAS_GPS_TIMEOUT = <meas-gps-timeout>
-_MEAS_GPS_SATELLITE_FIX_NUM = <meas-gps-sat-num>
-
-_CHECK_FOR_OTA = <system-enable-ota>
-
-_NOTIFICATION_LED_ENABLED = <meas-led-enabled>

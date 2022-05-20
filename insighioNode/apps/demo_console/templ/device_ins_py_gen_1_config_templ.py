@@ -35,12 +35,3 @@ _UC_IO_ANALOG_DIGITAL_P1 = 'P20'
 _UC_IO_ANALOG_DIGITAL_P2 = 'P19'
 _UC_IO_ANALOG_P1 = 'P18'
 _UC_IO_ANALOG_P2 = 'P17'
-
-''' measurements that are controlled by boolean values '''
-_MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>
-_MEAS_BOARD_SENSE_ENABLE = <meas-board-sense>
-_MEAS_BOARD_STAT_ENABLE = <meas-board-stat>
-_MEAS_NETWORK_STAT_ENABLE = <meas-network-stat>
-_MEAS_TEMP_UNIT_IS_CELSIUS = <meas-temp-unit>
-
-_CHECK_FOR_OTA = <system-enable-ota>
