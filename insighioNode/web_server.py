@@ -89,7 +89,10 @@ class WebServer:
 
         # Starts the server as easily as possible in managed mode
         # 1 parallel process, 32K stack size
-        self.mws2.StartManaged(1, 32*1024)
+        #if device_info.get_hw_module_verison() == "esp32s3":
+        self.mws2.StartManaged(2, 32*1024)
+        # else:
+        #     self.mws2.StartManaged(1, 32*1024)
 
         logging.info("Web UI started")
 
@@ -107,6 +110,7 @@ class WebServer:
             end_time_when_connected = start_time + 600000
             is_connected  = False
             now = 0
+            cnt = 0
             while True:
                 is_connected = self.wlan.isconnected()
                 now = utime.ticks_ms()
@@ -127,8 +131,10 @@ class WebServer:
                     utime.sleep_ms(100)
                     device_info.set_led_color('black')
 
-                device_info.wdt_reset()
-                utime.sleep_ms(1000)
+                if cnt % 10 == 0:
+                    device_info.wdt_reset()
+                cnt += 1
+                utime.sleep_ms(500)
         except KeyboardInterrupt:
             pass
 
