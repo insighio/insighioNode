@@ -105,16 +105,29 @@ class WebServer:
             # 5 minutes timeout if timeoutMs is > -1 and someone has connected to the wifi
             # self.wlan.isconnected() is confirmed to be NOT supported by firmware 1.18
             end_time_when_connected = start_time + 600000
-            while self.mws2.IsRunning and (timeoutMs == -1 or (timeoutMs > 0
-              and (not self.wlan.isconnected() and utime.ticks_ms() < end_time)
-              or (self.wlan.isconnected() and utime.ticks_ms() < end_time_when_connected))):
+            is_connected  = False
+            now = 0
+            while True:
+                is_connected = self.wlan.isconnected()
+                now = utime.ticks_ms()
+                if (self.mws2.IsRunning
+                    and (
+                        timeoutMs <= 0
+                        or (
+                            (not is_connected and now < end_time)
+                            or (is_connected and now < end_time_when_connected)
+                           )
+                        )
+                   ):
+                   pass
+                else:
+                    break
                 device_info.set_led_color(purple)
-                if not self.wlan.isconnected():
+                if not is_connected:
                     utime.sleep_ms(100)
                     device_info.set_led_color('black')
 
                 device_info.wdt_reset()
-                logging.debug("is connected: {}, start time: {}, end time: {}, end connected time: {}".format(self.wlan.isconnected(), start_time, end_time, end_time_when_connected ))
                 utime.sleep_ms(1000)
         except KeyboardInterrupt:
             pass
