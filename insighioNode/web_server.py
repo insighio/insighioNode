@@ -87,8 +87,9 @@ class WebServer:
         self.mws2.SetEmbeddedConfig()
         self.mws2.BindAddress = ('192.168.4.1', 80)
 
-        # Starts the server as easily as possible in managed mode,
-        self.mws2.StartManaged(0, 32*1024)
+        # Starts the server as easily as possible in managed mode
+        # 1 parallel process, 32K stack size
+        self.mws2.StartManaged(1, 32*1024)
 
         logging.info("Web UI started")
 
@@ -113,6 +114,7 @@ class WebServer:
                     device_info.set_led_color('black')
 
                 device_info.wdt_reset()
+                logging.debug("is connected: {}, start time: {}, end time: {}, end connected time: {}".format(self.wlan.isconnected(), start_time, end_time, end_time_when_connected ))
                 utime.sleep_ms(1000)
         except KeyboardInterrupt:
             pass
