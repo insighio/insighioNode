@@ -44,7 +44,7 @@ if (rstCause == 0 or rstCause == 1 or not demo_config_exists) and device_info.ge
     print(".", end='')
     server = WebServer()
     print(".", end='')
-    server.start(60000)
+    server.start(60000 if demo_config_exists else -1)
     del server
     del sys.modules["web_server"]
     import gc
