@@ -29,6 +29,8 @@ def device_init():
             device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED, cfg._UC_RGB_VDD, cfg._UC_IO_RGB_DIN)
         else:
             device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED)
+    else:
+        device_info.set_led_enabled(False)
 
 def bq_charger_exec(bq_func):
     from machine import SoftI2C, Pin
