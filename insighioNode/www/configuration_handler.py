@@ -25,7 +25,10 @@ def apply_configuration(keyValuePairDictionary):
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_scale.py')
         elif board == "ins_esp_gen_s1":
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s1_config_templ.py')
+            if device_info.get_hw_module_verison() == "esp32s3":
+                contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s2_s3_config_templ.py')
+            else:
+                contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s1_config_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_i2c_dig_analog_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
         elif board == "ins_esp_gen_sdi12":

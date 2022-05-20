@@ -2,6 +2,7 @@ _CONST_BOARD_TYPE_DEFAULT = "default"
 _CONST_BOARD_TYPE_SDI_12 = "sdi12"
 _CONST_BOARD_TYPE_ESP_GEN_1 = "ins_esp_gen_1"
 _CONST_BOARD_TYPE_ESP_GEN_SHIELD_1 = "ins_esp_gen_s1"
+_CONST_BOARD_TYPE_ESP_GEN_SHIELD_2_S3 = "ins_esp_gen_s2_s3"
 _CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12 = "ins_esp_gen_sdi12"
 
 _CONST_SENSOR_SI7021 = 'si7021'
@@ -37,3 +38,6 @@ _MEAS_GPS_SATELLITE_FIX_NUM = <meas-gps-sat-num>
 _CHECK_FOR_OTA = <system-enable-ota>
 
 _NOTIFICATION_LED_ENABLED = <meas-led-enabled>
+
+""" System configuration options """
+_WD_PERIOD = 120 # watchdog time for rebooting in seconds

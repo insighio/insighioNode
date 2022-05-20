@@ -1,8 +1,5 @@
 import machine
 
-""" System configuration options """
-_WD_PERIOD = 120 # watchdog time for rebooting in seconds
-
 """ Measurement configuration options """
 _UC_IO_BAT_MEAS_ON = 27
 _UC_IO_BAT_READ = 36

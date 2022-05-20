@@ -30,11 +30,14 @@ def is_esp32():
 def is_wdt_enabled():
     return wdt is not None
 
+
 def get_hw_module_verison():
     hw_info = str(os.uname())
     hw_info = hw_info.lower()
     if "esp32s2" in hw_info or "esp32-s2" in hw_info:
         return "esp32s2"
+    elif "esp32s3" in hw_info or "esp32-s3" in hw_info:
+        return "esp32s3"
     elif "esp32" in hw_info:
         return "esp32"
     elif "esp8266" in hw_info:
