@@ -13,6 +13,8 @@ wdt_timeout = None
 _led_enabled = True
 _led_pin_vdd = 37
 _led_pin_din = 36
+_led_pin_pwr = None
+_led_neopixel = None
 
 color_map = {}
 color_map['blue'] = 0x0000F0
@@ -187,16 +189,32 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
 
 
 def set_led_enabled(led_enabled, led_pin_vdd=37, led_pin_din=36):
-    global _led_enabled
-    global _led_pin_vdd
-    global _led_pin_din
-    _led_enabled = led_enabled
-    _led_pin_vdd = led_pin_vdd
-    _led_pin_din = led_pin_din
+    global _led_pin_pwr
+    global _led_neopixel
+
+    try:
+        _led_pin_pwr = machine.Pin(led_pin_vdd, machine.Pin.OUT)
+
+        if not led_enabled:
+            _led_pin_pwr.off()
+            return
+    except Exception as e:
+        pass
+
+    if not led_enabled:
+        _led_neopixel = None
+    else:
+        try:
+            from neopixel import NeoPixel
+            pin_din = machine.Pin(led_pin_din, machine.Pin.OUT)
+            _led_neopixel = NeoPixel(pin_din, 1)
+        except Exception as e:
+            _led_neopixel = None
+            pass
 
 
 def set_led_color(color):
-    if not _led_enabled:
+    if not _led_neopixel:
         return
 
     """ Sets led color """
@@ -218,25 +236,18 @@ def set_led_color(color):
         # try controlling led's power (for ESP32S2), if called to simple ESP32, it will through exception
         # thus it will ignore call.
         try:
-            pin_pwr = machine.Pin(_led_pin_vdd, machine.Pin.OUT)
-
             if color == 0:
-                pin_pwr.off()
+                _led_pin_pwr.off()
                 return
-
-            pin_pwr.on()
+            _led_pin_pwr.on()
         except Exception as e:
             pass
 
         # try setting led's data (for ESP32S2), if called to simple ESP32, it will through exception
         # thus it will ignore call.
         try:
-            from neopixel import NeoPixel
-            pin_din = machine.Pin(_led_pin_din, machine.Pin.OUT)
-            np = NeoPixel(pin_din, 1)
-
-            np[0] = ((color_hex & 0xFF0000) >> 16, (color_hex & 0x00FF00) >> 8, (color_hex & 0x0000FF))
-            np.write()
+            _led_neopixel[0] = ((color_hex & 0xFF0000) >> 16, (color_hex & 0x00FF00) >> 8, (color_hex & 0x0000FF))
+            _led_neopixel.write()
         except Exception as e:
             pass
 
