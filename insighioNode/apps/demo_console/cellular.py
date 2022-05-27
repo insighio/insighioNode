@@ -90,14 +90,15 @@ def coord_to_double(part1, part2, part3):
         return None
 
 
-def get_gps_position(cfg, measurements):
+def get_gps_position(cfg, measurements, keep_open=False):
     modem_instance = cellular.get_modem_instance()
     if modem_instance is not None:
-        for i in range(0, 3):
-            if modem_instance.set_gps_state(True):
-                break
-            modem_instance.set_gps_state(False)
-            utime.sleep_ms(500)
+        if not modem_instance.is_gps_on():
+            for i in range(0, 3):
+                if modem_instance.set_gps_state(True):
+                    break
+                modem_instance.set_gps_state(False)
+                utime.sleep_ms(500)
 
         if modem_instance.is_gps_on():
             start_time = utime.ticks_ms()
@@ -119,7 +120,8 @@ def get_gps_position(cfg, measurements):
                 add_value_if_valid(measurements, "gps_lon", lonD, SenmlUnits.SENML_UNIT_DEGREES_LONGITUDE)
                 add_value_if_valid(measurements, "gps_num_of_sat", num_of_sat)
                 add_value_if_valid(measurements, "gps_hdop", hdop)
-        modem_instance.set_gps_state(False)
+        if not keep_open:
+            modem_instance.set_gps_state(False)
 
 
 def create_message(device_id, measurements):

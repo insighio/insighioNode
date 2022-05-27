@@ -102,7 +102,7 @@ def execute():
                 if demo_utils.get_config("_MEAS_GPS_ENABLE"):
                     from . import cellular as network_gps
                     network_gps.init(cfg)
-                    network_gps.get_gps_position(cfg, measurements)  # may be it needs relocation
+                    network_gps.get_gps_position(cfg, measurements, always_on)  # may be it needs relocation
             except Exception as e:
                 logging.exception(e, "GPS Exception:")
 
