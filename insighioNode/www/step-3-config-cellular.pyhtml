@@ -93,11 +93,11 @@ import device_info
                     </div>
                     <div class="col-9 col-sm-12">
                       <label class="form-radio">
-                        <input type="radio" name="protocol" onclick="showIpVersion(false)"  value="mqtt" checked>
+                        <input type="radio" name="protocol" value="mqtt" checked>
                         <i class="form-icon"></i> MQTT
                       </label>
                       <label class="form-radio">
-                        <input type="radio" name="protocol" onclick="showIpVersion(true)" value="coap" checked>
+                        <input type="radio" name="protocol" value="coap" checked>
                         <i class="form-icon"></i> CoAP
                       </label>
                     </div>
@@ -112,7 +112,7 @@ import device_info
                         <i class="form-icon"></i> IPv4
                       </label>
                       <label class="form-radio">
-                        <input type="radio" name="ipversion" value="IPV6" id="ipv6Option" disabled>
+                        <input type="radio" name="ipversion" value="IPV6" id="ipv6Option">
                         <i class="form-icon"></i> IPv6
                       </label>
                     </div>
@@ -163,14 +163,6 @@ import device_info
             Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
             Cookies.remove('cell-tech')
-          }
-
-          function showIpVersion(status){
-            enableElement("ipv6Option", status)
-            if(!status) {
-                document.getElementById("ipv6Option").checked = false
-                document.getElementById("ipv4Option").checked = true
-            }
           }
 
           function storeData(){
