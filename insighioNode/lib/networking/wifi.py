@@ -89,6 +89,9 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
 
     return (connection_status, conn_attempt_duration, scan_attempt_duration, channel, rssi)
 
+def getSignalQuality():
+    pass
+
 def is_connected():
     if not device_info.is_esp32():
         return False

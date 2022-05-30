@@ -9,6 +9,11 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 def init(cfg):
     pass
 
+def updateSignalQuality(measurements):
+    if not cfg._MEAS_NETWORK_STAT_ENABLE:
+        return
+    pass
+
 def connect(cfg):
     # network connectivity & transmission
     logging.info("Joining network...")
