@@ -94,7 +94,7 @@ def get_gps_position(cfg, measurements, keep_open=False):
     modem_instance = cellular.get_modem_instance()
     if modem_instance is not None:
         if not modem_instance.is_gps_on():
-            for i in range(0, 3):
+            for i in range(0, 10):
                 if modem_instance.set_gps_state(True):
                     break
                 modem_instance.set_gps_state(False)
