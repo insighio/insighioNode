@@ -21,8 +21,8 @@ def timestamp_measurements(measurements):
     measurements["dt"] = {"value": utime.time() + offset}   # time offset 1970 -> 2000
 
 
-def store_measurement_if_needed(measurements):
-    if cfg._BATCH_UPLOAD_MESSAGE_BUFFER is None:
+def store_measurement_if_needed(measurements, force_store=False):
+    if cfg._BATCH_UPLOAD_MESSAGE_BUFFER is None and not force_store:
         logging.error("Batch upload not activated, ignoring")
         return False
 
@@ -30,7 +30,7 @@ def store_measurement_if_needed(measurements):
     number_of_measurements = utils.countFileLines(storage_file_name) + 1
     logging.info("Message " + str(number_of_measurements) + " of " + str(cfg._BATCH_UPLOAD_MESSAGE_BUFFER))
 
-    if number_of_measurements < cfg._BATCH_UPLOAD_MESSAGE_BUFFER:
+    if number_of_measurements < cfg._BATCH_UPLOAD_MESSAGE_BUFFER or force_store:
         data = json.dumps(measurements) + "\n"
         utils.appendToFile(storage_file_name, data)
         logging.debug("Measurement stored: " + str(measurements))
