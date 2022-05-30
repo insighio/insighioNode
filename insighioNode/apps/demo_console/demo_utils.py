@@ -102,7 +102,7 @@ def get_measurements(cfg):
             else:
                 set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
     except Exception as e:
-        logging.error("unable to measure board sensors")
+        logging.exception(e, "unable to measure board sensors")
 
     sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_SWITCH_ON)
 
