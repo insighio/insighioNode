@@ -148,13 +148,6 @@ def connect(cfg, dataStateOn=True):
                 attachment_duration = utime.ticks_ms() - start_attachment_duration
                 logging.debug('Modem attached')
 
-                # printout/gather some information before activating PDP
-                # check registation status
-                # reg_data = lte.send_at_cmd('AT+CEREG?').split('\r\n')[1].split(',')
-                # logging.debug('Registration Status: {}, RAT type selected: {}'.format(reg_data[1], reg_data[-1]))
-                # # get PDP context status
-                # pdp_data = lte.send_at_cmd('AT+CGCONTRDP=1').split('\r\n')[1].split(',')
-                # logging.debug('IP/Subnet: {}, Primary DNS: {}'.format(pdp_data[3], pdp_data[5]))
                 # signal quality
                 rssi = modemInst.get_rssi()
                 (rsrp, rsrq) = modemInst.get_extended_signal_quality()
@@ -166,9 +159,10 @@ def connect(cfg, dataStateOn=True):
                     logging.debug('Entering Data State. Modem connecting...')
                     start_connection_duration = utime.ticks_ms()
                     connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
-                    modemInst.connect()
-                    while not modemInst.is_connected() and utime.ticks_ms() < connection_timeout:
-                        utime.sleep_ms(10)
+                    if not modemInst.is_connected():
+                        modemInst.connect()
+                        while not modemInst.is_connected() and utime.ticks_ms() < connection_timeout:
+                            utime.sleep_ms(10)
 
                     if modemInst.is_connected():
                         status = MODEM_CONNECTED
