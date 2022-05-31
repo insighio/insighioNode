@@ -24,6 +24,13 @@ def getUptime(timeOffset=None):
         uptime -= start_time
     return uptime
 
+def now():
+    from machine import RTC
+    if device_info.is_esp32():
+        return RTC().datetime()
+    else:
+        return RTC().now()
+
 def isAlwaysOnScenario():
     return (demo_utils.get_config("_ALWAYS_ON_CONNECTION") and demo_utils.bq_charger_exec(demo_utils.bq_charger_is_on_external_power)) or demo_utils.get_config("_FORCE_ALWAYS_ON_CONNECTION")
 
@@ -32,7 +39,6 @@ def execute():
     executeMeasureAndUploadLoop()
     executeDeviceDeinitialization()
     executeTimingConfiguration()
-
 
 def storeMeasurement(measurements, force_store):
     message_buffer.timestamp_measurements(measurements)
@@ -97,6 +103,7 @@ def executeMeasureAndUploadLoop():
             storeMeasurement(measurements, False)
 
         # connect (if needed) and upload message
+        connectAndUploadCompletedWithoutErrors = False
         if execute_connetion_procedure:
             executeGetGPSPosition(cfg, measurements, always_on)
             connectAndUploadCompletedWithoutErrors = exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on)
@@ -256,11 +263,7 @@ def executeTimingConfiguration():
         ### RTC tuple format
         ###2021, 7, 8, 3, 16, 8, 45, 890003
         ### yy, MM, dd, DD, hh, mm, ss
-        from machine import RTC
-        if device_info.is_esp32():
-            time_tuple = RTC().datetime()
-        else:
-            time_tuple = RTC().now()
+        time_tuple = now()
         logging.info("current time: " + str(time_tuple))
 
         MORNING_MEAS = demo_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND")

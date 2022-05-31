@@ -11,7 +11,7 @@ transfer_client = None
 def init(cfg):
     pass
 
-def updateSignalQuality(measurements):
+def updateSignalQuality(cfg, measurements):
     if not cfg._MEAS_NETWORK_STAT_ENABLE:
         return
     pass

@@ -18,7 +18,11 @@ def timestamp_measurements(measurements):
     if timezone_offset is not None:
         offset -= timezone_offset
 
-    measurements["dt"] = {"value": utime.time() + offset}   # time offset 1970 -> 2000
+    epoch = utime.time() + offset
+
+    # Friday, April 15, 2022
+    if epoch > 1650000000:
+        measurements["dt"] = {"value": epoch}   # time offset 1970 -> 2000
 
 
 def store_measurement_if_needed(measurements, force_store=False):
