@@ -103,7 +103,7 @@ def get_modem_instance():
     return modem_instance
 
 
-def connect(cfg, dataStateOn=True):
+def connect(cfg):
     """ Complete cellular connection procedure (activation, attachment, data connection)
             Returns:
                 status: "Modem state" see enums NBIOT_*.
@@ -127,6 +127,9 @@ def connect(cfg, dataStateOn=True):
         start_activation_duration = utime.ticks_ms()
         if modemInst.wait_for_registration(120000):
             # print("Modem activated (AT+CFUN=1), continuing...")
+            # logging.debug("Deattaching (precautionary)")
+            # modemInst.attach(False)
+            # utime.sleep_ms(1000)
 
             status = MODEM_ACTIVATED
             activation_duration = utime.ticks_ms() - start_activation_duration
@@ -134,12 +137,14 @@ def connect(cfg, dataStateOn=True):
             start_attachment_duration = utime.ticks_ms()
             attachment_timeout = start_attachment_duration + cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC * 1000
 
-            # start attachment
-            logging.debug('Attaching...')
-            modemInst.attach()
-            # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
-            while not modemInst.is_attached() and (utime.ticks_ms() < attachment_timeout):
-                utime.sleep_ms(10)
+            modemInst.get_registered_mcc_mnc()
+
+            if not modemInst.is_attached():
+                logging.debug('Attaching...')
+                modemInst.attach()
+                # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
+                while not modemInst.is_attached() and (utime.ticks_ms() < attachment_timeout):
+                    utime.sleep_ms(10)
 
             update_rtc_from_network_time(modemInst)
 
@@ -155,7 +160,7 @@ def connect(cfg, dataStateOn=True):
                 logging.debug('Signal Quality - RSSI/RSRP/RSRQ: {}, {}, {}'.format(rssi, rsrp, rsrq))
 
                 # ready to connect
-                if dataStateOn:
+                if modemInst.has_data_over_ppp():
                     logging.debug('Entering Data State. Modem connecting...')
                     start_connection_duration = utime.ticks_ms()
                     connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000

@@ -49,14 +49,13 @@ def updateSignalQuality(cfg, measurements):
 def connect(cfg):
     logging.info("Connecting to cellular...")
     protocol_config = cfg.get_protocol_config()
-    enableDataState = (demo_utils.get_config("_IP_VERSION") == "IP")
     results = {}
 
     modem_instance = cellular.get_modem_instance()
 
     logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
     if modem_instance is not None and modem_instance.has_sim():
-        (status, activation_duration, attachment_duration, connection_duration, _, _, _) = cellular.connect(cfg, dataStateOn=enableDataState)
+        (status, activation_duration, attachment_duration, connection_duration, _, _, _) = cellular.connect(cfg)
         add_value_if_valid(results, "status", status == cellular.MODEM_CONNECTED)
 
         # if network statistics are enabled

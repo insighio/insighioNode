@@ -17,6 +17,7 @@ class Modem:
         self.apn = None
         self.gps_timestamp = None
         self.gps_date = None
+        self.data_over_ppp = True
 
         if modem_tx is not None and modem_rx is not None:
             self.uart = UART(1, 115200, tx=modem_tx, rx=modem_rx)
@@ -24,6 +25,9 @@ class Modem:
 
         self.modem_power_on = power_on
         self.modem_power_key = power_key
+
+    def has_data_over_ppp(self):
+        return self.data_over_ppp
 
     def is_alive(self):
         (status, response) = self.send_at_cmd("AT", 1000)
@@ -87,7 +91,6 @@ class Modem:
             # disable command echo
             self.send_at_cmd('ATE0')
             # set auto-registration
-            # self.send_at_cmd("AT+CFUN=0")
             self.send_at_cmd("AT+COPS=3,2")  # set network name as numeric value
             self.send_at_cmd("AT+CREG=2")  # enable LAC, CI reporting
             self.send_at_cmd("AT+CTZU=1")  # automatic time update
@@ -102,6 +105,9 @@ class Modem:
 
     def set_technology(self, technology):
         pass
+
+#          +QMTPUB: 0,1,2
+
 
     def get_network_date_time(self):
         start_timestamp = utime.ticks_ms()
