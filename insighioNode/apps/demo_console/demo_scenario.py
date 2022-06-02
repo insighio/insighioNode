@@ -15,6 +15,7 @@ from . import demo_config as cfg
 
 # Globals
 timeDiffAfterNTP = None
+measurement_run_start_timestamp = None
 
 def getUptime(timeOffset=None):
     uptime = utime.ticks_ms()
@@ -74,6 +75,7 @@ def determine_message_buffering_and_network_connection_necessity():
     return (buffered_upload_enabled, execute_connetion_procedure)
 
 def executeMeasureAndUploadLoop():
+    global measurement_run_start_timestamp
     (buffered_upload_enabled, execute_connetion_procedure) = determine_message_buffering_and_network_connection_necessity()
 
     is_first_run = True
