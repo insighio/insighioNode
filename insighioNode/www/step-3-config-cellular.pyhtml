@@ -67,6 +67,7 @@ import device_info
                         <select class="form-select"  id="input-cell-tech">
                           <option selected>GSM</option>
                           <option>NBIoT</option>
+                          <option>LTE-M</option>
                           <option>auto</option>
                         </select>
                       </div>

@@ -25,21 +25,24 @@ class ModemBG600(modem_base.Modem):
 
     def set_technology(self, technology):
         if technology == 'NBIoT':
-            self.send_at_cmd('AT+QCFG="nwscanseq",3,1')
+            self.send_at_cmd('AT+QCFG="nwscanseq",03,1')
+            self.send_at_cmd('AT+QCFG="nwscanmode",3,1')
+        elif technology == 'LTE-M':
+            self.send_at_cmd('AT+QCFG="nwscanseq",02,1')
             self.send_at_cmd('AT+QCFG="nwscanmode",3,1')
         elif technology == 'GSM':
-            self.send_at_cmd('AT+QCFG="nwscanseq",1,1')
+            self.send_at_cmd('AT+QCFG="nwscanseq",01,1')
             self.send_at_cmd('AT+QCFG="nwscanmode",1,1')
         else:
-            self.send_at_cmd('AT+QCFG="nwscanseq",0,1')
+            self.send_at_cmd('AT+QCFG="nwscanseq",00,1')
             self.send_at_cmd('AT+QCFG="nwscanmode",0,1')
 
     def prioritizeWWAN(self):
-        self.send_at_cmd('AT+QGPSCFG="priority",1,1')
+        self.send_at_cmd('AT+QGPSCFG="priority",1,0')
         utime.sleep_ms(500)
 
     def prioritizeGNSS(self):
-        self.send_at_cmd('AT+QGPSCFG="priority",1,0')
+        self.send_at_cmd('AT+QGPSCFG="priority",0,0')
         utime.sleep_ms(500)
 
     def connect(self, timeoutms=30000):
