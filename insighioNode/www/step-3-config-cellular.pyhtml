@@ -115,6 +115,10 @@ import device_info
                         <input type="radio" name="ipversion" value="IPV6" id="ipv6Option">
                         <i class="form-icon"></i> IPv6
                       </label>
+                      <label class="form-radio">
+                        <input type="radio" name="ipversion" value="IPV4V6" id="ipv4v6Option">
+                        <i class="form-icon"></i> IPv4/v6
+                      </label>
                     </div>
                     <br />
                     <br />
