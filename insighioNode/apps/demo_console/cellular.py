@@ -23,6 +23,18 @@ def init(cfg):
     if device_info.is_esp32():
         cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
+def prepareForConnectAndUpload():
+    modem_instance = cellular.get_modem_instance()
+    if modem_instance is None:
+        return
+    modem_instance.prioritizeWWAN()
+
+def prepareForGPS():
+    modem_instance = cellular.get_modem_instance()
+    if modem_instance is None:
+        return
+    modem_instance.prioritizeGNSS()
+
 def updateSignalQuality(cfg, measurements):
     if not cfg._MEAS_NETWORK_STAT_ENABLE:
         return
@@ -54,34 +66,36 @@ def connect(cfg):
     modem_instance = cellular.get_modem_instance()
 
     logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
-    if modem_instance is not None and modem_instance.has_sim():
-        (status, activation_duration, attachment_duration, connection_duration, _, _, _) = cellular.connect(cfg)
-        add_value_if_valid(results, "status", status == cellular.MODEM_CONNECTED)
+    if modem_instance is None or not modem_instance.has_sim():
+        return results
 
-        # if network statistics are enabled
-        if cfg._MEAS_NETWORK_STAT_ENABLE:
+    (status, activation_duration, attachment_duration, connection_duration, _, _, _) = cellular.connect(cfg)
+    add_value_if_valid(results, "status", status == cellular.MODEM_CONNECTED)
 
-            add_value_if_valid(results, "cell_act_duration", activation_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
-            add_value_if_valid(results, "cell_att_duration", attachment_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
-            if not protocol_config.use_custom_socket:
-                add_value_if_valid(results, "cell_con_duration", connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+    # if network statistics are enabled
+    if cfg._MEAS_NETWORK_STAT_ENABLE:
 
-        if status == cellular.MODEM_CONNECTED:
-            global transfer_client
-            from . import transfer_protocol
+        add_value_if_valid(results, "cell_act_duration", activation_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+        add_value_if_valid(results, "cell_att_duration", attachment_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+        if not protocol_config.use_custom_socket:
+            add_value_if_valid(results, "cell_con_duration", connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
 
-            # AT command based implementation of communication of Quectel BG600L
-            modem_model = modem_instance.get_model()
-            if modem_model and 'bg600' in modem_model:
-                transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
-            elif cfg.protocol == 'coap':
-                transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
-            elif cfg.protocol == 'mqtt':
-                transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
-            else:
-                transfer_client = None
+    if status == cellular.MODEM_CONNECTED:
+        global transfer_client
+        from . import transfer_protocol
 
-            transfer_client.connect()
+        # AT command based implementation of communication of Quectel BG600L
+        modem_model = modem_instance.get_model()
+        if modem_model and 'bg600' in modem_model:
+            transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
+        elif cfg.protocol == 'coap':
+            transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
+        elif cfg.protocol == 'mqtt':
+            transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
+        else:
+            transfer_client = None
+
+        transfer_client.connect()
 
     return results
 

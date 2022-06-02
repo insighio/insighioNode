@@ -157,6 +157,9 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
     network.init(cfg)
     logging.debug("Network modules loaded")
 
+    if cfg.network == "cellular":
+        network.prepareForConnectAndUpload()
+
     message_sent = False
     # connect to the network if not already connected
     try:
@@ -224,6 +227,9 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
         storeMeasurement(measurements, True)
 
     device_info.set_led_color('black')
+
+    if cfg.network == "cellular":
+        network.prepareForGPS()
 
     # disconnect from network
     if not always_on:

@@ -106,8 +106,11 @@ class Modem:
     def set_technology(self, technology):
         pass
 
-#          +QMTPUB: 0,1,2
+    def prioritizeWWAN(self):
+        pass
 
+    def prioritizeGNSS(self):
+        pass
 
     def get_network_date_time(self):
         start_timestamp = utime.ticks_ms()

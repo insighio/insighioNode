@@ -19,6 +19,10 @@ class ModemBG600(modem_base.Modem):
         (status, _) = self.send_at_cmd("", 10000, "APP RDY")
         return status
 
+    def init(self, ip_version, apn, technology):
+        status = super().init(ip_version, apn, technology)
+        return status
+
     def set_technology(self, technology):
         if technology == 'NBIoT':
             self.send_at_cmd('AT+QCFG="nwscanseq",3,1')
@@ -29,6 +33,14 @@ class ModemBG600(modem_base.Modem):
         else:
             self.send_at_cmd('AT+QCFG="nwscanseq",0,1')
             self.send_at_cmd('AT+QCFG="nwscanmode",0,1')
+
+    def prioritizeWWAN(self):
+        self.send_at_cmd('AT+QGPSCFG="priority",1,1')
+        utime.sleep_ms(500)
+
+    def prioritizeGNSS(self):
+        self.send_at_cmd('AT+QGPSCFG="priority",1,0')
+        utime.sleep_ms(500)
 
     def connect(self, timeoutms=30000):
         for i in range(0, 5):
@@ -96,6 +108,8 @@ class ModemBG600(modem_base.Modem):
         from external.micropyGPS.micropyGPS import MicropyGPS
         import math
         my_gps = MicropyGPS()
+
+        self.prioritizeGNSS()
 
         start_timestamp = utime.ticks_ms()
         last_valid_gps_lat = None
