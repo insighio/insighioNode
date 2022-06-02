@@ -9,6 +9,7 @@ class ModemBG600(modem_base.Modem):
     def __init__(self, power_on, power_key, modem_tx, modem_rx):
         super().__init__(power_on, power_key, modem_tx, modem_rx)
         self.connection_status = False
+        self.data_over_ppp = True
 
     # even though this function is correct for BG600, it is normally called
     # while waiting for the modem to power on, where at that time we are not aware
@@ -173,21 +174,34 @@ class ModemBG600(modem_base.Modem):
     def mqtt_publish(self, topic, message, num_of_retries=3, retain=False):
         mqtt_send_ready = False
         mqtt_send_ok = False
-        for i in range(0, num_of_retries):
-            (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,{},"{}"'.format("1" if retain else "0", topic), 15000, '>.*')
-            if mqtt_send_ready:
-                break
-            logging.error("Mqtt not ready to send")
-            utime.sleep_ms(500)
 
-        if mqtt_send_ready:
+        message_sent = False
+        general_retry_num = 0
+        while not message_sent and general_retry_num < num_of_retries:
             for i in range(0, num_of_retries):
-                (mqtt_send_ok, _) = self.send_at_cmd(message + '\x1a', 30000, r"\+QMTPUB:\s*\d+,\d+,[01]")
-                if mqtt_send_ok:
+                (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,{},"{}"'.format("1" if retain else "0", topic), 15000, '>.*')
+                if mqtt_send_ready:
                     break
-                logging.error("Mqtt publish failed")
+                logging.error("Mqtt not ready to send")
                 utime.sleep_ms(500)
-        return mqtt_send_ready and mqtt_send_ok
+
+            if mqtt_send_ready:
+                for i in range(0, num_of_retries):
+                    (mqtt_send_ok, lines) = self.send_at_cmd(message + '\x1a', 30000, r"\+QMTPUB:\s*\d+,\d+,[012]")
+
+                    for line in lines:
+                        if "0,1,0" in line or "0,1,1" in line:
+                            message_sent = True
+
+                    if mqtt_send_ok :
+                        break
+                    logging.error("Mqtt publish failed")
+                    utime.sleep_ms(500)
+            if message_sent:
+                break
+
+            general_retry_num += 1
+        return mqtt_send_ready and mqtt_send_ok and message_sent
 
     def mqtt_get_message(self, topic, timeout_ms=5000):
         import random
