@@ -180,7 +180,8 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
                 measurements.update(connection_results)
             # else do an instantanious deepsleep to do a cleanup and restart
             else:
-                logging.info("Network disconnected, executing reset and retrying...")
+                logging.info("Network disconnected, storing measurement, executing reset and retrying...")
+                storeMeasurement(measurements, True)
                 machine.deepsleep(1000)
     except Exception as e:
         logging.exception(e, "Exception during connection:")
