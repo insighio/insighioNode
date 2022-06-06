@@ -86,6 +86,10 @@ def executeMeasureAndUploadLoop():
         proto_cfg_instance = cfg.get_protocol_config()
         proto_cfg_instance.keepalive = int(always_on_period * 1.5) if always_on else 0
 
+        if demo_utils.get_config("_MEAS_GPS_ENABLE"):
+            proto_cfg_instance.keepalive += demo_utils.get_config("_MEAS_GPS_TIMEOUT")
+        logging.debug("keepalive period: " + str(proto_cfg_instance.keepalive))
+
     while True:
         logging.info("Always on connection activated: " + str(always_on))
         measurements = {}
