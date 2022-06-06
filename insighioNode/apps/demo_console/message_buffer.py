@@ -6,7 +6,7 @@ import utime
 import device_info
 
 storage_file_name = "measurements.log"
-
+MAX_NUMBER_OF_FORCED_MESSAGES=1000
 
 def timestamp_measurements(measurements):
     offset = 0
@@ -34,7 +34,7 @@ def store_measurement_if_needed(measurements, force_store=False):
     number_of_measurements = utils.countFileLines(storage_file_name) + 1
     logging.info("Message " + str(number_of_measurements) + " of " + str(cfg._BATCH_UPLOAD_MESSAGE_BUFFER))
 
-    if number_of_measurements < cfg._BATCH_UPLOAD_MESSAGE_BUFFER or force_store:
+    if number_of_measurements < cfg._BATCH_UPLOAD_MESSAGE_BUFFER or (force_store and number_of_measurements < MAX_NUMBER_OF_FORCED_MESSAGES):
         data = json.dumps(measurements) + "\n"
         utils.appendToFile(storage_file_name, data)
         logging.debug("Measurement stored: " + str(measurements))
