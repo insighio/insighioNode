@@ -4,11 +4,11 @@ import utime
 import device_info
 
 from machine import ADC, Pin
+(major_version, minor_version, _, _) = device_info.get_firmware_version()
 
 import logging
 
 _NUM_ADC_READINGS = const(500)
-
 
 def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cycles=_NUM_ADC_READINGS):
     """ Returns input voltage in a specific pin, for a given voltage divider (default is 1) and attenuator level (default 3, i.e. 0-3.3V) """
@@ -19,7 +19,10 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
         adc.width(adc_width)
 
         try:
-            adc.init(attn, adc_width)
+            if major_version == 1 and minor_version < 18:
+                adc.init(attn, adc_width)
+            elif major_version == 1 and minor_version >= 18:
+                adc.init_mp(atten=ADC.ATTN_11DB)
             return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
         except Exception as e:
             logging.exception(e, "unable to read: pin: {}".format(pin))
