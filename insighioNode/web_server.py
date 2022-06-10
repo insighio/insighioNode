@@ -90,7 +90,11 @@ class WebServer:
         # Starts the server as easily as possible in managed mode
         # 1 parallel process, 32K stack size
         #if device_info.get_hw_module_verison() == "esp32s3":
-        self.mws2.StartManaged(2, 32*1024)
+
+        if device_info.get_hw_module_verison() == "esp32s2":
+            self.mws2.StartManaged(0, 16*1024)
+        else:
+            self.mws2.StartManaged(2, 32*1024)
         # else:
         #     self.mws2.StartManaged(1, 32*1024)
 
