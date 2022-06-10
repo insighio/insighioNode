@@ -1,7 +1,7 @@
 """ Module for getting various type of information from device """
 import gc
 import machine
-import os
+import uos
 import sys
 import ubinascii
 import logging
@@ -24,6 +24,10 @@ color_map['green'] = 0xF0F000
 color_map['white'] = 0xFFFFFF
 color_map['black'] = 0x000000
 
+uos_version_data = uos.uname()
+machine_data = uos_version_data.machine
+firmware_data = uos_version_data.version.split(" ")[0].split("-")
+firmware_data[0] = firmware_data[0][1:] # "from 'v1.18' to '1.18'"
 
 def is_esp32():
     return sys.platform == 'esp32' or 'esp8266'
@@ -34,7 +38,7 @@ def is_wdt_enabled():
 
 
 def get_hw_module_verison():
-    hw_info = str(os.uname())
+    hw_info = machine_data
     hw_info = hw_info.lower()
     if "esp32s2" in hw_info or "esp32-s2" in hw_info:
         return "esp32s2"
@@ -61,9 +65,26 @@ def get_device_root_folder():
     return '/' if is_esp32() else '/flash/'
 
 
-def get_device_fw():
-    """ Returns device fw (release, version) """
-    return (os.uname()[2], os.uname()[3])
+def get_firmware_version():
+    major = None
+    minor = None
+    patch = None
+    commit = None
+
+    major_minor = firmware_data[0].split(".")
+
+    try:
+        major = int(major_minor[0])
+        if len(major_minor) > 1:
+            minor = int(major_minor[1])
+        if len(firmware_data) > 1:
+            patch = int(firmware_data[1])
+        if len(firmware_data) > 2:
+            commit = int(firmware_data[2])
+    except:
+        pass
+
+    return (major, minor, patch, commit)
 
 
 def get_reset_cause():
