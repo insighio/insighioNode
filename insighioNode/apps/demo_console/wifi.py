@@ -85,7 +85,6 @@ def create_message(device_id, measurements):
         message.base_time = measurements["dt"]["value"]
 
     for key in measurements:
-        logging.debug("[{}]={} - {}".format(key, measurements[key], type(measurements[key])))
         if isinstance(measurements[key], dict):
             if "unit" in measurements[key]:
                 message.add(SenmlRecord(key, unit=measurements[key]["unit"], value=measurements[key]["value"]))
