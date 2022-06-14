@@ -210,7 +210,7 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
             # upload any stored/buffered messages
             message_buffer.parse_stored_measurements_and_upload(network)
 
-            executeDeviceConfigurationUpload(network)
+            executeDeviceConfigurationUpload(cfg, network)
 
             if demo_utils.get_config("_CHECK_FOR_OTA"):
                 network.check_and_apply_ota(cfg)
@@ -245,13 +245,37 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
         return False
     return True
 
-def executeDeviceConfigurationUpload(network):
+def executeDeviceStatisticsUpload(cfg, network):
+    stats = {}
+
+    try:
+        import srcInfo
+        stats["src_branch"] = srcInfo.branch
+        stats["src_commit"] = srcInfo.commit
+    except:
+        logging.error("no srcInfo file found")
+
+    stats["hw_version"] = device_info.get_hw_module_verison()
+    (major, minor, patch, commit)  = device_info.get_firmware_version()
+    stats["sw_v_major"] = major
+    stats["sw_v_minor"] = minor
+    stats["sw_v_patch"] = patch
+    stats["sw_v_commit"] = commit
+    stats["free_flash"] = device_info.get_free_flash()
+    stats["serial"] = device_info.get_device_id()[0]
+    logging.info("Uploading device statistics.")
+    network.send_control_message(cfg, network.create_message(None, stats), "/stat")
+
+def executeDeviceConfigurationUpload(cfg, network):
     # check for configuration pending for upload
     configUploadFileContent = utils.readFromFile("/configLog")
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
         network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
         utils.deleteFile("/configLog")
+
+        # whenever a new config log is uplaoded, upload also statistics for the device
+        executeDeviceStatisticsUpload(cfg, network)
 
 def executeDeviceDeinitialization():
     demo_utils.device_deinit()

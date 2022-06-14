@@ -302,3 +302,9 @@ def get_cpu_temp(unit_in_celsius=True):
         return (temp - 32) / 1.8
     else:
         return temp
+
+def get_free_flash():
+    import uos
+    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(get_device_root_folder())
+    freesize = f_bsize * f_bfree
+    return freesize

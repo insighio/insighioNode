@@ -150,16 +150,20 @@ def get_gps_position(cfg, measurements, keep_open=False):
 
 
 def create_message(device_id, measurements):
-    message = SenmlPackJson(device_id + '-')
+    message = SenmlPackJson((device_id + '-') if device_id is not None else None)
 
     if "dt" in measurements:
         message.base_time = measurements["dt"]["value"]
 
     for key in measurements:
-        if "unit" in measurements[key]:
-            message.add(SenmlRecord(key, unit=measurements[key]["unit"], value=measurements[key]["value"]))
-        elif key != "dt":
-            message.add(SenmlRecord(key, value=measurements[key]["value"]))
+        logging.debug("[{}]={} - {}".format(key, measurements[key], type(measurements[key])))
+        if isinstance(measurements[key], dict):
+            if "unit" in measurements[key]:
+                message.add(SenmlRecord(key, unit=measurements[key]["unit"], value=measurements[key]["value"]))
+            elif key != "dt":
+                message.add(SenmlRecord(key, value=measurements[key]["value"]))
+        elif measurements[key] is not None:
+            message.add(SenmlRecord(key, value=measurements[key]))
 
     return message.to_json()
 
