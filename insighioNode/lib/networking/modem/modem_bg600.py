@@ -68,7 +68,6 @@ class ModemBG600(modem_base.Modem):
         return status and len(lines) > 0 and "1,1" in lines[0]
 
     def disconnect(self):
-        self.mqtt_disconnect()
         self.send_at_cmd("AT+QIDEACT=1")
 
         return super().disconnect()
@@ -281,8 +280,10 @@ class ModemBG600(modem_base.Modem):
         return res
 
     def mqtt_disconnect(self):
-        (status, _) = self.send_at_cmd("AT+QMTDISC=0")
-        return status
+        (statusMqttDisconnect, _) = self.send_at_cmd("AT+QMTDISC=0", 20000, r"\+QMTDISC:\s+0.*")
+        (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE=0", 20000, r"\+QMTCLOSE:\s+0.*")
+
+        return statusMqttDisconnect and statusNetworkClose
 
     def get_next_bytes_from_file(self, file_handle, num_of_bytes, timeout_ms=2000):
         # clear incoming message buffer
