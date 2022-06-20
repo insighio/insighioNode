@@ -93,6 +93,7 @@ def generateOptions(optionsDict):
               {{ addSwitch("input-board-stat", "Board health statistics") }}
               {{ addSwitch("input-network", "Network statistics") }}
               {{ addSwitch("input-ota", "Over the Air Updates") }}
+              {{ addSwitch("input-store-meas-if-failed-conn", "Store measurement if no connection") }}
               <div class="col-4 col-sm-12">
                 <label class="form-label" for="measurements">Temperature Unit</label>
               </div>
@@ -133,6 +134,25 @@ def generateOptions(optionsDict):
                     </div>
                     <div class="col-3 col-sm-12">
                       <input class="form-input constr-field" type="number" id="input-gps-sat-num"/>
+                    </div>
+                    <div class="column col-5 col-mr-auto"></div>
+                  </div>
+                </div>
+                <div id="gps-no-fix-no-upload-div" class="col-12" style="display:block">
+                  <div class="form-group">
+                    <div class="column col-1 col-mr-auto"></div>
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label">
+                    Discard measurements if no GPS fix
+                    </label>
+                    </div>
+                    <div class="col-3 col-sm-12">
+                      <div class="form-group">
+                        <label class="form-switch">
+                          <input type="checkbox" id="input-gps-no-fix-no-upload"/>
+                          <i class="form-icon"></i>
+                        </label>
+                      </div>
                     </div>
                     <div class="column col-5 col-mr-auto"></div>
                   </div>
@@ -480,6 +500,7 @@ def generateOptions(optionsDict):
 
       setElemValue('input-gps-timeout', {{ meas_gps_timeout }}, 120, false)
       setElemValue('input-gps-sat-num', {{ meas_gps_sat_num }}, 4, false)
+      //setElemValueBool('input-gps-no-fix-no-upload', {{ meas_gps_no_fix_no_upload }},  false)
 
       setElemValueBool('input-ins-esp-gen-sdi12-1-enable', {{ meas_sdi_1_enabled }}, false)
       setElemValueBool('input-ins-esp-gen-sdi12-2-enable', {{ meas_sdi_2_enabled }}, false)
@@ -511,6 +532,8 @@ def generateOptions(optionsDict):
       showElement('input-ins-esp-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
       showElement('input-ins-esp-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
 
+      //setElemValueBool('input-store-meas-if-failed-conn', {{ store_meas_if_failed_conn }}, false)
+
       var index = 0
       var keyValueDict = '{{ meas_keyvalue }}'
       // bypass issue of html encoding that is enforced by an unknown module
@@ -535,6 +558,7 @@ def generateOptions(optionsDict):
       Cookies.remove('meas-board-sense')
       Cookies.remove('meas-board-stat')
       Cookies.remove('meas-gps-enabled')
+      Cookies.remove('meas-gps-no-fix-no-upload')
       Cookies.remove('meas-gps-sat-num')
       Cookies.remove('meas-gps-timeout')
       Cookies.remove('meas-i2c-1')
@@ -558,6 +582,7 @@ def generateOptions(optionsDict):
       Cookies.remove('selected-board')
       Cookies.remove('system-enable-ota')
       Cookies.remove('meas-keyvalue')
+      Cookies.remove('store-meas-if-failed-conn')
     }
 
     function storeData() {
@@ -576,6 +601,9 @@ def generateOptions(optionsDict):
 
       Cookies.set('meas-gps-timeout', document.getElementById('input-gps-timeout').value)
       Cookies.set('meas-gps-sat-num', document.getElementById('input-gps-sat-num').value)
+      Cookies.set('meas-gps-no-fix-no-upload', boolElemToPyStr('input-gps-no-fix-no-upload'))
+
+      Cookies.set('store-meas-if-failed-conn', boolElemToPyStr('input-store-meas-if-failed-conn'))
 
       if (elementIsVisible("ins-esp-gen-sdi12-board-options")) {
         Cookies.set('selected-board', boardNamePerTab["ins-esp-gen-sdi12-board-options"] )
