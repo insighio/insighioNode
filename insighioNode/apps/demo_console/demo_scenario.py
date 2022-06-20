@@ -115,8 +115,12 @@ def executeMeasureAndUploadLoop():
         # connect (if needed) and upload message
         connectAndUploadCompletedWithoutErrors = False
         if execute_connetion_procedure:
-            executeGetGPSPosition(cfg, measurements, always_on)
-            connectAndUploadCompletedWithoutErrors = exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on)
+            hasGPSFix = executeGetGPSPosition(cfg, measurements, always_on)
+
+            if not hasGPSFix and demo_utils.get_config("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
+                connectAndUploadCompletedWithoutErrors = False
+            else:
+                connectAndUploadCompletedWithoutErrors = exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on)
 
         if not connectAndUploadCompletedWithoutErrors or not always_on or not always_on_period:
             # abort measurement while loop
@@ -144,9 +148,10 @@ def executeGetGPSPosition(cfg, measurements, always_on):
         if demo_utils.get_config("_MEAS_GPS_ENABLE"):
             from . import cellular as network_gps
             network_gps.init(cfg)
-            network_gps.get_gps_position(cfg, measurements, always_on)  # may be it needs relocation
+            return network_gps.get_gps_position(cfg, measurements, always_on)
     except Exception as e:
         logging.exception(e, "GPS Exception:")
+        return false
 
 def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
     global timeDiffAfterNTP
@@ -188,7 +193,8 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
             # else do an instantanious deepsleep to do a cleanup and restart
             else:
                 logging.info("Network disconnected, storing measurement, executing reset and retrying...")
-                storeMeasurement(measurements, True)
+                if demo_utils.get_config("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+                    storeMeasurement(measurements, True)
                 machine.deepsleep(1000)
     except Exception as e:
         logging.exception(e, "Exception during connection:")
@@ -222,17 +228,20 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
             # if not connected execute complete deepsleep regardless always-on setting
 
             logging.info("No network, storing measurements in buffer")
-            storeMeasurement(measurements, True)
+            if demo_utils.get_config("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+                storeMeasurement(measurements, True)
             return False
     except Exception as e:
         device_info.set_led_color('black')
         logging.exception(e, "Exception while sending data:")
-        storeMeasurement(measurements, True)
+        if demo_utils.get_config("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+            storeMeasurement(measurements, True)
         return False
 
     if not message_sent:
         logging.info("Message transmission failed, storing for later")
-        storeMeasurement(measurements, True)
+        if demo_utils.get_config("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+            storeMeasurement(measurements, True)
 
     device_info.set_led_color('black')
 
