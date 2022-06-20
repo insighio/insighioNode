@@ -92,6 +92,7 @@ def executeMeasureAndUploadLoop():
 
     while True:
         logging.info("Always on connection activated: " + str(always_on))
+        always_on_start_timestamp = utime.ticks_ms()
         measurements = {}
         device_info.wdt_reset()
         measurement_run_start_timestamp = utime.ticks_ms()
@@ -123,14 +124,16 @@ def executeMeasureAndUploadLoop():
         else:
             is_first_run = False
 
+            time_to_sleep = always_on_period * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
+            time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
             logging.info("light sleeping for: " + str(always_on_period) + " seconds")
             gc.collect()
 
             if not device_info.is_wdt_enabled() or device_info.wdt_timeout > always_on_period:
-                utime.sleep_ms(always_on_period * 1000)
+                utime.sleep_ms(time_to_sleep)
             else:
                 start_sleep_time = utime.ticks_ms()
-                end_sleep_time = start_sleep_time + always_on_period * 1000
+                end_sleep_time = start_sleep_time + time_to_sleep
                 while utime.ticks_ms() < end_sleep_time:
                     device_info.wdt_reset()
                     utime.sleep_ms(1000)
