@@ -130,7 +130,7 @@ def executeMeasureAndUploadLoop():
 
             time_to_sleep = always_on_period * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
             time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
-            logging.info("light sleeping for: " + str(always_on_period) + " seconds")
+            logging.info("light sleeping for: " + str(time_to_sleep) + " milliseconds")
             gc.collect()
 
             if not device_info.is_wdt_enabled() or device_info.wdt_timeout > always_on_period:
@@ -151,7 +151,7 @@ def executeGetGPSPosition(cfg, measurements, always_on):
             return network_gps.get_gps_position(cfg, measurements, always_on)
     except Exception as e:
         logging.exception(e, "GPS Exception:")
-        return false
+        return False
 
 def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
     global timeDiffAfterNTP
@@ -192,8 +192,9 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
                 measurements.update(connection_results)
             # else do an instantanious deepsleep to do a cleanup and restart
             else:
-                logging.info("Network disconnected, storing measurement, executing reset and retrying...")
+                logging.info("Network disconnected, executing reset and retrying...")
                 if demo_utils.get_config("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+                    logging.info("storing measurement")
                     storeMeasurement(measurements, True)
                 machine.deepsleep(1000)
     except Exception as e:
@@ -255,7 +256,7 @@ def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
         except Exception as e:
             logging.exception(e, "Exception during disconenction:")
         return False
-    return True
+    return message_sent
 
 def executeDeviceStatisticsUpload(cfg, network):
     stats = {}
