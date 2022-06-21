@@ -9,6 +9,8 @@ class TransferProtocol:
         self.protocol_config.client_name = cfg.device_id
         self.protocol = cfg.protocol
         self.modem_based = False
+        if self.protocol_config.keepalive is None:
+             self.protocol_config.keepalive = 120
         logging.debug("initializing TransferProtocol for: " + str(self.protocol))
 
     def is_connected(self):
@@ -37,15 +39,16 @@ class TransferProtocolModemAT(TransferProtocol):
         self.modem_based = (modem_instance is not None)
 
     def connect(self):
-        if self.connected:
+        if self.is_connected():
             return True
 
         #TODO: use the keepalive setting
-        self.connected = self.modem_instance.mqtt_connect(self.protocol_config.server_ip, self.protocol_config.server_port, self.protocol_config.thing_id, self.protocol_config.thing_token)
+        self.connected = self.modem_instance.mqtt_connect(self.protocol_config.server_ip, self.protocol_config.server_port, self.protocol_config.thing_id, self.protocol_config.thing_token, self.protocol_config.keepalive)
         return self.connected
 
     def is_connected(self):
-        return self.modem_instance.mqtt_is_connected()
+        self.connected = self.modem_instance.mqtt_is_connected()
+        return self.connected
 
     def disconnect(self):
         self.modem_instance.mqtt_disconnect()
@@ -88,9 +91,6 @@ class TransferProtocolMQTT(TransferProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         from protocols import mqtt_client
-
-        if self.protocol_config.keepalive is None:
-             self.protocol_config.keepalive = 0
         self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
 
     def connect(self):
