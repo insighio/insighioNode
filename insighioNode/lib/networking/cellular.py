@@ -166,8 +166,6 @@ def connect(cfg):
                     connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
                     if not modemInst.is_connected():
                         modemInst.connect()
-                        while not modemInst.is_connected() and utime.ticks_ms() < connection_timeout:
-                            utime.sleep_ms(10)
 
                     if modemInst.is_connected():
                         status = MODEM_CONNECTED
