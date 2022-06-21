@@ -152,10 +152,13 @@ class ModemBG600(modem_base.Modem):
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)
 
-    def mqtt_connect(self, server_ip, server_port, username, password):
+    def mqtt_connect(self, server_ip, server_port, username, password, keepalive=120):
         (context_activated, _) = self.send_at_cmd('AT+QMTCFG="pdpcid",1')
         if not context_activated:
             return False
+
+        #setup keepalive
+        self.send_at_cmd('AT+QMTCFG="keepalive",0,' + str(keepalive))
 
         max_retries = 3
         retry = 0
@@ -183,8 +186,8 @@ class ModemBG600(modem_base.Modem):
         return False
 
     def mqtt_is_connected(self):
-         (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN?', 15000, r"\+QMTOPEN:\s+0.*")
-         (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN?', 15000, r"\+QMTCONN:\s+0.*")
+         (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN?', 2000, r"\+QMTOPEN:\s+0.*")
+         (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN?', 2000, r"\+QMTCONN:\s+0.*")
          return mqtt_ready and mqtt_connected
 
     def mqtt_publish(self, topic, message, num_of_retries=3, retain=False):
@@ -193,9 +196,11 @@ class ModemBG600(modem_base.Modem):
 
         message_sent = False
         general_retry_num = 0
+        import random
+        message_id = int(random.random() * 65530) + 1
         while not message_sent and general_retry_num < num_of_retries:
             for i in range(0, num_of_retries):
-                (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,1,1,{},"{}"'.format("1" if retain else "0", topic), 15000, '>.*')
+                (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,{},1,{},"{}"'.format(message_id, "1" if retain else "0", topic), 15000, '>.*')
                 if mqtt_send_ready:
                     break
                 logging.error("Mqtt not ready to send")
@@ -206,7 +211,7 @@ class ModemBG600(modem_base.Modem):
                     (mqtt_send_ok, lines) = self.send_at_cmd(message + '\x1a', 30000, r"\+QMTPUB:\s*\d+,\d+,[012]")
 
                     for line in lines:
-                        if "0,1,0" in line or "0,1,1" in line:
+                        if "0,{},0".format(message_id) in line or "0,{},1".format(message_id) in line:
                             message_sent = True
 
                     if mqtt_send_ok :
@@ -223,12 +228,12 @@ class ModemBG600(modem_base.Modem):
         import random
         #channels/f1937d78-6745-4b6b-98c3-62e2201c21ab/messages/5de93307-344f-48f2-a66d-1d2f7e359504/#
         #reg = r"\+QMTRECV:\s*\d+,\d+,\"([a-z\-0-9\/]+)\",\"(.*)\"" -> can not be used as it causes: RuntimeError: maximum recursion depth exceeded
-        reg = r"^\s*\+QMTRECV:"
+        reg = r"\+QMTRECV:\s*0,"
         # subscribe and receive message if any
         message_id = int(random.random() * 65530) + 1
         (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=0,{},"{}",1'.format(message_id, topic), timeout_ms, reg)
         # unsubscribe
-        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=0,{},"{}"'.format(message_id, topic))
+        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=0,{},"{}"'.format(message_id, topic), 30000, r"\+QMTUNS:\s*0,")
 
         selected_line = None
         for line in lines:
