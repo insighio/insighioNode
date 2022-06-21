@@ -304,7 +304,7 @@ class Modem:
         start_timestamp = utime.ticks_ms()
         timeout_timestamp = start_timestamp + timeoutms
 
-        success_regex = "^([\\w\\s\\+]+)?(" + success_condition + ")$"
+        success_regex = "^([\\w\\s\\+]+)?" + success_condition
         error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
         first_line = True
         is_echo_on = True
