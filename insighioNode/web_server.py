@@ -94,7 +94,7 @@ class WebServer:
         if device_info.get_hw_module_verison() == "esp32s2":
             self.mws2.StartManaged(0, 16*1024)
         else:
-            self.mws2.StartManaged(2, 32*1024)
+            self.mws2.StartManaged(1, 32*1024)
         # else:
         #     self.mws2.StartManaged(1, 32*1024)
 
