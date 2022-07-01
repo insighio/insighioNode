@@ -22,7 +22,7 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
             if major_version == 1 and minor_version < 18:
                 adc.init(attn, adc_width)
             elif major_version == 1 and minor_version >= 18:
-                adc.init_mp(atten=ADC.ATTN_11DB)
+                adc.init_mp(atten=attn)
             return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
         except Exception as e:
             logging.exception(e, "unable to read: pin: {}".format(pin))
