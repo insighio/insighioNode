@@ -120,7 +120,7 @@ def executeMeasureAndUploadLoop():
             if not hasGPSFix and demo_utils.get_config("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
                 connectAndUploadCompletedWithoutErrors = False
             else:
-                connectAndUploadCompletedWithoutErrors = exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on)
+                connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, always_on)
 
         if not connectAndUploadCompletedWithoutErrors or not always_on or not always_on_period:
             # abort measurement while loop
@@ -153,7 +153,7 @@ def executeGetGPSPosition(cfg, measurements, always_on):
         logging.exception(e, "GPS Exception:")
         return False
 
-def exeuteConnectAndUpload(cfg, measurements, is_first_run, always_on):
+def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
     global timeDiffAfterNTP
     from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
@@ -263,17 +263,17 @@ def executeDeviceStatisticsUpload(cfg, network):
 
     try:
         import srcInfo
-        stats["src_branch"] = srcInfo.branch
-        stats["src_commit"] = srcInfo.commit
+        stats["sw_branch"] = srcInfo.branch
+        stats["sw_commit"] = srcInfo.commit
     except:
         logging.error("no srcInfo file found")
 
     stats["hw_version"] = device_info.get_hw_module_verison()
     (major, minor, patch, commit)  = device_info.get_firmware_version()
-    stats["sw_v_major"] = major
-    stats["sw_v_minor"] = minor
-    stats["sw_v_patch"] = patch
-    stats["sw_v_commit"] = commit
+    stats["fw_v_major"] = major
+    stats["fw_v_minor"] = minor
+    stats["fw_v_patch"] = patch
+    stats["fw_v_commit"] = commit
     stats["free_flash"] = device_info.get_free_flash()
     stats["serial"] = device_info.get_device_id()[0]
     logging.info("Uploading device statistics.")
