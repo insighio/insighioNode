@@ -294,9 +294,8 @@ def executeDeviceDeinitialization():
     demo_utils.device_deinit()
 
 def executeTimingConfiguration():
-    sleep_period = demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")*1000
-
-    if(sleep_period is not None):
+    if(demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") is not None):
+        sleep_period = demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")*1000
         # utime.ticks_ms() is being reset after each deepsleep
         uptime = getUptime(timeDiffAfterNTP)
         logging.debug("end timestamp: " + str(uptime))
