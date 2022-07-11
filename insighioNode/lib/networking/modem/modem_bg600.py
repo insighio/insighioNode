@@ -427,7 +427,7 @@ class ModemBG600(modem_base.Modem):
         # enable executing http request with custom headers
         self.send_at_cmd('AT+QHTTPCFG="requestheader",1')
         self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
-        url = 'http://' + url_base  #"http://console.insigh.io/mf-rproxy/channels/list"
+        url = 'https://' + url_base  #"http://console.insigh.io/mf-rproxy/channels/list"
         requestHeader = (
             "GET " + url_request_route + " HTTP/1.1\r\n"
             "Host: " + url_base + "\r\n"

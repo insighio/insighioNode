@@ -154,7 +154,7 @@ def downloadDeviceConfigurationHTTP(client):
     else: # not tested
         from external.MicroWebCli import microWebCli
         auth = MicroWebCli.AuthToken(protocol_config.thing_token)
-        wCli = microWebCli.MicroWebCli('http://' + URL_base + URL_PATH, 'GET', auth)
+        wCli = microWebCli.MicroWebCli('https://' + URL_base + URL_PATH, 'GET', auth)
         wCli.QueryParams['id'] = protocol_config.thing_id
         wCli.QueryParams['channel'] = protocol_config.control_channel_id
         logging.debug('GET file %s' % wCli.URL)
@@ -190,7 +190,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
     # http://<ip>/packages/download?fuid=<file-uid>&did=<device-id>&dk=<device-key>&cid=<control-channel-id>
     # TODO: fix support of redirections
     protocol_config = cfg.get_protocol_config()
-    URL = 'http://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}'.format(
+    URL = 'https://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}'.format(
         # cfg.protocol_config.server_ip,
         "console.insigh.io",
         fileId,
