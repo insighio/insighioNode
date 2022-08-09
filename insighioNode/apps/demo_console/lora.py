@@ -7,7 +7,9 @@ from networking import lora
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 def init(cfg):
-    pass
+    lora.set_pins(cfg._UC_IO_RADIO_GPS_ON, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
+    is_connected = lora.is_connected()
+    logging.info("Lora is connected: {}".format(is_connected))
 
 def updateSignalQuality(cfg, measurements):
     if not cfg._MEAS_NETWORK_STAT_ENABLE:
@@ -28,11 +30,11 @@ def connect(cfg):
     return results
 
 def is_connected():
-    return True
+    return lora.is_connected()
 
 def disconnect():
-    pass
-
+    logging.info("about to power off modem")
+    lora.deinit()
 
 def create_message_cbor(device_id, measurements):
     from external.kpn_senml.senml_pack_cbor import SenmlPackCbor

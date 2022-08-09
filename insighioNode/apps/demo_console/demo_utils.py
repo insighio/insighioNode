@@ -104,9 +104,8 @@ def get_measurements(cfg):
 
     try:
         if cfg._MEAS_BATTERY_STAT_ENABLE:
-            (vbatt, current) = read_battery_voltage()
+            vbatt = read_battery_voltage()
             set_value_int(measurements, "vbatt", vbatt, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
-            set_value_int(measurements, "current", current, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
         if cfg._MEAS_BOARD_STAT_ENABLE:
             (mem_alloc, mem_free) = device_info.get_heap_memory()
@@ -132,11 +131,11 @@ def get_measurements(cfg):
             set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
-        if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12 or cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12:
-            from . import demo_sdi12_utils
-            demo_sdi12_utils.sdi12_board_measurements(measurements)
-        else:
-            default_board_measurements(measurements)
+        #if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12 or cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12:
+        from . import demo_sdi12_utils
+        demo_sdi12_utils.sdi12_board_measurements(measurements)
+        # else:
+        #     default_board_measurements(measurements)
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
 
@@ -156,7 +155,7 @@ def read_battery_voltage():
 
     bq_charger_exec(bq_charger_set_charging_on)
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 0)
-    return (vbatt, current)
+    return vbatt
 
 
 def default_board_measurements(measurements):

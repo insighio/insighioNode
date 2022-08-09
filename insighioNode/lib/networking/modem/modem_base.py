@@ -66,10 +66,10 @@ class Modem:
         if status:
             self.send_at_cmd("at+cmee=2")
 
-    def wait_for_modem_power_on(self):
+    def wait_for_modem_power_on(self, command="AT"):
         retries = 0
         while retries < 10:
-            (status, response) = self.send_at_cmd("AT", 500)
+            (status, response) = self.send_at_cmd(command, 500)
             if status:
                 return True
             retries += 1
