@@ -28,3 +28,6 @@ _UC_IO_RADIO_ON = 13
 _UC_IO_PWRKEY = 10
 _UC_UART_MODEM_TX = 15
 _UC_UART_MODEM_RX = 16
+
+""" const i2c addresses """
+_I2C_BQ_ADDRESS = 0x6B

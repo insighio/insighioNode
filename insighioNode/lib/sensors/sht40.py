@@ -19,9 +19,9 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
     hum = None
 
     try:
-        i2c.writeto(68, b'\xFD')
+        i2c.writeto(0x44, b'\xFD')
         utime.sleep_ms(20)
-        rx_bytes = i2c.readfrom(68, 6)
+        rx_bytes = i2c.readfrom(0x44, 6)
         if len(rx_bytes) > 4:
             t_ticks = rx_bytes[0] << 8 | rx_bytes[1]
             rh_ticks = rx_bytes[3] << 8 | rx_bytes[4]

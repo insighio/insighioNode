@@ -32,6 +32,22 @@ def device_init():
     else:
         device_info.set_led_enabled(False)
 
+def read_shield_chip_id():
+    from machine import Pin, SoftI2C
+    import utime
+    chip_id = None
+    try:
+        i2c=SoftI2C(scl=cfg._UC_IO_I2C_SCL, sda=Pin(cfg._UC_IO_I2C_SDA))
+        # # WRITE`EXAMPLE: WRITE in MEMORY ADDRESS '02' the content 'AA'
+        # i2c.writeto(eeprom_addr, b'\x02\xAA', True)
+        #
+        # # READ EXAMPLE : READ 3 BYTES STARTING AT MEMORY ADDRESS '00'
+        # i2c.writeto(eeprom_addr, b'\x00', False)
+        chip_id = i2c.readfrom(cfg._I2C_CHIP_ID_ADDRESS, 3)
+    except Exception as e:
+        pass
+    return chip_id
+
 def bq_charger_exec(bq_func):
     from machine import SoftI2C, Pin
     status = False
@@ -39,7 +55,7 @@ def bq_charger_exec(bq_func):
         p_snsr = Pin(cfg._UC_IO_SENSOR_GND_ON, Pin.OUT)
         p_snsr.on()
         i2c = SoftI2C(scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
-        status = bq_func(i2c, 107)
+        status = bq_func(i2c, cfg._I2C_BQ_ADDRESS)
     except Exception as e:
         logging.error("No BQ charger detected")
     try:
