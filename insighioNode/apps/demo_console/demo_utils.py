@@ -36,7 +36,7 @@ def bq_charger_exec(bq_func):
     from machine import SoftI2C, Pin
     status = False
     try:
-        p_snsr = Pin(cfg._UC_IO_SENSOR_SWITCH_ON, Pin.OUT)
+        p_snsr = Pin(cfg._UC_IO_SENSOR_GND_ON, Pin.OUT)
         p_snsr.on()
         i2c = SoftI2C(scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
         status = bq_func(i2c, 107)
@@ -104,10 +104,7 @@ def get_measurements(cfg):
     except Exception as e:
         logging.exception(e, "unable to measure board sensors")
 
-    sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_SWITCH_ON)
-
-    if get_config("_UC_IO_ONB_SNSR_ON") is not None:
-        sensors.set_sensor_power_on(cfg._UC_IO_ONB_SNSR_ON)
+    sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_GND_ON)
 
     # read internal temperature and humidity
     try:
@@ -129,13 +126,7 @@ def get_measurements(cfg):
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
 
-    if get_config("_UC_IO_ONB_SNSR_ON") is not None:
-        sensors.set_sensor_power_off(cfg._UC_IO_ONB_SNSR_ON)
-
-    sensors.set_sensor_power_off(cfg._UC_IO_SENSOR_SWITCH_ON)
-
-    if get_config("_UC_IO_ONB_SNSR_ON") is not None:
-        sensors.set_sensor_power_off(cfg._UC_IO_ONB_SNSR_ON)
+    sensors.set_sensor_power_off(cfg._UC_IO_SENSOR_GND_ON)
 
     return measurements
 

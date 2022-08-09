@@ -20,29 +20,14 @@ def apply_configuration(keyValuePairDictionary):
 
     # set project configuration content
     if device_info.is_esp32():
-        if board == "ins_esp_gen_1":
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_1_config_templ.py')
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_scale.py')
-        elif board == "ins_esp_gen_s1":
-            if device_info.get_hw_module_verison() == "esp32s3":
-                contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s2_s3_config_templ.py')
-            else:
-                contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s1_config_templ.py')
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_i2c_dig_analog_templ.py')
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
-        elif board == "ins_esp_gen_sdi12":
+        #board == "ins_gen_s3":
+        contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s3_config_templ.py')
+        contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_i2c_dig_analog_templ.py')
+        contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
+        if  "ins_esp_gen_sdi12":
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s1_config_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_sdi12_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_sdi12_config_templ.py')
-    else:
-        contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_py_gen_1_config_templ.py')
-        if board == "sdi12":
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_sdi12_config_templ.py')
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/py_sdi12_config_templ.py')
-        else:
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
-        contents += '\n'
     contents += '\n'
 
     if operation == 'wifi':
