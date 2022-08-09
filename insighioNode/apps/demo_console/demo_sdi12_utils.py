@@ -23,14 +23,23 @@ def sdi12_board_measurements(measurements):
     sdi12 = None
 
     try:
-        sdi12 = SDI12(cfg._UC_IO_DRV_IN, cfg._UC_IO_RCV_OUT, cfg._UC_IO_DRV_RCV_ON, 1)
+        sdi12 = SDI12(cfg._UC_IO_DRV_IN, cfg._UC_IO_RCV_OUT, None, 1)
+        # set drv rcv cfg._UC_IO_DRV_RCV_ON
         sdi12.set_wait_after_uart_write(not device_info.is_esp32())
 
         if cfg._SDI12_SENSOR_1_ENABLED:
+            if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ"):
+                sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
             read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_1_ADDRESS, measurements)
+            if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ"):
+                sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
 
         if cfg._SDI12_SENSOR_2_ENABLED:
+            if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ"):
+                sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
             read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_2_ADDRESS, measurements)
+            if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ"):
+                sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
     if sdi12:
@@ -38,7 +47,7 @@ def sdi12_board_measurements(measurements):
 
     # power off SDI12 regulator
     if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
-        sensors.set_sensor_power_on(cfg._UC_IO_SNSR_REG_ON)
+        sensors.set_sensor_power_off(cfg._UC_IO_SNSR_REG_ON)
 
 
 def read_sdi12_sensor(sdi12, address, measurements):

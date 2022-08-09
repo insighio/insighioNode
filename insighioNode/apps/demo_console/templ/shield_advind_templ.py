@@ -1,0 +1,10 @@
+""" SDI-12 """
+_UC_IO_RCV_OUT = 41
+_UC_IO_DRV_ON = 11
+_UC_IO_RCV_ON = 1
+_UC_IO_DRV_IN = 17
+_UC_IO_SNSR_REG_ON = 37
+_UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ = 42
+_UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ = 48
+
+"""  """
