@@ -88,7 +88,7 @@ def get_measurements(cfg):
 
     try:
         if cfg._MEAS_BATTERY_STAT_ENABLE:
-            (vbatt, current) = read_battery_voltage_and_current()
+            (vbatt, current) = read_battery_voltage()
             set_value_int(measurements, "vbatt", vbatt, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT)
             set_value_int(measurements, "current", current, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
@@ -103,8 +103,6 @@ def get_measurements(cfg):
                 set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
     except Exception as e:
         logging.exception(e, "unable to measure board sensors")
-
-    sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_GND_ON)
 
     # read internal temperature and humidity
     try:
@@ -126,29 +124,20 @@ def get_measurements(cfg):
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
 
-    sensors.set_sensor_power_off(cfg._UC_IO_SENSOR_GND_ON)
-
     return measurements
 
 
-def read_battery_voltage_and_current():
-    # BATT VOLTAGE & CURR measurement
+def read_battery_voltage():
+    # BATT VOLTAGE
     current = None
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 1)
 
     bq_charger_exec(bq_charger_set_charging_off)
-    if hasattr(cfg, "_UC_IO_CHARGER_OFF"):
-        gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 1)
 
     utime.sleep_ms(50)
 
     vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, cfg._BAT_VDIV, cfg._BAT_ATT)
 
-    if hasattr(cfg, "_UC_IO_CHARGER_OFF") and hasattr(cfg, "_UC_IO_CUR_READ"):
-        vina_mV = gpio_handler.get_input_voltage(cfg._UC_IO_CUR_READ, voltage_divider=cfg._CUR_VDIV, attn=cfg._CUR_ATT)
-        current = (vina_mV - cfg._CUR_VREF_mV) / (cfg._CUR_RSENSE * cfg._CUR_GAIN)
-        # changed the order of the following two lines. evaluate if correct.
-        gpio_handler.set_pin_value(cfg._UC_IO_CHARGER_OFF, 0)
     bq_charger_exec(bq_charger_set_charging_on)
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 0)
     return (vbatt, current)
