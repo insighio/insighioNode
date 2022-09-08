@@ -25,8 +25,7 @@ def apply_configuration(keyValuePairDictionary):
         contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_i2c_dig_analog_templ.py')
         contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
         if  "ins_esp_gen_sdi12":
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s1_config_templ.py')
-            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_sdi12_templ.py')
+            contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_advind_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_sdi12_config_templ.py')
     contents += '\n'
 

@@ -9,7 +9,7 @@ _UC_IO_BAT_READ = 3
 
 """ Battery Voltage configuration """
 _BAT_VDIV = 2
-_BAT_ATT = machine.ADC.ATTN_0DB
+_BAT_ATT = machine.ADC.ATTN_11DB
 
 ''' Parameters for i2c sensors '''
 _UC_IO_I2C_SDA = 39
