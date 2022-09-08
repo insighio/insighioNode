@@ -171,26 +171,29 @@ def current_sense_4_20mA(measurements):
     import utime
 
     # sensor 1
-    gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
-    gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 1)
+    if cfg._4_20_SNSR_1_ENABLE:
+        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
+        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 1)
 
-    raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_1)
-    current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
-    print("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_1, raw_mV, current_mA))
-    set_value_float(measurements, "curr_port_1", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+        raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_1)
+        current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
+        logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_1, raw_mV, current_mA))
+        set_value_float(measurements, "curr_port_1", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
-    gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 0)
-    gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 0)
+        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
 
     # sensor 2
-    gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
-    gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 1)
+    if cfg._4_20_SNSR_2_ENABLE:
+        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
+        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 1)
 
-    raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_2)
-    current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
-    print("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_2, raw_mV, current_mA))
-    set_value_float(measurements, "curr_port_2", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+        raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_2)
+        current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
+        logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_2, raw_mV, current_mA))
+        set_value_float(measurements, "curr_port_2", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
-    gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 0)
-    gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 0)
+        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+
     utime.sleep_ms(2000)

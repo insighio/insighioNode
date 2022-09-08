@@ -54,7 +54,9 @@ configDict = {
 "_FORCE_ALWAYS_ON_CONNECTION": "force_always_on_connection",
 "_ALWAYS_ON_PERIOD": "always_on_period",
 "_MEAS_GPS_NO_FIX_NO_UPLOAD": "meas_gps_no_fix_no_upload",
-"_STORE_MEASUREMENT_IF_FAILED_CONNECTION": "store_meas_if_failed_conn"
+"_STORE_MEASUREMENT_IF_FAILED_CONNECTION": "store_meas_if_failed_conn",
+"_4_20_SNSR_1_ENABLE": "meas-4-20-snsr-1-enable",
+"_4_20_SNSR_2_ENABLE": "meas-4-20-snsr-2-enable"
 }
 
 

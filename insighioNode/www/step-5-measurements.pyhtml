@@ -409,6 +409,32 @@ def generateOptions(optionsDict):
                   <div class="col-8 col-sm-12">
                     <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time"/>
                   </div>
+                  <div class="form-group">
+                    <div class="col-4 col-sm-12">
+                      <label class="form-label" for="measurements">4-20mA sensor n.1</label>
+                    </div>
+                    <div class="col-8 col-sm-12">
+                      <div class="form-group">
+                        <label class="form-switch">
+                          <input type="checkbox" id="ins-esp-gen-4-20-snsr-1-enable" />
+                          <i class="form-icon"></i>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="col-4 col-sm-12">
+                      <label class="form-label" for="measurements">4-20mA sensor n.2</label>
+                    </div>
+                    <div class="col-8 col-sm-12">
+                      <div class="form-group">
+                        <label class="form-switch">
+                          <input type="checkbox" id="ins-esp-gen-4-20-snsr-2-enable" />
+                          <i class="form-icon"></i>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
                   <br />
                   <br />
                   <br />
@@ -583,6 +609,8 @@ def generateOptions(optionsDict):
       Cookies.remove('system-enable-ota')
       Cookies.remove('meas-keyvalue')
       Cookies.remove('store-meas-if-failed-conn')
+      Cookies.remove('meas-4-20-snsr-1-enable')
+      Cookies.remove('meas-4-20-snsr-2-enable')
     }
 
     function storeData() {
@@ -614,6 +642,9 @@ def generateOptions(optionsDict):
         Cookies.set('meas-sdi-2-enabled', boolElemToPyStr('input-ins-esp-gen-sdi12-2-enable'))
         Cookies.set('meas-sdi-1-address', address1_elem !== null ? address1_elem.value : "")
         Cookies.set('meas-sdi-2-address', address2_elem !== null ? address2_elem.value : "")
+
+        Cookies.set('meas-4-20-snsr-1-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-1-enable'))
+        Cookies.set('meas-4-20-snsr-2-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-2-enable'))
 
         Cookies.set('meas-sdi-warmup-time', document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value)
         location.href = "step-6-timing.pyhtml"
