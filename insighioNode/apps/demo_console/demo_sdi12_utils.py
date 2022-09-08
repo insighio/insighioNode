@@ -31,18 +31,24 @@ def sdi12_board_measurements(measurements):
         if cfg._SDI12_SENSOR_1_ENABLED:
             if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ"):
                 sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
+                sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
                 utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
             read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_1_ADDRESS, measurements)
+
             if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ"):
                 sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
+                sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
+                utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
 
         if cfg._SDI12_SENSOR_2_ENABLED:
             if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ"):
                 sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
+                sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
                 utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
             read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_2_ADDRESS, measurements)
             if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ"):
                 sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
+                sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
 
         current_sense_4_20mA(measurements)
     except Exception as e:
@@ -162,7 +168,9 @@ def current_sense_4_20mA(measurements):
     from machine import Pin
     import gpio_handler
     from sensors import analog_generic
+    import utime
 
+    # sensor 1
     gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
     gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 1)
 
@@ -173,3 +181,16 @@ def current_sense_4_20mA(measurements):
 
     gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 0)
     gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+
+    # sensor 2
+    gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
+    gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 1)
+
+    raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_2)
+    current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
+    print("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_2, raw_mV, current_mA))
+    set_value_float(measurements, "curr_port_2", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+
+    gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 0)
+    gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+    utime.sleep_ms(2000)
