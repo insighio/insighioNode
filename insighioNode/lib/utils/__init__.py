@@ -1,8 +1,15 @@
 import logging
 import esp32
+import uos
 
 key_value_storage = esp32.NVS("insighio")
 
+def existsFile(source):
+    try:
+        uos.stat(source)
+        return True
+    except Exception as e:
+        return False
 
 def copyFile(source, destination):
     try:
@@ -15,6 +22,14 @@ def copyFile(source, destination):
         return True
     except Exception as e:
         logging.exception(e, "Error copying file [{}] to [{}]".format(source, destination))
+        return False
+
+def renameFile(source, destination):
+    try:
+        uos.rename(source, destination)
+        return True
+    except Exception as e:
+        logging.exception(e, "Error renaming file [{}] to [{}]".format(source, destination))
         return False
 
 
