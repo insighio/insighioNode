@@ -1,4 +1,7 @@
-from . import demo_config as cfg
+try:
+    from . import demo_config as cfg
+except Exception as e:
+    cfg = type('', (), {})()
 import json
 import utils
 import logging

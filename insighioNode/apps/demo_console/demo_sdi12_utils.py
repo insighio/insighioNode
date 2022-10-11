@@ -2,7 +2,10 @@ import utime
 from apps.demo_console.dictionary_utils import set_value_float
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
-from . import demo_config as cfg
+try:
+    from . import demo_config as cfg
+except Exception as e:
+    cfg = type('', (), {})()
 import logging
 import device_info
 import sensors

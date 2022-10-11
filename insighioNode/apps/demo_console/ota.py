@@ -129,7 +129,10 @@ def progressCallback(microWebCli, progressSize, totalSize):
 
 def downloadDeviceConfigurationHTTP(client):
     logging.info("About to download device configuration over HTTP...")
-    from . import demo_config as cfg
+    try:
+        from . import demo_config as cfg
+    except Exception as e:
+        cfg = type('', (), {})()
     protocol_config = cfg.get_protocol_config()
     URL_base = "console.insigh.io"
     URL_PATH = '/mf-rproxy/device/config'
@@ -184,7 +187,10 @@ def downloadOTA(client, fileId, fileType, fileSize):
 
     logging.debug("OTA size check passed")
 
-    from . import demo_config as cfg
+    try:
+        from . import demo_config as cfg
+    except Exception as e:
+        cfg = type('', (), {})()
 
     filename = device_info.get_device_root_folder() + fileId + fileType
     # http://<ip>/packages/download?fuid=<file-uid>&did=<device-id>&dk=<device-key>&cid=<control-channel-id>
