@@ -28,7 +28,7 @@ def get_protocol_config():
     if _IP_VERSION == "IPV6":
         protocol_config.server_ip = "2001:41d0:701:1100:0:0:0:2060"
     else:
-        protocol_config.server_ip = "51.75.72.81"
+        protocol_config.server_ip = "console.insigh.io"
 
     """ console.insigh.io security keys """
     protocol_config.message_channel_id = "<insighio-channel>"
