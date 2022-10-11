@@ -11,9 +11,9 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
     # initialization & measurement
     i2c = I2C(0, scl=Pin(scl_pin), sda=Pin(sda_pin))
 
-    # could be removed
-    i2c_scan = i2c.scan()
-    logging.debug("I2C: {}".format(i2c_scan))
+    # # could be removed
+    # i2c_scan = i2c.scan()
+    # logging.debug("I2C: {}".format(i2c_scan))
 
     temp = None
     hum = None
