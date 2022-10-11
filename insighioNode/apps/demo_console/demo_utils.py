@@ -136,6 +136,18 @@ def get_measurements(cfg):
         demo_sdi12_utils.sdi12_board_measurements(measurements)
         # else:
         #     default_board_measurements(measurements)
+
+        # add support for asm330
+        from sensors import asm330 as sens
+        # only at setup
+        #sens.get_sensor_whoami()
+        sens.set_asm(1)
+        (asm330_accX, asm330_accY, asm330_accZ) = sens.get_acc_reading()
+        set_value_float(measurements, "asm330_accX", asm330_accX, SenmlUnits.SENML_UNIT_ACCELERATION)
+        set_value_float(measurements, "asm330_accY", asm330_accY, SenmlUnits.SENML_UNIT_ACCELERATION)
+        set_value_float(measurements, "asm330_accZ", asm330_accZ, SenmlUnits.SENML_UNIT_ACCELERATION)
+
+
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
 
