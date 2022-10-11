@@ -8,3 +8,7 @@ class MQTTConfig:
         self.thing_token = ""
         self.client_name = ""
         self.keepalive = 0
+        self.lw_subtopic = None
+        self.lw_message = None
+        self.lw_qos = None
+        self.lw_retain = None

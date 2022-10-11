@@ -1,6 +1,6 @@
 import logging
 import device_info
-
+from . import locks
 
 class TransferProtocol:
     def __init__(self, cfg, modem_instance=None):
@@ -92,19 +92,30 @@ class TransferProtocolMQTT(TransferProtocol):
         super().__init__(cfg)
         from protocols import mqtt_client
         self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
+        self.enable_last_will(self.protocol_config)
 
     def connect(self):
         if self.connected:
             return True
 
-        connectionStatus = self.client.connect()
-        logging.info("mqtt connection status: " + str(connectionStatus))
-        # connectionStatus is not valid on pycom devices
-        self.connected = (connectionStatus or not device_info.is_esp32())
-        return self.connected
+        with locks.network_transmit_mutex:
+            self.connected = self.client.connect()
+            logging.info("mqtt connection status: " + str(self.connected))
+            return self.connected
+
+    def enable_last_will(self, protocol_config):
+        if protocol_config.lw_subtopic is None or protocol_config.lw_message is None or self.client is None:
+            logging.info("Error in last will setup, ignoring")
+            return
+
+        logging.info("Setting last will message")
+        qos = protocol_config.lw_qos if not None else 0
+        retain = protocol_config.lw_retain if not None else False
+        self.client.set_last_will(protocol_config.lw_subtopic, protocol_config.lw_message, retain, qos)
 
     def is_connected(self):
-        return self.client.is_connected()
+        with locks.network_transmit_mutex:
+            return self.client.is_connected()
 
     def disconnect(self):
         self.client.disconnect()
@@ -119,10 +130,11 @@ class TransferProtocolMQTT(TransferProtocol):
 
         logging.info("About to send: " + message)
         for i in range(0, 3):
-            message_publish_ok = self.client.sendMessage(message, channel)
-            if message_publish_ok:
-                logging.info("Sent.")
-                return True
+            with locks.network_transmit_mutex:
+                message_publish_ok = self.client.sendMessage(message, channel)
+                if message_publish_ok:
+                    logging.info("Sent.")
+                    return True
         logging.info("Failed.")
         return False
 
@@ -132,7 +144,8 @@ class TransferProtocolMQTT(TransferProtocol):
             return False
 
         logging.info("About to send control message")
-        return self.client.sendControlMessage(message, subtopic)
+        with locks.network_transmit_mutex:
+            return self.client.sendControlMessage(message, subtopic)
 
 
     def get_control_message(self):
@@ -140,11 +153,13 @@ class TransferProtocolMQTT(TransferProtocol):
             logging.info("TransferProtocol not connected")
             return None
 
-        return self.client.subscribe_and_get_first_message()
+        with locks.network_transmit_mutex:
+            return self.client.subscribe_and_get_first_message()
 
     def clear_retained(self, topic):
         logging.info("About to clear retained message of topic: " + topic)
-        return self.client.sendMessage("", topic, True)
+        with locks.network_transmit_mutex:
+            return self.client.sendMessage("", topic, True)
 
 class TransferProtocolCoAP(TransferProtocol):
     def __init__(self, cfg):
