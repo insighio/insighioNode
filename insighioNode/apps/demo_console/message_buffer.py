@@ -1,20 +1,24 @@
 try:
-    from . import demo_config as cfg
-except Exception as e:
+    from apps.demo_console import demo_config as cfg
+except:
     cfg = type('', (), {})()
 import json
 import utils
 import logging
 import utime
 import device_info
+import _thread
 
 storage_file_name = "measurements.log"
-MAX_NUMBER_OF_FORCED_MESSAGES=1000
+MAX_NUMBER_OF_FORCED_MESSAGES=const(1000)
+
+mutex = _thread.allocate_lock()
+
+def buffered_measurements_count():
+    return utils.countFileLines(storage_file_name)
 
 def timestamp_measurements(measurements):
-    offset = 0
-    if device_info.is_esp32():
-        offset = 946684800
+    offset = 946684800
 
     timezone_offset = utils.getKeyValueInteger("tz_sec_offset")
 
@@ -28,27 +32,34 @@ def timestamp_measurements(measurements):
         measurements["dt"] = {"value": epoch}   # time offset 1970 -> 2000
 
 
-def store_measurement_if_needed(measurements, force_store=False):
-    if cfg._BATCH_UPLOAD_MESSAGE_BUFFER is None and not force_store:
-        logging.error("Batch upload not activated, ignoring")
-        return False
-
+def store_measurement(measurements):
+    global mutex
     # +1 is added to count the current measurement that has not been stored to the file
     number_of_measurements = utils.countFileLines(storage_file_name) + 1
-    logging.info("Message " + str(number_of_measurements) + " of " + str(cfg._BATCH_UPLOAD_MESSAGE_BUFFER))
+    logging.info("Message #" + str(number_of_measurements))
 
-    if number_of_measurements < cfg._BATCH_UPLOAD_MESSAGE_BUFFER or (force_store and number_of_measurements < MAX_NUMBER_OF_FORCED_MESSAGES):
-        data = json.dumps(measurements) + "\n"
+    data = json.dumps(measurements) + "\n"
+    with mutex:
         utils.appendToFile(storage_file_name, data)
         logging.debug("Measurement stored: " + str(measurements))
         return True
-    return False
 
 
 def parse_stored_measurements_and_upload(network):
+    global mutex
     # load stored measurements
     failed_messages = []
-    stored_measurements_str = utils.readFromFile(storage_file_name)
+    if not utils.existsFile(storage_file_name) and not utils.existsFile(storage_file_name + ".up"):
+        return
+
+    logging.info("stored measurements found, about to upload")
+
+    with mutex:
+        interupted_upload_str = utils.readFromFile(storage_file_name + ".up")
+        stored_measurements_str = utils.readFromFile(storage_file_name)
+        utils.copyFile(storage_file_name, storage_file_name + ".up")
+        utils.deleteFile(storage_file_name)
+        stored_measurements_str += "\n" + interupted_upload_str
     uploaded_measurement_count = 0
     for line in stored_measurements_str.split('\n'):
         utime.sleep_ms(50)
@@ -67,10 +78,10 @@ def parse_stored_measurements_and_upload(network):
             else:
                 uploaded_measurement_count += 1
         except Exception as e:
-            logging.exception(e, "error reading line: ", line)
+            logging.exception(e, "error reading line: [{}]".format(line))
 
-    if uploaded_measurement_count > 0:
-        utils.deleteFile(storage_file_name)
+    with mutex:
+        utils.deleteFile(storage_file_name + ".up")
 
         # if failed messages were logged, recreate the file to upload during next connection
         for failed_message in failed_messages:

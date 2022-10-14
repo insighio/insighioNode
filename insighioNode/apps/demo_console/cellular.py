@@ -6,7 +6,6 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 import device_info
 import utime
-from . import demo_utils
 
 transfer_client = None
 mqtt_connected = False
@@ -82,7 +81,7 @@ def connect(cfg):
 
     if status == cellular.MODEM_CONNECTED:
         global transfer_client
-        from . import transfer_protocol
+        from apps.demo_console import transfer_protocol
 
         # AT command based implementation of communication of Quectel BG600L
         modem_model = modem_instance.get_model()
@@ -192,5 +191,5 @@ def disconnect():
 
 def check_and_apply_ota(cfg):
     if transfer_client is not None:
-        from . import ota
+        from apps.demo_console import ota
         ota.checkAndApply(transfer_client)

@@ -3,7 +3,7 @@ from apps.demo_console.dictionary_utils import set_value_float
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 try:
-    from . import demo_config as cfg
+    from apps.demo_console import demo_config as cfg
 except Exception as e:
     cfg = type('', (), {})()
 import logging

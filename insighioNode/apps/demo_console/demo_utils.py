@@ -3,11 +3,16 @@ import logging
 import gpio_handler
 import device_info
 import sensors
-from . import demo_config as cfg
+import gc
+try:
+    from apps.demo_console import demo_config as cfg
+except Exception as e:
+    cfg = type('', (), {})()
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from apps.demo_console.dictionary_utils import set_value, set_value_int, set_value_float
 import ubinascii
+from apps.demo_console import message_buffer
 
 
 def get_config(key):
@@ -132,21 +137,10 @@ def get_measurements(cfg):
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
         #if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12 or cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12:
-        from . import demo_sdi12_utils
+        from apps.demo_console import demo_sdi12_utils
         demo_sdi12_utils.sdi12_board_measurements(measurements)
         # else:
         #     default_board_measurements(measurements)
-
-        # add support for asm330
-        from sensors import asm330 as sens
-        # only at setup
-        #sens.get_sensor_whoami()
-        sens.set_asm(1)
-        (asm330_accX, asm330_accY, asm330_accZ) = sens.get_acc_reading()
-        set_value_float(measurements, "asm330_accX", asm330_accX, SenmlUnits.SENML_UNIT_ACCELERATION)
-        set_value_float(measurements, "asm330_accY", asm330_accY, SenmlUnits.SENML_UNIT_ACCELERATION)
-        set_value_float(measurements, "asm330_accZ", asm330_accZ, SenmlUnits.SENML_UNIT_ACCELERATION)
-
 
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
@@ -297,3 +291,52 @@ def execute_transformation(measurements, name, raw_value, transformator):
     except Exception as e:
         logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass
+
+def storeMeasurement(measurements, force_store):
+    message_buffer.timestamp_measurements(measurements)
+    return message_buffer.store_measurement(measurements)
+
+def read_accelerometer():
+    logging.info("starting XL thread")
+
+    if get_config("_ALWAYS_ON_CONNECTION") or get_config("_FORCE_ALWAYS_ON_CONNECTION"):
+        logging.debug("loading network modules...")
+        # connect to network
+        if cfg.network == "wifi":
+            from apps.demo_console import wifi as network
+        elif cfg.network == "cellular":
+            from apps.demo_console import cellular as network
+    else:
+        network = None
+
+    try:
+        # add support for asm330
+        from sensors import asm330
+        # only at setup
+        #sens.get_sensor_whoami()
+        asm330.init(cfg._UC_IO_I2C_SCL, cfg._UC_IO_I2C_SDA)
+    except Exception as e:
+        logging.info("No sensors detected")
+        return
+
+    while True:
+        gc.collect()
+
+        (asm330_accX, asm330_accY, asm330_accZ) = asm330.get_acc_reading()
+        if asm330_accX is None or asm330_accY is None or asm330_accZ is None:
+            utime.sleep_ms(100)
+            continue
+            
+        measurement = {}
+        set_value_float(measurement, "asm330_accX", asm330_accX, SenmlUnits.SENML_UNIT_ACCELERATION)
+        set_value_float(measurement, "asm330_accY", asm330_accY, SenmlUnits.SENML_UNIT_ACCELERATION)
+        set_value_float(measurement, "asm330_accZ", asm330_accZ, SenmlUnits.SENML_UNIT_ACCELERATION)
+
+        if network and network.is_connected():
+            message = network.create_message(cfg.device_id, measurement)
+            message_send_status = network.send_message(cfg, message)
+
+        if not network or not network.is_connected() or not message_send_status:
+            storeMeasurement(measurement, True)
+
+        utime.sleep_ms(100)

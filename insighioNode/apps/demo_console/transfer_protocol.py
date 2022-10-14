@@ -1,6 +1,6 @@
 import logging
 import device_info
-from . import locks
+from apps.demo_console import locks
 
 class TransferProtocol:
     def __init__(self, cfg, modem_instance=None):

@@ -1,5 +1,5 @@
 import logging
-from . import transfer_protocol
+from apps.demo_console import transfer_protocol
 import device_info
 import utils
 
@@ -76,7 +76,7 @@ def checkAndApply(client):
         if str(eventId) == "0" and fileId and fileType and fileSize:
             downloaded_file = downloadOTA(client, fileId, fileType, fileSize)
             if downloaded_file:
-                from . import apply_ota
+                from apps.demo_console import apply_ota
                 applied = apply_ota.do_apply(downloaded_file)
                 if applied:
                     print("about to reset...")
@@ -107,7 +107,7 @@ def hasEnoughFreeSpace(fileSize):
 # 2: Failed
 # 3: Canceled
 def sendOtaStatusMessage(client, fileId, success, reason_measage=None):
-    from . import transfer_protocol
+    from apps.demo_console import transfer_protocol
     from external.kpn_senml.senml_pack_json import SenmlPackJson
     from external.kpn_senml.senml_record import SenmlRecord
 
@@ -130,7 +130,7 @@ def progressCallback(microWebCli, progressSize, totalSize):
 def downloadDeviceConfigurationHTTP(client):
     logging.info("About to download device configuration over HTTP...")
     try:
-        from . import demo_config as cfg
+        from apps.demo_console import demo_config as cfg
     except Exception as e:
         cfg = type('', (), {})()
     protocol_config = cfg.get_protocol_config()
@@ -188,7 +188,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
     logging.debug("OTA size check passed")
 
     try:
-        from . import demo_config as cfg
+        from apps.demo_console import demo_config as cfg
     except Exception as e:
         cfg = type('', (), {})()
 
