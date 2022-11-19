@@ -22,3 +22,6 @@
 [submodule "lib-external/MicroWebCli"]
 	path = lib-external/MicroWebCli
 	url = https://github.com/jczic/MicroWebCli.git
+[submodule "lib-external/astronode-micropython"]
+	path = lib-external/astronode-micropython
+	url = https://github.com/insighio/astronode-micropython.git
