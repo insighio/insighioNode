@@ -77,9 +77,6 @@ def determine_message_buffering_and_network_connection_necessity():
         execute_connetion_procedure = True
     return (buffered_upload_enabled, execute_connetion_procedure)
 
-def executeStartAccelerometerReading():
-    _thread.start_new_thread(demo_utils.read_accelerometer, ())
-
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
     (buffered_upload_enabled, execute_connetion_procedure) = determine_message_buffering_and_network_connection_necessity()
@@ -88,15 +85,18 @@ def executeMeasureAndUploadLoop():
     always_on = isAlwaysOnScenario()
     always_on_period = demo_utils.get_config("_ALWAYS_ON_PERIOD")
     if always_on_period:
-        # set keepalive timing used for heartbeats in open connections
-        proto_cfg_instance = cfg.get_protocol_config()
-        proto_cfg_instance.keepalive = int(always_on_period * 1.5) if always_on else 0
+        try:
+            # set keepalive timing used for heartbeats in open connections
+            proto_cfg_instance = cfg.get_protocol_config()
+            proto_cfg_instance.keepalive = int(always_on_period * 1.5) if always_on else 0
 
-        if demo_utils.get_config("_MEAS_GPS_ENABLE"):
-            proto_cfg_instance.keepalive += demo_utils.get_config("_MEAS_GPS_TIMEOUT")
-        logging.debug("keepalive period: " + str(proto_cfg_instance.keepalive))
+            if demo_utils.get_config("_MEAS_GPS_ENABLE"):
+                proto_cfg_instance.keepalive += demo_utils.get_config("_MEAS_GPS_TIMEOUT")
+            logging.debug("keepalive period: " + str(proto_cfg_instance.keepalive))
+        except:
+            logging.debug("no protocol info, ignoring keepalive configuration")
 
-    if always_on or not RTCisValid():
+    if always_on: #or not RTCisValid():
         time_to_sleep = 5000 # check connection and upload messages every 5 seconds
     else:
         time_to_sleep = scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") if scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") else 60
@@ -106,13 +106,13 @@ def executeMeasureAndUploadLoop():
     while True:
         logging.info("Always on connection activated: " + str(always_on))
         always_on_start_timestamp = utime.ticks_ms()
-        measurements = {}
+        #measurements = {}
         device_info.wdt_reset()
         measurement_run_start_timestamp = utime.ticks_ms()
 
         # get measurements
         logging.debug("Starting getting measurements...")
-        #measurements = demo_utils.get_measurements(cfg)
+        measurements = demo_utils.get_measurements(cfg)
         if is_first_run:
             measurements["reset_cause"] = {"value": device_info.get_reset_cause()}
 
@@ -142,8 +142,6 @@ def executeMeasureAndUploadLoop():
             if is_first_run:
                 # if it is always on, first connect to the network and then start threads,
                 # to allow them to immediatelly upload events
-                if always_on:
-                    executeStartAccelerometerReading()
                 is_first_run = False
 
             start_sleep_time = utime.ticks_ms()
@@ -175,6 +173,8 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
         from apps.demo_console import wifi as network
     elif cfg.network == "cellular":
         from apps.demo_console import cellular as network
+    elif cfg.network == "satellite":
+        from apps.demo_console import satellite as network
 
         network.init(cfg)
         logging.debug("Network modules loaded")
@@ -224,14 +224,9 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
 
         if is_first_run:
             executeDeviceConfigurationUpload(cfg, network)
-            # executeDeviceDetailsDownload(cfg, network)
-            # executeCheckAndCallDeviceRegistration(cfg, network)
 
         # create packet
         uptime = getUptime(timeDiffAfterNTP)
-        #measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": uptime if is_first_run else (uptime - measurement_run_start_timestamp)}
-        #message_sent = network.send_message(cfg, network.create_message(cfg.device_id, measurements))
-        # upload any stored/buffered messages
         message_buffer.parse_stored_measurements_and_upload(network)
 
         if not always_on or (always_on and is_first_run):
