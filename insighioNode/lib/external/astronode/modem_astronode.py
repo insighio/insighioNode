@@ -1,1 +1,0 @@
-../../../../lib-external/astronode-micropython/modem_astronode.py
