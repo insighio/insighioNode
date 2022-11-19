@@ -43,34 +43,27 @@ def set_pins(power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx
 
 def detect_modem():
     global cellular_model
-    if device_info.is_esp32():
-        from networking.modem.modem_base import Modem
-        modemInst = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
-        if not modemInst.is_alive():
-            modemInst.power_on()
+    from networking.modem.modem_base import Modem
+    modemInst = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
+    if not modemInst.is_alive():
+        modemInst.power_on()
+    model_name = modemInst.get_model()
+    # logging.debug("modem name returned: " + model_name)
+    # if modem is still not responding, try power off/on
+    if not model_name:
+        modemInst.power_off()
+        utime.sleep_ms(1000)
+        modemInst.power_on()
         model_name = modemInst.get_model()
-        # logging.debug("modem name returned: " + model_name)
-        # if modem is still not responding, try power off/on
-        if not model_name:
-            modemInst.power_off()
-            utime.sleep_ms(1000)
-            modemInst.power_on()
-            model_name = modemInst.get_model()
 
-        if not model_name:
-            cellular_model = CELLULAR_NO
-        elif CELLULAR_MC60_STR in model_name:
-            cellular_model = CELLULAR_MC60
-        elif CELLULAR_BG600_STR in model_name:
-            cellular_model = CELLULAR_BG600
-        else:
-            cellular_model = CELLULAR_UNKNOWN
+    if not model_name:
+        cellular_model = CELLULAR_NO
+    elif CELLULAR_MC60_STR in model_name:
+        cellular_model = CELLULAR_MC60
+    elif CELLULAR_BG600_STR in model_name:
+        cellular_model = CELLULAR_BG600
     else:
-        try:
-            import pycom
-            cellular_model = CELLULAR_SEQUANS if sys.platform in device_info._LTE_COMPATIBLE_PLATFORMS else CELLULAR_NO
-        except Exception as e:
-            cellular_model = CELLULAR_NO
+        cellular_model = CELLULAR_UNKNOWN
 
     logging.debug("selected modem: " + str(cellular_model))
     return cellular_model
@@ -184,9 +177,6 @@ def connect(cfg):
 
 
 def update_rtc_from_network_time(modem):
-    if not device_info.is_esp32():
-        return
-
     try:
         from machine import RTC
         time_tuple = modem.get_network_date_time()

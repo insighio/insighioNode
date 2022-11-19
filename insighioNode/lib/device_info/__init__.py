@@ -29,10 +29,6 @@ machine_data = uos_version_data.machine
 firmware_data = uos_version_data.version.split(" ")[0].split("-")
 firmware_data[0] = firmware_data[0][1:] # "from 'v1.18' to '1.18'"
 
-def is_esp32():
-    return sys.platform == 'esp32' or 'esp8266'
-
-
 def is_wdt_enabled():
     return wdt is not None
 
@@ -55,14 +51,8 @@ def supports_13bit_adc():
     return get_hw_module_verison() == "esp32s2"
 
 
-if not is_esp32():
-    import pycom
-    _LORA_COMPATIBLE_PLATFORMS = ["LoPy", "FiPy", "LoPy4"]
-    _LTE_COMPATIBLE_PLATFORMS = ["GPy", "FiPy"]
-
-
 def get_device_root_folder():
-    return '/' if is_esp32() else '/flash/'
+    return '/'
 
 
 def get_firmware_version():
@@ -102,33 +92,11 @@ def get_device_id():
 
 def _try_get_lora_mac_bytes(force_init_region=False):
     mac = None
-    try:
-        from network import LoRa
-        lora = None
-        if force_init_region:
-            lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
-            utime.sleep_ms(250)
-        else:
-            lora = LoRa(mode=LoRa.LORAWAN)
-        mac = lora.mac()
-    except Exception as e:
-        logging.exception(e, "_try_get_lora_mac_bytes")
-
     return mac
 
 
 def get_lora_mac():
     """ Returns a device id based on lora mac in readable format and in raw format """
-    # valid only for lora compatible devices
-    if not is_esp32() and sys.platform in _LORA_COMPATIBLE_PLATFORMS:
-        mac = _try_get_lora_mac_bytes()
-
-        if mac is None:
-            mac = _try_get_lora_mac_bytes(True)
-
-        if mac is not None:
-            return (ubinascii.hexlify(mac).upper().decode('utf-8'), mac)
-
     return (None, None)
 
 
@@ -153,60 +121,32 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
     global wdt
     global wdt_timeout
     wdt = None
-    if is_esp32():
-        import network
-        wl = network.WLAN(network.STA_IF)
-        wl.active(wifi_on_boot)
 
-        if not wifi_on_boot:
-            ap = network.WLAN(network.AP_IF)
-            ap.active(False)
+    import network
+    wl = network.WLAN(network.STA_IF)
+    wl.active(wifi_on_boot)
 
-        try:
-            from ubluetooth import BLE
-            BLE().active(bt_on_boot)
-        except:
-            pass
+    if not wifi_on_boot:
+        ap = network.WLAN(network.AP_IF)
+        ap.active(False)
 
-        if(wdt_on_boot):
-            wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
-            wdt_timeout = wdt_on_boot_timeout_sec
+    try:
+        from ubluetooth import BLE
+        BLE().active(bt_on_boot)
+    except:
+        pass
+
+    if(wdt_on_boot):
+        wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
+        wdt_timeout = wdt_on_boot_timeout_sec
 
 
-        if get_hw_module_verison() == "esp32s3":
-            set_led_enabled(True, 47, 21)
-        elif get_hw_module_verison() == "esp32s2":
-            set_led_enabled(True, 37, 36)
-        else:
-            set_led_enabled(False)
+    if get_hw_module_verison() == "esp32s3":
+        set_led_enabled(True, 47, 21)
+    elif get_hw_module_verison() == "esp32s2":
+        set_led_enabled(True, 37, 36)
     else:
-        try:
-            import pycom
-            pycom.heartbeat(heartbeat)
-            # disable/enable wifi on boot
-            pycom.wifi_on_boot(wifi_on_boot)
-            # setup watchdog
-            pycom.wdt_on_boot(wdt_on_boot)
-            pycom.wdt_on_boot_timeout(wdt_on_boot_timeout_sec * 1000)  # reboots after X ms if no wdt.feed
-            pycom.pybytes_on_boot(False)
-            if(wdt_on_boot):
-                wdt = machine.WDT(wdt_on_boot_timeout_sec * 1000)
-                wdt_timeout = wdt_on_boot_timeout_sec
-        except Exception as e:
-            pass
-
-        # bluetooth disable if requested
-        if not bt_on_boot:
-            try:
-                from network import Bluetooth
-                Bluetooth().deinit()
-            except Exception as e:
-                pass
-        # print("Bluetooth disabled")
-
-    # garbage collection
-    # TODO: review why the next line existed
-    # gc.disable()
+        set_led_enabled(False)
 
 
 def set_led_enabled(led_enabled, led_pin_vdd=37, led_pin_din=36):
@@ -292,11 +232,8 @@ def get_heap_memory():
 def get_cpu_temp(unit_in_celsius=True):
     """ Returns CPU temperature in degrees of Celsius """
     temp = None
-    if is_esp32():
-        import esp32
-        temp = esp32.raw_temperature()
-    else:
-        temp = machine.temperature()
+    import esp32
+    temp = esp32.raw_temperature()
 
     if unit_in_celsius:
         return (temp - 32) / 1.8

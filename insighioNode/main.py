@@ -9,23 +9,22 @@ logging.debug("start timestamp: " + str(utime.ticks_ms()))
 import sys
 import device_info
 
-if device_info.is_esp32():
-    import machine
-    if device_info.get_hw_module_verison() == "esp8266":
-        machine.freq(160000000)
-    else:
-        machine.freq(240000000)
+import machine
+if device_info.get_hw_module_verison() == "esp8266":
+    machine.freq(160000000)
+else:
+    machine.freq(240000000)
 
-    if device_info.get_hw_module_verison() == "esp32s2":
-        import _thread
-        import time
+if device_info.get_hw_module_verison() == "esp32s2":
+    import _thread
+    import time
 
-        def testThread():
-            while True:
-                print(".", end='')
-                utime.sleep_ms(500)
+    def testThread():
+        while True:
+            print(".", end='')
+            utime.sleep_ms(500)
 
-        _thread.start_new_thread(testThread, ())
+    _thread.start_new_thread(testThread, ())
 
 demo_config_exists = False
 try:

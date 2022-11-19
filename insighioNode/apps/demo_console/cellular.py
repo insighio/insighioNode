@@ -19,8 +19,7 @@ def add_value_if_valid(results, key, value, unit=None):
         results[key] = {"value": value}
 
 def init(cfg):
-    if device_info.is_esp32():
-        cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
+    cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
 def prepareForConnectAndUpload():
     modem_instance = cellular.get_modem_instance()

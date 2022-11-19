@@ -25,16 +25,11 @@ def getUptime(timeOffset=None):
     uptime = utime.ticks_ms()
     if timeOffset is not None:
         uptime -= timeOffset
-    if not device_info.is_esp32():
-        uptime -= start_time
     return uptime
 
 def now():
     from machine import RTC
-    if device_info.is_esp32():
-        return RTC().datetime()
-    else:
-        return RTC().now()
+    return RTC().datetime()
 
 def isAlwaysOnScenario():
     return (demo_utils.get_config("_ALWAYS_ON_CONNECTION") and demo_utils.bq_charger_exec(demo_utils.bq_charger_is_on_external_power)) or demo_utils.get_config("_FORCE_ALWAYS_ON_CONNECTION")
@@ -346,11 +341,7 @@ def executeTimingConfiguration():
             else:
                 return DAY_SECONDS - current_seconds_of_day + MORNING_MEAS
 
-        if device_info.is_esp32():
-            seconds_of_day = (time_tuple[4] * 3600 + time_tuple[5] * 60 + time_tuple[6])
-        else:
-            seconds_of_day = (time_tuple[3] * 3600 + time_tuple[4] * 60 + time_tuple[5])
-        # seconds_of_day = (seconds_of_day + 3 * 3600) % DAY_SECONDS  # temp timezone fix
+        seconds_of_day = (time_tuple[4] * 3600 + time_tuple[5] * 60 + time_tuple[6])
 
         seconds_to_wait = get_seconds_till_next_slot(seconds_of_day)
         MIN_WAIT_THRESHOLD = 900  # 15 minutes

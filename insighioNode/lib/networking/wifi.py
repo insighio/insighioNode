@@ -18,12 +18,8 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
     rssi = -121
     channel = -1
 
-    # wl = WLAN(mode=WLAN.STA, antenna=WLAN.INT_ANT)
-    if device_info.is_esp32():
-        wl = network.WLAN(network.STA_IF)
-        wl.active(True)
-    else:
-        wl = network.WLAN(mode=network.WLAN.STA, antenna=network.WLAN.INT_ANT)
+    wl = network.WLAN(network.STA_IF)
+    wl.active(True)
 
     try:
         if not force_no_scan:
@@ -55,10 +51,7 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
         # connect
         start_time = utime.ticks_ms()
         connect_timeout = start_time + max_connection_attempt_time_sec * 1000
-        if device_info.is_esp32():
-            wl.connect(net_to_use, pwd)
-        else:
-            wl.connect(net_to_use, (sec, pwd))
+        wl.connect(net_to_use, pwd)
         while not wl.isconnected() and utime.ticks_ms() < connect_timeout:
             utime.sleep_ms(10)
         conn_attempt_duration = utime.ticks_ms() - start_time
@@ -70,13 +63,8 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
             # update_time_ntp()
 
             # obtain some extra KPIs from joined AP
-            if device_info.is_esp32():
-                channel = -1
-                rssi = -1
-            else:
-                ap_info = wl.joined_ap_info()
-                channel = ap_info[2]
-                rssi = ap_info[3]
+            channel = -1
+            rssi = -1
         else:
             logging.debug("Not connected to {}".format(net_to_use))
     except Exception as e:
@@ -93,9 +81,6 @@ def getSignalQuality():
     pass
 
 def is_connected():
-    if not device_info.is_esp32():
-        return False
-
     return network.WLAN(network.STA_IF).isconnected()
 
 def deactivate():
@@ -104,23 +89,12 @@ def deactivate():
     deactivation_status = False
     start_time_deactivation = utime.ticks_ms()
 
-    if device_info.is_esp32():
-        try:
-            wl = network.WLAN(network.STA_IF)
-            wl.disconnect()
-            wl.active(False)
-        except:
-            logging.debug('WiFi disconnecting ignored.')
-    else:
-        from network import WLAN
-        try:
-            logging.debug('WiFi disconnecting...')
-            WLAN().disconnect()
-            logging.debug('WiFi deinitializing...')
-            WLAN().deinit()
-            deactivation_status = True
-        except Exception as e:
-            logging.exception(e, "Error in deactivation")
+    try:
+        wl = network.WLAN(network.STA_IF)
+        wl.disconnect()
+        wl.active(False)
+    except:
+        logging.debug('WiFi disconnecting ignored.')
 
     return (deactivation_status, utime.ticks_ms() - start_time_deactivation)
 

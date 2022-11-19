@@ -12,49 +12,38 @@ _NUM_ADC_READINGS = const(500)
 
 def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cycles=_NUM_ADC_READINGS):
     """ Returns input voltage in a specific pin, for a given voltage divider (default is 1) and attenuator level (default 3, i.e. 0-3.3V) """
-    if device_info.is_esp32():
-        adc = ADC(Pin(pin))
-        adc.atten(attn)
-        adc_width = ADC.WIDTH_13BIT if device_info.supports_13bit_adc() else ADC.WIDTH_12BIT
-        adc.width(adc_width)
+    adc = ADC(Pin(pin))
+    adc.atten(attn)
+    adc_width = ADC.WIDTH_13BIT if device_info.supports_13bit_adc() else ADC.WIDTH_12BIT
+    adc.width(adc_width)
 
-        try:
-            if major_version == 1 and minor_version < 18:
-                adc.init(attn, adc_width)
-            elif major_version == 1 and minor_version >= 18:
-                adc.init_mp(atten=attn)
-            return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
-        except Exception as e:
-            logging.exception(e, "unable to read: pin: {}".format(pin))
-            pass
+    try:
+        if major_version == 1 and minor_version < 18:
+            adc.init(attn, adc_width)
+        elif major_version == 1 and minor_version >= 18:
+            adc.init_mp(atten=attn)
+        return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
+    except Exception as e:
+        logging.exception(e, "unable to read: pin: {}".format(pin))
+        pass
 
-        logging.debug("fallback ADC without calibration")
+    logging.debug("fallback ADC without calibration")
 
-        attn_factor = 1
-        if attn == ADC.ATTN_11DB:
-            attn_factor = 3.548134  # 10**(11/20)
-        elif attn == ADC.ATTN_6DB:
-            attn_factor = 1.995262  # 10**(6/20)
-        elif attn == ADC.ATTN_2_5DB:
-            attn_factor = 1.333521  # 10**(2.5/20)
+    attn_factor = 1
+    if attn == ADC.ATTN_11DB:
+        attn_factor = 3.548134  # 10**(11/20)
+    elif attn == ADC.ATTN_6DB:
+        attn_factor = 1.995262  # 10**(6/20)
+    elif attn == ADC.ATTN_2_5DB:
+        attn_factor = 1.333521  # 10**(2.5/20)
 
-        tmp = 0.0
-        running_avg = 0.0
-        for i in range(0, measurement_cycles):
-            running_avg = (i / (i + 1)) * running_avg + float(adc.read_u16()) / (i + 1)
+    tmp = 0.0
+    running_avg = 0.0
+    for i in range(0, measurement_cycles):
+        running_avg = (i / (i + 1)) * running_avg + float(adc.read_u16()) / (i + 1)
 
-        return 1000 * running_avg / 65535 * attn_factor * voltage_divider
-    else:
-        adc = ADC()
+    return 1000 * running_avg / 65535 * attn_factor * voltage_divider
 
-        adc.vref(1100)
-        adc_pin = adc.channel(pin=pin, attn=attn)
-        # now take the average over multiple readings
-        tmp = 0.0
-        for _ in range(0, measurement_cycles):
-            tmp += adc_pin.voltage()
-
-        return round((tmp / measurement_cycles) * voltage_divider)
     # typical voltage_divider levels: 3.054 --> Exp Board 2.0, 2 --> Exp Board 3, 11 --> in-house implementation
 
 

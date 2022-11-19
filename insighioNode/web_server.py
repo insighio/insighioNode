@@ -16,36 +16,29 @@ class WebServer:
         device_info.set_defaults()
         logging.info("Initializing WiFi APs in range")
         self.wlan = None
-        if device_info.is_esp32():
-            self.wlan = network.WLAN(network.STA_IF)
-        else:
-            self.wlan = network.WLAN(mode=network.WLAN.STA, antenna=network.WLAN.INT_ANT)
+        self.wlan = network.WLAN(network.STA_IF)
+
         try:
             nets = self.wlan.scan()
-            if not device_info.is_esp32():
-                self.wlan.deinit()
-            else:
-                self.wlan.active(False)
+            self.wlan.active(False)
             nets = nets[:min(10, len(nets))]
         except Exception as e:
             logging.error("WiFi scan failed. Will provide empty SSID list")
             nets = []
-        # nets = list(filter(lambda net: net.rssi > -89, nets))
-        if device_info.is_esp32():
-            self.available_nets = []
 
-            class TmpSSIDELEm:
-                def __init__(self):
-                    self.ssid = None
-                    self.rssi = None
+        self.available_nets = []
 
-            for net in nets:
-                tmpObj = TmpSSIDELEm()
-                tmpObj.ssid = net[0].decode('UTF-8')
-                tmpObj.rssi = net[3]
-                self.available_nets.append(tmpObj)
-        else:
-            self.available_nets = nets
+        class TmpSSIDELEm:
+            def __init__(self):
+                self.ssid = None
+                self.rssi = None
+
+        for net in nets:
+            tmpObj = TmpSSIDELEm()
+            tmpObj.ssid = net[0].decode('UTF-8')
+            tmpObj.rssi = net[3]
+            self.available_nets.append(tmpObj)
+
         self.ssidCustom = "insigh-" + device_info.get_device_id()[0][-4:]
         logging.info("SSID: " + self.ssidCustom)
         logging.info("Original device id: " + device_info.get_device_id()[0])
@@ -65,15 +58,12 @@ class WebServer:
     def start(self, timeoutMs=-1):
         logging.info('\n\n** Init WLAN mode and WAP2')
         device_info.wdt_reset()
-        if device_info.is_esp32():
-            self.wlan = network.WLAN(network.AP_IF)
-            self.wlan.active(True)
-            self.wlan.config(essid=self.ssidCustom)  # set the ESSID of the access point
-            self.wlan.config(password='insighiodev')
-            self.wlan.config(authmode=3)  # 3 -- WPA2-PSK
-            self.wlan.config(max_clients=1)  # set how many clients can connect to the network
-        else:
-            self.wlan = network.WLAN(mode=network.WLAN.AP, ssid=self.ssidCustom, auth=(network.WLAN.WPA2, 'insighiodev'))
+        self.wlan = network.WLAN(network.AP_IF)
+        self.wlan.active(True)
+        self.wlan.config(essid=self.ssidCustom)  # set the ESSID of the access point
+        self.wlan.config(password='insighiodev')
+        self.wlan.config(authmode=3)  # 3 -- WPA2-PSK
+        self.wlan.config(max_clients=1)  # set how many clients can connect to the network
 
         device_info.wdt_reset()
 
@@ -156,8 +146,5 @@ class WebServer:
                     del sys.modules[module]
             except Exception as e:
                 sys.print_exception(e)
-        if not device_info.is_esp32():
-            self.wlan.deinit()
-        else:
-            self.wlan.active(False)
+        self.wlan.active(False)
         logging.info('Bye\n')
