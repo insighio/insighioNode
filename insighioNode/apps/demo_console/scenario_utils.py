@@ -137,8 +137,8 @@ def get_measurements(cfg):
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
         #if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12 or cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12:
-        from apps.demo_console import demo_sdi12_utils
-        demo_sdi12_utils.sdi12_board_measurements(measurements)
+        from apps.demo_console import scenario_sdi12_utils
+        scenario_sdi12_utils.sdi12_board_measurements(measurements)
         # else:
         #     default_board_measurements(measurements)
 
@@ -326,7 +326,7 @@ def read_accelerometer():
         if asm330_accX is None or asm330_accY is None or asm330_accZ is None:
             utime.sleep_ms(100)
             continue
-            
+
         measurement = {}
         set_value_float(measurement, "asm330_accX", asm330_accX, SenmlUnits.SENML_UNIT_ACCELERATION)
         set_value_float(measurement, "asm330_accY", asm330_accY, SenmlUnits.SENML_UNIT_ACCELERATION)
