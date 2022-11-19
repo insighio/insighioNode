@@ -1,0 +1,1 @@
+network="satellite"
