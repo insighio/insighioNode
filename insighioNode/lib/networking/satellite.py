@@ -46,7 +46,13 @@ def _initialize(modem):
         logging.info("No modem detected")
         return False
 
-    if not modem.is_alive():
+    modem_is_alive = False
+    for x in range(3):
+        modem_is_alive = modem.is_alive()
+        if modem_is_alive:
+            break
+        utime.sleep_ms(500)
+    if not modem_is_alive:
         logging.info("Modem is unresponsive")
         return False
 
