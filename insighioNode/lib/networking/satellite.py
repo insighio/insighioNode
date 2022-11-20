@@ -11,7 +11,7 @@ SATELLITE_ASTRONODE = 1
 SATELLITE_UNKNOWN = 2
 
 SATELLITE_ASTRONODE_STR  = 'AST50108'
-cellular_model = CELLULAR_NO_INIT
+satellite_model = SATELLITE_NO_INIT
 
 modem_instance = None
 pin_modem_tx = None
@@ -31,8 +31,9 @@ def get_modem_instance():
     global modem_instance
     logging.debug("getting satellite modem instance...")
     if modem_instance is None:
-        from external.astronode import astronode
-        modem_instance = astronode.ASTRONODE(pin_modem_tx, pin_modem_rx)
+        from networking.modem_satellite import modem_astronode
+        modem_instance = modem_astronode.ModemAstronode(pin_modem_tx, pin_modem_rx)
+        modem_instance.modem_instance.enableDebugging()
         if not _initialize(modem_instance):
             modem_instance = None
     else:
@@ -59,15 +60,13 @@ def is_alive():
         logging.info("No modem detected")
         return False
 
-    return modem.is_alive():
+    return modem.is_alive()
 
 def send(cfg, byte_msg):
     modem = get_modem_instance()
 
     if modem is None:
         logging.info("No modem detected, ignoring send request")
-        return
+        return False
 
-    # status = modem.enqueue_payload(ubinascii.hexlify(byte_msg).upper().decode('utf-8'))
-    # return status()
     return modem.send_payload(byte_msg)

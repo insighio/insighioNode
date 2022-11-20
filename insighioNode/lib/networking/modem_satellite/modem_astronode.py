@@ -7,7 +7,7 @@ class ModemAstronode:
         self.modem_instance = False
 
         if modem_tx is not None and modem_rx is not None:
-            self.modem_instance = astronode.ASTRONODE(pin_modem_tx, pin_modem_rx)
+            self.modem_instance = astronode.ASTRONODE(modem_tx, modem_rx)
 
         self.prefCfg = astronode.ASTRONODE.ASTRONODE_CONFIG()
         self.prefCfg.with_deep_sleep_en = 0
@@ -24,7 +24,7 @@ class ModemAstronode:
         (status, pn) = self.modem_instance.product_number_read()
         (status, guid) = self.modem_instance.guid_read()
         (status, sn) = self.modem_instance.serial_number_read()
-        (status, config) = modem.configuration_read()
+        (status, config) = self.modem_instance.configuration_read()
 
         logging.info("Product Number: {}".format(pn))
         logging.info("GUID: {}".format(guid))
@@ -43,8 +43,6 @@ class ModemAstronode:
         if config is None:
             logging.error("error getting device configuration")
             return
-        logging.info("product_id: {}, hardware_rev: {}".format(config.product_id, config.hardware_rev))
-        logging.info("firmware version: {}.{}.{}".format(config.firmware_maj_ver, config.firmware_min_ver, config.firmware_rev))
 
         self.prefCfg = astronode.ASTRONODE.ASTRONODE_CONFIG()
         self.prefCfg.with_deep_sleep_en = 0
@@ -60,13 +58,16 @@ class ModemAstronode:
             config.with_msg_reset_pin_en != self.prefCfg.with_msg_reset_pin_en or\
             config.with_pl_ack != self.prefCfg.with_pl_ack:
             logging.info("modem requires configuration update")
-            (status, _) = self.modem_instance.configuration_write(self.prefCfg.with_pl_ack,
+            status = self.modem_instance.configuration_write(self.prefCfg.with_pl_ack,
                                         self.prefCfg.with_geoloc,
                                         self.prefCfg.with_ephemeris,
                                         self.prefCfg.with_deep_sleep_en,
                                         self.prefCfg.with_msg_ack_pin_en,
                                         self.prefCfg.with_msg_reset_pin_en)
             logging.info("configuration update: {}".format("ok" if (status == astronode.ANS_STATUS_SUCCESS) else "failed"))
+
+            status = self.modem_instance.configuration_save()
+            logging.info("configuration save: {}".format("ok" if (status == astronode.ANS_STATUS_SUCCESS) else "failed"))
         else:
             logging.info("modem configuration ok")
 
@@ -75,4 +76,7 @@ class ModemAstronode:
         if status == astronode.ANS_STATUS_BUFFER_FULL:
             logging.info("message buffer full, about to dequeue oldest message")
             (status, message_id) = self.modem_instance.dequeue_payload()
+            if status == astronode.ANS_STATUS_SUCCESS:
+                logging.info("retrying message queueing")
+                (status, message_id) = self.modem_instance.enqueue_payload(payload)
         return (status == astronode.ANS_STATUS_SUCCESS)

@@ -96,6 +96,7 @@ def executeMeasureAndUploadLoop():
         except:
             logging.debug("no protocol info, ignoring keepalive configuration")
 
+    always_on_start_timestamp = utime.ticks_ms()
     if always_on: #or not RTCisValid():
         time_to_sleep = 5000 # check connection and upload messages every 5 seconds
     else:
@@ -105,7 +106,6 @@ def executeMeasureAndUploadLoop():
 
     while True:
         logging.info("Always on connection activated: " + str(always_on))
-        always_on_start_timestamp = utime.ticks_ms()
         #measurements = {}
         device_info.wdt_reset()
         measurement_run_start_timestamp = utime.ticks_ms()
@@ -227,6 +227,9 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
 
         # create packet
         uptime = getUptime(timeDiffAfterNTP)
+        measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": uptime if is_first_run else (uptime - measurement_run_start_timestamp)}
+        message_sent = network.send_message(cfg, network.create_message(cfg.device_id, measurements))
+        logging.info("measurement sent: {}".format(message_sent))
         message_buffer.parse_stored_measurements_and_upload(network)
 
         if not always_on or (always_on and is_first_run):
@@ -240,6 +243,11 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
     if cfg.network == "cellular":
         network.prepareForGPS()
 
+    if not message_sent:
+        logging.info("Message transmission failed, storing for later")
+        if scenario_utils.get_config("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+            storeMeasurement(measurements, True)
+
     # disconnect from network
     if not always_on or not is_connected:
         try:
@@ -248,7 +256,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             device_info.set_led_color("red")
         except Exception as e:
             logging.exception(e, "Exception during disconenction:")
-    return is_connected
+    return message_sent
 
 def executeDeviceStatisticsUpload(cfg, network):
     stats = {}

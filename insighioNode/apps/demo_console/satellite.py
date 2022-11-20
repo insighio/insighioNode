@@ -20,6 +20,9 @@ def connect(cfg):
 def is_connected():
     return True
 
+def disconnect():
+    pass
+
 # def create_message_cbor(device_id, measurements):
 #     from external.kpn_senml.senml_pack_cbor import SenmlPackCbor
 #     from external.kpn_senml.senml_record import SenmlRecord
@@ -43,7 +46,7 @@ def create_message(device_id, measurements):
 
 def send_message(cfg, message):
     logging.info("Sending byte packet of {} bytes length".format(len(message)))
-    satellite.send(cfg, message)
+    return satellite.send(cfg, message)
 
 def send_control_message(cfg, message, subtopic):
     logging.error("Config message not yet supported for satellite")
