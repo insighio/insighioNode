@@ -95,77 +95,80 @@ def create_message(device_id, measurements):
     # 'h' -> short -> 2 bytes
     # 'I' -> unsigned int -> 4 bytes
     # 'i' -> int -> 4 bytes
-    for key in sorted(measurements.keys()):
-        logging.debug("Processing [{}]={}".format(key, measurements[key]["value"]))
-        value = measurements[key]["value"]
-        keyparts = key.split("_")
-        measurement_index = None
-        if len(keyparts) > 1:
-            try:
-                # check if value key has index value at the end of the name: ex. gen_vwc_1 instead of gen_vwc
-                index = int(keyparts[-1])
-                if index >= 0 and index <= 16:
-                    measurement_index = index
-                    key = "_".join(keyparts[0:-1])
-            except:
-                pass
-        logging.debug("key testung: " + key)
-        if key == "vbatt":
-            binary_data += struct.pack('>BBH', TYPE_VBAT, LOCATION_INTERNAL_BOARD, value)
-        elif key == "current":
-            binary_data += struct.pack('>BBH', TYPE_CURRENT, LOCATION_INTERNAL_BOARD, value)
-        elif key == "reset_cause":
-            binary_data += struct.pack('>BBB', TYPE_RESET_CAUSE, LOCATION_INTERNAL_BOARD, value)
-        elif key == "uptime":
-            binary_data += struct.pack('>BBI', TYPE_UPTIME, LOCATION_INTERNAL_BOARD, value)
-        elif key == "mem_alloc":
-            binary_data += struct.pack('>BBI', TYPE_MEM_ALLOC, LOCATION_INTERNAL_BOARD, value)
-        elif key == "mem_free":
-            binary_data += struct.pack('>BBI', TYPE_MEM_FREE, LOCATION_INTERNAL_BOARD, value)
-        elif key == "lora_join_duration":
-            binary_data += struct.pack('>BBH', TYPE_LORA_JOIN_DUR, LOCATION_MODEM, value)
-        # explicit cases should be added here
-        # elif key == "new_explicit_value"
-        #    do_stuff()
-        elif key.endswith("_light"):
-            binary_data += struct.pack('>BBH', TYPE_LIGHT_LUX, get_location_by_key(key), value)
-        elif key.endswith("_temp"):
-            binary_data += struct.pack('>BBh', TYPE_TEMPERATURE, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_humidity"):
-            binary_data += struct.pack('>BBH', TYPE_HUMIDITY, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_co2"):
-            binary_data += struct.pack('>BBH', TYPE_CO2, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_pressure"):
-            binary_data += struct.pack('>BBi', TYPE_PRESSURE, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_gas"):
-            binary_data += struct.pack('>BBH', TYPE_GAS, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_volt"):
-            binary_data += struct.pack('>BBH', TYPE_VOLTAGE, get_location_by_key(key), value)
-        elif key.endswith("_vwc"):
-            binary_data += struct.pack('>BBH', TYPE_VWC, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_rel_perm"):
-            binary_data += struct.pack('>BBH', TYPE_REL_PERM, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_soil_ec"):
-            binary_data += struct.pack('>BBH', TYPE_SOIL_EC, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_pore_water_ec"):
-            binary_data += struct.pack('>BBH', TYPE_GAS, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_sap_flow"):
-            binary_data += struct.pack('>BBH', TYPE_SAP_FLOW, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_hv_outer") or key.endswith("_hv_inner"):
-            binary_data += struct.pack('>BBH', TYPE_HEAT_VELOCITY, get_location_by_key(key), round(value * 100))
-        elif key.endswith("_log_rt_a_outer") or key.endswith("_log_rt_a_inner"):
-            binary_data += struct.pack('>BBI', TYPE_LOG_RATIO, get_location_by_key(key), round(value * 100000))
-        elif "gen_" in key:
-            keyParts = key.split("_")
-            index = 0
-            if len(keyParts) == 3:
+    try:
+        for key in sorted(measurements.keys()):
+            logging.debug("Processing [{}]={}".format(key, measurements[key]["value"]))
+            value = measurements[key]["value"]
+            keyparts = key.split("_")
+            measurement_index = None
+            if len(keyparts) > 1:
                 try:
-                    index = int(keyParts[2])
-                except Exception as e:
+                    # check if value key has index value at the end of the name: ex. gen_vwc_1 instead of gen_vwc
+                    index = int(keyparts[-1])
+                    if index >= 0 and index <= 16:
+                        measurement_index = index
+                        key = "_".join(keyparts[0:-1])
+                except:
                     pass
-            binary_data += struct.pack('>BBi', TYPE_GENERIC | index, get_location_by_key(key), round(value * 100))
-        else:
-            logging.error("Unregistered measurement: key: " + str(key) + ", value: " + str(value))
-        logging.info("message: size[{}], data:[{}]".format(len(binary_data), ubinascii.hexlify(binary_data).decode('utf-8')))
+            logging.debug("key testung: " + key)
+            if key == "vbatt":
+                binary_data += struct.pack('>BBH', TYPE_VBAT, LOCATION_INTERNAL_BOARD, value)
+            elif key == "current":
+                binary_data += struct.pack('>BBH', TYPE_CURRENT, LOCATION_INTERNAL_BOARD, value)
+            elif key == "reset_cause":
+                binary_data += struct.pack('>BBB', TYPE_RESET_CAUSE, LOCATION_INTERNAL_BOARD, value)
+            elif key == "uptime":
+                binary_data += struct.pack('>BBI', TYPE_UPTIME, LOCATION_INTERNAL_BOARD, value)
+            elif key == "mem_alloc":
+                binary_data += struct.pack('>BBI', TYPE_MEM_ALLOC, LOCATION_INTERNAL_BOARD, value)
+            elif key == "mem_free":
+                binary_data += struct.pack('>BBI', TYPE_MEM_FREE, LOCATION_INTERNAL_BOARD, value)
+            elif key == "lora_join_duration":
+                binary_data += struct.pack('>BBH', TYPE_LORA_JOIN_DUR, LOCATION_MODEM, value)
+            # explicit cases should be added here
+            # elif key == "new_explicit_value"
+            #    do_stuff()
+            elif key.endswith("_light"):
+                binary_data += struct.pack('>BBH', TYPE_LIGHT_LUX, get_location_by_key(key), value)
+            elif key.endswith("_temp"):
+                binary_data += struct.pack('>BBh', TYPE_TEMPERATURE, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_humidity"):
+                binary_data += struct.pack('>BBH', TYPE_HUMIDITY, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_co2"):
+                binary_data += struct.pack('>BBH', TYPE_CO2, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_pressure"):
+                binary_data += struct.pack('>BBi', TYPE_PRESSURE, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_gas"):
+                binary_data += struct.pack('>BBH', TYPE_GAS, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_volt"):
+                binary_data += struct.pack('>BBH', TYPE_VOLTAGE, get_location_by_key(key), value)
+            elif key.endswith("_vwc"):
+                binary_data += struct.pack('>BBH', TYPE_VWC, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_rel_perm"):
+                binary_data += struct.pack('>BBH', TYPE_REL_PERM, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_soil_ec"):
+                binary_data += struct.pack('>BBH', TYPE_SOIL_EC, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_pore_water_ec"):
+                binary_data += struct.pack('>BBH', TYPE_GAS, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_sap_flow"):
+                binary_data += struct.pack('>BBH', TYPE_SAP_FLOW, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_hv_outer") or key.endswith("_hv_inner"):
+                binary_data += struct.pack('>BBH', TYPE_HEAT_VELOCITY, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_log_rt_a_outer") or key.endswith("_log_rt_a_inner"):
+                binary_data += struct.pack('>BBI', TYPE_LOG_RATIO, get_location_by_key(key), round(value * 100000))
+            elif "gen_" in key:
+                keyParts = key.split("_")
+                index = 0
+                if len(keyParts) == 3:
+                    try:
+                        index = int(keyParts[2])
+                    except Exception as e:
+                        pass
+                binary_data += struct.pack('>BBi', TYPE_GENERIC | index, get_location_by_key(key), round(value * 100))
+            else:
+                logging.error("Unregistered measurement: key: " + str(key) + ", value: " + str(value))
+            logging.info("message: size[{}], data:[{}]".format(len(binary_data), ubinascii.hexlify(binary_data).decode('utf-8')))
+    except:
+        return ''
 
     return binary_data
