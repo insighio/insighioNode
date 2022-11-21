@@ -1,3 +1,9 @@
+import sys
+sys.path.clear()
+sys.path.append('/lib')
+sys.path.append('.frozen')
+sys.path.append('')
+
 import utime
 import logging
 
