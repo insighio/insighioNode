@@ -124,6 +124,9 @@ def get_measurements(cfg):
     except Exception as e:
         logging.exception(e, "unable to measure board sensors")
 
+    #enable sensors
+    gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_GND_ON, 1)
+
     # read internal temperature and humidity
     try:
         if cfg._MEAS_BOARD_SENSE_ENABLE:
@@ -136,14 +139,17 @@ def get_measurements(cfg):
             set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
-        #if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_SDI_12 or cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12:
-        from apps.demo_console import scenario_sdi12_utils
-        scenario_sdi12_utils.sdi12_board_measurements(measurements)
-        # else:
-        #     default_board_measurements(measurements)
+        if get_config("_SHIELD_NAME") == cfg._CONST_SHIELD_ADVIND:
+            from apps.demo_console import scenario_sdi12_utils
+            scenario_sdi12_utils.sdi12_board_measurements(measurements)
+        elif get_config("_SHIELD_NAME") == cfg._CONST_SHIELD_DIG_ANALOG:
+            default_board_measurements(measurements)
 
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
+
+    #enable sensors
+    gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_GND_ON, 0)
 
     return measurements
 
@@ -166,9 +172,13 @@ def read_battery_voltage():
 
 def default_board_measurements(measurements):
     # up to 2 I2C sensors
+    meas_key_name = None
+
     for n in range(1, 3):
-        i2c_config = get_config("_MEAS_I2C_" + str(n))
+        meas_key_name = "_MEAS_I2C_" + str(n)
+        i2c_config = get_config(meas_key_name)
         if i2c_config and hasattr(cfg, "_UC_IO_I2C_SDA") and hasattr(cfg, "_UC_IO_I2C_SCL") and i2c_config != cfg._CONST_MEAS_DISABLED:
+            logging.debug("Getting measurement for [{}] from sensor [{}]".format(meas_key_name, i2c_config))
             read_i2c_sensor(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL, i2c_config, measurements)
 
     # up to 3 Analog sensors
@@ -176,6 +186,7 @@ def default_board_measurements(measurements):
         meas_key_name = "_MEAS_ANALOG_P" + str(n)
         pin_name = "_UC_IO_ANALOG_P" + str(n)
         if hasattr(cfg, meas_key_name) and hasattr(cfg, pin_name) and getattr(cfg, meas_key_name) != cfg._CONST_MEAS_DISABLED:
+            logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, getattr(cfg, meas_key_name), getattr(cfg, pin_name)))
             read_analog_digital_sensor(getattr(cfg, pin_name), getattr(cfg, meas_key_name), measurements, "ap" + str(n))
 
     # up to 3 Digital/Analog sensors
@@ -184,6 +195,7 @@ def default_board_measurements(measurements):
         pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
         transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
         if hasattr(cfg, meas_key_name) and hasattr(cfg, pin_name) and getattr(cfg, meas_key_name) != cfg._CONST_MEAS_DISABLED:
+            logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, getattr(cfg, meas_key_name), getattr(cfg, pin_name)))
             read_analog_digital_sensor(getattr(cfg, pin_name), getattr(cfg, meas_key_name), measurements, "adp" + str(n), get_config(transformation_key))
 
     if hasattr(cfg, '_MEAS_SCALE_ENABLED') and cfg._MEAS_SCALE_ENABLED:

@@ -170,7 +170,7 @@ def generateOptions(optionsDict):
               <li id="tab-i2c-scale-board-options" class="tab-item active" onclick="boardChanged(event, 'i2c-scale-board-options')">
                 <a class="pointer">Cellular Digital/Scale</a>
               </li>
-              <li id="tab-esp32s2-bg600-i2c-analog-options" class="tab-item" onclick="boardChanged(event, 'esp32s2-bg600-i2c-analog-options')">
+              <li id="tab-esp32s3-bg600-i2c-analog-options" class="tab-item" onclick="boardChanged(event, 'esp32s3-bg600-i2c-analog-options')">
                 <a class="pointer">Cellular + Shield I²C/Analog</a>
               </li>
               <li id="tab-ins-esp-gen-sdi12-board-options" class="tab-item" onclick="boardChanged(event, 'ins-esp-gen-sdi12-board-options')">
@@ -225,7 +225,7 @@ def generateOptions(optionsDict):
                 </div>
               </form>
             </div>
-            <div id="esp32s2-bg600-i2c-analog-options" class="tabcontent" style="display: none">
+            <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent" style="display: none">
               <form class="form-horizontal">
                 <br />
                 <br />
@@ -496,13 +496,13 @@ def generateOptions(optionsDict):
       var boardNamePerTab = {
         "ins-esp-gen-sdi12-board-options" : "ins_esp_gen_sdi12",
         "i2c-scale-board-options" : "ins_esp_gen_1",
-        "esp32s2-bg600-i2c-analog-options" : "ins_esp_gen_s1"
+        "esp32s3-bg600-i2c-analog-options" : "ins_gen_s3"
       }
 
       var tabNamePerBoard = {
         "ins_esp_gen_sdi12" : "ins-esp-gen-sdi12-board-options",
         "ins_esp_gen_1" : "i2c-scale-board-options" ,
-        "ins_esp_gen_s1" : "esp32s2-bg600-i2c-analog-options"
+        "ins_gen_s3" : "esp32s3-bg600-i2c-analog-options"
       }
 
     function initializeValues() {
@@ -674,8 +674,8 @@ def generateOptions(optionsDict):
             location.href = "step-5-1-scale-idle.html"
         }
       }
-      else if (elementIsVisible("esp32s2-bg600-i2c-analog-options")) {
-        Cookies.set('selected-board', boardNamePerTab["esp32s2-bg600-i2c-analog-options"])
+      else if (elementIsVisible("esp32s3-bg600-i2c-analog-options")) {
+        Cookies.set('selected-board', boardNamePerTab["esp32s3-bg600-i2c-analog-options"])
         Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-s1-i2c').value)
         Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-s1-sensor-a-d-p1').value)
         Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-ins-esp-s1-sensor-a-d-p2').value)
