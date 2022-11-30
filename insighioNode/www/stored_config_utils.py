@@ -55,8 +55,12 @@ configDict = {
 "_ALWAYS_ON_PERIOD": "always_on_period",
 "_MEAS_GPS_NO_FIX_NO_UPLOAD": "meas_gps_no_fix_no_upload",
 "_STORE_MEASUREMENT_IF_FAILED_CONNECTION": "store_meas_if_failed_conn",
-"_4_20_SNSR_1_ENABLE": "meas-4-20-snsr-1-enable",
-"_4_20_SNSR_2_ENABLE": "meas-4-20-snsr-2-enable"
+"_4_20_SNSR_1_ENABLE": "meas_4_20_snsr_1_enable",
+"_4_20_SNSR_2_ENABLE": "meas_4_20_snsr_2_enable",
+"_SATELLITE_ASTROCAST_DEVKIT_EN": "sat_astro_devkit_en",
+"_SATELLITE_ASTROCAST_DEVKIT_SSID": "sat_astro_devkit_ssid",
+"_SATELLITE_ASTROCAST_DEVKIT_PASS": "sat_astro_devkit_pass",
+"_SATELLITE_ASTROCAST_DEVKIT_TOKEN": "sat_astro_devkit_token"
 }
 
 

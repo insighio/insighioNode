@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>insigh.io Device</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="css/spectre.min.css" />
+    </head>
+
+    <body class="body-custom">
+        <img src="img/logo.png" class="img-responsive img-center">
+
+        <div class="panel panel-custom">
+          <div class="panel-header">
+            <div class="panel-title text-center">Set network connection details</div>
+          </div>
+
+          <div class="panel-nav">
+            <ul class="step">
+              <li class="step-item"><a>Login</a></li>
+              <li class="step-item"><a>Select Network</a></li>
+              <li class="step-item active"><a>Network Params</a></li>
+              <li class="step-item"><a>API Keys</a></li>
+              <li class="step-item"><a>Measurements</a></li>
+              <li class="step-item"><a>Timing</a></li>
+              <li class="step-item"><a>Verify</a></li>
+            </ul>
+          </div>
+
+          <div class="panel-body">
+            <br />
+            <hr />
+            <br />
+            <div id="loader" class="loading loading-lg"></div>
+            <div class="text-center">
+              Configuration details for: <span class="text-bold">Satellite - Astrocast</span>
+            </div>
+            <br />
+            <div class="columns flex-centered">
+              <div class="column col-7">
+                <form class="form-horizontal">
+                  <div class="form-group">
+                    <div class="col-4 col-sm-12">
+                      <label class="form-label">
+                        Enable AstroNode DevKit
+                    </label>
+                    </div>
+                    <div class="col-8 col-sm-12">
+                      <div class="form-group">
+                        <label class="form-switch">
+                          <input type="checkbox" id="input-satAstroDevkitEnable"/>
+                          <i class="form-icon"></i>
+                        </label>
+                      </div>
+                    </div>
+                    <br />
+                    <br />
+                    <div id="address-gps-timeout" class="col-12" style="display:block">
+                      <form class="form-horizontal">
+                        <div class="form-group">
+                          <div class="col-3 col-sm-12">
+                            <label class="form-label" for="input-satAstroSSID">SSID</label>
+                          </div>
+                          <div class="col-9 col-sm-12">
+                            <input class="form-input constr-field" id="input-satAstroSSID"></input>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-3 col-sm-12">
+                            <label class="form-label" for="input-satAstroPass">Password</label>
+                          </div>
+                          <div class="col-9 col-sm-12">
+                            <input class="form-input constr-field" id="input-satAstroPass"></input>
+                          </div>
+                          <br />
+                          <br />
+                          <div class="col-3 col-sm-12">
+                            <label class="form-label" for="input-satAstroToken">Access Token</label>
+                          </div>
+                          <div class="col-9 col-sm-12">
+                            <input class="form-input constr-field" id="input-satAstroToken"></input>
+                          </div>
+                          <br />
+                          <br />
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </form>
+                <div class="columns">
+                  <div class="column col-4 col-mr-auto"></div>
+                  <div class="column col-1"><button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button></div>
+                  <div class="column col-1"><button class="btn btn-primary float-right" onclick="validateMyForm()" id="save-button">Save</button></div>
+                </div>
+                <br />
+                <br />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script src="js.cookie.min.js"></script>
+        <script src="utils.js"></script>
+        <script >
+
+        //_SATELLITE_ASTROCAST_DEVKIT_EN=<sat-astro-devkit-en> input-satAstroDevkitEnable
+        // _SATELLITE_ASTROCAST_DEVKIT_SSID="<sat-astro-devkit-ssid>" input-satAstroPass
+        // _SATELLITE_ASTROCAST_DEVKIT_PASS="<sat-astro-devkit-pass>" input-satAstroSSID
+        // _SATELLITE_ASTROCAST_DEVKIT_TOKEN="<sat-astro-devkit-token>" input-satAstroToken
+
+        // "_SATELLITE_ASTROCAST_DEVKIT_EN": "sat_astro_devkit_en",
+        // "_SATELLITE_ASTROCAST_DEVKIT_SSID": "sat_astro_devkit_ssid",
+        // "_SATELLITE_ASTROCAST_DEVKIT_PASS": "sat_astro_devkit_pass",
+        // "_SATELLITE_ASTROCAST_DEVKIT_TOKEN": "sat_astro_devkit_token"
+
+        function initializeValues() {
+          var dev_enable = {{ sat_astro_devkit_en }}
+          var dev_ssid = "{{ sat_astro_devkit_ssid }}"
+          var dev_pass = "{{ sat_astro_devkit_pass }}"
+          var dev_token = "{{ sat_astro_devkit_token }}"
+
+          setElemValue('input-satAstroSSID', dev_ssid, "")
+          setElemValue('input-satAstroPass', dev_pass,"")
+          setElemValue('input-satAstroToken', dev_token,"")
+
+          document.getElementById('input-satAstroDevkitEnable').checked = dev_enable !== undefined ? dev_enable : false
+
+          showElement('loader', false)
+        }
+
+          function clearCookies() {
+            Cookies.remove('sat-astro-devkit-en')
+            Cookies.remove('sat-astro-devkit-ssid')
+            Cookies.remove('sat-astro-devkit-pass')
+            Cookies.remove('sat-astro-devkit-token')
+            Cookies.remove('network')
+          }
+
+          function storeData(){
+            document.getElementById('save-button').disabled = true
+            clearCookies();
+
+            Cookies.set('network', "satellite")
+
+            Cookies.set('sat-astro-devkit-en', boolElemToPyStr('input-satAstroDevkitEnable'))
+            Cookies.set('sat-astro-devkit-ssid', document.getElementById('input-satAstroSSID').value)
+            Cookies.set('sat-astro-devkit-pass', document.getElementById('input-satAstroPass').value)
+            Cookies.set('sat-astro-devkit-token', document.getElementById('input-satAstroToken').value)
+
+            location.href = "step-5-measurements.pyhtml";
+          }
+
+          function validateMyForm(){
+            storeData()
+            return true
+          }
+
+          initializeValues()
+        </script>
+    </body>
+</html>

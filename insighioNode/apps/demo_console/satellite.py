@@ -6,10 +6,22 @@ from apps.demo_console import lora_custom_encoding
 from networking import satellite
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
+def get_config(cfg, key):
+    return getattr(cfg, key) if hasattr(cfg, key) else None
+
 def init(cfg):
     satellite.set_pins(cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
     is_alive = satellite.is_alive()
     logging.info("satellite modem is alive: {}".format(is_alive))
+
+    if get_config(cfg, "_SATELLITE_ASTROCAST_DEVKIT_EN"):
+        ssid = get_config(cfg, "_SATELLITE_ASTROCAST_DEVKIT_SSID")
+        password = get_config(cfg, "_SATELLITE_ASTROCAST_DEVKIT_PASS")
+        token = get_config(cfg, "_SATELLITE_ASTROCAST_DEVKIT_TOKEN")
+        logging.info("Setting DevKit wifi credentials and access token")
+        res = satellite.get_modem_instance().modem_instance.wifi_configuration_write(ssid, password, token)
+        logging.info("WiFi configuration setup result: {}".format(res))
+        #satellite.get_modem_instance().modem_instance.configuration_save()
 
 def updateSignalQuality(cfg, measurements):
     pass
