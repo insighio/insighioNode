@@ -66,6 +66,12 @@ def get_location_by_key(key):
             return LOCATION_I2C + 2
         elif loc_name == "bme680":
             return LOCATION_I2C + 3
+        elif loc_name == "sht20":
+            return LOCATION_I2C + 4
+        elif loc_name == "sht40":
+            return LOCATION_I2C + 5
+        elif loc_name == "sunrise":
+            return LOCATION_I2C + 6      
         elif len(parts) > 2:
             if position == "ap1":
                 return LOCATION_A_P1
