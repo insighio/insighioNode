@@ -3,13 +3,15 @@ import utime
 import logging
 import ure
 import device_info
-
+from external.micropyGPS.micropyGPS import MicropyGPS
+import math
 
 class ModemBG600(modem_base.Modem):
     def __init__(self, power_on, power_key, modem_tx, modem_rx):
         super().__init__(power_on, power_key, modem_tx, modem_rx)
         self.connection_status = False
         self.data_over_ppp = True
+        self._last_prioritization_is_gnss = None
 
     # even though this function is correct for BG600, it is normally called
     # while waiting for the modem to power on, where at that time we are not aware
@@ -38,12 +40,16 @@ class ModemBG600(modem_base.Modem):
             self.send_at_cmd('AT+QCFG="nwscanmode",0,1')
 
     def prioritizeWWAN(self):
-        self.send_at_cmd('AT+QGPSCFG="priority",1,0')
-        utime.sleep_ms(500)
+        if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == True:
+            self.send_at_cmd('AT+QGPSCFG="priority",1,0')
+            self._last_prioritization_is_gnss = False
+            utime.sleep_ms(500)
 
     def prioritizeGNSS(self):
-        self.send_at_cmd('AT+QGPSCFG="priority",0,0')
-        utime.sleep_ms(500)
+        if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == False:
+            self.send_at_cmd('AT+QGPSCFG="priority",0,0')
+            self._last_prioritization_is_gnss = True
+            utime.sleep_ms(500)
 
     def connect(self, timeoutms=30000):
         for i in range(0, 5):
@@ -107,8 +113,6 @@ class ModemBG600(modem_base.Modem):
     def get_gps_position(self, timeoutms=300000, satellite_number_threshold=5):
         gps_fix = False
         logging.info("Starting query gps. Timeout: {}, Min satellite num: {}".format(timeoutms, satellite_number_threshold))
-        from external.micropyGPS.micropyGPS import MicropyGPS
-        import math
         my_gps = MicropyGPS()
 
         self.prioritizeGNSS()
