@@ -2,6 +2,9 @@ import logging
 import device_info
 from apps.demo_console import locks
 
+def get_config(cfg, key):
+    return getattr(cfg, key) if hasattr(cfg, key) else None
+
 class TransferProtocol:
     def __init__(self, cfg, modem_instance=None):
         self.connected = False
@@ -93,6 +96,7 @@ class TransferProtocolMQTT(TransferProtocol):
         from protocols import mqtt_client
         self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
         self.enable_last_will(self.protocol_config)
+        self.require_message_delivery_ack = get_config(self.protocol_config, "REQ_MESG_DEL_ACK")
 
     def connect(self):
         if self.connected:
@@ -131,10 +135,10 @@ class TransferProtocolMQTT(TransferProtocol):
         logging.info("About to send: " + message)
         for i in range(0, 3):
             with locks.network_transmit_mutex:
-                message_publish_ok = self.client.sendMessage(message, channel)
-                if message_publish_ok:
-                    logging.info("Sent.")
-                    return True
+                message_publish_ok = self.client.sendMessage(message, channel, False, self.require_message_delivery_ack)
+            if message_publish_ok:
+                logging.info("Sent.")
+                return True
         logging.info("Failed.")
         return False
 

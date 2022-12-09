@@ -102,10 +102,10 @@ class MQTTClientCustom:
     def is_connected(self):
         return self._is_connected
 
-    def sendMessage(self, message, topic=None, retained=False):
+    def sendMessage(self, message, topic=None, retained=False, require_message_delivery_ack=True):
         if topic is None:
             topic = self.messageChannel
-        return self.__sendMessageEx(topic, message, 1, retained)
+        return self.__sendMessageEx(topic, message, 1 if require_message_delivery_ack else 0, retained)
 
     def sendControlMessage(self, message, subtopic):
         return self.sendMessage(message, self.controlChannelGeneric + subtopic, False)
