@@ -21,7 +21,7 @@ def get_config(key):
 
 def device_init():
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
-        device_info.bq_charger_exec(bq_charger_setup)
+        device_info.bq_charger_exec(device_info.bq_charger_setup)
     else:
         if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
             gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
@@ -126,7 +126,7 @@ def read_battery_voltage():
     current = None
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 1)
 
-    bq_charger_exec(bq_charger_set_charging_off)
+    device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
     utime.sleep_ms(50)
 
