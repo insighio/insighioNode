@@ -170,9 +170,9 @@ def create_message(device_id, measurements):
     return message.to_json()
 
 
-def send_message(cfg, message):
+def send_message(cfg, message, explicit_channel_name=None):
     if transfer_client is not None:
-        return transfer_client.send_packet(message)
+        return transfer_client.send_packet(message, explicit_channel_name)
     return False
 
 def send_control_message(cfg, message, configSubtopic):

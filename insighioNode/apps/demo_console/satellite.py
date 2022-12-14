@@ -56,7 +56,7 @@ def disconnect():
 def create_message(device_id, measurements):
     return lora_custom_encoding.create_message(device_id, measurements)
 
-def send_message(cfg, message):
+def send_message(cfg, message, explicit_channel_name=None):
     logging.info("Sending byte packet of {} bytes length".format(len(message)))
     return satellite.send(cfg, message)
 
