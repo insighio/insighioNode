@@ -21,7 +21,7 @@ def get_config(key):
 
 def device_init():
     if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
-        bq_charger_exec(bq_charger_setup)
+        device_info.bq_charger_exec(bq_charger_setup)
     else:
         if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
             gpio_handler.set_pin_value(cfg._UC_IO_LOAD_PWR_SAVE_OFF, 1)
@@ -52,39 +52,6 @@ def read_shield_chip_id():
     except Exception as e:
         pass
     return chip_id
-
-def bq_charger_exec(bq_func):
-    from machine import SoftI2C, Pin
-    status = False
-    try:
-        p_snsr = Pin(cfg._UC_IO_SENSOR_GND_ON, Pin.OUT)
-        p_snsr.on()
-        i2c = SoftI2C(scl=Pin(cfg._UC_IO_I2C_SCL), sda=Pin(cfg._UC_IO_I2C_SDA))
-        status = bq_func(i2c, cfg._I2C_BQ_ADDRESS)
-    except Exception as e:
-        logging.error("No BQ charger detected")
-    try:
-        p_snsr.off()
-    except Exception as e:
-        pass
-    return status
-
-def bq_charger_setup(i2c, bq_addr):
-    i2c.writeto_mem(bq_addr, 5, b'\x84')
-    i2c.writeto_mem(bq_addr, 0, b'\x22')
-
-def bq_charger_set_charging_on(i2c, bq_addr):
-    i2c.writeto_mem(bq_addr, 1, b'\x3B')
-
-def bq_charger_set_charging_off(i2c, bq_addr):
-    i2c.writeto_mem(bq_addr, 1, b'\x2B')
-
-def bq_charger_is_on_external_power(i2c, bq_addr):
-    val = i2c.readfrom_mem(bq_addr, 8, 1)
-    logging.debug("BQ charger state: {}".format(ubinascii.hexlify(val)))
-    power_good = (int.from_bytes(val, "big") & 0x4) > 0
-    is_charging = True  # val & 0x30
-    return is_charging and power_good
 
 def device_deinit():
     if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:

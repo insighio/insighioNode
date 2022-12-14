@@ -7,13 +7,13 @@ sys.path.append('')
 import utime
 import logging
 
-#logging.setLevel(logging.INFO)
+#logging.setLevel(logging.ERROR)
 logging.setLevel(logging.DEBUG)
 logging.debug("start timestamp: " + str(utime.ticks_ms()))
 
 # main.py -- put your code here!
-import sys
 import device_info
+device_info.bq_charger_exec(device_info.bq_charger_setup)
 
 import machine
 if device_info.get_hw_module_verison() == "esp8266":
@@ -37,7 +37,6 @@ try:
     import apps.demo_console.demo_config as cfg
     demo_config_exists = True
 except Exception as e:
-    sys.print_exception(e)
     logging.info("Device never configured.")
     pass
 
