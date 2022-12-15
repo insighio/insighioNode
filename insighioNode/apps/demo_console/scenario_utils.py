@@ -132,7 +132,7 @@ def read_battery_voltage():
 
     vbatt = gpio_handler.get_input_voltage(cfg._UC_IO_BAT_READ, cfg._BAT_VDIV, cfg._BAT_ATT)
 
-    bq_charger_exec(bq_charger_set_charging_on)
+    device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
     gpio_handler.set_pin_value(cfg._UC_IO_BAT_MEAS_ON, 0)
     return vbatt
 

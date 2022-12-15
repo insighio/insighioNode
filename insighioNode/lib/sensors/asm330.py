@@ -32,7 +32,6 @@ def get_sensor_whoami():
         logging.debug("Data {}, Output: {}".format(val, ubinascii.hexlify(val)))
     except Exception as e:
         logging.exception(e, "Exception raised in I2C {}")
-
     return None
 
 def init(scl_pin, sda_pin):
@@ -67,8 +66,8 @@ def get_reading():
         # LINEAR ACCELERATION X,Y,Z
         data = i2c_obj.readfrom_mem(asm330_addr, _OUTX_L_A, 6)
         ACC_X = ustruct.unpack_from("<h", data, 0)[0] * _FACTOR
-    	ACC_Y = ustruct.unpack_from("<h", data, 2)[0] * _FACTOR
-    	ACC_Z = ustruct.unpack_from("<h", data, 4)[0] * _FACTOR
+        ACC_Y = ustruct.unpack_from("<h", data, 2)[0] * _FACTOR
+        ACC_Z = ustruct.unpack_from("<h", data, 4)[0] * _FACTOR
     except Exception as e:
         logging.exception(e, "Exception raised in I2C {}")
     return (ACC_X, ACC_Y, ACC_Z)
