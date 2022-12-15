@@ -32,7 +32,7 @@ def now():
     return RTC().datetime()
 
 def isAlwaysOnScenario():
-    return (scenario_utils.get_config("_ALWAYS_ON_CONNECTION") and scenario_utils.bq_charger_exec(scenario_utils.bq_charger_is_on_external_power)) or scenario_utils.get_config("_FORCE_ALWAYS_ON_CONNECTION")
+    return (scenario_utils.get_config("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)) or scenario_utils.get_config("_FORCE_ALWAYS_ON_CONNECTION")
 
 def execute():
     executeDeviceInitialization()
@@ -97,15 +97,16 @@ def executeMeasureAndUploadLoop():
             logging.debug("no protocol info, ignoring keepalive configuration")
 
     always_on_start_timestamp = utime.ticks_ms()
-    if always_on: #or not RTCisValid():
-        time_to_sleep = 5000 # check connection and upload messages every 5 seconds
-    else:
+    if not always_on: #or not RTCisValid():
+    #     time_to_sleep = 5000 # check connection and upload messages every 5 seconds
+    # else:
         time_to_sleep = scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") if scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") else 60
         time_to_sleep = time_to_sleep * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
         time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
 
     while True:
         logging.info("Always on connection activated: " + str(always_on))
+        always_on_start_timestamp = utime.ticks_ms()
         #measurements = {}
         device_info.wdt_reset()
         measurement_run_start_timestamp = utime.ticks_ms()
@@ -142,7 +143,12 @@ def executeMeasureAndUploadLoop():
             if is_first_run:
                 # if it is always on, first connect to the network and then start threads,
                 # to allow them to immediatelly upload events
-                is_first_run = False
+                pass
+            is_first_run = False
+            time_to_sleep = always_on_period * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
+            time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
+            logging.info("light sleeping for: " + str(time_to_sleep) + " milliseconds")
+            gc.collect()
 
             start_sleep_time = utime.ticks_ms()
             end_sleep_time = start_sleep_time + time_to_sleep
