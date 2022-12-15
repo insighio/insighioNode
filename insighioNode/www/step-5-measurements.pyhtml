@@ -39,6 +39,7 @@ i2cOptions = [
     ["scd30 - C02 / temperature / humidity", "scd30"],
     ["bme680 - gap / temperature / humidity", "bme680"],
     ["sunrise - CO2 / temperature", "sunrise"]
+    ["scd4x - CO2 / temperature / humidity", "scd4x"],
 ]
 
 adcOptions = [
