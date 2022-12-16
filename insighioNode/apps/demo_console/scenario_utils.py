@@ -151,19 +151,24 @@ def default_board_measurements(measurements):
     # up to 3 Analog sensors
     for n in range(1, 4):
         meas_key_name = "_MEAS_ANALOG_P" + str(n)
-        pin_name = "_UC_IO_ANALOG_P" + str(n)
-        if hasattr(cfg, meas_key_name) and hasattr(cfg, pin_name) and getattr(cfg, meas_key_name) != cfg._CONST_MEAS_DISABLED:
-            logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, getattr(cfg, meas_key_name), getattr(cfg, pin_name)))
-            read_analog_digital_sensor(getattr(cfg, pin_name), getattr(cfg, meas_key_name), measurements, "ap" + str(n))
+        pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
+        meas_key = get_config(meas_key_name)
+        pin = get_config(pin_name)
+        if meas_key is not None and pin is not None and meas_key != cfg._CONST_MEAS_DISABLED:
+            logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, meas_key, pin))
+            read_analog_digital_sensor(pin, meas_key, measurements, "ap" + str(n))
 
     # up to 3 Digital/Analog sensors
     for n in range(1, 4):
         meas_key_name = "_MEAS_ANALOG_DIGITAL_P" + str(n)
         pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
         transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
-        if hasattr(cfg, meas_key_name) and hasattr(cfg, pin_name) and getattr(cfg, meas_key_name) != cfg._CONST_MEAS_DISABLED:
-            logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, getattr(cfg, meas_key_name), getattr(cfg, pin_name)))
-            read_analog_digital_sensor(getattr(cfg, pin_name), getattr(cfg, meas_key_name), measurements, "adp" + str(n), get_config(transformation_key))
+        meas_key = get_config(meas_key_name)
+        pin = get_config(pin_name)
+        transformation = get_config(transformation_key)
+        if meas_key is not None and pin is not None and meas_key != cfg._CONST_MEAS_DISABLED:
+            logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, meas_key, pin))
+            read_analog_digital_sensor(pin, meas_key, measurements, "adp" + str(n), transformation)
 
     if hasattr(cfg, '_MEAS_SCALE_ENABLED') and cfg._MEAS_SCALE_ENABLED:
         read_scale(measurements)
