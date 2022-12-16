@@ -10,6 +10,43 @@ import logging
 import device_info
 import sensors
 
+def get_config(key):
+    return getattr(cfg, key) if hasattr(cfg, key) else None
+
+_sdi12_sensor_ground_list = []
+
+def populateSDI12SensorGroundList():
+    global _sdi12_sensor_ground_list
+    _sdi12_sensor_ground_list = [None]*10
+
+    for i in range(1,11):
+        _sdi12_sensor_ground_list[i] = get_config("_UC_IO_SNSR_GND_SDI_SNSR_" + i + "_ΟΝ")
+
+populateSDI12SensorGroundList()
+
+def powerOnAllGNDExcept(excludedIndex=None):
+    for i in range(1, 11):
+        if excludedIndex == i or _sdi12_sensor_ground_list[excludedIndex] is None:
+            continue
+        sensors.set_sensor_power_on(_sdi12_sensor_ground_list[excludedIndex])
+
+def powerOffAllGNDExcept(excludedIndex=None):
+    for i in range(1, 11):
+        if excludedIndex == i or _sdi12_sensor_ground_list[excludedIndex] is None:
+            continue
+        sensors.set_sensor_power_off(_sdi12_sensor_ground_list[excludedIndex])
+
+def executeSDI12Measurement(measurements, index):
+    enabled = get_config("_SDI12_SENSOR_ " + index + "_ENABLED")
+    address = get_config("_SDI12_SENSOR_ " + index + "_ADDRESS")
+
+    if not enabled:
+        return
+
+    powerOnAllGNDExcept()
+    utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
+    read_sdi12_sensor(sdi12, address, measurements)
+    powerOffAllGNDExcept()
 
 def sdi12_board_measurements(measurements):
     if not cfg._SDI12_SENSOR_1_ENABLED and not cfg._SDI12_SENSOR_2_ENABLED:
@@ -29,29 +66,10 @@ def sdi12_board_measurements(measurements):
         sdi12 = SDI12(cfg._UC_IO_DRV_IN, cfg._UC_IO_RCV_OUT, None, 1)
         sdi12.set_dual_direction_pins(cfg._UC_IO_DRV_ON, cfg._UC_IO_RCV_ON)
         sdi12.set_wait_after_uart_write(True)
-        sdi12.wait_after_each_send(1000)
+        sdi12.wait_after_each_send(500)
 
-        if cfg._SDI12_SENSOR_1_ENABLED:
-            if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ"):
-                sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
-                sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
-                utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
-            read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_1_ADDRESS, measurements)
-
-            if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ"):
-                sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
-                sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
-                utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
-
-        if cfg._SDI12_SENSOR_2_ENABLED:
-            if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ"):
-                sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
-                sensors.set_sensor_power_on(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
-                utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
-            read_sdi12_sensor(sdi12, cfg._SDI12_SENSOR_2_ADDRESS, measurements)
-            if hasattr(cfg, "_UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ"):
-                sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_2_ΟΝ)
-                sensors.set_sensor_power_off(cfg._UC_IO_SNSR_GND_SDI_SNSR_1_ΟΝ)
+        for i in range(1,11):
+            executeSDI12Measurement(measurements, i)
 
         current_sense_4_20mA(measurements)
     except Exception as e:

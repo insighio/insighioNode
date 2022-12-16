@@ -106,11 +106,13 @@ def get_measurements(cfg):
             set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
-        if get_config("_SHIELD_NAME") == cfg._CONST_SHIELD_ADVIND:
-            from apps.demo_console import scenario_sdi12_utils
-            scenario_sdi12_utils.sdi12_board_measurements(measurements)
-        elif get_config("_SHIELD_NAME") == cfg._CONST_SHIELD_DIG_ANALOG:
-            default_board_measurements(measurements)
+        shield_name = get_config("_SHIELD_NAME")
+        if shield_name is not None:
+            if shield_name == get_config("_CONST_SHIELD_ADVIND"):
+                from apps.demo_console import scenario_sdi12_utils
+                scenario_sdi12_utils.sdi12_board_measurements(measurements)
+            elif shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
+                default_board_measurements(measurements)
 
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
