@@ -17,33 +17,36 @@ _sdi12_sensor_ground_list = []
 
 def populateSDI12SensorGroundList():
     global _sdi12_sensor_ground_list
-    _sdi12_sensor_ground_list = [None]*10
+    _sdi12_sensor_ground_list = [None]*11
 
     for i in range(1,11):
-        _sdi12_sensor_ground_list[i] = get_config("_UC_IO_SNSR_GND_SDI_SNSR_" + i + "_ΟΝ")
+        _sdi12_sensor_ground_list[i] = get_config("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ΟΝ")
 
 populateSDI12SensorGroundList()
 
 def powerOnAllGNDExcept(excludedIndex=None):
     for i in range(1, 11):
-        if excludedIndex == i or _sdi12_sensor_ground_list[excludedIndex] is None:
+        if excludedIndex == i or _sdi12_sensor_ground_list[i] is None:
             continue
-        sensors.set_sensor_power_on(_sdi12_sensor_ground_list[excludedIndex])
+        sensors.set_sensor_power_on(_sdi12_sensor_ground_list[i])
 
 def powerOffAllGNDExcept(excludedIndex=None):
     for i in range(1, 11):
-        if excludedIndex == i or _sdi12_sensor_ground_list[excludedIndex] is None:
+        if excludedIndex == i or _sdi12_sensor_ground_list[i] is None:
             continue
-        sensors.set_sensor_power_off(_sdi12_sensor_ground_list[excludedIndex])
+        sensors.set_sensor_power_off(_sdi12_sensor_ground_list[i])
 
-def executeSDI12Measurement(measurements, index):
-    enabled = get_config("_SDI12_SENSOR_ " + index + "_ENABLED")
-    address = get_config("_SDI12_SENSOR_ " + index + "_ADDRESS")
+def executeSDI12Measurement(sdi12, measurements, index):
+    enabled = get_config("_SDI12_SENSOR_" + str(index) + "_ENABLED")
+    address = get_config("_SDI12_SENSOR_" + str(index) + "_ADDRESS")
 
     if not enabled:
+        logging.debug("sdi12 sensor [{}] enabled: {}".format(index, enabled))
         return
 
-    powerOnAllGNDExcept()
+    if _sdi12_sensor_ground_list[index] is not None:
+        sensors.set_sensor_power_on(_sdi12_sensor_ground_list[index])
+    powerOffAllGNDExcept(index)
     utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
     read_sdi12_sensor(sdi12, address, measurements)
     powerOffAllGNDExcept()
@@ -69,7 +72,7 @@ def sdi12_board_measurements(measurements):
         sdi12.wait_after_each_send(500)
 
         for i in range(1,11):
-            executeSDI12Measurement(measurements, i)
+            executeSDI12Measurement(sdi12, measurements, i)
 
         current_sense_4_20mA(measurements)
     except Exception as e:
