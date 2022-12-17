@@ -30,6 +30,49 @@ def addSwitch(switchId, switchLabel, onClickOpt=""):
     <br />
     '''
 
+def generateSdi12Options():
+    tags = ""
+    for i in range(1,11):
+      tags += '''
+        <div class="col-4 col-sm-12">
+          <label class="form-label" for="measurements">SDI-12 n.''' + str(i) + '''</label>
+        </div>
+        <div class="col-8 col-sm-12">
+          <div class="form-group">
+            <label class="form-switch">
+              <input type="checkbox" id="input-ins-esp-gen-sdi12-''' + str(i) + '''-enable" onclick="checkboxStatusChanged('ins-esp-gen-sdi12-''' + str(i) + '''')" />
+              <i class="form-icon"></i>
+            </label>
+          </div>
+        </div>
+        <div id="address-ins-esp-gen-sdi12-''' + str(i) + '''" class="col-12" style="display:none">
+          <div class="form-group">
+            <div class="column col-1 col-mr-auto"></div>
+            <div class="col-3 col-sm-12">
+              <label class="form-label" for="measurements">address
+                <button class="btn btn-link tooltip" data-tooltip="addresses must be preconfigured to not collide">
+                  <i class="icon icon-flag"></i>
+                </button>
+              </label>
+            </div>
+            <div class="col-3 col-sm-12">
+              <select class="form-select" id="option-ins-esp-gen-sdi12-''' + str(i) + '''-address">
+          '''
+
+      for j in range(0,10):
+          tags += '''<option> ''' + str(j) + ''' </option>'''
+
+      tags += '''
+              </select>
+            </div>
+            <div class="column col-5 col-mr-auto"></div>
+          </div>
+        </div>
+        <br />
+        <br />
+        '''
+    return tags
+
 i2cOptions = [
     ["disabled", "disabled"],
     ["tsl2561 - luminosity", "tsl2561"],
@@ -40,6 +83,7 @@ i2cOptions = [
     ["bme680 - gap / temperature / humidity", "bme680"],
     ["sunrise - CO2 / temperature", "sunrise"],
     ["scd4x - CO2 / temperature / humidity", "scd4x"],
+    ["sgx7ox - industrial oxygen sensor ", "sgx7ox"],
 ]
 
 adcOptions = [
@@ -83,7 +127,7 @@ def generateOptions(optionsDict):
       <br />
       <div id="loader" class="loading loading-lg"></div>
       <div class="columns flex-centered">
-        <div class="column col-7">
+        <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
           <form class="form-horizontal">
             <div class="divider text-center" data-content="Available measurements"></div>
             <br />
@@ -342,68 +386,7 @@ def generateOptions(optionsDict):
                 <br />
                 <br />
                 <div class="form-group">
-                  <div class="col-4 col-sm-12">
-                    <label class="form-label" for="measurements">SDI-12 n.1</label>
-                  </div>
-                  <div class="col-8 col-sm-12">
-                    <div class="form-group">
-                      <label class="form-switch">
-                        <input type="checkbox" id="input-ins-esp-gen-sdi12-1-enable" onclick="checkboxStatusChanged('ins-esp-gen-sdi12-1')" />
-                        <i class="form-icon"></i>
-                      </label>
-                    </div>
-                  </div>
-                  <div id="address-ins-esp-gen-sdi12-1" class="col-12" style="display:none">
-                    <div class="form-group">
-                      <div class="column col-1 col-mr-auto"></div>
-                      <div class="col-3 col-sm-12">
-                        <label class="form-label" for="measurements">address
-                          <button class="btn btn-link tooltip" data-tooltip="addresses must be preconfigured&#xa;to not collide">
-                            <i class="icon icon-flag"></i>
-                          </button>
-                        </label>
-                      </div>
-                      <div class="col-3 col-sm-12">
-                        <select class="form-select" id="option-ins-esp-gen-sdi12-1-address">
-                          {{ for i in range(0,10) }} <option> {{ i }}</option> {{ end }}
-                        </select>
-                      </div>
-                      <div class="column col-5 col-mr-auto"></div>
-                    </div>
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-sm-12">
-                    <label class="form-label" for="measurements">SDI-12 n.2</label>
-                  </div>
-                  <div class="col-8 col-sm-12">
-                    <div class="form-group">
-                      <label class="form-switch">
-                        <input type="checkbox" id="input-ins-esp-gen-sdi12-2-enable" onclick="checkboxStatusChanged('ins-esp-gen-sdi12-2')" />
-                        <i class="form-icon"></i>
-                      </label>
-                    </div>
-                  </div>
-                  <div id="address-ins-esp-gen-sdi12-2" class="col-12" style="display:none">
-                    <div class="form-group">
-                      <div class="column col-1 col-mr-auto"></div>
-                      <div class="col-3 col-sm-12">
-                        <label class="form-label" for="measurements">address
-                          <button class="btn btn-link tooltip" data-tooltip="addresses must be preconfigured to not collide">
-                            <i class="icon icon-flag"></i>
-                          </button>
-                        </label>
-                      </div>
-                      <div class="col-3 col-sm-12">
-                        <select class="form-select" id="option-ins-esp-gen-sdi12-2-address">
-                          {{ for i in range(0,10) }} <option> {{ i }}</option> {{ end }}
-                        </select>
-                      </div>
-                      <div class="column col-5 col-mr-auto"></div>
-                    </div>
-                  </div>
-                  <br />
-                  <br />
+                  {{ generateSdi12Options() }}
                   <div class="col-4 col-sm-12">
                     <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
                   </div>
@@ -529,11 +512,23 @@ def generateOptions(optionsDict):
       setElemValue('input-gps-sat-num', {{ meas_gps_sat_num }}, 4, false)
       //setElemValueBool('input-gps-no-fix-no-upload', {{ meas_gps_no_fix_no_upload }},  false)
 
-      setElemValueBool('input-ins-esp-gen-sdi12-1-enable', {{ meas_sdi_1_enabled }}, false)
-      setElemValueBool('input-ins-esp-gen-sdi12-2-enable', {{ meas_sdi_2_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-3-enable', {{ meas_sdi_3_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-4-enable', {{ meas_sdi_4_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-5-enable', {{ meas_sdi_5_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-6-enable', {{ meas_sdi_6_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-7-enable', {{ meas_sdi_7_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-8-enable', {{ meas_sdi_8_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-9-enable', {{ meas_sdi_9_enabled }}, false)
+      setElemValueBool('input-ins-esp-gen-sdi12-10-enable', {{ meas_sdi_10_enabled }}, false)
 
-      setElemValue('option-ins-esp-gen-sdi12-1-address', {{ meas_sdi_1_address }}, 0)
-      setElemValue('option-ins-esp-gen-sdi12-2-address', {{ meas_sdi_2_address }}, 1)
+      setElemValue('option-ins-esp-gen-sdi12-3-address', {{ meas_sdi_3_address }}, 1)
+      setElemValue('option-ins-esp-gen-sdi12-4-address', {{ meas_sdi_4_address }}, 1)
+      setElemValue('option-ins-esp-gen-sdi12-5-address', {{ meas_sdi_5_address }}, 1)
+      setElemValue('option-ins-esp-gen-sdi12-6-address', {{ meas_sdi_6_address }}, 1)
+      setElemValue('option-ins-esp-gen-sdi12-7-address', {{ meas_sdi_7_address }}, 1)
+      setElemValue('option-ins-esp-gen-sdi12-8-address', {{ meas_sdi_8_address }}, 1)
+      setElemValue('option-ins-esp-gen-sdi12-9-address', {{ meas_sdi_9_address }}, 1)
+      setElemValue('option-ins-esp-gen-sdi12-10-address', {{ meas_sdi_10_address }}, 1)
       setElemValue('input-ins-esp-gen-sdi12-warmup-time', {{ meas_sdi_warmup_time }}, 1000)
 
       checkboxStatusChanged('ins-esp-gen-sdi12-1')
@@ -594,10 +589,6 @@ def generateOptions(optionsDict):
       Cookies.remove('meas-scale-enabled')
       Cookies.remove('meas-scale-offset')
       Cookies.remove('meas-scale-scale')
-      Cookies.remove('meas-sdi-1-address')
-      Cookies.remove('meas-sdi-1-enabled')
-      Cookies.remove('meas-sdi-2-address')
-      Cookies.remove('meas-sdi-2-enabled')
       Cookies.remove('meas-sensor-a-d-p1')
       Cookies.remove('meas-sensor-a-d-p1-t')
       Cookies.remove('meas-sensor-a-d-p2')
@@ -612,6 +603,18 @@ def generateOptions(optionsDict):
       Cookies.remove('store-meas-if-failed-conn')
       Cookies.remove('meas-4-20-snsr-1-enable')
       Cookies.remove('meas-4-20-snsr-2-enable')
+
+      for(let i=1; i<11; ++i) {
+        Cookies.remove('meas-sdi-' + i + '-enabled')
+        Cookies.remove('meas-sdi-' + i + '-address')
+      }
+    }
+
+    function setSDI12Cookie(sdi12Index) {
+      var address_elem = document.getElementById('option-ins-esp-gen-sdi12-' + sdi12Index + '-address')
+
+      Cookies.set('meas-sdi-' + sdi12Index + '-enabled', boolElemToPyStr('input-ins-esp-gen-sdi12-' + sdi12Index + '-enable'))
+      Cookies.set('meas-sdi-' + sdi12Index + '-address', address_elem !== null ? address_elem.value : "")
     }
 
     function storeData() {
@@ -636,13 +639,10 @@ def generateOptions(optionsDict):
 
       if (elementIsVisible("ins-esp-gen-sdi12-board-options")) {
         Cookies.set('selected-board', boardNamePerTab["ins-esp-gen-sdi12-board-options"] )
-        var address1_elem = document.getElementById('option-ins-esp-gen-sdi12-1-address')
-        var address2_elem = document.getElementById('option-ins-esp-gen-sdi12-2-address')
 
-        Cookies.set('meas-sdi-1-enabled', boolElemToPyStr('input-ins-esp-gen-sdi12-1-enable'))
-        Cookies.set('meas-sdi-2-enabled', boolElemToPyStr('input-ins-esp-gen-sdi12-2-enable'))
-        Cookies.set('meas-sdi-1-address', address1_elem !== null ? address1_elem.value : "")
-        Cookies.set('meas-sdi-2-address', address2_elem !== null ? address2_elem.value : "")
+        for(let i=1; i<11; ++i) {
+          setSDI12Cookie(i)
+        }
 
         Cookies.set('meas-4-20-snsr-1-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-1-enable'))
         Cookies.set('meas-4-20-snsr-2-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-2-enable'))
