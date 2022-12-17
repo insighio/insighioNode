@@ -10,9 +10,6 @@
 [submodule "lib-external/microsdi12"]
 	path = lib-external/microsdi12
 	url = https://github.com/insighio/microSDI12.git
-[submodule "lib-external/MicroWebSrv2"]
-	path = lib-external/MicroWebSrv2
-	url = https://github.com/insighio/MicroWebSrv2.git
 [submodule "lib-external/micropyGPS"]
 	path = lib-external/micropyGPS
 	url = https://github.com/inmcm/micropyGPS.git
