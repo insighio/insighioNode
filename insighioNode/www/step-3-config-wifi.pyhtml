@@ -39,7 +39,7 @@
             </div>
             <br />
             <div class="columns flex-centered">
-              <div class="column col-7">
+              <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
                 <form class="form-horizontal">
                   <div class="form-group">
                     <div class="col-12">

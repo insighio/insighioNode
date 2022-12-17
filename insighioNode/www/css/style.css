@@ -3,11 +3,10 @@ html, body {
 	padding: 30px;
 }
 body {
-	margin: 30px;
 	background-color: #F2F2F2;
 	font-family: "Trebuchet MS", Verdana, sans-serif;
 	letter-spacing: 2px;
-	padding: 0 70px;
+	padding: 0 0px;
 }
 h1 {
 	color: #D35F8D;
