@@ -37,6 +37,7 @@
             <div class="text-center">Select network technology to be used:</div>
             <br />
             <br />
+            <div id="loader" class="loading loading-lg"></div>
             <div class="container">
               <div class="columns flex-centered">
                 <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
@@ -64,13 +65,13 @@
                    document.getElementById('button-lora').disabled = true
                    document.getElementById('button-satellite').disabled = true
                    if(operationName == "WiFi")
-                      location.href = "step-3-config-wifi.pyhtml";
+                      location.href = "step-3-config-wifi.html";
                   else if(operationName == "Cellular")
-                     location.href = "step-3-config-cellular.pyhtml";
+                     location.href = "step-3-config-cellular.html";
                   else if(operationName == "LoRa")
-                     location.href = "step-3-config-lora.pyhtml";
+                     location.href = "step-3-config-lora.html";
                   else if(operationName == "Satellite") {
-                    location.href = "step-3-config-sat-astro.pyhtml"
+                    location.href = "step-3-config-sat-astro.html"
                   }
                 }
             </script>

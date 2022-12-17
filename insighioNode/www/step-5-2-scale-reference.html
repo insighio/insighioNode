@@ -2,13 +2,6 @@
 
 <html>
 
-{{ py }}
-
-import gc
-gc.collect()
-from sensors import hx711
-{{ end }}
-
     <head>
         <meta charset="UTF-8" />
         <title>insigh.io Device</title>
@@ -88,7 +81,7 @@ from sensors import hx711
         Cookies.set('meas-scale-offset', document.getElementById('idle-weight-value').innerHTML)
         Cookies.set('meas-scale-reference', document.getElementById('input-ref-weight').value)
 
-        location.href = "step-5-3-scale-calibr-res.pyhtml"
+        location.href = "step-5-3-scale-calibr-res.html"
       }
       </script>
     </body>

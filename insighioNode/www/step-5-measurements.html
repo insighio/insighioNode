@@ -11,25 +11,6 @@
 </head>
 
 {{ py }}
-def addSwitch(switchId, switchLabel, onClickOpt=""):
-    return '''
-    <div class="col-4 col-sm-12">
-      <label class="form-label">
-    ''' + switchLabel + '''
-    </label>
-    </div>
-    <div class="col-8 col-sm-12">
-      <div class="form-group">
-        <label class="form-switch">
-          <input type="checkbox" id="''' + switchId + '''" ''' + onClickOpt + '''/>
-          <i class="form-icon"></i>
-        </label>
-      </div>
-    </div>
-    <br />
-    <br />
-    '''
-
 def generateSdi12Options():
     tags = ""
     for i in range(1,11):
@@ -72,33 +53,6 @@ def generateSdi12Options():
         <br />
         '''
     return tags
-
-i2cOptions = [
-    ["disabled", "disabled"],
-    ["tsl2561 - luminosity", "tsl2561"],
-    ["sht20 - temperature / humidity", "sht20"],
-    ["sht40 - temperature / humidity", "sht40"],
-    ["si7021 - temperature / humidity", "si7021"],
-    ["scd30 - C02 / temperature / humidity", "scd30"],
-    ["bme680 - gap / temperature / humidity", "bme680"],
-    ["sunrise - CO2 / temperature", "sunrise"],
-    ["scd4x - CO2 / temperature / humidity", "scd4x"],
-    ["sgx7ox - industrial oxygen sensor ", "sgx7ox"],
-]
-
-adcOptions = [
-    ["disabled", "disabled"],
-    ["dht11 - temperature / humidity (digital)", "dht11"],
-    ["dht22 - temperature / humidity (digital)", "dht22"],
-    ["ds18x20 - temperature (OneWire)", "ds18x20"],
-    ["generic analog", "analog"]
-]
-
-def generateOptions(optionsDict):
-    res = ''
-    for keyVal in optionsDict:
-        res += '<option value="{}">{}</option>\n'.format(keyVal[1], keyVal[0])
-    return res
 {{ end }}
 
 <body class="body-custom">
@@ -132,13 +86,10 @@ def generateOptions(optionsDict):
             <div class="divider text-center" data-content="Available measurements"></div>
             <br />
             <div class="form-group">
-              {{ addSwitch("input-led-enabled", "LED notifications") }}
-              {{ addSwitch("input-battery", "Battery statistics") }}
-              {{ addSwitch("input-board-sense", "Board humidity/temperature") }}
-              {{ addSwitch("input-board-stat", "Board health statistics") }}
-              {{ addSwitch("input-network", "Network statistics") }}
-              {{ addSwitch("input-ota", "Over the Air Updates") }}
-              {{ addSwitch("input-store-meas-if-failed-conn", "Store measurement if no connection") }}
+              <div id="board-default-options" style="display: block">
+                <br />
+                <br />
+              </div>
               <div class="col-4 col-sm-12">
                 <label class="form-label" for="measurements">Temperature Unit</label>
               </div>
@@ -153,7 +104,10 @@ def generateOptions(optionsDict):
               <div class="column col-5 col-mr-auto"></div>
               <br />
               <br />
-              {{ addSwitch("input-gps-enable", "GPS", 'onclick="checkboxStatusChanged(\'gps\')"') }}
+              <div id="board-default-option-gps" style="display: block">
+                <br />
+                <br />
+              </div>
               <div id="address-gps" class="col-12">
                 <br />
                 <div id="address-gps-timeout" class="col-12" style="display:block">
@@ -184,23 +138,6 @@ def generateOptions(optionsDict):
                   </div>
                 </div>
                 <div id="gps-no-fix-no-upload-div" class="col-12" style="display:block">
-                  <div class="form-group">
-                    <div class="column col-1 col-mr-auto"></div>
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label">
-                    Discard measurements if no GPS fix
-                    </label>
-                    </div>
-                    <div class="col-3 col-sm-12">
-                      <div class="form-group">
-                        <label class="form-switch">
-                          <input type="checkbox" id="input-gps-no-fix-no-upload"/>
-                          <i class="form-icon"></i>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="column col-5 col-mr-auto"></div>
-                  </div>
                 </div>
                 <br />
                 <br />
@@ -234,7 +171,6 @@ def generateOptions(optionsDict):
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-i2c-1">
-                        {{ generateOptions(i2cOptions) }}
                       </select>
                     </div>
                   </div>
@@ -246,7 +182,6 @@ def generateOptions(optionsDict):
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-i2c-2">
-                        {{ generateOptions(i2cOptions) }}
                       </select>
                     </div>
                   </div>
@@ -258,13 +193,13 @@ def generateOptions(optionsDict):
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
-                        {{ generateOptions(adcOptions) }}
                       </select>
                     </div>
                   </div>
                   <br />
                   <br />
-                  {{ addSwitch("input-ins-esp-weight-scale", "Weight Scale") }}
+                  <div id="div-option-weigh-scale">
+                  </div>
                   <br />
                   <br />
                 </div>
@@ -281,7 +216,6 @@ def generateOptions(optionsDict):
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-i2c">
-                        {{ generateOptions(i2cOptions) }}
                       </select>
                     </div>
                   </div>
@@ -293,7 +227,6 @@ def generateOptions(optionsDict):
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
-                        {{ generateOptions(adcOptions) }}
                       </select>
                     </div>
                   </div>
@@ -323,7 +256,6 @@ def generateOptions(optionsDict):
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
-                        {{ generateOptions(adcOptions) }}
                       </select>
                     </div>
                   </div>
@@ -352,7 +284,6 @@ def generateOptions(optionsDict):
                   <div class="col-8 col-sm-12">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
-                        {{ generateOptions(adcOptions) }}
                       </select>
                     </div>
                   </div>
@@ -489,8 +420,50 @@ def generateOptions(optionsDict):
         "ins_gen_s3" : "esp32s3-bg600-i2c-analog-options"
       }
 
+      const i2cOptions = {
+          "disabled": "disabled",
+          "tsl2561": "tsl2561 - luminosity",
+          "sht20": "sht20 - temperature / humidity",
+          "sht40": "sht40 - temperature / humidity",
+          "si7021": "si7021 - temperature / humidity",
+          "scd30": "scd30 - C02 / temperature / humidity",
+          "bme680": "bme680 - gap / temperature / humidity",
+          "sunrise": "sunrise - CO2 / temperature",
+          "scd4x": "scd4x - CO2 / temperature / humidity",
+          "sgx7ox": "sgx7ox - industrial oxygen sensor ",
+      }
+
+      const adcOptions = {
+          "disabled": "disabled",
+          "dht11": "dht11 - temperature / humidity (digital)",
+          "dht22": "dht22 - temperature / humidity (digital)",
+          "ds18x20": "ds18x20 - temperature (OneWire)",
+          "analog": "generic analog"
+      }
+
     function initializeValues() {
       var gps = Boolean({{ meas_gps_enabled }})
+
+      addSwitch("board-default-options", "input-led-enabled", "LED notifications")
+      addSwitch("board-default-options", "input-battery", "Battery statistics")
+      addSwitch("board-default-options", "input-board-sense", "Board humidity/temperature")
+      addSwitch("board-default-options", "input-board-stat", "Board health statistics")
+      addSwitch("board-default-options", "input-network", "Network statistics")
+      addSwitch("board-default-options", "input-ota", "Over the Air Updates")
+      addSwitch("board-default-options", "input-store-meas-if-failed-conn", "Store measurement if no connection")
+      addSwitch("board-default-option-gps", "input-gps-enable", "GPS", checkboxGPSStatusChanged)
+      addSwitch("gps-no-fix-no-upload-div", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
+
+      addSwitch("div-option-weigh-scale", "input-ins-esp-weight-scale", "Weight Scale")
+
+      generateOptions("input-ins-esp-i2c-1", i2cOptions)
+      generateOptions("input-ins-esp-i2c-2", i2cOptions)
+      generateOptions("input-ins-esp-s1-i2c", i2cOptions)
+
+      generateOptions("input-ins-esp-sensor-a-d-p1", adcOptions)
+      generateOptions("input-ins-esp-s1-sensor-a-d-p1", adcOptions)
+      generateOptions("input-ins-esp-s1-sensor-a-d-p2", adcOptions)
+      generateOptions("input-ins-esp-s1-sensor-a-d-p3", adcOptions)
 
       setElemValueBool('input-led-enabled', {{ meas_led_enabled }}, true)
       setElemValueBool('input-battery', {{ meas_battery_stat }}, true)
@@ -648,7 +621,7 @@ def generateOptions(optionsDict):
         Cookies.set('meas-4-20-snsr-2-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-2-enable'))
 
         Cookies.set('meas-sdi-warmup-time', document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value)
-        location.href = "step-6-timing.pyhtml"
+        location.href = "step-6-timing.html"
       }
       else if (elementIsVisible("i2c-scale-board-options")) {
         Cookies.set('selected-board', boardNamePerTab["i2c-scale-board-options"] )
@@ -660,7 +633,7 @@ def generateOptions(optionsDict):
         if (!document.getElementById('input-ins-esp-weight-scale').checked) {
           Cookies.set('meas-scale-offset', 0)
           Cookies.set('meas-scale-scale', 1)
-          location.href = "step-6-timing.pyhtml"
+          location.href = "step-6-timing.html"
         }
         else {
           var scale = {{ meas_scale_scale }}
@@ -669,7 +642,7 @@ def generateOptions(optionsDict):
           if(scale && offset) {
             Cookies.set('meas-scale-offset', offset)
             Cookies.set('meas-scale-scale', scale)
-            location.href = "step-5-3-scale-calibr-res.pyhtml"
+            location.href = "step-5-3-scale-calibr-res.html"
           }
           else
             location.href = "step-5-1-scale-idle.html"
@@ -691,7 +664,7 @@ def generateOptions(optionsDict):
         if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p3-trans-div'))
           Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p3-t').value)
 
-        location.href = "step-6-timing.pyhtml"
+        location.href = "step-6-timing.html"
       }
 
       Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
@@ -770,6 +743,10 @@ def generateOptions(optionsDict):
       }
 
       return returnObj
+    }
+
+    function checkboxGPSStatusChanged() {
+        checkboxStatusChanged('gps')
     }
 
     initializeValues()

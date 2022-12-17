@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 
+{{ py }}
+import device_info
+{{ end }}
+
 <html>
 
     <head>
@@ -35,7 +39,7 @@
             <br />
             <div id="loader" class="loading loading-lg"></div>
             <div class="text-center">
-              Configuration details for: <span class="text-bold">LoRa</span>
+              Configuration details for: <span class="text-bold">Cellular</span>
             </div>
             <br />
             <div class="columns flex-centered">
@@ -48,62 +52,64 @@
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="measurements">Region</label>
+                      <label class="form-label" for="input-example-cellular">APN</label>
+                    </div>
+                    <div class="col-9 col-sm-12">
+                      <input class="form-input constr-field" type="text" id="input-apn"/>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-3 col-sm-12">
+                      <label class="form-label" for="measurements">Technology</label>
                     </div>
                     <div class="col-9 col-sm-12">
                       <div class="form-group">
-                        <select class="form-select" id="input-region">
-                          <option value="AS923">AS923</option>
-                          <option value="AU915">AU915</option>
-                          <option value="EU868">EU868</option>
-                          <option value="US915">US915</option>
-                          <option value="CN470">CN470</option>
-                          <option value="IN865">IN865</option>
+                        <select class="form-select"  id="input-cell-tech">
+                          <option selected>GSM</option>
+                          <option>NBIoT</option>
+                          <option>LTE-M</option>
+                          <option>auto</option>
                         </select>
                       </div>
                     </div>
                     <br />
                     <br />
-
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-cellular">DR</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-dr"></input>
+                    <div class="col-12">
+                      <div class="divider text-center" data-content="Generic Configuration"></div>
                     </div>
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-cellular">TX Retries</label>
+                      <label class="form-label" for="input-example-cellular">Protocol</label>
                     </div>
                     <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-retries"></input>
+                      <label class="form-radio">
+                        <input type="radio" name="protocol" value="mqtt" checked>
+                        <i class="form-icon"></i> MQTT
+                      </label>
+                      <label class="form-radio">
+                        <input type="radio" name="protocol" value="coap" checked>
+                        <i class="form-icon"></i> CoAP
+                      </label>
                     </div>
                     <br />
                     <br />
                     <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-cellular">ADR</label>
+                      <label class="form-label" for="input-example-cellular">IP version</label>
                     </div>
-                    <div class="col-9 col-sm-12">
-                      <div class="form-group">
-                        <label class="form-switch">
-                          <input type="checkbox" id="input-adr"/>
-                          <i class="form-icon"></i>
-                        </label>
-                      </div>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-cellular">Confirmed</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <div class="form-group">
-                        <label class="form-switch">
-                          <input type="checkbox" id="input-confirmed" />
-                          <i class="form-icon"></i>
-                        </label>
-                      </div>
+                    <div class="col-9 col-sm-12" >
+                      <label class="form-radio">
+                        <input type="radio" name="ipversion" value="IP" id="ipv4Option" checked>
+                        <i class="form-icon"></i> IPv4
+                      </label>
+                      <label class="form-radio">
+                        <input type="radio" name="ipversion" value="IPV6" id="ipv6Option">
+                        <i class="form-icon"></i> IPv6
+                      </label>
+                      <label class="form-radio">
+                        <input type="radio" name="ipversion" value="IPV4V6" id="ipv4v6Option">
+                        <i class="form-icon"></i> IPv4/v6
+                      </label>
                     </div>
                     <br />
                     <br />
@@ -124,19 +130,20 @@
         <script src="js.cookie.min.js"></script>
         <script src="utils.js"></script>
         <script >
-        function initializeValues() {
-          var adr = {{ lora_adr }}
-          var confirmed = {{ lora_confirmed }}
+          function initializeValues() {
+            var protocol = "{{ protocol }}"
+            var ipv = "{{ ipversion }}"
 
-          setElemValue('input-region', "{{ lora_region }}", "EU868")
-          setElemValue('input-dr', {{ lora_dr }}, 5)
-          setElemValue('input-retries', {{ lora_retries }}, 1)
+            //input-band" value={{ cell_band }}
+            setElemValue('input-cell-tech', "{{ cell_tech }}", "GSM")
+            setElemValue('input-apn', "{{ cell_apn }}", "internet")
+            setElemValue('input-band', {{ cell_band }}, 20)
 
-          document.getElementById('input-adr').checked = adr !== undefined ? adr : true
-          document.getElementById('input-confirmed').checked = confirmed !== undefined ? confirmed : false
+            setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
+            setRadioGroupValue('ipversion', ipv !== "undefined" ? ipv : "IP")
 
-          showElement('loader', false)
-        }
+            showElement('loader', false)
+          }
 
           function clearCookies() {
             Cookies.remove('lora-region')
@@ -150,23 +157,37 @@
             Cookies.remove('wifi-pass')
             Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
+            Cookies.remove('cell-tech')
           }
 
           function storeData(){
             document.getElementById('save-button').disabled = true
             clearCookies();
-            Cookies.set('network', "lora")
+            Cookies.set('network', "cellular")
 
-            Cookies.set('lora-adr', boolElemToPyStr('input-adr'))
-            Cookies.set('lora-confirmed', boolElemToPyStr('input-confirmed'))
-            Cookies.set('lora-dr', document.getElementById('input-dr').value)
-            Cookies.set('lora-region', document.getElementById('input-region').value)
-            Cookies.set('lora-retries', document.getElementById('input-retries').value)
 
-            location.href = "step-4-keys-lora.pyhtml";
+            Cookies.set('cell-tech', document.getElementById('input-cell-tech').value)
+
+            Cookies.set('cell-apn', document.getElementById('input-apn').value.trim())
+            var band_elem = document.getElementById('input-band')
+            if(band_elem) Cookies.set('cell-band', band_elem.value)
+
+            readRadioGroupValue('protocol', 'protocol')
+            readRadioGroupValue('ipversion', 'ipversion')
+
+            location.href = "step-4-keys-console.html";
           }
 
           function validateMyForm(){
+            var apn =  document.getElementById('input-apn')
+            if(apn.value.trim() == ""){
+                apn.style.borderColor = "red";
+                apn.focus()
+                window.alert("Please enter an APN")
+                return false
+            }
+            apn.style.borderColor = "green";
+
             storeData()
             return true
           }
