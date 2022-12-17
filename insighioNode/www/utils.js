@@ -89,10 +89,86 @@ function boolElemToPyStr(elemId, boolField="checked") {
   return fieldObj[boolField] ? "True" : "False"
 }
 
+function isChecked(elemId) {
+  var fieldObj = document.getElementById(elemId)
+  return fieldObj && fieldObj["checked"]
+}
+
 function addElemChild(parentElem, txt, val){
     var elem = document.createElement("option")
     if(val)
         elem.value = val
     elem.innerHTML = txt
     parentElem.appendChild(elem)
+}
+
+function addSwitch(parentId, switchId, switchLabel, onClickCallback=undefined) {
+  var parent = document.getElementById(parentId);
+
+  var mainDiv = document.createElement("div")
+  mainDiv.classList.add('form-group')
+
+  ///////////////////////////////////////////////////////
+  var labelDiv = document.createElement("div")
+  labelDiv.classList.add('col-4')
+  labelDiv.classList.add('col-lg-6')
+  labelDiv.classList.add('col-sm-10')
+
+  var label = document.createElement("label")
+  label.classList.add('form-label')
+  label.appendChild(document.createTextNode(switchLabel));
+
+  labelDiv.appendChild(label)
+  mainDiv.appendChild(labelDiv)
+
+  ///////////////////////////////////////////
+
+  var switchDiv = document.createElement("div")
+  switchDiv.classList.add('col-8')
+  switchDiv.classList.add('col-lg-6')
+  switchDiv.classList.add('col-sm-2')
+
+  var switchDivGroup = document.createElement("div") // not sure if needed
+  switchDivGroup.classList.add('form-group')
+
+  var switchLabel = document.createElement("label")
+  switchLabel.classList.add('form-switch')
+
+  var switchInput = document.createElement("input")
+  switchInput.type = "checkbox"
+  switchInput.id = switchId
+  if(onClickCallback)
+    switchInput.onclick = onClickCallback
+
+  var switchIcon = document.createElement("i")
+  switchIcon.classList.add('form-icon')
+
+  switchLabel.appendChild(switchInput)
+  switchLabel.appendChild(switchIcon)
+  switchDivGroup.appendChild(switchLabel)
+  switchDiv.appendChild(switchDivGroup)
+  mainDiv.appendChild(switchDiv)
+
+  parent.appendChild(mainDiv)
+}
+
+function strToJSValue(strVal) {
+  if (strVal === "undefined")
+    return undefined
+  else if (strVal === "true")
+    return true
+  else if (strVal === "false")
+    return false
+  return strVal
+}
+
+function generateOptions(parentId, optionsData){
+  var parent = document.getElementById(parentId)
+
+  for (const [key, value] of Object.entries(optionsData)) {
+    var label = document.createElement("option")
+    label.value = key
+    label.appendChild(document.createTextNode(value))
+    parent.appendChild(label)
+  }
 }
