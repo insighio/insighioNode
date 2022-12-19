@@ -1,5 +1,3 @@
-""" Module for getting information from pycom's pins """
-
 import utime
 import device_info
 
@@ -48,7 +46,7 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
 
 
 def get_vin(pin='P16'):
-    """ A simple wrapper to take Vin for pycom modules (relevant only when an expansion board is used) """
+    """ A simple wrapper to take Vin for modules (relevant only when an expansion board is used) """
     # just fix pin to 'P16' and voltage divider to 3.054 for Expansion Board 2 or 2 for Expansion Board 3
     return get_input_voltage(pin, 2)
 

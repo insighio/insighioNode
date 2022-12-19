@@ -188,29 +188,23 @@ def set_led_color(color):
     if color_hex is None:
         color_hex = color
 
-    if sys.platform != 'esp32':
-        try:
-            pycom.rgbled(color_hex)
-        except Exception as e:
-            pass
-    else:
-        # try controlling led's power (for ESP32S2), if called to simple ESP32, it will through exception
-        # thus it will ignore call.
-        try:
-            if color == 0:
-                _led_pin_pwr.off()
-                return
-            _led_pin_pwr.on()
-        except Exception as e:
-            pass
+    # try controlling led's power (for ESP32S2), if called to simple ESP32, it will through exception
+    # thus it will ignore call.
+    try:
+        if color == 0:
+            _led_pin_pwr.off()
+            return
+        _led_pin_pwr.on()
+    except Exception as e:
+        pass
 
-        # try setting led's data (for ESP32S2), if called to simple ESP32, it will through exception
-        # thus it will ignore call.
-        try:
-            _led_neopixel[0] = ((color_hex & 0xFF0000) >> 16, (color_hex & 0x00FF00) >> 8, (color_hex & 0x0000FF))
-            _led_neopixel.write()
-        except Exception as e:
-            pass
+    # try setting led's data (for ESP32S2), if called to simple ESP32, it will through exception
+    # thus it will ignore call.
+    try:
+        _led_neopixel[0] = ((color_hex & 0xFF0000) >> 16, (color_hex & 0x00FF00) >> 8, (color_hex & 0x0000FF))
+        _led_neopixel.write()
+    except Exception as e:
+        pass
 
 
 def blink_led(color):
