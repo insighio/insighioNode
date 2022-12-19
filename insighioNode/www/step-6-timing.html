@@ -117,10 +117,9 @@
                     <br />
                   </div>
                 </form>
-                <div class="columns">
-                  <div class="column col-4 col-mr-auto"></div>
-                  <div class="column col-1"><button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button></div>
-                  <div class="column col-1"><button class="btn btn-primary float-right" onclick="validateMyForm()" id="save-button">Save</button></div>
+                <div class="column col-12">
+                  <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
+                  <button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button>
                 </div>
                 <br />
                 <br />
@@ -143,11 +142,11 @@
             addSwitch("option-always-on-switches", "input-ins-always-on", "Always-On Connection (main current plugged)")
             addSwitch("option-always-on-switches", "input-ins-force-always-on", "Force Always-On (ignore power mode)")
             addSwitch("options-batch-upload", "input-ins-batch-upload-enable", "Batch Upload", batchUploadSelected)
-            
+
             fetch("/settings").then((response) => {
               return response.json()
             }).then(function(data) {
-              var batchBufferSize = data.batch_upload_buffer_size 
+              var batchBufferSize = data.batch_upload_buffer_size
               var period = data.period
               var timeA = data.scheduled_time_a
               var timeB = data.scheduled_time_b

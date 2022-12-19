@@ -40,11 +40,11 @@
             <div class="divider text-center" data-content="Available measurements"></div>
             <br />
             <div class="form-group">
-              <div id="board-default-options" style="display: block">
+              <div id="board-default-options" class="column col-12">
                 <br />
                 <br />
               </div>
-              <div class="col-4 col-sm-12">
+              <div class="col-4 col-lg-6 col-sm-10">
                 <label class="form-label" for="measurements">Temperature Unit</label>
               </div>
               <div class="col-3 col-sm-12">
@@ -55,13 +55,12 @@
                   </select>
                 </div>
               </div>
-              <div class="column col-5 col-mr-auto"></div>
-              <br />
-              <br />
-              <div id="board-default-option-gps" style="display: block">
-                <br />
-                <br />
+            </div>
+            <div class="form-group">
+              <div id="board-default-option-gps" class="col-12" style="display: block">
               </div>
+              <br />
+              <br />
               <div id="address-gps" class="col-12">
                 <br />
                 <div id="address-gps-timeout" class="col-12" style="display:block">
@@ -93,8 +92,6 @@
                 </div>
                 <div id="gps-no-fix-no-upload-div" class="col-12" style="display:block">
                 </div>
-                <br />
-                <br />
               </div>
               <br />
               <br />
@@ -118,11 +115,11 @@
               <form class="form-horizontal">
                 <br />
                 <br />
-                <div class="form-group">
-                  <div class="col-4 col-sm-12">
+                <div id="div-option-weigh-scale" class="form-group">
+                  <div class="col-4 col-lg-6">
                     <label class="form-label" for="measurements">I²C #1</label>
                   </div>
-                  <div class="col-8 col-sm-12">
+                  <div class="col-8 col-lg-6">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-i2c-1">
                       </select>
@@ -130,10 +127,10 @@
                   </div>
                   <br />
                   <br />
-                  <div class="col-4 col-sm-12">
+                  <div class="col-4 col-lg-6">
                     <label class="form-label" for="measurements">I²C #2</label>
                   </div>
-                  <div class="col-8 col-sm-12">
+                  <div class="col-8 col-lg-6">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-i2c-2">
                       </select>
@@ -141,10 +138,10 @@
                   </div>
                   <br />
                   <br />
-                  <div class="col-4 col-sm-12">
+                  <div class="col-4 col-lg-6">
                     <label class="form-label" for="measurements">Analog / Digital P1</label>
                   </div>
-                  <div class="col-8 col-sm-12">
+                  <div class="col-8 col-lg-6">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
                       </select>
@@ -152,7 +149,14 @@
                   </div>
                   <br />
                   <br />
-                  <div id="div-option-weigh-scale">
+                  <div class="col-4 col-lg-6">
+                    <label class="form-label" for="measurements">Weight Scale</label>
+                  </div>
+                  <div class="col-8 col-lg-6">
+                      <label class="form-switch">
+                        <input type="checkbox" id="input-ins-esp-weight-scale" />
+                        <i class="form-icon"></i>
+                      </label>
                   </div>
                   <br />
                   <br />
@@ -164,10 +168,10 @@
                 <br />
                 <br />
                 <div class="form-group">
-                  <div class="col-4 col-sm-12">
+                  <div class="col-4 col-lg-6 ">
                     <label class="form-label" for="measurements">I²C</label>
                   </div>
-                  <div class="col-8 col-sm-12">
+                  <div class="col-8 col-lg-6 ">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-i2c">
                       </select>
@@ -175,10 +179,10 @@
                   </div>
                   <br />
                   <br />
-                  <div class="col-4 col-sm-12">
+                  <div class="col-4 col-lg-6">
                     <label class="form-label" for="measurements">Analog / Digital P1</label>
                   </div>
-                  <div class="col-8 col-sm-12">
+                  <div class="col-8 col-lg-6">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
                       </select>
@@ -204,10 +208,10 @@
                   </div>
                   <br />
                   <br />
-                  <div class="col-4 col-sm-12">
+                  <div class="col-4 col-lg-6">
                     <label class="form-label" for="measurements">Analog / Digital P2</label>
                   </div>
-                  <div class="col-8 col-sm-12">
+                  <div class="col-8 col-lg-6">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
                       </select>
@@ -232,10 +236,10 @@
                   </div>
                   <br />
                   <br />
-                  <div class="col-4 col-sm-12">
+                  <div class="col-4 col-lg-6">
                     <label class="form-label" for="measurements">Analog / Digital P3</label>
                   </div>
-                  <div class="col-8 col-sm-12">
+                  <div class="col-8 col-lg-6">
                     <div class="form-group">
                       <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
                       </select>
@@ -270,42 +274,36 @@
               <form class="form-horizontal">
                 <br />
                 <br />
+                <div id="options-sdi12" class="form-group"></div>
                 <div class="form-group">
-                  <!--div> {{ generateSdi12Options() }}</div-->
-                  <div class="col-4 col-sm-12">
+                  <div class="col-4 col-lg-6 col-sm-6">
                     <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
                   </div>
-                  <div class="col-8 col-sm-12">
+                  <div class="col-8 col-lg-6 col-sm-6">
                     <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time"/>
                   </div>
-                  <div class="form-group">
-                    <div class="col-4 col-sm-12">
-                      <label class="form-label" for="measurements">4-20mA sensor n.1</label>
-                    </div>
-                    <div class="col-8 col-sm-12">
-                      <div class="form-group">
-                        <label class="form-switch">
-                          <input type="checkbox" id="ins-esp-gen-4-20-snsr-1-enable" />
-                          <i class="form-icon"></i>
-                        </label>
-                      </div>
-                    </div>
+                  <br />
+                  <br />
+                  <div class="col-4 col-lg-6 col-sm-6">
+                    <label class="form-label" for="measurements">4-20mA sensor n.1</label>
                   </div>
-                  <div class="form-group">
-                    <div class="col-4 col-sm-12">
-                      <label class="form-label" for="measurements">4-20mA sensor n.2</label>
-                    </div>
-                    <div class="col-8 col-sm-12">
-                      <div class="form-group">
-                        <label class="form-switch">
-                          <input type="checkbox" id="ins-esp-gen-4-20-snsr-2-enable" />
-                          <i class="form-icon"></i>
-                        </label>
-                      </div>
-                    </div>
+                  <div class="col-8 col-lg-6 col-sm-6">
+                      <label class="form-switch">
+                        <input type="checkbox" id="ins-esp-gen-4-20-snsr-1-enable" />
+                        <i class="form-icon"></i>
+                      </label>
                   </div>
                   <br />
                   <br />
+                  <div class="col-4 col-lg-6 col-sm-6">
+                    <label class="form-label" for="measurements">4-20mA sensor n.2</label>
+                  </div>
+                  <div class="col-8 col-lg-6 col-sm-6">
+                  <label class="form-switch">
+                    <input type="checkbox" id="ins-esp-gen-4-20-snsr-2-enable" />
+                    <i class="form-icon"></i>
+                  </label>
+                  </div>
                   <br />
                   <br />
                 </div>
@@ -345,10 +343,9 @@
               </div>
             </div>
           </form>
-          <div class="columns">
-            <div class="column col-4 col-mr-auto"></div>
-            <div class="column col-1"><button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button></div>
-            <div class="column col-1"><button class="btn btn-primary float-right" onclick="validateMyForm()" id="save-button">Save</button></div>
+          <div class="column col-12">
+            <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
+            <button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button>
           </div>
           <br />
           <br />
@@ -395,6 +392,10 @@
           "analog": "generic analog"
       }
 
+      let sdi12Options = {
+        "disabled": "disabled",
+      }
+
       let settings = undefined
 
       function initializeValues() {
@@ -408,8 +409,6 @@
         addSwitch("board-default-option-gps", "input-gps-enable", "GPS", checkboxGPSStatusChanged)
         addSwitch("gps-no-fix-no-upload-div", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
 
-        addSwitch("div-option-weigh-scale", "input-ins-esp-weight-scale", "Weight Scale")
-
         generateOptions("input-ins-esp-i2c-1", i2cOptions)
         generateOptions("input-ins-esp-i2c-2", i2cOptions)
         generateOptions("input-ins-esp-s1-i2c", i2cOptions)
@@ -418,13 +417,15 @@
         generateOptions("input-ins-esp-s1-sensor-a-d-p1", adcOptions)
         generateOptions("input-ins-esp-s1-sensor-a-d-p2", adcOptions)
         generateOptions("input-ins-esp-s1-sensor-a-d-p3", adcOptions)
-        
+
+        generateSdi12Options()
+
         fetch("/settings").then((response) => {
           return response.json()
         }).then(function(data) {
           settings = data
-          
-          var gps = Boolean(data.meas_gps_enabled)        
+
+          var gps = Boolean(data.meas_gps_enabled)
 
           setElemValueBool('input-led-enabled', data.meas_led_enabled, true)
           setElemValueBool('input-battery', data.meas_battery_stat, true)
@@ -447,8 +448,11 @@
           //setElemValueBool('input-gps-no-fix-no-upload', data.meas_gps_no_fix_no_upload,  false)
 
           for(let i=1; i<=10; ++i) {
-            setElemValueBool('input-ins-esp-gen-sdi12-' + i + '-enable', data["meas_sdi_" + i + "_enabled"], false)
-            setElemValue('option-ins-esp-gen-sdi12-" + i + "-address', data["meas_sdi_" + i + "_address"], 0)
+            var sdi12Enabled = data["meas_sdi_" + i + "_enabled"]
+            if(!sdi12Enabled) 
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', "disabled", "disabled")  
+            else
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "disabled")  
           }
 
           setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
@@ -539,8 +543,8 @@
     function setSDI12Cookie(sdi12Index) {
       var address_elem = document.getElementById('option-ins-esp-gen-sdi12-' + sdi12Index + '-address')
 
-      Cookies.set('meas-sdi-' + sdi12Index + '-enabled', boolElemToPyStr('input-ins-esp-gen-sdi12-' + sdi12Index + '-enable'))
-      Cookies.set('meas-sdi-' + sdi12Index + '-address', address_elem !== null ? address_elem.value : "")
+      Cookies.set('meas-sdi-' + sdi12Index + '-enabled', address_elem !== null || address_elem.value == "disabled" ? "False" : "True" )
+      Cookies.set('meas-sdi-' + sdi12Index + '-address', address_elem !== null || address_elem.value == "disabled" ? "" : address_elem.value)
     }
 
     function storeData() {
@@ -703,6 +707,50 @@
 
     function checkboxGPSStatusChanged() {
         checkboxStatusChanged('gps')
+    }
+
+    function generateSdi12Options(){
+      var parent = document.getElementById("options-sdi12");
+
+      for(let i=0; i<10; i++) {
+        sdi12Options[""+i] = i
+      }
+
+      for(let i=1; i<=10; i++) {
+        var labelDiv = document.createElement("div")
+        labelDiv.classList.add('col-4')
+        labelDiv.classList.add('col-lg-6')
+        labelDiv.classList.add('col-sm-6')
+
+        var label = document.createElement("label")
+        label.classList.add('form-label')
+        label.appendChild(document.createTextNode("SDI-12 n." + i));
+
+        labelDiv.appendChild(label)
+        parent.appendChild(labelDiv)
+
+        var optionsDiv = document.createElement("div")
+        optionsDiv.classList.add('col-8')
+        optionsDiv.classList.add('col-lg-6')
+        optionsDiv.classList.add('col-sm-6')
+
+        var optionsDivGroup = document.createElement("div") // not sure if needed
+        optionsDivGroup.classList.add('form-group')
+
+        var selectElem = document.createElement("select")
+        selectElem.classList.add('form-select')
+        selectElem.id = 'option-ins-esp-gen-sdi12-' + i + '-address'
+
+        optionsDivGroup.appendChild(selectElem)
+        optionsDiv.appendChild(optionsDivGroup)
+        parent.appendChild(optionsDiv)
+
+        parent.appendChild(document.createElement("br"))
+        parent.appendChild(document.createElement("br"))
+
+        generateOptions(selectElem.id, sdi12Options)
+        setElemValue(selectElem.id, "disabled", "disabled")
+      }
     }
 
     initializeValues()
