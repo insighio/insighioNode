@@ -425,18 +425,18 @@
         }).then(function(data) {
           settings = data
 
-          var gps = Boolean(data.meas_gps_enabled)
+          var gps =  strToJSValue(data.meas_gps_enabled)
 
-          setElemValueBool('input-led-enabled', data.meas_led_enabled, true)
-          setElemValueBool('input-battery', data.meas_battery_stat, true)
-          setElemValueBool('input-board-sense', data.meas_board_sense, true)
-          setElemValueBool('input-board-stat', data.meas_board_stat, false)
-          setElemValueBool('input-network', data.meas_network_stat, true)
-          setElemValueBool('input-ota', data.system_enable_ota, true)
-          setElemValueBool('input-ins-esp-weight-scale', data.meas_scale_enabled, false)
+          setElemValueBool('input-led-enabled', strToJSValue(data.meas_led_enabled), true)
+          setElemValueBool('input-battery', strToJSValue(data.meas_battery_stat), true)
+          setElemValueBool('input-board-sense', strToJSValue(data.meas_board_sense), true)
+          setElemValueBool('input-board-stat', strToJSValue(data.meas_board_stat), false)
+          setElemValueBool('input-network', strToJSValue(data.meas_network_stat), true)
+          setElemValueBool('input-ota', strToJSValue(data.system_enable_ota), true)
+          setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_enabled), false)
 
           setElemValueBool('input-gps-enable', gps, true)
-          setElemValueBool('input-temp-unit', data.meas_temp_unit, true, "value")
+          setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
 
           checkboxStatusChanged('gps')
           var boardType = data.selected_board
@@ -456,9 +456,6 @@
           }
 
           setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
-
-          checkboxStatusChanged('ins-esp-gen-sdi12-1')
-          checkboxStatusChanged('ins-esp-gen-sdi12-2')
 
           var adp1 = data.meas_sensor_a_d_p1
           var adp2 = data.meas_sensor_a_d_p2
