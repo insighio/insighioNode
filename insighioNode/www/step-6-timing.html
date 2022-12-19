@@ -156,10 +156,10 @@
             }).then(function(data) {
               var batchBufferSize = data.batch_upload_buffer_size
               var period = data.period
-              var timeA = data.scheduled_time_a
+              var timeA = data.scheduled_time_a 
               var timeB = data.scheduled_time_b
 
-              if(timeA !== undefined && timeB !== undefined) {
+              if(timeA !== "undefined" && timeB !== "undefined") {
                 timingChanged(undefined, 'scheduled')
 
                 document.getElementById('input-scheduled-time-a').value = secondsToStringTime(timeA)

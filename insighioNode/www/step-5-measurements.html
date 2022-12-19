@@ -448,7 +448,7 @@
           //setElemValueBool('input-gps-no-fix-no-upload', data.meas_gps_no_fix_no_upload,  false)
 
           for(let i=1; i<=10; ++i) {
-            var sdi12Enabled = data["meas_sdi_" + i + "_enabled"]
+            var sdi12Enabled = strToJSValue(data["meas_sdi_" + i + "_enabled"])
             if(!sdi12Enabled) 
               setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', "disabled", "disabled")  
             else
@@ -537,11 +537,13 @@
       }
     }
 
-    function setSDI12Cookie(sdi12Index) {
-      var address_elem = document.getElementById('option-ins-esp-gen-sdi12-' + sdi12Index + '-address')
+    function setSDI12Cookie(i) {
+      var address_elem = document.getElementById('option-ins-esp-gen-sdi12-' + i + '-address')
 
-      Cookies.set('meas-sdi-' + sdi12Index + '-enabled', address_elem !== null || address_elem.value == "disabled" ? "False" : "True" )
-      Cookies.set('meas-sdi-' + sdi12Index + '-address', address_elem !== null || address_elem.value == "disabled" ? "" : address_elem.value)
+      console.log("checking: ",i, ", val: ", address_elem.value)
+
+      Cookies.set('meas-sdi-' + i + '-enabled', address_elem === null || address_elem.value === "disabled" ? "False" : "True" )
+      Cookies.set('meas-sdi-' + i + '-address', address_elem === null || address_elem.value === "disabled" ? "" : address_elem.value)
     }
 
     function storeData() {
