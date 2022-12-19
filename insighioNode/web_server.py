@@ -58,14 +58,14 @@ class Settings():
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
         return insighioSettings, 200
-
+#hx711.get_reading(4, 33, 12, None, None, 25)
 class RawWeightIdle():
     def get(self, data):
         from sensors import hx711
         if data and data["board"] == "old_esp_cyclefi":
             raw_val = hx711.get_reading_raw_idle_value(21, 22, 23, None)
         else:
-            raw_val = hx711.get_reading_raw_idle_value(4, 33, 25, 13)
+            raw_val = hx711.get_reading_raw_idle_value(4, 33, 12, 25)
         logging.debug("raw val about to return: " + str(raw_val))
         return {"raw": raw_val}, 200
 
@@ -75,7 +75,7 @@ class RawWeight:
         if data and data["board"] == "old_esp_cyclefi":
             raw_val = hx711.get_reading(21, 22, 23, None, None, None, True)
         else:
-            raw_val = hx711.get_reading(4, 33, 25, None, None, 13, True)
+            raw_val = hx711.get_reading(4, 33, 12, None, None, 25, True)
         logging.debug("raw weight about to return: " + str(raw_val))
         return {"raw": raw_val}, 200
 
@@ -97,7 +97,7 @@ class Config:
 
 async def server_loop(timeoutMs):
     purple = 0x4c004c
-    device_info.set_led_purple()
+    device_info.set_led_color(purple)
 
     device_info.wdt_reset()
 
@@ -117,7 +117,11 @@ async def server_loop(timeoutMs):
         cnt = 0
         while True:
             is_connected = wlan.isconnected()
-            print(".", end='')
+            if is_connected:
+                print("_", end='')
+            else:
+                print(".", end='')
+
             if is_connected:
                 keep_active_after_connection = True
 
@@ -129,16 +133,14 @@ async def server_loop(timeoutMs):
             else:
                 break
 
-            device_info.set_led_color(purple)
-            if not is_connected:
-                utime.sleep_ms(100)
-                device_info.set_led_color('black')
-
             if cnt % 10 == 0:
                 device_info.wdt_reset()
+                device_info.set_led_color(purple)
+            else:
+                if not is_connected:
+                    device_info.set_led_color('black')
+                
             cnt += 1
-            utime.sleep_ms(500)
-
             yield from  uasyncio.sleep_ms(100)
     except KeyboardInterrupt:
         pass
@@ -157,7 +159,7 @@ def start(timeoutMs=120000):
 
     device_info.wdt_reset()
 
-    app = tinyweb.webserver(3, 3, 16, False)
+    app = tinyweb.webserver(3, 6, 16, False)
 
     ############################################################################
     # callback registration
@@ -234,12 +236,12 @@ def start(timeoutMs=120000):
     finally:
         app.loop.close()
 
-    device_info.set_led_black()
+    device_info.set_led_color('black')
 
     try:
         app.shutdown()
     except Exception as e:
-        logging.exception(e, "failed to shutodown web server properly")
+        logging.exception(e, "failed to shutdown web server properly")
 
     device_info.set_led_color('black')
 
