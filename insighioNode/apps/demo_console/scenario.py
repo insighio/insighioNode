@@ -70,16 +70,16 @@ def executeDeviceInitialization():
 
 def determine_message_buffering_and_network_connection_necessity():
     buffered_upload_enabled = scenario_utils.get_config("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
-    execute_connetion_procedure = not buffered_upload_enabled
+    execute_connection_procedure = not buffered_upload_enabled
 
     # if RTC is invalid, force network connection
     if buffered_upload_enabled and utime.gmtime()[0] < 2021:
-        execute_connetion_procedure = True
-    return (buffered_upload_enabled, execute_connetion_procedure)
+        execute_connection_procedure = True
+    return (buffered_upload_enabled, execute_connection_procedure)
 
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
-    (buffered_upload_enabled, execute_connetion_procedure) = determine_message_buffering_and_network_connection_necessity()
+    (buffered_upload_enabled, execute_connection_procedure) = determine_message_buffering_and_network_connection_necessity()
 
     is_first_run = True
     always_on = isAlwaysOnScenario()
@@ -120,15 +120,15 @@ def executeMeasureAndUploadLoop():
         logging.debug("printing measurements so far: " + str(measurements))
 
         # if the RTC is OK, timestamp message
-        if buffered_upload_enabled and not execute_connetion_procedure:
+        if buffered_upload_enabled and not execute_connection_procedure:
             measurementStored = storeMeasurement(measurements, False)
             # if always on, do run connect and upload
             # else run connection only if measurement was not stored
-            execute_connetion_procedure = True if always_on else not measurementStored
+            execute_connection_procedure = True if always_on else not measurementStored
 
         # connect (if needed) and upload message
         connectAndUploadCompletedWithoutErrors = False
-        if execute_connetion_procedure:
+        if execute_connection_procedure:
             hasGPSFix = executeGetGPSPosition(cfg, measurements, always_on)
 
             if not hasGPSFix and scenario_utils.get_config("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
