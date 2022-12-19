@@ -44,7 +44,7 @@ logging.info("Original device id: " + device_info.get_device_id()[0])
 
 class DevID():
     def get(self, data):
-        return {"id": device_info.get_device_id()}, 200
+        return {"id": device_info.get_device_id()[0]}, 200
 
 class Settings():
     def get(self, data):
@@ -117,10 +117,10 @@ async def server_loop(timeoutMs):
         cnt = 0
         while True:
             is_connected = wlan.isconnected()
-            if is_connected:
-                print("_", end='')
-            else:
-                print(".", end='')
+            # if is_connected:
+            #     print("_", end='')
+            # else:
+            #     print(".", end='')
 
             if is_connected:
                 keep_active_after_connection = True
@@ -139,7 +139,7 @@ async def server_loop(timeoutMs):
             else:
                 if not is_connected:
                     device_info.set_led_color('black')
-                
+
             cnt += 1
             yield from  uasyncio.sleep_ms(100)
     except KeyboardInterrupt:
@@ -231,6 +231,8 @@ def start(timeoutMs=120000):
 
     try:
         app.loop.run_until_complete(server_loop(timeoutMs))
+    except KeyboardInterrupt:
+        pass
     except Exception as e:
         logging.exception(e, "web server exception")
     finally:
@@ -240,6 +242,7 @@ def start(timeoutMs=120000):
 
     try:
         app.shutdown()
+
     except Exception as e:
         logging.exception(e, "failed to shutdown web server properly")
 
