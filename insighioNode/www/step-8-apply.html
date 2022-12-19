@@ -50,28 +50,75 @@
             </div>
           </div>
           <script>
-          function startOver() {
-            location.href = "step-2-select.html"
-          }
+            function startOver() {
+              location.href = "step-2-select.html"
+            }
+            function apply(){
+              const urlParams = new URLSearchParams(window.location.search);
+  
+              var queryComponents = window.location.search.substr(1, window.location.search.length - 1).split("&")
+              const queryParamsDict = {}
+              var queryStringCustom = ""
+              queryComponents.forEach( component => {
+                var compElems = component.split("=")
+                var key = compElems[0]
+                var value = compElems[1]
+                if (key === "wifi-pass" || key === "wifi-ssid") {
+                  try {
+                    value = atob(value)
+                  }catch(e) {
+                  }
+  
+                  if(value.includes("'"))
+                    value = value.replaceAll("'", "\\'")
+                }
+  
+                var addSeparator = (queryStringCustom !== "")
+                queryStringCustom += addSeparator ? "&" : ""
+  
+                queryStringCustom += key + "=" + value
+  
+                queryParamsDict[key] = value
+              })
+  
+              console.log("queryStringCustom: ", queryStringCustom)
+  
+              const objToSend = {queryParams: queryParamsDict, queryString: queryStringCustom}
+              console.log("obj: ", objToSend)
+  
+              fetch('/save-config', {
+                method: 'POST',
+                headers: {
+                  'Accept': 'application/json, text/plain, */*',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(objToSend)
+              }).then(res => res.json())
+                .then(res => {
+                    requestReboot()
+                })
+                .catch(err => {
+                  console.log("error saving config: ", err)
+                })
+            }
+  
+            function requestReboot() {
+              fetch('/reboot', {
+                method: 'POST',
+                headers: {
+                  'Accept': 'application/json, text/plain, */*',
+                  'Content-Type': 'application/json'
+                },
+                body: "{}"
+              }).then(res => res.json())
+                .then(res => console.log(res))
+                .catch(err => {
+                  console.log("error rebooting: ", err)
+                })
+            }
+  
+            apply()
           </script>
-          {{ py }}
-            from www import configuration_handler
-            import utils
-            utils.writeToFile("/configLog", Request.QueryString)
-            configuration_handler.apply_configuration(Request.QueryParams)
-          {{ end }}
-
-          {{ pyend }}
-            import machine
-            import utime
-
-            start_time = utime.ticks_ms()
-            WAIT_UNTIL_REBOOT_MSEC = 3000
-            while (utime.ticks_ms()-start_time < WAIT_UNTIL_REBOOT_MSEC):
-                    utime.sleep_ms(1000)
-
-            machine.reset()
-          {{ end }}
         </pre>
       </div>
     </body>

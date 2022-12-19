@@ -4,6 +4,7 @@
 
     <head>
         <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>insigh.io Device</title>
         <link rel="stylesheet" href="css/style.css" />
         <link rel="stylesheet" href="css/spectre.min.css" />
@@ -101,34 +102,31 @@
           </div>
         </div>
 
-        <script src="js.cookie.min.js"></script>
-        <script src="utils.js"></script>
+        <script src="js/js.cookie.min.js"></script>
+        <script src="js/utils.js"></script>
         <script >
 
-        //_SATELLITE_ASTROCAST_DEVKIT_EN=<sat-astro-devkit-en> input-satAstroDevkitEnable
-        // _SATELLITE_ASTROCAST_DEVKIT_SSID="<sat-astro-devkit-ssid>" input-satAstroPass
-        // _SATELLITE_ASTROCAST_DEVKIT_PASS="<sat-astro-devkit-pass>" input-satAstroSSID
-        // _SATELLITE_ASTROCAST_DEVKIT_TOKEN="<sat-astro-devkit-token>" input-satAstroToken
+          function initializeValues() {
+            fetch("/settings").then((response) => {
+              return response.json();
+            }).then(function(data) {
+              var dev_enable = data.sat_astro_devkit_en
+              var dev_ssid = data.sat_astro_devkit_ssid
+              var dev_pass = data.sat_astro_devkit_pass
+              var dev_token = data.sat_astro_devkit_token
 
-        // "_SATELLITE_ASTROCAST_DEVKIT_EN": "sat_astro_devkit_en",
-        // "_SATELLITE_ASTROCAST_DEVKIT_SSID": "sat_astro_devkit_ssid",
-        // "_SATELLITE_ASTROCAST_DEVKIT_PASS": "sat_astro_devkit_pass",
-        // "_SATELLITE_ASTROCAST_DEVKIT_TOKEN": "sat_astro_devkit_token"
+              setElemValue('input-satAstroSSID', dev_ssid, "")
+              setElemValue('input-satAstroPass', dev_pass,"")
+              setElemValue('input-satAstroToken', dev_token,"")
 
-        function initializeValues() {
-          var dev_enable = {{ sat_astro_devkit_en }}
-          var dev_ssid = "{{ sat_astro_devkit_ssid }}"
-          var dev_pass = "{{ sat_astro_devkit_pass }}"
-          var dev_token = "{{ sat_astro_devkit_token }}"
+              document.getElementById('input-satAstroDevkitEnable').checked = dev_enable !== undefined ? dev_enable : false
 
-          setElemValue('input-satAstroSSID', dev_ssid, "")
-          setElemValue('input-satAstroPass', dev_pass,"")
-          setElemValue('input-satAstroToken', dev_token,"")
-
-          document.getElementById('input-satAstroDevkitEnable').checked = dev_enable !== undefined ? dev_enable : false
-
-          showElement('loader', false)
-        }
+              showElement('loader', false)
+            }).catch((err) => {
+              console.log("error completing request", err);
+              showElement('loader', false)
+            });
+          }
 
           function clearCookies() {
             Cookies.remove('sat-astro-devkit-en')

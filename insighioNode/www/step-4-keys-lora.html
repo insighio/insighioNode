@@ -83,15 +83,22 @@
             </div>
           </div>
       </div>
-      <script src="js.cookie.min.js"></script>
-      <script src="utils.js"></script>
+      <script src="js/js.cookie.min.js"></script>
+      <script src="js/utils.js"></script>
       <script>
         function initializeValues() {
-          setElemValue("input-dev-eui", "{{ lora_dev_eui }}")
-          setElemValue("input-app-eui", "{{ lora_app_eui }}")
-          setElemValue("input-app-key", "{{ lora_app_key }}")
+          fetch("/settings").then((response) => {
+            return response.json();
+          }).then(function(data) {
+            setElemValue("input-dev-eui", data.lora_dev_eui)
+            setElemValue("input-app-eui", data.lora_app_eui)
+            setElemValue("input-app-key", data.lora_app_key)
 
-          showElement('loader', false)
+            showElement('loader', false)
+          }).catch((err) => {
+            console.log("error completing request", err);
+            showElement('loader', false)
+          });
         }
 
         function clearCookies() {

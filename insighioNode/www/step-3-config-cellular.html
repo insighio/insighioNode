@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 
-{{ py }}
-import device_info
-{{ end }}
-
 <html>
 
     <head>
         <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>insigh.io Device</title>
         <link rel="stylesheet" href="css/style.css" />
         <link rel="stylesheet" href="css/spectre.min.css" />
@@ -127,37 +124,39 @@ import device_info
           </div>
         </div>
 
-        <script src="js.cookie.min.js"></script>
-        <script src="utils.js"></script>
+        <script src="js/js.cookie.min.js"></script>
+        <script src="js/utils.js"></script>
         <script >
+
           function initializeValues() {
-            var protocol = "{{ protocol }}"
-            var ipv = "{{ ipversion }}"
+            fetch("/settings").then((response) => {
+              return response.json();
+            }).then(function(data) {
+              var protocol = data.protocol
+              var ipv = data.ipversion
 
-            //input-band" value={{ cell_band }}
-            setElemValue('input-cell-tech', "{{ cell_tech }}", "GSM")
-            setElemValue('input-apn', "{{ cell_apn }}", "internet")
-            setElemValue('input-band', {{ cell_band }}, 20)
+              //input-band" value={{ cell_band }}
+              setElemValue('input-cell-tech', data.cell_tech, "GSM")
+              setElemValue('input-apn', data.cell_apn, "internet")
+              setElemValue('input-band', data.cell_band, 20)
 
-            setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
-            setRadioGroupValue('ipversion', ipv !== "undefined" ? ipv : "IP")
+              setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
+              setRadioGroupValue('ipversion', ipv !== "undefined" ? ipv : "IP")
 
-            showElement('loader', false)
+              showElement('loader', false)
+            }).catch((err) => {
+              console.log("error completing request", err);
+              showElement('loader', false)
+            });
           }
 
           function clearCookies() {
-            Cookies.remove('lora-region')
             Cookies.remove('network')
-            Cookies.remove('lora-adr')
-            Cookies.remove('lora-confirmed')
-            Cookies.remove('lora-dr')
-            Cookies.remove('lora-retries')
             Cookies.remove('cell-apn')
             Cookies.remove('cell-band')
-            Cookies.remove('wifi-pass')
-            Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
             Cookies.remove('cell-tech')
+            Cookies.remove('ipversion')
           }
 
           function storeData(){

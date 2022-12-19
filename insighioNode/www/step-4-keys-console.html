@@ -117,16 +117,23 @@
             </div>
           </div>
       </div>
-      <script src="js.cookie.min.js"></script>
-      <script src="utils.js"></script>
+      <script src="js/js.cookie.min.js"></script>
+      <script src="js/utils.js"></script>
       <script>
         function initializeValues() {
-          setElemValue("input-id", "{{ insighio_id }}")
-          setElemValue("input-key", "{{ insighio_key }}")
-          setElemValue("input-channel", "{{ insighio_channel }}")
-          setElemValue("input-control-channel", "{{ insighio_control_channel }}")
+          fetch("/settings").then((response) => {
+            return response.json();
+          }).then(function(data) {
+            setElemValue("input-id", data.insighio_id)
+            setElemValue("input-key", data.insighio_key)
+            setElemValue("input-channel", data.insighio_channel)
+            setElemValue("input-control-channel", data.insighio_control_channel)
 
-          showElement('loader', false)
+            showElement('loader', false)
+          }).catch((err) => {
+            console.log("error completing request", err);
+            showElement('loader', false)
+          });
         }
 
         function fillClipboardData(field) {

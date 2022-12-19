@@ -37,7 +37,7 @@
             <br />
             <div class="empty">
               <p class="empty-title h5">Weight Scale Calibration</p>
-              <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold">{{ hx711.get_reading(4, 33, 12, None, None, 25) }}</span>.</p>
+              <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold"><div id="loader" class="loading"></div></span></p>
               <p class="empty-subtitle">Place your reference weight on the scale, fill its exact weight in grams at the following field and press <span class="text-bold">Measure</span> to complete calibration.</p>
               <p class="empty-subtitle p-centered">
                 <form class="form-horizontal">
@@ -58,9 +58,22 @@
             </div>
           </div>
       </div>
-      <script src="js.cookie.min.js"></script>
-      <script src="utils.js"></script>
+      <script src="js/js.cookie.min.js"></script>
+      <script src="js/utils.js"></script>
       <script>
+        function initialize(){
+          document.getElementById('save-button').disabled = true
+          fetch("/raw-weight?board=" + Cookies.get('selected-board')).then((response) => {
+            return response.json();
+          }).then(function(data) {
+            document.getElementById('save-button').disabled = false
+            document.getElementById('idle-weight-value').innerHTML = data.raw
+            showElement('loader', false)
+          }).catch((err) => {
+            console.log("Booo", err);
+          });
+        }
+
       function clearCookies() {
         Cookies.remove('meas-scale-offset')
         Cookies.remove('meas-scale-reference')
@@ -83,6 +96,8 @@
 
         location.href = "step-5-3-scale-calibr-res.html"
       }
+
+      initialize()
       </script>
     </body>
 

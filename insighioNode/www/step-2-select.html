@@ -51,15 +51,31 @@
                 </div>
              </div>
              <br />
-             <script src="js.cookie.min.js"></script>
-             <script src="utils.js"></script>
+             <script src="js/js.cookie.min.js"></script>
+             <script src="js/utils.js"></script>
              <script >
-                function clearCookies() {
+               var mac = undefined
+               function initializeValues() {
+                 fetch("/devid").then((response) => {
+                   return response.json();
+                 }).then(function(data) {
+                   mac =  data.id
+                   showElement('loader', false)
+                 }).catch((err) => {
+                   console.log("error completing request", err);
+                   showElement('loader', false)
+                 });
+               }
+
+               function clearCookies() {
+                 Cookies.remove('board-mac')
                  Cookies.remove('network')
                 }
 
                 function operationSelected(operationName) {
                    clearCookies();
+                   Cookies.set('board-mac', mac)
+
                    document.getElementById('button-wifi').disabled = true
                    document.getElementById('button-cellular').disabled = true
                    document.getElementById('button-lora').disabled = true
@@ -74,6 +90,9 @@
                     location.href = "step-3-config-sat-astro.html"
                   }
                 }
+
+              clearCookies()
+              initializeValues()
             </script>
           </div>
       </div>

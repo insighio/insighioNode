@@ -9,52 +9,6 @@
   <link rel="stylesheet" href="css/spectre.min.css" />
   <link rel="stylesheet" href="css/spectre-icons.min.css" />
 </head>
-
-{{ py }}
-def generateSdi12Options():
-    tags = ""
-    for i in range(1,11):
-      tags += '''
-        <div class="col-4 col-sm-12">
-          <label class="form-label" for="measurements">SDI-12 n.''' + str(i) + '''</label>
-        </div>
-        <div class="col-8 col-sm-12">
-          <div class="form-group">
-            <label class="form-switch">
-              <input type="checkbox" id="input-ins-esp-gen-sdi12-''' + str(i) + '''-enable" onclick="checkboxStatusChanged('ins-esp-gen-sdi12-''' + str(i) + '''')" />
-              <i class="form-icon"></i>
-            </label>
-          </div>
-        </div>
-        <div id="address-ins-esp-gen-sdi12-''' + str(i) + '''" class="col-12" style="display:none">
-          <div class="form-group">
-            <div class="column col-1 col-mr-auto"></div>
-            <div class="col-3 col-sm-12">
-              <label class="form-label" for="measurements">address
-                <button class="btn btn-link tooltip" data-tooltip="addresses must be preconfigured to not collide">
-                  <i class="icon icon-flag"></i>
-                </button>
-              </label>
-            </div>
-            <div class="col-3 col-sm-12">
-              <select class="form-select" id="option-ins-esp-gen-sdi12-''' + str(i) + '''-address">
-          '''
-
-      for j in range(0,10):
-          tags += '''<option> ''' + str(j) + ''' </option>'''
-
-      tags += '''
-              </select>
-            </div>
-            <div class="column col-5 col-mr-auto"></div>
-          </div>
-        </div>
-        <br />
-        <br />
-        '''
-    return tags
-{{ end }}
-
 <body class="body-custom">
   <img src="img/logo.png" class="img-responsive img-center">
 
@@ -317,7 +271,7 @@ def generateSdi12Options():
                 <br />
                 <br />
                 <div class="form-group">
-                  {{ generateSdi12Options() }}
+                  <!--div> {{ generateSdi12Options() }}</div-->
                   <div class="col-4 col-sm-12">
                     <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
                   </div>
@@ -405,8 +359,8 @@ def generateSdi12Options():
     </div>
   </div>
 
-  <script src="js.cookie.min.js"></script>
-  <script src="utils.js"></script>
+  <script src="js/js.cookie.min.js"></script>
+  <script src="js/utils.js"></script>
   <script>
       var boardNamePerTab = {
         "ins-esp-gen-sdi12-board-options" : "ins_esp_gen_sdi12",
@@ -441,111 +395,110 @@ def generateSdi12Options():
           "analog": "generic analog"
       }
 
-    function initializeValues() {
-      var gps = Boolean({{ meas_gps_enabled }})
+      let settings = undefined
 
-      addSwitch("board-default-options", "input-led-enabled", "LED notifications")
-      addSwitch("board-default-options", "input-battery", "Battery statistics")
-      addSwitch("board-default-options", "input-board-sense", "Board humidity/temperature")
-      addSwitch("board-default-options", "input-board-stat", "Board health statistics")
-      addSwitch("board-default-options", "input-network", "Network statistics")
-      addSwitch("board-default-options", "input-ota", "Over the Air Updates")
-      addSwitch("board-default-options", "input-store-meas-if-failed-conn", "Store measurement if no connection")
-      addSwitch("board-default-option-gps", "input-gps-enable", "GPS", checkboxGPSStatusChanged)
-      addSwitch("gps-no-fix-no-upload-div", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
+      function initializeValues() {
+        addSwitch("board-default-options", "input-led-enabled", "LED notifications")
+        addSwitch("board-default-options", "input-battery", "Battery statistics")
+        addSwitch("board-default-options", "input-board-sense", "Board humidity/temperature")
+        addSwitch("board-default-options", "input-board-stat", "Board health statistics")
+        addSwitch("board-default-options", "input-network", "Network statistics")
+        addSwitch("board-default-options", "input-ota", "Over the Air Updates")
+        addSwitch("board-default-options", "input-store-meas-if-failed-conn", "Store measurement if no connection")
+        addSwitch("board-default-option-gps", "input-gps-enable", "GPS", checkboxGPSStatusChanged)
+        addSwitch("gps-no-fix-no-upload-div", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
 
-      addSwitch("div-option-weigh-scale", "input-ins-esp-weight-scale", "Weight Scale")
+        addSwitch("div-option-weigh-scale", "input-ins-esp-weight-scale", "Weight Scale")
 
-      generateOptions("input-ins-esp-i2c-1", i2cOptions)
-      generateOptions("input-ins-esp-i2c-2", i2cOptions)
-      generateOptions("input-ins-esp-s1-i2c", i2cOptions)
+        generateOptions("input-ins-esp-i2c-1", i2cOptions)
+        generateOptions("input-ins-esp-i2c-2", i2cOptions)
+        generateOptions("input-ins-esp-s1-i2c", i2cOptions)
 
-      generateOptions("input-ins-esp-sensor-a-d-p1", adcOptions)
-      generateOptions("input-ins-esp-s1-sensor-a-d-p1", adcOptions)
-      generateOptions("input-ins-esp-s1-sensor-a-d-p2", adcOptions)
-      generateOptions("input-ins-esp-s1-sensor-a-d-p3", adcOptions)
+        generateOptions("input-ins-esp-sensor-a-d-p1", adcOptions)
+        generateOptions("input-ins-esp-s1-sensor-a-d-p1", adcOptions)
+        generateOptions("input-ins-esp-s1-sensor-a-d-p2", adcOptions)
+        generateOptions("input-ins-esp-s1-sensor-a-d-p3", adcOptions)
+        
+        fetch("/settings").then((response) => {
+          return response.json()
+        }).then(function(data) {
+          settings = data
+          
+          var gps = Boolean(data.meas_gps_enabled)        
 
-      setElemValueBool('input-led-enabled', {{ meas_led_enabled }}, true)
-      setElemValueBool('input-battery', {{ meas_battery_stat }}, true)
-      setElemValueBool('input-board-sense', {{ meas_board_sense }}, true)
-      setElemValueBool('input-board-stat', {{ meas_board_stat }}, false)
-      setElemValueBool('input-network', {{ meas_network_stat }}, true)
-      setElemValueBool('input-ota', {{ system_enable_ota }}, true)
-      setElemValueBool('input-ins-esp-weight-scale', {{ meas_scale_enabled }}, false)
+          setElemValueBool('input-led-enabled', data.meas_led_enabled, true)
+          setElemValueBool('input-battery', data.meas_battery_stat, true)
+          setElemValueBool('input-board-sense', data.meas_board_sense, true)
+          setElemValueBool('input-board-stat', data.meas_board_stat, false)
+          setElemValueBool('input-network', data.meas_network_stat, true)
+          setElemValueBool('input-ota', data.system_enable_ota, true)
+          setElemValueBool('input-ins-esp-weight-scale', data.meas_scale_enabled, false)
 
-      setElemValueBool('input-gps-enable', gps, true)
-      setElemValueBool('input-temp-unit', {{ meas_temp_unit }}, true, "value")
+          setElemValueBool('input-gps-enable', gps, true)
+          setElemValueBool('input-temp-unit', data.meas_temp_unit, true, "value")
 
-      checkboxStatusChanged('gps')
-      var boardType = "{{ selected_board }}"
-      if(boardType && tabNamePerBoard[boardType])
-        boardChanged(undefined, tabNamePerBoard[boardType])
+          checkboxStatusChanged('gps')
+          var boardType = data.selected_board
+          if(boardType && tabNamePerBoard[boardType])
+            boardChanged(undefined, tabNamePerBoard[boardType])
 
-      setElemValue('input-gps-timeout', {{ meas_gps_timeout }}, 120, false)
-      setElemValue('input-gps-sat-num', {{ meas_gps_sat_num }}, 4, false)
-      //setElemValueBool('input-gps-no-fix-no-upload', {{ meas_gps_no_fix_no_upload }},  false)
+          setElemValue('input-gps-timeout', data.meas_gps_timeout, 120, false)
+          setElemValue('input-gps-sat-num', data.meas_gps_sat_num, 4, false)
+          //setElemValueBool('input-gps-no-fix-no-upload', data.meas_gps_no_fix_no_upload,  false)
 
-      setElemValueBool('input-ins-esp-gen-sdi12-3-enable', {{ meas_sdi_3_enabled }}, false)
-      setElemValueBool('input-ins-esp-gen-sdi12-4-enable', {{ meas_sdi_4_enabled }}, false)
-      setElemValueBool('input-ins-esp-gen-sdi12-5-enable', {{ meas_sdi_5_enabled }}, false)
-      setElemValueBool('input-ins-esp-gen-sdi12-6-enable', {{ meas_sdi_6_enabled }}, false)
-      setElemValueBool('input-ins-esp-gen-sdi12-7-enable', {{ meas_sdi_7_enabled }}, false)
-      setElemValueBool('input-ins-esp-gen-sdi12-8-enable', {{ meas_sdi_8_enabled }}, false)
-      setElemValueBool('input-ins-esp-gen-sdi12-9-enable', {{ meas_sdi_9_enabled }}, false)
-      setElemValueBool('input-ins-esp-gen-sdi12-10-enable', {{ meas_sdi_10_enabled }}, false)
-
-      setElemValue('option-ins-esp-gen-sdi12-3-address', {{ meas_sdi_3_address }}, 1)
-      setElemValue('option-ins-esp-gen-sdi12-4-address', {{ meas_sdi_4_address }}, 1)
-      setElemValue('option-ins-esp-gen-sdi12-5-address', {{ meas_sdi_5_address }}, 1)
-      setElemValue('option-ins-esp-gen-sdi12-6-address', {{ meas_sdi_6_address }}, 1)
-      setElemValue('option-ins-esp-gen-sdi12-7-address', {{ meas_sdi_7_address }}, 1)
-      setElemValue('option-ins-esp-gen-sdi12-8-address', {{ meas_sdi_8_address }}, 1)
-      setElemValue('option-ins-esp-gen-sdi12-9-address', {{ meas_sdi_9_address }}, 1)
-      setElemValue('option-ins-esp-gen-sdi12-10-address', {{ meas_sdi_10_address }}, 1)
-      setElemValue('input-ins-esp-gen-sdi12-warmup-time', {{ meas_sdi_warmup_time }}, 1000)
-
-      checkboxStatusChanged('ins-esp-gen-sdi12-1')
-      checkboxStatusChanged('ins-esp-gen-sdi12-2')
-
-      var adp1 = "{{ meas_sensor_a_d_p1 }}"
-      var adp2 = "{{ meas_sensor_a_d_p2 }}"
-      var adp3 = "{{ meas_sensor_a_d_p3 }}"
-
-      setElemValue('input-ins-esp-i2c-1', "{{ meas_i2c_1 }}", "disabled")
-      setElemValue('input-ins-esp-s1-i2c', "{{ meas_i2c_1 }}", "disabled")
-      setElemValue('input-ins-esp-i2c-2', "{{ meas_i2c_2 }}", "disabled")
-      setElemValue('input-ins-esp-sensor-a-d-p1', adp1 , "disabled")
-      setElemValue('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
-      setElemValue('input-ins-esp-s1-sensor-a-d-p2', adp2, "disabled")
-      setElemValue('input-ins-esp-s1-sensor-a-d-p3', adp3, "disabled")
-
-      setElemValue("input-ins-esp-s1-sensor-a-d-p1-t", "{{ meas_sensor_a_d_p1_t }}", "v")
-      setElemValue("input-ins-esp-s1-sensor-a-d-p2-t", "{{ meas_sensor_a_d_p2_t }}", "v")
-      setElemValue("input-ins-esp-s1-sensor-a-d-p3-t", "{{ meas_sensor_a_d_p3_t }}", "v")
-
-      showElement('input-ins-esp-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
-      showElement('input-ins-esp-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
-      showElement('input-ins-esp-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
-
-      //setElemValueBool('input-store-meas-if-failed-conn', {{ store_meas_if_failed_conn }}, false)
-
-      var index = 0
-      var keyValueDict = '{{ meas_keyvalue }}'
-      // bypass issue of html encoding that is enforced by an unknown module
-      try {
-        if(keyValueDict !== 'undefined') {
-          keyValueDict = JSON.parse(keyValueDict)
-          for(i in keyValueDict) {
-              document.getElementById('key' + index).value = i
-              document.getElementById('value' + index).value = keyValueDict[i]
-              addKeyValue()
-              index += 1
+          for(let i=1; i<=10; ++i) {
+            setElemValueBool('input-ins-esp-gen-sdi12-' + i + '-enable', data["meas_sdi_" + i + "_enabled"], false)
+            setElemValue('option-ins-esp-gen-sdi12-" + i + "-address', data["meas_sdi_" + i + "_address"], 0)
           }
-        }
-      } catch(e) {}
 
-      showElement('loader', false)
-    }
+          setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
+
+          checkboxStatusChanged('ins-esp-gen-sdi12-1')
+          checkboxStatusChanged('ins-esp-gen-sdi12-2')
+
+          var adp1 = data.meas_sensor_a_d_p1
+          var adp2 = data.meas_sensor_a_d_p2
+          var adp3 = data.meas_sensor_a_d_p3
+
+          setElemValue('input-ins-esp-i2c-1', data.meas_i2c_1, "disabled")
+          setElemValue('input-ins-esp-s1-i2c', data.meas_i2c_1, "disabled")
+          setElemValue('input-ins-esp-i2c-2', data.meas_i2c_2, "disabled")
+          setElemValue('input-ins-esp-sensor-a-d-p1', adp1 , "disabled")
+          setElemValue('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
+          setElemValue('input-ins-esp-s1-sensor-a-d-p2', adp2, "disabled")
+          setElemValue('input-ins-esp-s1-sensor-a-d-p3', adp3, "disabled")
+
+          setElemValue("input-ins-esp-s1-sensor-a-d-p1-t", data.meas_sensor_a_d_p1_t, "v")
+          setElemValue("input-ins-esp-s1-sensor-a-d-p2-t", data.meas_sensor_a_d_p2_t, "v")
+          setElemValue("input-ins-esp-s1-sensor-a-d-p3-t", data.meas_sensor_a_d_p3_t, "v")
+
+          showElement('input-ins-esp-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
+          showElement('input-ins-esp-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
+          showElement('input-ins-esp-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
+
+          //setElemValueBool('input-store-meas-if-failed-conn', data.store_meas_if_failed_conn, false)
+
+          var index = 0
+          var keyValueDict = data.meas_keyvalue
+          // bypass issue of html encoding that is enforced by an unknown module
+          try {
+            if(keyValueDict !== 'undefined') {
+              keyValueDict = JSON.parse(keyValueDict)
+              for(i in keyValueDict) {
+                  document.getElementById('key' + index).value = i
+                  document.getElementById('value' + index).value = keyValueDict[i]
+                  addKeyValue()
+                  index += 1
+              }
+            }
+          } catch(e) {}
+
+          showElement('loader', false)
+        }).catch((err) => {
+          console.log("error completing request", err);
+          showElement('loader', false)
+        });
+      }
 
     function clearCookies() {
       Cookies.remove('meas-led-enabled')
@@ -621,6 +574,8 @@ def generateSdi12Options():
         Cookies.set('meas-4-20-snsr-2-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-2-enable'))
 
         Cookies.set('meas-sdi-warmup-time', document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value)
+
+        Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
         location.href = "step-6-timing.html"
       }
       else if (elementIsVisible("i2c-scale-board-options")) {
@@ -630,21 +585,23 @@ def generateSdi12Options():
         Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
         Cookies.set('meas-scale-enabled', boolElemToPyStr('input-ins-esp-weight-scale'))
 
-        if (!document.getElementById('input-ins-esp-weight-scale').checked) {
+        if (!isChecked('input-ins-esp-weight-scale')) {
           Cookies.set('meas-scale-offset', 0)
           Cookies.set('meas-scale-scale', 1)
           location.href = "step-6-timing.html"
         }
         else {
-          var scale = {{ meas_scale_scale }}
-          var offset = {{ meas_scale_offset }}
+          var scale = settings.meas_scale_scale
+          var offset = settings.meas_scale_offset
 
           if(scale && offset) {
             Cookies.set('meas-scale-offset', offset)
             Cookies.set('meas-scale-scale', scale)
+            Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
             location.href = "step-5-3-scale-calibr-res.html"
           }
           else
+          Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
             location.href = "step-5-1-scale-idle.html"
         }
       }
@@ -664,10 +621,9 @@ def generateSdi12Options():
         if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p3-trans-div'))
           Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p3-t').value)
 
+        Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
         location.href = "step-6-timing.html"
       }
-
-      Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
     }
 
     function boardChanged(evt, boardDivId) {

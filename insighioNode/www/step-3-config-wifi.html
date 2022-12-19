@@ -3,6 +3,7 @@
 <html>
     <head>
         <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>insigh.io Device</title>
         <link rel="stylesheet" href="css/style.css" />
         <link rel="stylesheet" href="css/spectre-icons.min.css" />
@@ -38,119 +39,142 @@
               Configuration details for: <span class="text-bold">WiFi</span>
             </div>
             <br />
-            <div class="columns flex-centered">
-              <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
-                <form class="form-horizontal">
-                  <div class="form-group">
-                    <div class="col-12">
-                      <div class="divider text-center" data-content="Connection Configuration"></div>
+            <div class="container grid-lg">
+              <div class="columns flex-centered">
+                <div class="column col-xl-7 col-md-10 col-sm-12">
+                  <form class="form-horizontal">
+                    <div class="form-group">
+                      <div class="columns">
+                        <div class="col-12">
+                          <div class="divider text-center" data-content="Connection Configuration"></div>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="col-3 col-sm-12">
+                          <label class="form-label" for="input-example-1">SSID</label>
+                        </div>
+                        <div class="col-9 col-sm-12">
+                          <input class="form-input constr-field" type="text" id="input-ssid"></input>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="col-3 col-sm-12">
+                          <label class="form-label" for="input-example-1">Password</label>
+                        </div>
+                        <div class="col-9 col-sm-12">
+                          <input class="form-input constr-field" type="text" id="input-ssid-pass"></input>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="col-12">
+                          <div class="divider text-center" data-content="Generic Configuration"></div>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="col-3 col-sm-12">
+                          <label class="form-label" for="input-example-cellular">Protocol</label>
+                        </div>
+                        <div class="col-9 col-sm-12">
+                          <label class="form-radio">
+                            <input type="radio" name="protocol" value="mqtt" checked>
+                            <i class="form-icon"></i> MQTT
+                          </label>
+                          <label class="form-radio">
+                            <input type="radio" name="protocol" value="coap">
+                            <i class="form-icon"></i> CoAP
+                          </label>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="column col-12">
+                          <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
+                          <button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button>
+                        </div>
+                        <br />
+                        <br />
+                        <div class="text-normal">
+                          SSIDs in range:
+                          <button class="btn btn-link tooltip" data-tooltip="Not showing weak networks">
+                            <i class="icon icon-flag"></i>
+                          </button>
+                        </div>
+                        <table class="table table-striped table-hover">
+                          <thead>
+                            <tr>
+                              <th>SSID</th>
+                              <th>rssi</th>
+                              <th>Quality</th>
+                            </tr>
+                          </thead>
+                          <tbody id="ssidList">
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-1">SSID</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-ssid"></input>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-1">Password</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-ssid-pass"></input>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-12">
-                      <div class="divider text-center" data-content="Generic Configuration"></div>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-example-cellular">Protocol</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <label class="form-radio">
-                        <input type="radio" name="protocol" value="mqtt" checked>
-                        <i class="form-icon"></i> MQTT
-                      </label>
-                      <label class="form-radio">
-                        <input type="radio" name="protocol" value="coap">
-                        <i class="form-icon"></i> CoAP
-                      </label>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="column col-12">
-                      <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
-                      <button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="text-normal">
-                      SSIDs in range:
-                      <button class="btn btn-link tooltip" data-tooltip="Not showing weak networks">
-                        <i class="icon icon-flag"></i>
-                      </button>
-                    </div>
-                    <table class="table table-striped table-hover">
-                      <thead>
-                        <tr>
-                          <th>SSID</th>
-                          <th>rssi</th>
-                          <th>Quality</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {{ for net in wifiAvailableNets }}
-                        <tr onclick="ssidSelected(event)">
-                          <td class="pointer">{{ net.ssid }}</td>
-                          <td class="pointer"><span >{{ net.rssi }}</span>
-                          {{ if net.rssi >= -50 }}
-                          <td class="pointer" style><span style="color: green">very good</span></td>
-                          {{ elif net.rssi < -50 and net.rssi >= -67 }}
-                          <td class="pointer"><span style="color: green">good</span></td>
-                          {{ elif net.rssi < -67 and net.rssi > -89 }}
-                          <td class="pointer"><span style="color: #E2B200">fair</span></td>
-                          {{ elif net.rssi <= -89}}
-                          <td class="pointer"><span style="color: #A2021A">bad</span></td>
-                          {{ end }}
-                        </tr>
-                        {{ end }}
-
-                      </tbody>
-                    </table>
-                  </div>
-                </form>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <script src="js.cookie.min.js"></script>
-        <script src="utils.js"></script>
+        <script src="js/js.cookie.min.js"></script>
+        <script src="js/utils.js"></script>
         <script >
+          function populateAvailableNets(networks) {
+            var parent = document.getElementById("ssidList");
+
+            networks.forEach((network, i) => {
+              console.log("adding: ", network)
+              var row = document.createElement("tr")
+              row.onclick = ssidSelected
+
+              var colSsid = document.createElement("td")
+              colSsid.classList.add('pointer');
+              colSsid.appendChild(document.createTextNode(network.ssid));
+
+              var rssiVal = document.createElement("td")
+              rssiVal.classList.add('pointer');
+              rssiVal.appendChild(document.createTextNode(network.rssi));
+
+              var rssiSsid = document.createElement("td")
+              rssiSsid.classList.add('pointer')
+
+              var colorName = network.rssi >= -67 ? "green" : network.rssi < -67 && network.rssi >= -89 ? "#E2B200" : "#A2021A"
+              var rssidText = network.rssi >= -50 ? "very good" : network.rssi < -50 && network.rssi >= -67 ?  "good" : network.rssi < -67 && network.rssi >= -89 ? "fair" : "bad"
+
+              var signal = document.createElement("span")
+              signal.style.color = colorName
+              signal.appendChild(document.createTextNode(rssidText));
+              rssiSsid.appendChild(signal);
+
+              row.appendChild(colSsid)
+              row.appendChild(rssiVal)
+              row.appendChild(rssiSsid)
+
+              parent.appendChild(row)
+            });
+          }
+
           function initializeValues() {
-            var protocol = "{{ protocol }}"
-
-            setElemValue('input-ssid', "{{ wifi_ssid }}")
-            setElemValue('input-ssid-pass', "{{ wifi_pass }}")
-            setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
-
-            showElement('loader', false)
+            fetch("/settings").then((response) => {
+              return response.json();
+            }).then(function(data) {
+              console.log("settings: ", data)
+              protocol = data.protocol
+              setElemValue('input-ssid', data.wifi_ssid)
+              setElemValue('input-ssid-pass', data.wifi_pass)
+              setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
+              populateAvailableNets(data.wifiAvailableNets)
+              showElement('loader', false)
+            }).catch((err) => {
+              console.log("error completing request", err);
+              showElement('loader', false)
+            });
           }
 
           function clearCookies() {
-            Cookies.remove('lora-region')
             Cookies.remove('network')
-            Cookies.remove('lora-adr')
-            Cookies.remove('lora-confirmed')
-            Cookies.remove('lora-dr')
-            Cookies.remove('lora-retries')
-            Cookies.remove('cell-apn')
-            Cookies.remove('cell-band')
             Cookies.remove('wifi-pass')
             Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
@@ -173,8 +197,8 @@
 
             //wifi
             Cookies.set('network', "wifi")
-            Cookies.set('wifi-ssid', document.getElementById('input-ssid').value.trim())
-            Cookies.set('wifi-pass', document.getElementById('input-ssid-pass').value)
+            Cookies.set('wifi-ssid', btoa(document.getElementById('input-ssid').value.trim()))
+            Cookies.set('wifi-pass', btoa(document.getElementById('input-ssid-pass').value))
 
             setProtocolCookie();
 

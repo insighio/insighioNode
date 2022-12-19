@@ -4,6 +4,7 @@
 
     <head>
         <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>insigh.io Device</title>
         <link rel="stylesheet" href="css/style.css" />
         <link rel="stylesheet" href="css/spectre.min.css" />
@@ -121,22 +122,29 @@
           </div>
         </div>
 
-        <script src="js.cookie.min.js"></script>
-        <script src="utils.js"></script>
+        <script src="js/js.cookie.min.js"></script>
+        <script src="js/utils.js"></script>
         <script >
-        function initializeValues() {
-          var adr = {{ lora_adr }}
-          var confirmed = {{ lora_confirmed }}
+          function initializeValues() {
+            fetch("/settings").then((response) => {
+              return response.json();
+            }).then(function(data) {
+              var adr = data.lora_adr
+              var confirmed = data.lora_confirmed
 
-          setElemValue('input-region', "{{ lora_region }}", "EU868")
-          setElemValue('input-dr', {{ lora_dr }}, 5)
-          setElemValue('input-retries', {{ lora_retries }}, 1)
+              setElemValue('input-region', data.lora_region, "EU868")
+              setElemValue('input-dr', data.lora_dr, 5)
+              setElemValue('input-retries', data.lora_retries, 1)
 
-          document.getElementById('input-adr').checked = adr !== undefined ? adr : true
-          document.getElementById('input-confirmed').checked = confirmed !== undefined ? confirmed : false
+              document.getElementById('input-adr').checked = adr !== undefined ? adr : true
+              document.getElementById('input-confirmed').checked = confirmed !== undefined ? confirmed : false
 
-          showElement('loader', false)
-        }
+              showElement('loader', false)
+            }).catch((err) => {
+              console.log("error completing request", err);
+              showElement('loader', false)
+            });
+          }
 
           function clearCookies() {
             Cookies.remove('lora-region')
@@ -145,10 +153,6 @@
             Cookies.remove('lora-confirmed')
             Cookies.remove('lora-dr')
             Cookies.remove('lora-retries')
-            Cookies.remove('cell-apn')
-            Cookies.remove('cell-band')
-            Cookies.remove('wifi-pass')
-            Cookies.remove('wifi-ssid')
             Cookies.remove('protocol')
           }
 

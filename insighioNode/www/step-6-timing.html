@@ -1,28 +1,6 @@
 <!DOCTYPE html>
 
 <html>
-
-{{ py }}
-def addSwitch(switchId, switchLabel, onClickOpt=""):
-    return '''
-    <div class="col-6 col-sm-12">
-      <label class="form-label">
-    ''' + switchLabel + '''
-    </label>
-    </div>
-    <div class="col-6 col-sm-12">
-      <div class="form-group">
-        <label class="form-switch">
-          <input type="checkbox" id="''' + switchId + '''" ''' + onClickOpt + '''/>
-          <i class="form-icon"></i>
-        </label>
-      </div>
-    </div>
-    <br />
-    <br />
-    '''
-{{ end }}
-
     <head>
         <meta charset="UTF-8" />
         <title>insigh.io Device</title>
@@ -81,8 +59,8 @@ def addSwitch(switchId, switchLabel, onClickOpt=""):
                       <div class="col-6 col-sm-12">
                         <input class="form-input constr-field" type="number" id="input-period" />
                       </div>
-                      {{ addSwitch("input-ins-always-on", "Always-On Connection (main current plugged)") }}
-                      {{ addSwitch("input-ins-force-always-on", "Force Always-On (ignore power mode)") }}
+                      <div id="option-always-on-switches">
+                      </div>
                       <div class="col-6 col-sm-12">
                         <label class="form-label" for="input-example-cellular">Always-on measurement period (s)</label>
                       </div>
@@ -116,8 +94,7 @@ def addSwitch(switchId, switchLabel, onClickOpt=""):
                   <div>
                     <br />
                     <hr/>
-                    <div class="columns flex-centered">
-                      {{ addSwitch("input-ins-batch-upload-enable", "Batch Upload", 'onclick="checkboxStatusChanged(\'ins-batch-upload\')"') }}
+                    <div id="options-batch-upload" class="columns flex-centered">
                       <div id="address-ins-batch-upload" class="col-12" style="display:block">
                         <br />
                         <div class="form-group">
@@ -152,8 +129,8 @@ def addSwitch(switchId, switchLabel, onClickOpt=""):
           </div>
         </div>
 
-        <script src="js.cookie.min.js"></script>
-        <script src="utils.js"></script>
+        <script src="js/js.cookie.min.js"></script>
+        <script src="js/utils.js"></script>
         <script >
           function secondsToStringTime(seconds){
             var hours = Math.floor(seconds/3600)
@@ -163,30 +140,41 @@ def addSwitch(switchId, switchLabel, onClickOpt=""):
           }
 
           function initializeValues() {
-            var batchBufferSize = {{ batch_upload_buffer_size }}
-            var period = {{ period }}
-            var timeA = {{ scheduled_time_a }}
-            var timeB = {{ scheduled_time_b }}
+            addSwitch("option-always-on-switches", "input-ins-always-on", "Always-On Connection (main current plugged)")
+            addSwitch("option-always-on-switches", "input-ins-force-always-on", "Force Always-On (ignore power mode)")
+            addSwitch("options-batch-upload", "input-ins-batch-upload-enable", "Batch Upload", batchUploadSelected)
+            
+            fetch("/settings").then((response) => {
+              return response.json()
+            }).then(function(data) {
+              var batchBufferSize = data.batch_upload_buffer_size 
+              var period = data.period
+              var timeA = data.scheduled_time_a
+              var timeB = data.scheduled_time_b
 
-            if(timeA !== undefined && timeB !== undefined) {
-              timingChanged(undefined, 'scheduled')
+              if(timeA !== undefined && timeB !== undefined) {
+                timingChanged(undefined, 'scheduled')
 
-              document.getElementById('input-scheduled-time-a').value = secondsToStringTime(timeA)
-              document.getElementById('input-scheduled-time-b').value = secondsToStringTime(timeB)
-            }
-            else
-              timingChanged(undefined, 'periodic')
+                document.getElementById('input-scheduled-time-a').value = secondsToStringTime(timeA)
+                document.getElementById('input-scheduled-time-b').value = secondsToStringTime(timeB)
+              }
+              else
+                timingChanged(undefined, 'periodic')
 
-            setElemValue('input-period', {{ period }}, 300)
-            setElemValue('input-message-buffer-size', batchBufferSize, 1)
-            document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
+              setElemValue('input-period', data.period, 300)
+              setElemValue('input-message-buffer-size', batchBufferSize, 1)
+              document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
 
-            setElemValueBool('input-ins-always-on', {{ always_on_connection }}, false)
-            setElemValueBool('input-ins-force-always-on', {{ force_always_on_connection }}, false)
-            setElemValue('input-always-on-period', {{ always_on_period }}, 60)
+              setElemValueBool('input-ins-always-on', data.always_on_connection, false)
+              setElemValueBool('input-ins-force-always-on', data.force_always_on_connection, false)
+              setElemValue('input-always-on-period', data.always_on_period, 60)
 
-            checkboxStatusChanged('ins-batch-upload')
-            showElement('loader', false)
+              checkboxStatusChanged('ins-batch-upload')
+              showElement('loader', false)
+            }).catch((err) => {
+              console.log("error completing request", err);
+              showElement('loader', false)
+            });
           }
 
           function clearCookies() {
@@ -261,6 +249,10 @@ def addSwitch(switchId, switchLabel, onClickOpt=""):
           function validateMyForm(){
             storeData()
             return true
+          }
+
+          function batchUploadSelected(){
+            checkboxStatusChanged('ins-batch-upload')
           }
 
           initializeValues()
