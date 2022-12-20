@@ -15,7 +15,7 @@ logging.debug("start timestamp: " + str(utime.ticks_ms()))
 import device_info
 device_info.bq_charger_exec(device_info.bq_charger_setup)
 
-device_info.set_defaults(heartbeat=False, wifi_on_boot=False, wdt_on_boot=False, wdt_on_boot_timeout_sec=120, bt_on_boot=False)
+device_info.initialize_led()
 
 demo_config_exists = False
 try:

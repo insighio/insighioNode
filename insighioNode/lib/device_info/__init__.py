@@ -140,7 +140,10 @@ def set_defaults(heartbeat=False, wifi_on_boot=True, wdt_on_boot=False, wdt_on_b
         wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
         wdt_timeout = wdt_on_boot_timeout_sec
 
+    initialize_led()
 
+
+def initialize_led():
     if get_hw_module_verison() == "esp32s3":
         set_led_enabled(True, 47, 21)
     elif get_hw_module_verison() == "esp32s2":
