@@ -36,8 +36,6 @@ def populateAvailableNets():
         tmpObj["rssi"] = net[3]
         available_nets.append(tmpObj)
 
-populateAvailableNets()
-
 ssidCustom = "insigh-" + device_info.get_device_id()[0][-4:]
 logging.info("SSID: " + ssidCustom)
 logging.info("Original device id: " + device_info.get_device_id()[0])
@@ -49,7 +47,9 @@ class DevID():
 class Settings():
     def get(self, data):
         global insighioSettings
+
         if not insighioSettings:
+            populateAvailableNets()
             from www import stored_config_utils
             try:
                 insighioSettings = stored_config_utils.get_config_values()
@@ -57,6 +57,9 @@ class Settings():
                 insighioSettings["hw_module"] = device_info.get_hw_module_verison()
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
+        elif data.get("update_wifi_list") == '1':
+            populateAvailableNets()
+            insighioSettings["wifiAvailableNets"] = available_nets
         return insighioSettings, 200
 #hx711.get_reading(4, 33, 12, None, None, 25)
 class RawWeightIdle():

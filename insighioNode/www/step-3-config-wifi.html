@@ -157,7 +157,7 @@
           }
 
           function initializeValues() {
-            fetch("/settings").then((response) => {
+            fetch("/settings?update_wifi_list=1").then((response) => {
               return response.json();
             }).then(function(data) {
               console.log("settings: ", data)
