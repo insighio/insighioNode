@@ -89,8 +89,6 @@
                     <div class="column col-5 col-mr-auto"></div>
                   </div>
                 </div>
-                <div id="gps-no-fix-no-upload-div" class="col-12" style="display:block">
-                </div>
               </div>
               <br />
               <br />
@@ -273,6 +271,18 @@
               <form class="form-horizontal">
                 <br />
                 <br />
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>Index</th>
+                      <th>Sensor ID</th>
+                      <th>Board Location</th>
+                      <th>Active</th>
+                    </tr>
+                  </thead>
+                  <tbody id="option-sdi12-table-rows">
+                  </tbody>
+                </table>
                 <div id="options-sdi12" class="form-group"></div>
                 <div class="form-group">
                   <div class="col-4 col-lg-6 col-sm-6">
@@ -392,7 +402,11 @@
       }
 
       let sdi12Options = {
-        "disabled": "disabled",
+      }
+
+      let sdi12LocationOptions = {
+        "1": "SDI snr 1",
+        "2": "SDI snr 2"
       }
 
       let settings = undefined
@@ -406,7 +420,7 @@
         addSwitch("board-default-options", "input-ota", "Over the Air Updates")
         addSwitch("board-default-options", "input-store-meas-if-failed-conn", "Store measurement if no connection")
         addSwitch("board-default-option-gps", "input-gps-enable", "GPS", checkboxGPSStatusChanged)
-        addSwitch("gps-no-fix-no-upload-div", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
+        addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
 
         generateOptions("input-ins-esp-i2c-1", i2cOptions)
         generateOptions("input-ins-esp-i2c-2", i2cOptions)
@@ -448,10 +462,23 @@
 
           for(let i=1; i<=10; ++i) {
             var sdi12Enabled = strToJSValue(data["meas_sdi_" + i + "_enabled"])
-            if(!sdi12Enabled)
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', "disabled", "disabled")
-            else
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "disabled")
+
+            if (data["meas_sdi_" + i + "_loc"] !== undefined) { //new version
+              setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "" + i)
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', data["meas_sdi_" + i + "_loc"], "1")
+            }
+            else {
+              setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "" + i)
+
+              if( i === 1)
+                setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "1", "1")
+              else if( i === 2 )
+                setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "2", "2")
+              else
+                setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "1", "1")
+            }
           }
 
           setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
@@ -533,16 +560,18 @@
       for(let i=1; i<11; ++i) {
         Cookies.remove('meas-sdi-' + i + '-enabled')
         Cookies.remove('meas-sdi-' + i + '-address')
+        Cookies.remove('meas-sdi-' + i + '-loc')
       }
     }
 
     function setSDI12Cookie(i) {
-      var address_elem = document.getElementById('option-ins-esp-gen-sdi12-' + i + '-address')
+      var elem_address = document.getElementById('option-ins-esp-gen-sdi12-' + i + '-address')
+      var elem_location = document.getElementById('option-ins-esp-gen-sdi12-' + i + '-loc')
+      var elem_enabled = boolElemToPyStr('option-ins-esp-gen-sdi12-' + i + '-enabled')
 
-      console.log("checking: ",i, ", val: ", address_elem.value)
-
-      Cookies.set('meas-sdi-' + i + '-enabled', address_elem === null || address_elem.value === "disabled" ? "False" : "True" )
-      Cookies.set('meas-sdi-' + i + '-address', address_elem === null || address_elem.value === "disabled" ? "" : address_elem.value)
+      Cookies.set('meas-sdi-' + i + '-enabled', elem_enabled !== undefined ? elem_enabled : "False")
+      Cookies.set('meas-sdi-' + i + '-address', elem_address ? elem_address.value : "0")
+      Cookies.set('meas-sdi-' + i + '-loc', elem_location ? elem_location.value : "1")
     }
 
     function storeData() {
@@ -708,46 +737,56 @@
     }
 
     function generateSdi12Options(){
-      var parent = document.getElementById("options-sdi12");
+      var parent = document.getElementById("option-sdi12-table-rows");
 
       for(let i=0; i<10; i++) {
         sdi12Options[""+i] = i
       }
 
       for(let i=1; i<=10; i++) {
-        var labelDiv = document.createElement("div")
-        labelDiv.classList.add('col-4')
-        labelDiv.classList.add('col-lg-6')
-        labelDiv.classList.add('col-sm-6')
+        var row = document.createElement("tr")
+        if(i%1)
+          row.classList.add('active')
 
-        var label = document.createElement("label")
-        label.classList.add('form-label')
-        label.appendChild(document.createTextNode("SDI-12 n." + i));
+        var col1 = document.createElement("td")
+        col1.appendChild(document.createTextNode("SDI-12 n." + i));
+        row.appendChild(col1)
 
-        labelDiv.appendChild(label)
-        parent.appendChild(labelDiv)
+        var col2 = document.createElement("td")
+        var selectElem_address = document.createElement("select")
+        selectElem_address.classList.add('form-select')
+        selectElem_address.id = 'option-ins-esp-gen-sdi12-' + i + '-address'
+        col2.appendChild(selectElem_address)
+        row.appendChild(col2)
 
-        var optionsDiv = document.createElement("div")
-        optionsDiv.classList.add('col-8')
-        optionsDiv.classList.add('col-lg-6')
-        optionsDiv.classList.add('col-sm-6')
+        var col3 = document.createElement("td")
+        var selectElem_location = document.createElement("select")
+        selectElem_location.classList.add('form-select')
+        selectElem_location.id = 'option-ins-esp-gen-sdi12-' + i + '-loc'
+        col3.appendChild(selectElem_location)
+        row.appendChild(col3)
 
-        var optionsDivGroup = document.createElement("div") // not sure if needed
-        optionsDivGroup.classList.add('form-group')
+        var col4 = document.createElement("td")
+        var switchLabel = document.createElement("label")
+        switchLabel.classList.add('form-switch')
 
-        var selectElem = document.createElement("select")
-        selectElem.classList.add('form-select')
-        selectElem.id = 'option-ins-esp-gen-sdi12-' + i + '-address'
+        var switchInput = document.createElement("input")
+        switchInput.type = "checkbox"
+        switchInput.id = 'option-ins-esp-gen-sdi12-' + i + '-enabled'
 
-        optionsDivGroup.appendChild(selectElem)
-        optionsDiv.appendChild(optionsDivGroup)
-        parent.appendChild(optionsDiv)
+        var switchIcon = document.createElement("i")
+        switchIcon.classList.add('form-icon')
 
-        parent.appendChild(document.createElement("br"))
-        parent.appendChild(document.createElement("br"))
+        switchLabel.appendChild(switchInput)
+        switchLabel.appendChild(switchIcon)
+        col4.appendChild(switchLabel)
+        row.appendChild(col4)
 
-        generateOptions(selectElem.id, sdi12Options)
-        setElemValue(selectElem.id, "disabled", "disabled")
+        parent.appendChild(row)
+
+        generateOptions(selectElem_address.id, sdi12Options)
+        generateOptions(selectElem_location.id, sdi12LocationOptions)
+        setElemValue(selectElem_address.id, ""+(i-1), ""+0)
       }
     }
 

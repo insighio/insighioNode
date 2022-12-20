@@ -83,7 +83,7 @@ function boolElemToPyStr(elemId, boolField="checked") {
   var fieldObj = document.getElementById(elemId)
   if(!fieldObj) {
     console.log("boolElemToPyStr: Element not found: ", elemId)
-    return false
+    return undefined
   }
 
   return fieldObj[boolField] ? "True" : "False"

@@ -22,6 +22,17 @@ _SDI12_SENSOR_8_ADDRESS = "<meas-sdi-8-address>"
 _SDI12_SENSOR_9_ADDRESS = "<meas-sdi-9-address>"
 _SDI12_SENSOR_10_ADDRESS = "<meas-sdi-10-address>"
 
+_SDI12_SENSOR_1_LOCATION = "<meas-sdi-1-loc>"
+_SDI12_SENSOR_2_LOCATION = "<meas-sdi-2-loc>"
+_SDI12_SENSOR_3_LOCATION = "<meas-sdi-3-loc>"
+_SDI12_SENSOR_4_LOCATION = "<meas-sdi-4-loc>"
+_SDI12_SENSOR_5_LOCATION = "<meas-sdi-5-loc>"
+_SDI12_SENSOR_6_LOCATION = "<meas-sdi-6-loc>"
+_SDI12_SENSOR_7_LOCATION = "<meas-sdi-7-loc>"
+_SDI12_SENSOR_8_LOCATION = "<meas-sdi-8-loc>"
+_SDI12_SENSOR_9_LOCATION = "<meas-sdi-9-loc>"
+_SDI12_SENSOR_10_LOCATION = "<meas-sdi-10-loc>"
+
 _SDI12_WARM_UP_TIME_MSEC = <meas-sdi-warmup-time>
 
 _4_20_SNSR_1_ENABLE = <meas-4-20-snsr-1-enable>

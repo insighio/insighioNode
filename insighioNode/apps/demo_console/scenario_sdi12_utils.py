@@ -13,43 +13,56 @@ import sensors
 def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
 
-_sdi12_sensor_ground_list = []
+_sdi12_sensor_switch_list = []
 
-def populateSDI12SensorGroundList():
-    global _sdi12_sensor_ground_list
-    _sdi12_sensor_ground_list = [None]*11
+def populateSDI12SensorSwitchList():
+    global _sdi12_sensor_switch_list
+    _sdi12_sensor_switch_list = [None]*11
 
     for i in range(1,11):
-        _sdi12_sensor_ground_list[i] = get_config("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ΟΝ")
+        pwr_on = get_config("_UC_IO_PWR_SDI_SNSR_" + str(i) + "_ΟΝ")
+        if pwr_on is None:
+            pwr_on = get_config("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ΟΝ")
+        _sdi12_sensor_switch_list[i] = pwr_on
 
-populateSDI12SensorGroundList()
+populateSDI12SensorSwitchList()
 
-def powerOnAllGNDExcept(excludedIndex=None):
+def powerOnAllSwitchExcept(excludedIndex=None):
     for i in range(1, 11):
-        if excludedIndex == i or _sdi12_sensor_ground_list[i] is None:
+        if excludedIndex == i or _sdi12_sensor_switch_list[i] is None:
             continue
-        sensors.set_sensor_power_on(_sdi12_sensor_ground_list[i])
+        sensors.set_sensor_power_on(_sdi12_sensor_switch_list[i])
 
-def powerOffAllGNDExcept(excludedIndex=None):
+def powerOffAllSwitchExcept(excludedIndex=None):
     for i in range(1, 11):
-        if excludedIndex == i or _sdi12_sensor_ground_list[i] is None:
+        if excludedIndex == i or _sdi12_sensor_switch_list[i] is None:
             continue
-        sensors.set_sensor_power_off(_sdi12_sensor_ground_list[i])
+        sensors.set_sensor_power_off(_sdi12_sensor_switch_list[i])
 
 def executeSDI12Measurement(sdi12, measurements, index):
     enabled = get_config("_SDI12_SENSOR_" + str(index) + "_ENABLED")
     address = get_config("_SDI12_SENSOR_" + str(index) + "_ADDRESS")
+    location = get_config("_SDI12_SENSOR_" + str(index) + "_LOCATION")
 
     if not enabled:
         logging.debug("sdi12 sensor [{}] enabled: {}".format(index, enabled))
         return
 
-    if _sdi12_sensor_ground_list[index] is not None:
-        sensors.set_sensor_power_on(_sdi12_sensor_ground_list[index])
-    powerOffAllGNDExcept(index)
+    if location is None:
+        if index == 1 or index == 2: # backward compatibility
+            location = index
+    else:
+        try:
+            location = int(location)
+        except:
+            pass
+
+    if _sdi12_sensor_switch_list[location] is not None:
+        sensors.set_sensor_power_on(_sdi12_sensor_switch_list[location])
+    powerOffAllSwitchExcept(location)
     utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
     read_sdi12_sensor(sdi12, address, measurements)
-    powerOffAllGNDExcept()
+    powerOffAllSwitchExcept()
 
 def sdi12_board_measurements(measurements):
     if not cfg._SDI12_SENSOR_1_ENABLED and not cfg._SDI12_SENSOR_2_ENABLED:
