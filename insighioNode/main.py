@@ -15,7 +15,7 @@ logging.debug("start timestamp: " + str(utime.ticks_ms()))
 import device_info
 device_info.bq_charger_exec(device_info.bq_charger_setup)
 
-device_info.set_defaults(heartbeat=False, wifi_on_boot=False, wdt_on_boot=True, wdt_on_boot_timeout_sec=120, bt_on_boot=False)
+device_info.set_defaults(heartbeat=False, wifi_on_boot=False, wdt_on_boot=False, wdt_on_boot_timeout_sec=120, bt_on_boot=False)
 
 demo_config_exists = False
 try:
@@ -27,16 +27,12 @@ except Exception as e:
 
 rstCause = device_info.get_reset_cause()
 logging.info("Reset cause: " + str(rstCause))
-if (rstCause == 0 or rstCause == 1 or not demo_config_exists) and device_info.get_hw_module_verison() != "esp32s2" and device_info.get_hw_module_verison() != "esp8266":
+if rstCause == 0 or rstCause == 1 or not demo_config_exists:
     logging.info("Starting Web server")
     gc.collect()
     import web_server
-    print(".", end='')
-    print(".", end='')
     web_server.start(120000 if demo_config_exists else -1)
-    import sys
     del sys.modules["web_server"]
-    import gc
     gc.collect()
 
 import apps.demo_console.scenario as scenario

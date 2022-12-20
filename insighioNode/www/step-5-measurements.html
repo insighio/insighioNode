@@ -40,7 +40,7 @@
             <div class="divider text-center" data-content="Available measurements"></div>
             <br />
             <div class="form-group">
-              <div id="board-default-options" class="column col-12">
+              <div id="board-default-options" class="column col-12" style="padding-right: 0px; padding-left: 0px">
                 <br />
                 <br />
               </div>
@@ -62,7 +62,6 @@
               <br />
               <br />
               <div id="address-gps" class="col-12">
-                <br />
                 <div id="address-gps-timeout" class="col-12" style="display:block">
                   <div class="form-group">
                     <div class="column col-1 col-mr-auto"></div>
@@ -449,10 +448,10 @@
 
           for(let i=1; i<=10; ++i) {
             var sdi12Enabled = strToJSValue(data["meas_sdi_" + i + "_enabled"])
-            if(!sdi12Enabled) 
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', "disabled", "disabled")  
+            if(!sdi12Enabled)
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', "disabled", "disabled")
             else
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "disabled")  
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "disabled")
           }
 
           setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
