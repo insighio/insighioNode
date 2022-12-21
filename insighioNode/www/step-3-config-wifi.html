@@ -197,8 +197,8 @@
 
             //wifi
             Cookies.set('network', "wifi")
-            Cookies.set('wifi-ssid', btoa(document.getElementById('input-ssid').value.trim()))
-            Cookies.set('wifi-pass', btoa(document.getElementById('input-ssid-pass').value))
+            Cookies.set('wifi-ssid', document.getElementById('input-ssid').value.trim())
+            Cookies.set('wifi-pass', document.getElementById('input-ssid-pass').value)
 
             setProtocolCookie();
 

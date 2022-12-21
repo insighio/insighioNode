@@ -53,22 +53,22 @@
       <script>
       function storeAndReboot() {
         document.getElementById('save-button').disabled = true
-        var config = Cookies.get()
-        var params = ""
+        // var config = Cookies.get()
+        // var params = ""
+        //
+        // for (let key in config) {
+        //    if (config.hasOwnProperty(key)) {
+        //       params += (key + "=" + config[key] + "&")
+        //    }
+        // }
+        // if(params !== "")
+        //   params = params.slice(0, -1)
+        //
+        // for (let key in config) {
+        //   Cookies.remove(key)
+        // }
 
-        for (let key in config) {
-           if (config.hasOwnProperty(key)) {
-              params += (key + "=" + config[key] + "&")
-           }
-        }
-        if(params !== "")
-          params = params.slice(0, -1)
-
-        for (let key in config) {
-          Cookies.remove(key)
-        }
-
-        location.href = "step-8-apply.html?" + params
+        location.href = "step-8-apply.html"
       }
       </script>
     </body>

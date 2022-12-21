@@ -42,50 +42,40 @@
               <p class="empty-title h5">Configuration Applied</p>
               <p class="empty-subtitle">The device will soon reboot to the desired configuration.</p>
               <div class="empty-action">
-                <button class="btn btn-primary" type="button" onclick="location.reload()">Re-apply Last Config</button>
                 <button class="btn btn-primary" id="save-button" onclick="startOver()">Start over?</button>
               </div>
               <br />
               <br />
             </div>
           </div>
+          <script src="js/js.cookie.min.js"></script>
+          <script src="js/utils.js"></script>
           <script>
             function startOver() {
               location.href = "step-2-select.html"
             }
+
             function apply(){
-              const urlParams = new URLSearchParams(window.location.search);
-  
-              var queryComponents = window.location.search.substr(1, window.location.search.length - 1).split("&")
-              const queryParamsDict = {}
-              var queryStringCustom = ""
-              queryComponents.forEach( component => {
-                var compElems = component.split("=")
-                var key = compElems[0]
-                var value = compElems[1]
-                if (key === "wifi-pass" || key === "wifi-ssid") {
-                  try {
-                    value = atob(value)
-                  }catch(e) {
-                  }
-  
-                  if(value.includes("'"))
-                    value = value.replaceAll("'", "\\'")
-                }
-  
-                var addSeparator = (queryStringCustom !== "")
-                queryStringCustom += addSeparator ? "&" : ""
-  
-                queryStringCustom += key + "=" + value
-  
-                queryParamsDict[key] = value
-              })
-  
-              console.log("queryStringCustom: ", queryStringCustom)
-  
-              const objToSend = {queryParams: queryParamsDict, queryString: queryStringCustom}
-              console.log("obj: ", objToSend)
-  
+              var config = Cookies.get()
+              var configString = ""
+
+              for (let key in config) {
+                 if (config.hasOwnProperty(key)) {
+                    configString += (key + "=" + config[key] + "&")
+                 }
+              }
+
+              if(configString !== "")
+                configString = params.slice(0, -1)
+
+              console.log("configString: ", configString)
+              const objToSend = {queryParams: config, queryString: configString}
+
+              if(configString == "") {
+                  startOver()
+                  return
+              }
+
               fetch('/save-config', {
                 method: 'POST',
                 headers: {
@@ -95,13 +85,16 @@
                 body: JSON.stringify(objToSend)
               }).then(res => res.json())
                 .then(res => {
+                    for (let key in config) {
+                      Cookies.remove(key)
+                    }
                     requestReboot()
                 })
                 .catch(err => {
                   console.log("error saving config: ", err)
                 })
             }
-  
+
             function requestReboot() {
               fetch('/reboot', {
                 method: 'POST',
@@ -116,7 +109,7 @@
                   console.log("error rebooting: ", err)
                 })
             }
-  
+
             apply()
           </script>
         </pre>
