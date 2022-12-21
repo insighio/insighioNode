@@ -56,6 +56,7 @@ class Settings():
             try:
                 insighioSettings = stored_config_utils.get_config_values()
                 insighioSettings["hw_module"] = device_info.get_hw_module_verison()
+                insighioSettings["board_mac"] = device_info.get_device_id()[0]
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
 
@@ -64,7 +65,7 @@ class Settings():
             insighioSettings["wifiAvailableNets"] = available_nets
 
         return insighioSettings, 200
-#hx711.get_reading(4, 33, 12, None, None, 25)
+
 class RawWeightIdle():
     def get(self, data):
         logging.debug("[web-server][GET]: /raw-weight-idle")
