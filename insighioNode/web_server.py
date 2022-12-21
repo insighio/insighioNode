@@ -42,28 +42,33 @@ logging.info("Original device id: " + device_info.get_device_id()[0])
 
 class DevID():
     def get(self, data):
+        logging.debug("[web-server][GET]: /devid")
         return {"id": device_info.get_device_id()[0]}, 200
 
 class Settings():
     def get(self, data):
         global insighioSettings
 
+        logging.debug("[web-server][GET]: /settings, data: [{}]".format(data))
+
         if not insighioSettings:
-            populateAvailableNets()
             from www import stored_config_utils
             try:
                 insighioSettings = stored_config_utils.get_config_values()
-                insighioSettings["wifiAvailableNets"] = available_nets
                 insighioSettings["hw_module"] = device_info.get_hw_module_verison()
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
-        elif data.get("update_wifi_list") == '1':
+
+        if data.get("update_wifi_list") == '1':
             populateAvailableNets()
             insighioSettings["wifiAvailableNets"] = available_nets
+
         return insighioSettings, 200
 #hx711.get_reading(4, 33, 12, None, None, 25)
 class RawWeightIdle():
     def get(self, data):
+        logging.debug("[web-server][GET]: /raw-weight-idle")
+
         from sensors import hx711
         if data and data["board"] == "old_esp_cyclefi":
             raw_val = hx711.get_reading_raw_idle_value(21, 22, 23, None)
@@ -74,6 +79,7 @@ class RawWeightIdle():
 
 class RawWeight:
     def get(self, data):
+        logging.debug("[web-server][GET]: /raw-weight")
         from sensors import hx711
         if data and data["board"] == "old_esp_cyclefi":
             raw_val = hx711.get_reading(21, 22, 23, None, None, None, True)
