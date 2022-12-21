@@ -172,3 +172,13 @@ function generateOptions(parentId, optionsData){
     parent.appendChild(label)
   }
 }
+
+function enableNavigationButtons() {
+  document.getElementById('save-button').disabled = false
+  document.getElementById('back-button').disabled = false
+}
+
+function disableNavigationButtons() {
+  document.getElementById('save-button').disabled = true
+  document.getElementById('back-button').disabled = true
+}

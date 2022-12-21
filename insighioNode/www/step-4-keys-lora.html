@@ -71,7 +71,7 @@
                 </form>
                 <div class="column col-12">
                   <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
-                  <button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button>
+                  <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
                 </div>
                 <br />
                 <br />
@@ -106,7 +106,7 @@
           Cookies.remove('lora-app-key')        }
 
         function storeData(){
-          document.getElementById('save-button').disabled = true
+          disableNavigationButtons()
           clearCookies()
 
           Cookies.set('lora-dev-eui', document.getElementById('input-dev-eui').value.trim())
@@ -114,6 +114,7 @@
           Cookies.set('lora-app-key', document.getElementById('input-app-key').value.trim())
 
           location.href = "step-5-measurements.html"
+          enableNavigationButtons()
         }
 
         function validateMyForm(){

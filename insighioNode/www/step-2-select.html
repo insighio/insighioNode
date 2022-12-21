@@ -55,15 +55,27 @@
              <script src="js/utils.js"></script>
              <script >
                var mac = undefined
+
+               function enableButtonsLocal() {
+                 document.getElementById('button-wifi').disabled = false
+                 document.getElementById('button-cellular').disabled = false
+                 document.getElementById('button-lora').disabled = false
+                 document.getElementById('button-satellite').disabled = false
+               }
+
+               function disableButtonsLocal() {
+                 document.getElementById('button-wifi').disabled = true
+                 document.getElementById('button-cellular').disabled = true
+                 document.getElementById('button-lora').disabled = true
+                 document.getElementById('button-satellite').disabled = true
+               }
+
                function initializeValues() {
                  fetch("/devid").then((response) => {
                    return response.json();
                  }).then(function(data) {
                    mac =  data.id
-                   document.getElementById('button-wifi').disabled = false
-                   document.getElementById('button-cellular').disabled = false
-                   document.getElementById('button-lora').disabled = false
-                   document.getElementById('button-satellite').disabled = false
+                   enableButtonsLocal()
                    showElement('loader', false)
                  }).catch((err) => {
                    console.log("error completing request", err);
@@ -77,14 +89,12 @@
                 }
 
                 function operationSelected(operationName) {
-                   clearCookies();
-                   Cookies.set('board-mac', mac)
+                  disableButtonsLocal()
 
-                   document.getElementById('button-wifi').disabled = true
-                   document.getElementById('button-cellular').disabled = true
-                   document.getElementById('button-lora').disabled = true
-                   document.getElementById('button-satellite').disabled = true
-                   if(operationName == "WiFi")
+                  clearCookies();
+                  Cookies.set('board-mac', mac)
+
+                  if(operationName == "WiFi")
                       location.href = "step-3-config-wifi.html";
                   else if(operationName == "Cellular")
                      location.href = "step-3-config-cellular.html";
@@ -93,6 +103,8 @@
                   else if(operationName == "Satellite") {
                     location.href = "step-3-config-sat-astro.html"
                   }
+
+                  enableButtonsLocal()
                 }
 
               clearCookies()

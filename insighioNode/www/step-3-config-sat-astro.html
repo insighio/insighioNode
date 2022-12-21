@@ -92,7 +92,7 @@
                 </form>
                 <div class="column col-12">
                   <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
-                  <button class="btn btn-primary float-right" type="button" onclick="goBack()">Back</button>
+                  <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
                 </div>
                 <br />
                 <br />
@@ -136,7 +136,7 @@
           }
 
           function storeData(){
-            document.getElementById('save-button').disabled = true
+            disableNavigationButtons()
             clearCookies();
 
             Cookies.set('network', "satellite")
@@ -147,6 +147,7 @@
             Cookies.set('sat-astro-devkit-token', document.getElementById('input-satAstroToken').value)
 
             location.href = "step-5-measurements.html";
+            enableNavigationButtons()
           }
 
           function validateMyForm(){
