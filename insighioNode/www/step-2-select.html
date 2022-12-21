@@ -2,116 +2,116 @@
 
 <html>
 
-    <head>
-        <meta charset="UTF-8" />
-        <title>insigh.io Device</title>
-        <link rel="stylesheet" href="css/style.css" />
-        <link rel="stylesheet" href="css/spectre.min.css" />
-    </head>
+<head>
+  <meta charset="UTF-8" />
+  <title>insigh.io Device</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/spectre.min.css" />
+</head>
 
-    <body class="body-custom">
+<body class="body-custom">
 
-        <img src="img/logo.png" class="img-responsive img-center">
+  <img src="img/logo.png" class="img-responsive img-center">
 
-        <div class="panel panel-custom">
-          <div class="panel-header">
-            <div class="panel-title text-center">Select desired operation</div>
+  <div class="panel panel-custom">
+    <div class="panel-header">
+      <div class="panel-title text-center">Select desired operation</div>
+    </div>
+
+    <div class="panel-nav">
+      <ul class="step">
+        <li class="step-item"><a>Login</a></li>
+        <li class="step-item active"><a>Select Network</a></li>
+        <li class="step-item"><a>Network Params</a></li>
+        <li class="step-item"><a>API Keys</a></li>
+        <li class="step-item"><a>Measurements</a></li>
+        <li class="step-item"><a>Timing</a></li>
+        <li class="step-item"><a>Verify</a></li>
+      </ul>
+    </div>
+
+    <div class="panel-body">
+      <br />
+      <hr />
+      <br />
+      <div class="text-center">Select network technology to be used:</div>
+      <br />
+      <div id="loader" class="loading loading-lg"></div>
+      <br />
+      <div class="container">
+        <div class="columns flex-centered">
+          <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
+            <!-- <div class="column col-8 col-mr-auto img-center"> -->
+            <div class="btn-group btn-group-block img-center">
+              <button class="btn" id="button-wifi" disabled onclick="operationSelected('WiFi')">WiFi</button>
+              <button class="btn" id="button-cellular" disabled onclick="operationSelected('Cellular')">Cellular</button>
+              <button class="btn" id="button-lora" disabled onclick="operationSelected('LoRa')">LoRa</button>
+              <button class="btn" id="button-satellite" disabled onclick="operationSelected('Satellite')">Satellite</button>
+            </div>
           </div>
+        </div>
+        <br />
+        <script src="js/js.cookie.min.js"></script>
+        <script src="js/utils.js"></script>
+        <script>
+          var mac = undefined
 
-          <div class="panel-nav">
-            <ul class="step">
-              <li class="step-item"><a>Login</a></li>
-              <li class="step-item active"><a>Select Network</a></li>
-              <li class="step-item"><a>Network Params</a></li>
-              <li class="step-item"><a>API Keys</a></li>
-              <li class="step-item"><a>Measurements</a></li>
-              <li class="step-item"><a>Timing</a></li>
-              <li class="step-item"><a>Verify</a></li>
-            </ul>
-          </div>
+          function enableButtonsLocal() {
+            document.getElementById('button-wifi').disabled = false
+            document.getElementById('button-cellular').disabled = false
+            document.getElementById('button-lora').disabled = false
+            document.getElementById('button-satellite').disabled = false
+          }
 
-          <div class="panel-body">
-            <br />
-            <hr />
-            <br />
-            <div class="text-center">Select network technology to be used:</div>
-            <br />
-            <div id="loader" class="loading loading-lg"></div>
-            <br />
-            <div class="container">
-              <div class="columns flex-centered">
-                <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
-                <!-- <div class="column col-8 col-mr-auto img-center"> -->
-                  <div class="btn-group btn-group-block img-center">
-                    <button class="btn" id="button-wifi" disabled onclick="operationSelected('WiFi')">WiFi</button>
-                    <button class="btn" id="button-cellular" disabled onclick="operationSelected('Cellular')">Cellular</button>
-                    <button class="btn" id="button-lora" disabled onclick="operationSelected('LoRa')">LoRa</button>
-                    <button class="btn" id="button-satellite" disabled onclick="operationSelected('Satellite')">Satellite</button>
-                  </div>
-                </div>
-             </div>
-             <br />
-             <script src="js/js.cookie.min.js"></script>
-             <script src="js/utils.js"></script>
-             <script >
-               var mac = undefined
+          function disableButtonsLocal() {
+            document.getElementById('button-wifi').disabled = true
+            document.getElementById('button-cellular').disabled = true
+            document.getElementById('button-lora').disabled = true
+            document.getElementById('button-satellite').disabled = true
+          }
 
-               function enableButtonsLocal() {
-                 document.getElementById('button-wifi').disabled = false
-                 document.getElementById('button-cellular').disabled = false
-                 document.getElementById('button-lora').disabled = false
-                 document.getElementById('button-satellite').disabled = false
-               }
+          function initializeValues() {
+            fetch("/devid").then((response) => {
+              return response.json();
+            }).then(function (data) {
+              mac = data.id
+              enableButtonsLocal()
+              showElement('loader', false)
+            }).catch((err) => {
+              console.log("error completing request", err);
+              showElement('loader', false)
+            });
+          }
 
-               function disableButtonsLocal() {
-                 document.getElementById('button-wifi').disabled = true
-                 document.getElementById('button-cellular').disabled = true
-                 document.getElementById('button-lora').disabled = true
-                 document.getElementById('button-satellite').disabled = true
-               }
+          function clearCookies() {
+            Cookies.remove('board-mac')
+            Cookies.remove('network')
+          }
 
-               function initializeValues() {
-                 fetch("/devid").then((response) => {
-                   return response.json();
-                 }).then(function(data) {
-                   mac =  data.id
-                   enableButtonsLocal()
-                   showElement('loader', false)
-                 }).catch((err) => {
-                   console.log("error completing request", err);
-                   showElement('loader', false)
-                 });
-               }
+          function operationSelected(operationName) {
+            disableButtonsLocal()
 
-               function clearCookies() {
-                 Cookies.remove('board-mac')
-                 Cookies.remove('network')
-                }
+            clearCookies();
+            Cookies.set('board-mac', mac)
 
-                function operationSelected(operationName) {
-                  disableButtonsLocal()
+            if (operationName == "WiFi")
+              location.href = "step-3-config-wifi.html";
+            else if (operationName == "Cellular")
+              location.href = "step-3-config-cellular.html";
+            else if (operationName == "LoRa")
+              location.href = "step-3-config-lora.html";
+            else if (operationName == "Satellite") {
+              location.href = "step-3-config-sat-astro.html"
+            }
 
-                  clearCookies();
-                  Cookies.set('board-mac', mac)
+            enableButtonsLocal()
+          }
 
-                  if(operationName == "WiFi")
-                      location.href = "step-3-config-wifi.html";
-                  else if(operationName == "Cellular")
-                     location.href = "step-3-config-cellular.html";
-                  else if(operationName == "LoRa")
-                     location.href = "step-3-config-lora.html";
-                  else if(operationName == "Satellite") {
-                    location.href = "step-3-config-sat-astro.html"
-                  }
-
-                  enableButtonsLocal()
-                }
-
-              clearCookies()
-              initializeValues()
-            </script>
-          </div>
+          clearCookies()
+          initializeValues()
+        </script>
       </div>
-    </body>
+    </div>
+</body>
 
 </html>

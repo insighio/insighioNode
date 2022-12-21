@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/spectre.min.css" />
   <link rel="stylesheet" href="css/spectre-icons.min.css" />
 </head>
+
 <body class="body-custom">
   <img src="img/logo.png" class="img-responsive img-center">
 
@@ -34,93 +35,85 @@
       <hr />
       <br />
       <div id="loader" class="loading loading-lg"></div>
-      <div class="columns flex-centered">
-        <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
-          <form class="form-horizontal">
-            <div class="divider text-center" data-content="Available measurements"></div>
-            <br />
+      <div class="container grid-lg">
+        <div class="columns flex-centered">
+          <div class="column col-xl-7 col-md-10 col-sm-12">
             <div class="form-group">
-              <div id="board-default-options" class="column col-12" style="padding-right: 0px; padding-left: 0px">
+              <div class="columns">
+                <div class="col-12">
+                  <div class="divider text-center" data-content="Available measurements"></div>
+                </div>
                 <br />
-                <br />
-              </div>
-              <div class="col-4 col-lg-6 col-sm-10">
-                <label class="form-label" for="measurements">Temperature Unit</label>
-              </div>
-              <div class="col-3 col-sm-12">
-                <div class="form-group">
-                  <select class="form-select" id="input-temp-unit">
+                <div id="board-default-options" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
+                </div>
+                <div class="col-4 col-lg-6 col-sm-10">
+                  <label class="form-label" for="measurements">Temperature Unit</label>
+                </div>
+                <div class="col-8 col-sm-12">
+                  <select class="form-select" id="input-temp-unit" style="padding-right: 0px; padding-left: 0px">
                     <option value=true>Celsius (°C)</option>
                     <option value=false>Fahrenheit (°F)</option>
                   </select>
                 </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <div id="board-default-option-gps" class="col-12" style="display: block">
-              </div>
-              <br />
-              <br />
-              <div id="address-gps" class="col-12">
-                <div id="address-gps-timeout" class="col-12" style="display:block">
-                  <div class="form-group">
-                    <div class="column col-1 col-mr-auto"></div>
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="measurements">GPS Timeout (seconds)
-                      </label>
-                    </div>
-                    <div class="col-3 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-gps-timeout"/>
-                    </div>
-                    <div class="column col-5 col-mr-auto"></div>
-                  </div>
+                <div id="board-default-option-gps" class="columns  col-12" style="padding-right: 0px; padding-left: 0px">
                 </div>
                 <br />
-                <div id="address-gps-sat-num" class="col-12" style="display:block">
-                  <div class="form-group">
-                    <div class="column col-1 col-mr-auto"></div>
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="measurements">Min number of satellites
-                      </label>
-                    </div>
-                    <div class="col-3 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-gps-sat-num"/>
-                    </div>
-                    <div class="column col-5 col-mr-auto"></div>
+                <br />
+                <div id="address-gps" class="columns flex-centered col-12">
+                  <div class="column col-1 col-mr-auto"></div>
+                  <div class="col-3 col-sm-12">
+                    <label class="form-label" for="measurements">GPS Timeout (seconds)
+                    </label>
                   </div>
+                  <div class="col-3 col-sm-12">
+                    <input class="form-input constr-field" type="number" id="input-gps-timeout" />
+                  </div>
+                  <div class="column col-5 col-mr-auto"></div>
+                  <br />
+                  <br />
+                  <div class="column col-1 col-mr-auto"></div>
+                  <div class="col-3 col-sm-12">
+                    <label class="form-label" for="measurements">Min number of satellites
+                    </label>
+                  </div>
+                  <div class="col-3 col-sm-12">
+                    <input class="form-input constr-field" type="number" id="input-gps-sat-num" />
+                  </div>
+                  <div class="column col-5 col-mr-auto"></div>
+                  <br />
+                  <br />
                 </div>
-              </div>
-              <br />
-              <br />
-            </div>
-            <div class="divider text-center" data-content="Device Selection"></div>
-            <br />
-            <!-- board selector -->
-            <ul class="tab tab-block">
-              <li id="tab-i2c-scale-board-options" class="tab-item active" onclick="boardChanged(event, 'i2c-scale-board-options')">
-                <a class="pointer">Cellular Digital/Scale</a>
-              </li>
-              <li id="tab-esp32s3-bg600-i2c-analog-options" class="tab-item" onclick="boardChanged(event, 'esp32s3-bg600-i2c-analog-options')">
-                <a class="pointer">Cellular + Shield I²C/Analog</a>
-              </li>
-              <li id="tab-ins-esp-gen-sdi12-board-options" class="tab-item" onclick="boardChanged(event, 'ins-esp-gen-sdi12-board-options')">
-                <a class="pointer">Cellular + Shield SDI-12</a>
-              </li>
-            </ul>
-
-            <div id="i2c-scale-board-options" class="tabcontent" style="display: block">
-              <form class="form-horizontal">
                 <br />
                 <br />
-                <div id="div-option-weigh-scale" class="form-group">
+                <div class="col-12">
+                  <div class="divider text-center" data-content="Device Selection"></div>
+                </div>
+                <br />
+                <!-- board selector -->
+                <div class="col-12">
+                  <ul class="tab tab-block">
+                    <li id="tab-i2c-scale-board-options" class="tab-item active" onclick="boardChanged(event, 'i2c-scale-board-options')">
+                      <a class="pointer">Cellular Digital/Scale</a>
+                    </li>
+                    <li id="tab-esp32s3-bg600-i2c-analog-options" class="tab-item" onclick="boardChanged(event, 'esp32s3-bg600-i2c-analog-options')">
+                      <a class="pointer">Cellular + Shield I²C/Analog</a>
+                    </li>
+                    <li id="tab-ins-esp-gen-sdi12-board-options" class="tab-item" onclick="boardChanged(event, 'ins-esp-gen-sdi12-board-options')">
+                      <a class="pointer">Cellular + Shield SDI-12</a>
+                    </li>
+                  </ul>
+                </div>
+                <br />
+                <br />
+                <div id="i2c-scale-board-options" class="tabcontent columns col-12" style="display: block">
+                  <br />
+                  <br />
                   <div class="col-4 col-lg-6">
                     <label class="form-label" for="measurements">I²C #1</label>
                   </div>
                   <div class="col-8 col-lg-6">
-                    <div class="form-group">
-                      <select class="form-select" id="input-ins-esp-i2c-1">
-                      </select>
-                    </div>
+                    <select class="form-select" id="input-ins-esp-i2c-1">
+                    </select>
                   </div>
                   <br />
                   <br />
@@ -128,10 +121,8 @@
                     <label class="form-label" for="measurements">I²C #2</label>
                   </div>
                   <div class="col-8 col-lg-6">
-                    <div class="form-group">
-                      <select class="form-select" id="input-ins-esp-i2c-2">
-                      </select>
-                    </div>
+                    <select class="form-select" id="input-ins-esp-i2c-2">
+                    </select>
                   </div>
                   <br />
                   <br />
@@ -139,10 +130,8 @@
                     <label class="form-label" for="measurements">Analog / Digital P1</label>
                   </div>
                   <div class="col-8 col-lg-6">
-                    <div class="form-group">
-                      <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
-                      </select>
-                    </div>
+                    <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
+                    </select>
                   </div>
                   <br />
                   <br />
@@ -150,29 +139,23 @@
                     <label class="form-label" for="measurements">Weight Scale</label>
                   </div>
                   <div class="col-8 col-lg-6">
-                      <label class="form-switch">
-                        <input type="checkbox" id="input-ins-esp-weight-scale" />
-                        <i class="form-icon"></i>
-                      </label>
+                    <label class="form-switch">
+                      <input type="checkbox" id="input-ins-esp-weight-scale" />
+                      <i class="form-icon"></i>
+                    </label>
                   </div>
                   <br />
                   <br />
                 </div>
-              </form>
-            </div>
-            <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent" style="display: none">
-              <form class="form-horizontal">
-                <br />
-                <br />
-                <div class="form-group">
+                <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent" style="display: none">
+                  <br />
+                  <br />
                   <div class="col-4 col-lg-6 ">
                     <label class="form-label" for="measurements">I²C</label>
                   </div>
                   <div class="col-8 col-lg-6 ">
-                    <div class="form-group">
-                      <select class="form-select" id="input-ins-esp-s1-i2c">
-                      </select>
-                    </div>
+                    <select class="form-select" id="input-ins-esp-s1-i2c">
+                    </select>
                   </div>
                   <br />
                   <br />
@@ -180,28 +163,24 @@
                     <label class="form-label" for="measurements">Analog / Digital P1</label>
                   </div>
                   <div class="col-8 col-lg-6">
-                    <div class="form-group">
-                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
-                      </select>
-                    </div>
+                    <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
+                    </select>
                   </div>
                   <br />
                   <div id="input-ins-esp-s1-sensor-a-d-p1-trans-div" class="col-12" style="display:block">
-                    <div class="form-group">
-                      <div class="column col-1 col-mr-auto"></div>
-                      <div class="col-3  col-sm-12">
-                        <label class="form-label" for="measurements">transformation
-                          <button class="btn btn-link tooltip"
-                            data-tooltip="python script to&#xa;transform raw Value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
-                            <i class="icon icon-flag"></i>
-                          </button>
-                        </label>
-                      </div>
-                      <div class="col-6 col-sm-12">
-                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p1-t" />
-                      </div>
-                      <div class="column col-2 col-mr-auto"></div>
+                    <div class="column col-1 col-mr-auto"></div>
+                    <div class="col-3  col-sm-12">
+                      <label class="form-label" for="measurements">transformation
+                        <button class="btn btn-link tooltip"
+                          data-tooltip="python script to&#xa;transform raw Value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                          <i class="icon icon-flag"></i>
+                        </button>
+                      </label>
                     </div>
+                    <div class="col-6 col-sm-12">
+                      <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p1-t" />
+                    </div>
+                    <div class="column col-2 col-mr-auto"></div>
                   </div>
                   <br />
                   <br />
@@ -209,27 +188,23 @@
                     <label class="form-label" for="measurements">Analog / Digital P2</label>
                   </div>
                   <div class="col-8 col-lg-6">
-                    <div class="form-group">
-                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
-                      </select>
-                    </div>
+                    <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
+                    </select>
                   </div>
                   <div id="input-ins-esp-s1-sensor-a-d-p2-trans-div" class="col-12" style="display:none">
-                    <div class="form-group">
-                      <div class="column col-1 col-mr-auto"></div>
-                      <div class="col-3  col-sm-12">
-                        <label class="form-label" for="measurements">transformation
-                          <button class="btn btn-link tooltip"
-                            data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
-                            <i class="icon icon-flag"></i>
-                          </button>
-                        </label>
-                      </div>
-                      <div class="col-6 col-sm-12">
-                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" />
-                      </div>
-                      <div class="column col-2 col-mr-auto"></div>
+                    <div class="column col-1 col-mr-auto"></div>
+                    <div class="col-3  col-sm-12">
+                      <label class="form-label" for="measurements">transformation
+                        <button class="btn btn-link tooltip"
+                          data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                          <i class="icon icon-flag"></i>
+                        </button>
+                      </label>
                     </div>
+                    <div class="col-6 col-sm-12">
+                      <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" />
+                    </div>
+                    <div class="column col-2 col-mr-auto"></div>
                   </div>
                   <br />
                   <br />
@@ -237,59 +212,51 @@
                     <label class="form-label" for="measurements">Analog / Digital P3</label>
                   </div>
                   <div class="col-8 col-lg-6">
-                    <div class="form-group">
-                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
-                      </select>
-                    </div>
+                    <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
+                    </select>
                   </div>
                   <div id="input-ins-esp-s1-sensor-a-d-p3-trans-div" class="col-12" style="display:none">
-                    <div class="form-group">
-                      <div class="column col-1 col-mr-auto"></div>
-                      <div class="col-3  col-sm-12">
-                        <label class="form-label" for="measurements">transformation
-                          <button class="btn btn-link tooltip"
-                            data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
-                            <i class="icon icon-flag"></i>
-                          </button>
-                        </label>
-                      </div>
-                      <div class="col-6 col-sm-12">
-                        <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p3-t" />
-                      </div>
-                      <div class="column col-2 col-mr-auto"></div>
+                    <div class="column col-1 col-mr-auto"></div>
+                    <div class="col-3  col-sm-12">
+                      <label class="form-label" for="measurements">transformation
+                        <button class="btn btn-link tooltip"
+                          data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                          <i class="icon icon-flag"></i>
+                        </button>
+                      </label>
                     </div>
+                    <div class="col-6 col-sm-12">
+                      <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p3-t" />
+                    </div>
+                    <div class="column col-2 col-mr-auto"></div>
                   </div>
                   <br />
                   <br />
                   <br />
                   <br />
                 </div>
-              </form>
-            </div>
-            <!-- sdi board related settings -->
-            <div id="ins-esp-gen-sdi12-board-options" class="tabcontent" style="display: none">
-              <form class="form-horizontal">
-                <br />
-                <br />
-                <table class="table table-striped table-hover">
-                  <thead>
-                    <tr>
-                      <th>Index</th>
-                      <th>Sensor ID</th>
-                      <th>Board Location</th>
-                      <th>Active</th>
-                    </tr>
-                  </thead>
-                  <tbody id="option-sdi12-table-rows">
-                  </tbody>
-                </table>
-                <div id="options-sdi12" class="form-group"></div>
-                <div class="form-group">
+                <!-- sdi board related settings -->
+                <div id="ins-esp-gen-sdi12-board-options" class="tabcontent" style="display: none">
+                  <br />
+                  <br />
+                  <table class="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>Index</th>
+                        <th>Sensor ID</th>
+                        <th>Board Location</th>
+                        <th>Active</th>
+                      </tr>
+                    </thead>
+                    <tbody id="option-sdi12-table-rows">
+                    </tbody>
+                  </table>
+                  <div id="options-sdi12"></div>
                   <div class="col-4 col-lg-6 col-sm-6">
                     <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
                   </div>
                   <div class="col-8 col-lg-6 col-sm-6">
-                    <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time"/>
+                    <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time" />
                   </div>
                   <br />
                   <br />
@@ -297,10 +264,10 @@
                     <label class="form-label" for="measurements">4-20mA sensor n.1</label>
                   </div>
                   <div class="col-8 col-lg-6 col-sm-6">
-                      <label class="form-switch">
-                        <input type="checkbox" id="ins-esp-gen-4-20-snsr-1-enable" />
-                        <i class="form-icon"></i>
-                      </label>
+                    <label class="form-switch">
+                      <input type="checkbox" id="ins-esp-gen-4-20-snsr-1-enable" />
+                      <i class="form-icon"></i>
+                    </label>
                   </div>
                   <br />
                   <br />
@@ -308,224 +275,225 @@
                     <label class="form-label" for="measurements">4-20mA sensor n.2</label>
                   </div>
                   <div class="col-8 col-lg-6 col-sm-6">
-                  <label class="form-switch">
-                    <input type="checkbox" id="ins-esp-gen-4-20-snsr-2-enable" />
-                    <i class="form-icon"></i>
-                  </label>
+                    <label class="form-switch">
+                      <input type="checkbox" id="ins-esp-gen-4-20-snsr-2-enable" />
+                      <i class="form-icon"></i>
+                    </label>
                   </div>
                   <br />
                   <br />
                 </div>
-              </form>
-            </div>
-            <div class="divider text-center" data-content="Explicit key-values"></div>
-            <br />
-            <div class="form-group" id="keyvalue">
-              <div class="cardcontainer">
-                <div class="card">
-                  <div class="card-body">
-                    <div class="columns flex-centered">
-                      <div class="col-1 col-sm-6" style="text-align: center;">
-                        <label class="form-label" for="measurements">key
-                        </label>
-                      </div>
-                      <div class="col-4 col-sm-6" style="text-align: center;">
-                        <input class="form-input constr-field" id="key0" placeholder="field name" />
-                      </div>
-                      <div class="column col-1 col-mr-auto"></div>
-                      <div class="col-1 col-sm-6" style="text-align: center;">
-                        <label class="form-label" for="measurements">value
-                        </label>
-                      </div>
-                      <div class="col-4 col-sm-6" style="text-align: center;">
-                        <input class="form-input constr-field" id="value0" placeholder="field value" />
-                      </div>
-                      <div class="col-1">
-                        <div class="p-centered" style="text-align: center;">
-                          <button class="btn btn-action" onclick="addKeyValue()"><i class="icon icon-plus"></i></button>
+                <div class="divider text-center" data-content="Explicit key-values"></div>
+                <br />
+                <div id="keyvalue">
+                  <div class="cardcontainer">
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="columns flex-centered">
+                          <div class="col-1 col-sm-6" style="text-align: center;">
+                            <label class="form-label" for="measurements">key
+                            </label>
+                          </div>
+                          <div class="col-4 col-sm-6" style="text-align: center;">
+                            <input class="form-input constr-field" id="key0" placeholder="field name" />
+                          </div>
+                          <div class="column col-1 col-mr-auto"></div>
+                          <div class="col-1 col-sm-6" style="text-align: center;">
+                            <label class="form-label" for="measurements">value
+                            </label>
+                          </div>
+                          <div class="col-4 col-sm-6" style="text-align: center;">
+                            <input class="form-input constr-field" id="value0" placeholder="field value" />
+                          </div>
+                          <div class="col-1">
+                            <div class="p-centered" style="text-align: center;">
+                              <button class="btn btn-action" onclick="addKeyValue()"><i class="icon icon-plus"></i></button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <br />
                   </div>
                 </div>
-                <br />
               </div>
             </div>
-          </form>
-          <div class="column col-12">
-            <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
-            <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+            <div class="column col-12">
+              <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
+              <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+            </div>
+            <br />
+            <br />
           </div>
-          <br />
-          <br />
         </div>
+
       </div>
-      <br />
-      <br />
     </div>
   </div>
+
 
   <script src="js/js.cookie.min.js"></script>
   <script src="js/utils.js"></script>
   <script>
-      var boardNamePerTab = {
-        "ins-esp-gen-sdi12-board-options" : "ins_esp_gen_sdi12",
-        "i2c-scale-board-options" : "ins_esp_gen_1",
-        "esp32s3-bg600-i2c-analog-options" : "ins_gen_s3"
-      }
+    var boardNamePerTab = {
+      "ins-esp-gen-sdi12-board-options": "ins_esp_gen_sdi12",
+      "i2c-scale-board-options": "ins_esp_gen_1",
+      "esp32s3-bg600-i2c-analog-options": "ins_gen_s3"
+    }
 
-      var tabNamePerBoard = {
-        "ins_esp_gen_sdi12" : "ins-esp-gen-sdi12-board-options",
-        "ins_esp_gen_1" : "i2c-scale-board-options" ,
-        "ins_gen_s3" : "esp32s3-bg600-i2c-analog-options"
-      }
+    var tabNamePerBoard = {
+      "ins_esp_gen_sdi12": "ins-esp-gen-sdi12-board-options",
+      "ins_esp_gen_1": "i2c-scale-board-options",
+      "ins_gen_s3": "esp32s3-bg600-i2c-analog-options"
+    }
 
-      const i2cOptions = {
-          "disabled": "disabled",
-          "tsl2561": "tsl2561 - luminosity",
-          "sht20": "sht20 - temperature / humidity",
-          "sht40": "sht40 - temperature / humidity",
-          "si7021": "si7021 - temperature / humidity",
-          "scd30": "scd30 - C02 / temperature / humidity",
-          "bme680": "bme680 - gap / temperature / humidity",
-          "sunrise": "sunrise - CO2 / temperature",
-          "scd4x": "scd4x - CO2 / temperature / humidity",
-          "sgx7ox": "sgx7ox - industrial oxygen sensor ",
-      }
+    const i2cOptions = {
+      "disabled": "disabled",
+      "tsl2561": "tsl2561 - luminosity",
+      "sht20": "sht20 - temperature / humidity",
+      "sht40": "sht40 - temperature / humidity",
+      "si7021": "si7021 - temperature / humidity",
+      "scd30": "scd30 - C02 / temperature / humidity",
+      "bme680": "bme680 - gap / temperature / humidity",
+      "sunrise": "sunrise - CO2 / temperature",
+      "scd4x": "scd4x - CO2 / temperature / humidity",
+      "sgx7ox": "sgx7ox - industrial oxygen sensor ",
+    }
 
-      const adcOptions = {
-          "disabled": "disabled",
-          "dht11": "dht11 - temperature / humidity (digital)",
-          "dht22": "dht22 - temperature / humidity (digital)",
-          "ds18x20": "ds18x20 - temperature (OneWire)",
-          "analog": "generic analog"
-      }
+    const adcOptions = {
+      "disabled": "disabled",
+      "dht11": "dht11 - temperature / humidity (digital)",
+      "dht22": "dht22 - temperature / humidity (digital)",
+      "ds18x20": "ds18x20 - temperature (OneWire)",
+      "analog": "generic analog"
+    }
 
-      let sdi12Options = {
-      }
+    let sdi12Options = {
+    }
 
-      let sdi12LocationOptions = {
-        "1": "SDI snr 1",
-        "2": "SDI snr 2"
-      }
+    let sdi12LocationOptions = {
+      "1": "SDI snr 1",
+      "2": "SDI snr 2"
+    }
 
-      let settings = undefined
+    let settings = undefined
 
-      function initializeValues() {
-        addSwitch("board-default-options", "input-led-enabled", "LED notifications")
-        addSwitch("board-default-options", "input-battery", "Battery statistics")
-        addSwitch("board-default-options", "input-board-sense", "Board humidity/temperature")
-        addSwitch("board-default-options", "input-board-stat", "Board health statistics")
-        addSwitch("board-default-options", "input-network", "Network statistics")
-        addSwitch("board-default-options", "input-ota", "Over the Air Updates")
-        addSwitch("board-default-options", "input-store-meas-if-failed-conn", "Store measurement if no connection")
-        addSwitch("board-default-option-gps", "input-gps-enable", "GPS", checkboxGPSStatusChanged)
-        addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
+    function initializeValues() {
+      addSwitch("board-default-options", "input-led-enabled", "LED notifications")
+      addSwitch("board-default-options", "input-battery", "Battery statistics")
+      addSwitch("board-default-options", "input-board-sense", "Board humidity/temperature")
+      addSwitch("board-default-options", "input-board-stat", "Board health statistics")
+      addSwitch("board-default-options", "input-network", "Network statistics")
+      addSwitch("board-default-options", "input-ota", "Over the Air Updates")
+      addSwitch("board-default-options", "input-store-meas-if-failed-conn", "Store measurement if no connection")
+      //addSwitch("board-default-option-gps", "input-gps-enable", "GPS", checkboxGPSStatusChanged)
+      addSwitch("board-default-option-gps", "input-gps-enable", "GPS")
+      addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
 
-        generateOptions("input-ins-esp-i2c-1", i2cOptions)
-        generateOptions("input-ins-esp-i2c-2", i2cOptions)
-        generateOptions("input-ins-esp-s1-i2c", i2cOptions)
+      generateOptions("input-ins-esp-i2c-1", i2cOptions)
+      generateOptions("input-ins-esp-i2c-2", i2cOptions)
+      generateOptions("input-ins-esp-s1-i2c", i2cOptions)
 
-        generateOptions("input-ins-esp-sensor-a-d-p1", adcOptions)
-        generateOptions("input-ins-esp-s1-sensor-a-d-p1", adcOptions)
-        generateOptions("input-ins-esp-s1-sensor-a-d-p2", adcOptions)
-        generateOptions("input-ins-esp-s1-sensor-a-d-p3", adcOptions)
+      generateOptions("input-ins-esp-sensor-a-d-p1", adcOptions)
+      generateOptions("input-ins-esp-s1-sensor-a-d-p1", adcOptions)
+      generateOptions("input-ins-esp-s1-sensor-a-d-p2", adcOptions)
+      generateOptions("input-ins-esp-s1-sensor-a-d-p3", adcOptions)
 
-        generateSdi12Options()
+      generateSdi12Options()
 
-        fetch("/settings").then((response) => {
-          return response.json()
-        }).then(function(data) {
-          settings = data
+      fetch("/settings").then((response) => {
+        return response.json()
+      }).then(function (data) {
+        settings = data
 
-          var gps =  strToJSValue(data.meas_gps_enabled)
+        var gps = strToJSValue(data.meas_gps_enabled)
 
-          setElemValueBool('input-led-enabled', strToJSValue(data.meas_led_enabled), true)
-          setElemValueBool('input-battery', strToJSValue(data.meas_battery_stat), true)
-          setElemValueBool('input-board-sense', strToJSValue(data.meas_board_sense), true)
-          setElemValueBool('input-board-stat', strToJSValue(data.meas_board_stat), false)
-          setElemValueBool('input-network', strToJSValue(data.meas_network_stat), true)
-          setElemValueBool('input-ota', strToJSValue(data.system_enable_ota), true)
-          setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_enabled), false)
+        setElemValueBool('input-led-enabled', strToJSValue(data.meas_led_enabled), true)
+        setElemValueBool('input-battery', strToJSValue(data.meas_battery_stat), true)
+        setElemValueBool('input-board-sense', strToJSValue(data.meas_board_sense), true)
+        setElemValueBool('input-board-stat', strToJSValue(data.meas_board_stat), false)
+        setElemValueBool('input-network', strToJSValue(data.meas_network_stat), true)
+        setElemValueBool('input-ota', strToJSValue(data.system_enable_ota), true)
+        setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_enabled), false)
 
-          setElemValueBool('input-gps-enable', gps, true)
-          setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
+        setElemValueBool('input-gps-enable', gps, true)
+        setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
 
-          checkboxStatusChanged('gps')
-          var boardType = data.selected_board
-          if(boardType && tabNamePerBoard[boardType])
-            boardChanged(undefined, tabNamePerBoard[boardType])
+        checkboxStatusChanged('gps')
+        var boardType = data.selected_board
+        if (boardType && tabNamePerBoard[boardType])
+          boardChanged(undefined, tabNamePerBoard[boardType])
 
-          setElemValue('input-gps-timeout', data.meas_gps_timeout, 120, false)
-          setElemValue('input-gps-sat-num', data.meas_gps_sat_num, 4, false)
-          //setElemValueBool('input-gps-no-fix-no-upload', data.meas_gps_no_fix_no_upload,  false)
+        setElemValue('input-gps-timeout', data.meas_gps_timeout, 120, false)
+        setElemValue('input-gps-sat-num', data.meas_gps_sat_num, 4, false)
+        //setElemValueBool('input-gps-no-fix-no-upload', data.meas_gps_no_fix_no_upload,  false)
 
-          for(let i=1; i<=10; ++i) {
-            var sdi12Enabled = strToJSValue(data["meas_sdi_" + i + "_enabled"])
+        for (let i = 1; i <= 10; ++i) {
+          var sdi12Enabled = strToJSValue(data["meas_sdi_" + i + "_enabled"])
 
-            if (data["meas_sdi_" + i + "_loc"] !== undefined) { //new version
-              setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "" + i)
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', data["meas_sdi_" + i + "_loc"], "1")
-            }
-            else {
-              setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "" + i)
+          if (data["meas_sdi_" + i + "_loc"] !== undefined) { //new version
+            setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
+            setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "" + i)
+            setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', data["meas_sdi_" + i + "_loc"], "1")
+          }
+          else {
+            setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
+            setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "" + i)
 
-              if( i === 1)
-                setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "1", "1")
-              else if( i === 2 )
-                setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "2", "2")
-              else
-                setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "1", "1")
+            if (i === 1)
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "1", "1")
+            else if (i === 2)
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "2", "2")
+            else
+              setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "1", "1")
+          }
+        }
+
+        setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
+
+        var adp1 = data.meas_sensor_a_d_p1
+        var adp2 = data.meas_sensor_a_d_p2
+        var adp3 = data.meas_sensor_a_d_p3
+
+        setElemValue('input-ins-esp-i2c-1', data.meas_i2c_1, "disabled")
+        setElemValue('input-ins-esp-s1-i2c', data.meas_i2c_1, "disabled")
+        setElemValue('input-ins-esp-i2c-2', data.meas_i2c_2, "disabled")
+        setElemValue('input-ins-esp-sensor-a-d-p1', adp1, "disabled")
+        setElemValue('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
+        setElemValue('input-ins-esp-s1-sensor-a-d-p2', adp2, "disabled")
+        setElemValue('input-ins-esp-s1-sensor-a-d-p3', adp3, "disabled")
+
+        setElemValue("input-ins-esp-s1-sensor-a-d-p1-t", data.meas_sensor_a_d_p1_t, "v")
+        setElemValue("input-ins-esp-s1-sensor-a-d-p2-t", data.meas_sensor_a_d_p2_t, "v")
+        setElemValue("input-ins-esp-s1-sensor-a-d-p3-t", data.meas_sensor_a_d_p3_t, "v")
+
+        showElement('input-ins-esp-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
+        showElement('input-ins-esp-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
+        showElement('input-ins-esp-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
+
+        //setElemValueBool('input-store-meas-if-failed-conn', data.store_meas_if_failed_conn, false)
+
+        var index = 0
+        var keyValueDict = data.meas_keyvalue
+        // bypass issue of html encoding that is enforced by an unknown module
+        try {
+          if (keyValueDict !== 'undefined') {
+            keyValueDict = JSON.parse(keyValueDict)
+            for (i in keyValueDict) {
+              document.getElementById('key' + index).value = i
+              document.getElementById('value' + index).value = keyValueDict[i]
+              addKeyValue()
+              index += 1
             }
           }
+        } catch (e) { }
 
-          setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
-
-          var adp1 = data.meas_sensor_a_d_p1
-          var adp2 = data.meas_sensor_a_d_p2
-          var adp3 = data.meas_sensor_a_d_p3
-
-          setElemValue('input-ins-esp-i2c-1', data.meas_i2c_1, "disabled")
-          setElemValue('input-ins-esp-s1-i2c', data.meas_i2c_1, "disabled")
-          setElemValue('input-ins-esp-i2c-2', data.meas_i2c_2, "disabled")
-          setElemValue('input-ins-esp-sensor-a-d-p1', adp1 , "disabled")
-          setElemValue('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
-          setElemValue('input-ins-esp-s1-sensor-a-d-p2', adp2, "disabled")
-          setElemValue('input-ins-esp-s1-sensor-a-d-p3', adp3, "disabled")
-
-          setElemValue("input-ins-esp-s1-sensor-a-d-p1-t", data.meas_sensor_a_d_p1_t, "v")
-          setElemValue("input-ins-esp-s1-sensor-a-d-p2-t", data.meas_sensor_a_d_p2_t, "v")
-          setElemValue("input-ins-esp-s1-sensor-a-d-p3-t", data.meas_sensor_a_d_p3_t, "v")
-
-          showElement('input-ins-esp-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
-          showElement('input-ins-esp-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
-          showElement('input-ins-esp-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
-
-          //setElemValueBool('input-store-meas-if-failed-conn', data.store_meas_if_failed_conn, false)
-
-          var index = 0
-          var keyValueDict = data.meas_keyvalue
-          // bypass issue of html encoding that is enforced by an unknown module
-          try {
-            if(keyValueDict !== 'undefined') {
-              keyValueDict = JSON.parse(keyValueDict)
-              for(i in keyValueDict) {
-                  document.getElementById('key' + index).value = i
-                  document.getElementById('value' + index).value = keyValueDict[i]
-                  addKeyValue()
-                  index += 1
-              }
-            }
-          } catch(e) {}
-
-          showElement('loader', false)
-        }).catch((err) => {
-          console.log("error completing request", err);
-          showElement('loader', false)
-        });
-      }
+        showElement('loader', false)
+      }).catch((err) => {
+        console.log("error completing request", err);
+        showElement('loader', false)
+      });
+    }
 
     function clearCookies() {
       Cookies.remove('meas-led-enabled')
@@ -557,7 +525,7 @@
       Cookies.remove('meas-4-20-snsr-1-enable')
       Cookies.remove('meas-4-20-snsr-2-enable')
 
-      for(let i=1; i<11; ++i) {
+      for (let i = 1; i < 11; ++i) {
         Cookies.remove('meas-sdi-' + i + '-enabled')
         Cookies.remove('meas-sdi-' + i + '-address')
         Cookies.remove('meas-sdi-' + i + '-loc')
@@ -595,9 +563,9 @@
       Cookies.set('store-meas-if-failed-conn', boolElemToPyStr('input-store-meas-if-failed-conn'))
 
       if (elementIsVisible("ins-esp-gen-sdi12-board-options")) {
-        Cookies.set('selected-board', boardNamePerTab["ins-esp-gen-sdi12-board-options"] )
+        Cookies.set('selected-board', boardNamePerTab["ins-esp-gen-sdi12-board-options"])
 
-        for(let i=1; i<11; ++i) {
+        for (let i = 1; i < 11; ++i) {
           setSDI12Cookie(i)
         }
 
@@ -610,7 +578,7 @@
         location.href = "step-6-timing.html"
       }
       else if (elementIsVisible("i2c-scale-board-options")) {
-        Cookies.set('selected-board', boardNamePerTab["i2c-scale-board-options"] )
+        Cookies.set('selected-board', boardNamePerTab["i2c-scale-board-options"])
         Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-i2c-1').value)
         Cookies.set('meas-i2c-2', document.getElementById('input-ins-esp-i2c-2').value)
         Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
@@ -625,15 +593,15 @@
           var scale = settings.meas_scale_scale
           var offset = settings.meas_scale_offset
 
-          if(scale && offset) {
+          if (scale && offset) {
             Cookies.set('meas-scale-offset', offset)
             Cookies.set('meas-scale-scale', scale)
             Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
             location.href = "step-5-3-scale-calibr-res.html"
           }
           else
-          Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-            location.href = "step-5-1-scale-idle.html"
+            Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
+          location.href = "step-5-1-scale-idle.html"
         }
       }
       else if (elementIsVisible("esp32s3-bg600-i2c-analog-options")) {
@@ -735,19 +703,19 @@
     }
 
     function checkboxGPSStatusChanged() {
-        checkboxStatusChanged('gps')
+      checkboxStatusChanged('gps')
     }
 
-    function generateSdi12Options(){
+    function generateSdi12Options() {
       var parent = document.getElementById("option-sdi12-table-rows");
 
-      for(let i=0; i<10; i++) {
-        sdi12Options[""+i] = i
+      for (let i = 0; i < 10; i++) {
+        sdi12Options["" + i] = i
       }
 
-      for(let i=1; i<=10; i++) {
+      for (let i = 1; i <= 10; i++) {
         var row = document.createElement("tr")
-        if(i%1)
+        if (i % 1)
           row.classList.add('active')
 
         var col1 = document.createElement("td")
@@ -788,7 +756,7 @@
 
         generateOptions(selectElem_address.id, sdi12Options)
         generateOptions(selectElem_location.id, sdi12LocationOptions)
-        setElemValue(selectElem_address.id, ""+(i-1), ""+0)
+        setElemValue(selectElem_address.id, "" + (i - 1), "" + 0)
       }
     }
 

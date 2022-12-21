@@ -1,22 +1,22 @@
 function goBack() {
-  window.history.back();
+  window.history.back()
 }
 
-function setRadioGroupValue(groupName, valueToSelect){
+function setRadioGroupValue(groupName, valueToSelect) {
   var elems = document.getElementsByName(groupName)
 
   for (var i = 0, length = elems.length; i < length; i++) {
-    elems[i].checked = (elems[i].value === valueToSelect)
+    elems[i].checked = elems[i].value === valueToSelect
   }
 }
 
-function readRadioGroupValue(groupName, cookieName){
+function readRadioGroupValue(groupName, cookieName) {
   var elems = document.getElementsByName(groupName)
 
   for (var i = 0, length = elems.length; i < length; i++) {
     if (elems[i].checked) {
       Cookies.set(cookieName, elems[i].value)
-      break;
+      break
     }
   }
 }
@@ -37,51 +37,53 @@ function checkboxStatusChanged(sensorId) {
 
 function showElement(elementId, status) {
   var elem = document.getElementById(elementId)
-  if(elem)
-    elem.style.display = status ? "block" : "none"
+  if (elem) elem.style.display = status ? "block" : "none"
 }
 
-function setElemValue(elementId, newValue, defaultValue="", intZeroAccepted=true){
+function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = true) {
   var elem = document.getElementById(elementId)
-  if(!elem) {
+  if (!elem) {
     console.log("setElemValue: Element not found: ", elementId)
     return
   }
 
-  elem.value = (newValue !== "undefined" && newValue !== undefined && (intZeroAccepted || (!intZeroAccepted && newValue !== 0))) ? newValue : defaultValue
+  elem.value =
+    newValue !== "undefined" && newValue !== undefined && (intZeroAccepted || (!intZeroAccepted && newValue !== 0))
+      ? newValue
+      : defaultValue
 }
 
-function setElemValueBool(elementId, newValue, defaultValue="", boolField="checked"){
+function setElemValueBool(elementId, newValue, defaultValue = "", boolField = "checked") {
   var elem = document.getElementById(elementId)
-  if(!elem) {
+  if (!elem) {
     console.log("setElemValueBool: Element not found: ", elementId)
     return
   }
 
-  elem[boolField] = (newValue !== "undefined" && newValue !== undefined) ? Boolean(newValue) : defaultValue
+  elem[boolField] = newValue !== "undefined" && newValue !== undefined ? Boolean(newValue) : defaultValue
 }
 
-function validateElemValue(elemId, message, regex=undefined) {
+function validateElemValue(elemId, message, regex = undefined) {
   var fieldObj = document.getElementById(elemId)
-  if(!fieldObj) {
+  if (!fieldObj) {
     console.log("validateElemValue: Element not found: ", elemId)
     return false
   }
 
   var value = fieldObj.value.trim()
-  if(value == "" || (regex && !((new RegExp(regex, 'g')).exec(value)))) {
-      fieldObj.style.borderColor = "red";
-      fieldObj.focus()
-      window.alert("Please enter a valid " + message)
-      return false
+  if (value == "" || (regex && !new RegExp(regex, "g").exec(value))) {
+    fieldObj.style.borderColor = "red"
+    fieldObj.focus()
+    window.alert("Please enter a valid " + message)
+    return false
   }
-  fieldObj.style.borderColor = "green";
+  fieldObj.style.borderColor = "green"
   return true
 }
 
-function boolElemToPyStr(elemId, boolField="checked") {
+function boolElemToPyStr(elemId, boolField = "checked") {
   var fieldObj = document.getElementById(elemId)
-  if(!fieldObj) {
+  if (!fieldObj) {
     console.log("boolElemToPyStr: Element not found: ", elemId)
     return undefined
   }
@@ -94,75 +96,67 @@ function isChecked(elemId) {
   return fieldObj && fieldObj["checked"]
 }
 
-function addElemChild(parentElem, txt, val){
-    var elem = document.createElement("option")
-    if(val)
-        elem.value = val
-    elem.innerHTML = txt
-    parentElem.appendChild(elem)
+function addElemChild(parentElem, txt, val) {
+  var elem = document.createElement("option")
+  if (val) elem.value = val
+  elem.innerHTML = txt
+  parentElem.appendChild(elem)
 }
 
-function addSwitch(parentId, switchId, switchLabel, onClickCallback=undefined) {
-  var parent = document.getElementById(parentId);
+function addSwitch(parentId, switchId, switchLabel, onClickCallback = undefined) {
+  var parent = document.getElementById(parentId)
 
-  var mainDiv = document.createElement("div")
-  mainDiv.classList.add('form-group')
+  // var mainDiv = document.createElement("div")
+  // mainDiv.classList.add('form-group')
 
   ///////////////////////////////////////////////////////
   var labelDiv = document.createElement("div")
-  labelDiv.classList.add('col-4')
-  labelDiv.classList.add('col-lg-6')
-  labelDiv.classList.add('col-sm-10')
+  labelDiv.classList.add("col-4")
+  labelDiv.classList.add("col-lg-6")
+  labelDiv.classList.add("col-sm-10")
 
   var label = document.createElement("label")
-  label.classList.add('form-label')
-  label.appendChild(document.createTextNode(switchLabel));
+  label.classList.add("form-label")
+  label.appendChild(document.createTextNode(switchLabel))
 
   labelDiv.appendChild(label)
-  mainDiv.appendChild(labelDiv)
+  parent.appendChild(labelDiv)
 
   ///////////////////////////////////////////
 
   var switchDiv = document.createElement("div")
-  switchDiv.classList.add('col-8')
-  switchDiv.classList.add('col-lg-6')
-  switchDiv.classList.add('col-sm-2')
+  switchDiv.classList.add("col-8")
+  switchDiv.classList.add("col-lg-6")
+  switchDiv.classList.add("col-sm-2")
 
-  var switchDivGroup = document.createElement("div") // not sure if needed
-  switchDivGroup.classList.add('form-group')
+  // var switchDivGroup = document.createElement("div") // not sure if needed
+  // switchDivGroup.classList.add('form-group')
 
   var switchLabel = document.createElement("label")
-  switchLabel.classList.add('form-switch')
+  switchLabel.classList.add("form-switch")
 
   var switchInput = document.createElement("input")
   switchInput.type = "checkbox"
   switchInput.id = switchId
-  if(onClickCallback)
-    switchInput.onclick = onClickCallback
+  if (onClickCallback) switchInput.onclick = onClickCallback
 
   var switchIcon = document.createElement("i")
-  switchIcon.classList.add('form-icon')
+  switchIcon.classList.add("form-icon")
 
   switchLabel.appendChild(switchInput)
   switchLabel.appendChild(switchIcon)
-  switchDivGroup.appendChild(switchLabel)
-  switchDiv.appendChild(switchDivGroup)
-  mainDiv.appendChild(switchDiv)
-
-  parent.appendChild(mainDiv)
+  switchDiv.appendChild(switchLabel)
+  parent.appendChild(switchDiv)
 }
 
 function strToJSValue(strVal) {
-  if (strVal === "undefined")
-    return undefined
-  else if (strVal === "true")
-    return true
-  else if (strVal === "false")
-    return false
+  if (strVal === "undefined") return undefined
+  else if (strVal === "true") return true
+  else if (strVal === "false") return false
   return strVal
 }
 
-function generateOptions(parentId, optionsData){
+function generateOptions(parentId, optionsData) {
   var parent = document.getElementById(parentId)
 
   for (const [key, value] of Object.entries(optionsData)) {
@@ -174,11 +168,11 @@ function generateOptions(parentId, optionsData){
 }
 
 function enableNavigationButtons() {
-  document.getElementById('save-button').disabled = false
-  document.getElementById('back-button').disabled = false
+  document.getElementById("save-button").disabled = false
+  document.getElementById("back-button").disabled = false
 }
 
 function disableNavigationButtons() {
-  document.getElementById('save-button').disabled = true
-  document.getElementById('back-button').disabled = true
+  document.getElementById("save-button").disabled = true
+  document.getElementById("back-button").disabled = true
 }

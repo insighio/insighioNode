@@ -2,103 +2,104 @@
 
 <html>
 
-    <head>
-        <meta charset="UTF-8" />
-        <title>insigh.io Device</title>
-        <link rel="stylesheet" href="css/style.css" />
-        <link rel="stylesheet" href="css/spectre-icons.min.css" />
-        <link rel="stylesheet" href="css/spectre.min.css" />
-    </head>
+<head>
+  <meta charset="UTF-8" />
+  <title>insigh.io Device</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/spectre-icons.min.css" />
+  <link rel="stylesheet" href="css/spectre.min.css" />
+</head>
 
-    <body class="body-custom">
+<body class="body-custom">
 
-        <img src="img/logo.png" class="img-responsive img-center">
+  <img src="img/logo.png" class="img-responsive img-center">
 
-        <div class="panel panel-custom">
-          <div class="panel-header">
-            <div class="panel-title text-center">Set active measurements</div>
+  <div class="panel panel-custom">
+    <div class="panel-header">
+      <div class="panel-title text-center">Set active measurements</div>
+    </div>
+
+    <div class="panel-nav">
+      <ul class="step">
+        <li class="step-item"><a>Login</a></li>
+        <li class="step-item"><a>Select Network</a></li>
+        <li class="step-item"><a>Network Params</a></li>
+        <li class="step-item"><a>API Keys</a></li>
+        <li class="step-item active"><a>Measurements</a></li>
+        <li class="step-item"><a>Timing</a></li>
+        <li class="step-item"><a>Verify</a></li>
+      </ul>
+    </div>
+
+    <div class="panel-body">
+      <br />
+      <hr />
+      <br />
+      <div class="empty">
+        <p class="empty-title h5">Weight Scale Calibration</p>
+        <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold">
+            <div id="loader" class="loading"></div>
+          </span></p>
+        <p class="empty-subtitle">Place your reference weight on the scale, fill its exact weight in grams at the following field and press <span class="text-bold">Measure</span>
+          to complete calibration.</p>
+        <p class="empty-subtitle p-centered">
+        <div class="form-group p-centered">
+          <div class="col-2 col-sm-12 col-ml-auto ">
+            <label class="form-label p-centered" for="input-example-1">Reference Weight (g)</label>
           </div>
-
-          <div class="panel-nav">
-            <ul class="step">
-              <li class="step-item"><a>Login</a></li>
-              <li class="step-item"><a>Select Network</a></li>
-              <li class="step-item"><a>Network Params</a></li>
-              <li class="step-item"><a>API Keys</a></li>
-              <li class="step-item active"><a>Measurements</a></li>
-              <li class="step-item"><a>Timing</a></li>
-              <li class="step-item"><a>Verify</a></li>
-            </ul>
+          <div class="col-2 col-sm-12 col-mr-auto">
+            <input class="form-input p-centered" type="number" id="input-ref-weight" style="width: 300px">
           </div>
-
-          <div class="panel-body">
-            <br />
-            <hr />
-            <br />
-            <div class="empty">
-              <p class="empty-title h5">Weight Scale Calibration</p>
-              <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold"><div id="loader" class="loading"></div></span></p>
-              <p class="empty-subtitle">Place your reference weight on the scale, fill its exact weight in grams at the following field and press <span class="text-bold">Measure</span> to complete calibration.</p>
-              <p class="empty-subtitle p-centered">
-                <form class="form-horizontal">
-                  <div class="form-group p-centered">
-                    <div class="col-2 col-sm-12 col-ml-auto ">
-                      <label class="form-label p-centered" for="input-example-1">Reference Weight (g)</label>
-                    </div>
-                    <div class="col-2 col-sm-12 col-mr-auto">
-                      <input class="form-input p-centered" type="number" id="input-ref-weight" style="width: 300px">
-                    </div>
-                  </div>
-                </form>
-              </p>
-              <div class="empty-action">
-                <button class="btn btn-primary" id="back-button" onclick="goBack()">Back</button>
-                <button class="btn btn-primary" id="save-button" onclick="validateMyForm()">Measure</button>
-              </div>
-            </div>
-          </div>
+        </div>
+        </p>
+        <div class="empty-action">
+          <button class="btn btn-primary" id="back-button" onclick="goBack()">Back</button>
+          <button class="btn btn-primary" id="save-button" onclick="validateMyForm()">Measure</button>
+        </div>
       </div>
-      <script src="js/js.cookie.min.js"></script>
-      <script src="js/utils.js"></script>
-      <script>
-        function initialize(){
-          document.getElementById('save-button').disabled = true
-          fetch("/raw-weight?board=" + Cookies.get('selected-board')).then((response) => {
-            return response.json();
-          }).then(function(data) {
-            document.getElementById('save-button').disabled = false
-            document.getElementById('idle-weight-value').innerHTML = data.raw
-            showElement('loader', false)
-          }).catch((err) => {
-            console.log("Booo", err);
-          });
-        }
+    </div>
+  </div>
+  <script src="js/js.cookie.min.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    function initialize() {
+      document.getElementById('save-button').disabled = true
+      fetch("/raw-weight?board=" + Cookies.get('selected-board')).then((response) => {
+        return response.json();
+      }).then(function (data) {
+        document.getElementById('save-button').disabled = false
+        document.getElementById('idle-weight-value').innerHTML = data.raw
+        showElement('loader', false)
+      }).catch((err) => {
+        console.log("Booo", err);
+      });
+    }
 
-      function clearCookies() {
-        Cookies.remove('meas-scale-offset')
-        Cookies.remove('meas-scale-reference')
-      }
+    function clearCookies() {
+      Cookies.remove('meas-scale-offset')
+      Cookies.remove('meas-scale-reference')
+    }
 
-      function validateMyForm(){
-        if(!validateElemValue('input-ref-weight', "ref-weight"))
-          return false
+    function validateMyForm() {
+      if (!validateElemValue('input-ref-weight', "ref-weight"))
+        return false
 
-        storeData()
-        return true
-      }
+      storeData()
+      return true
+    }
 
-      function storeData(){
-        document.getElementById('save-button').disabled = true
-        clearCookies()
+    function storeData() {
+      document.getElementById('save-button').disabled = true
+      clearCookies()
 
-        Cookies.set('meas-scale-offset', document.getElementById('idle-weight-value').innerHTML)
-        Cookies.set('meas-scale-reference', document.getElementById('input-ref-weight').value)
+      Cookies.set('meas-scale-offset', document.getElementById('idle-weight-value').innerHTML)
+      Cookies.set('meas-scale-reference', document.getElementById('input-ref-weight').value)
 
-        location.href = "step-5-3-scale-calibr-res.html"
-      }
+      location.href = "step-5-3-scale-calibr-res.html"
+    }
 
-      initialize()
-      </script>
-    </body>
+    initialize()
+  </script>
+</body>
 
 </html>

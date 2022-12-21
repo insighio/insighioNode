@@ -2,188 +2,197 @@
 
 <html>
 
-    <head>
-        <meta charset="UTF-8" />
-        <title>insigh.io Device</title>
-        <link rel="stylesheet" href="css/style.css" />
-        <link rel="stylesheet" href="css/spectre-icons.min.css" />
-        <link rel="stylesheet" href="css/spectre.min.css" />
-    </head>
+<head>
+  <meta charset="UTF-8" />
+  <title>insigh.io Device</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/spectre-icons.min.css" />
+  <link rel="stylesheet" href="css/spectre.min.css" />
+</head>
 
-    <body class="body-custom">
-        <img src="img/logo.png" class="img-responsive img-center">
+<body class="body-custom">
+  <img src="img/logo.png" class="img-responsive img-center">
 
-        <div class="panel panel-custom">
-          <div class="panel-header">
-            <div class="panel-title text-center">Set API keys</div>
-          </div>
+  <div class="panel panel-custom">
+    <div class="panel-header">
+      <div class="panel-title text-center">Set API keys</div>
+    </div>
 
-          <div class="panel-nav">
-            <ul class="step">
-              <li class="step-item"><a>Login</a></li>
-              <li class="step-item"><a>Select Network</a></li>
-              <li class="step-item"><a>Network Params</a></li>
-              <li class="step-item active"><a>API Keys</a></li>
-              <li class="step-item"><a>Measurements</a></li>
-              <li class="step-item"><a>Timing</a></li>
-              <li class="step-item"><a>Verify</a></li>
-            </ul>
-          </div>
+    <div class="panel-nav">
+      <ul class="step">
+        <li class="step-item"><a>Login</a></li>
+        <li class="step-item"><a>Select Network</a></li>
+        <li class="step-item"><a>Network Params</a></li>
+        <li class="step-item active"><a>API Keys</a></li>
+        <li class="step-item"><a>Measurements</a></li>
+        <li class="step-item"><a>Timing</a></li>
+        <li class="step-item"><a>Verify</a></li>
+      </ul>
+    </div>
 
-          <div class="panel-body">
-            <br />
-            <hr />
-            <br />
-            <div id="loader" class="loading loading-lg"></div>
-            <div class="text-center">
-                Set API keys that were generated during device creation in console.insigh.io.
-                <div class="popover popover-bottom">
-                  <button class="btn btn-link">Tip: Autofill</button>
-                  <div class="popover-container">
-                    <div class="card">
-                      <div class="card-header">
-                        <div class="card-title h5">Auto fill fields</div>
-                      </div>
-                      <div class="card-body">
-                        In <a href="https://console.insigh.io/devices/list">Device List view</a> select the required device and press Options
-                        <img src="img/devOpt.png" style="margin-bottom: -5px" /> -> JSON <img src="img/copy.png" style="margin-bottom: -5px"/>.
-                        Then paste in any of the input fields and the contents will be auto-filled.
-                        <div class="container">
-                          <div class="columns">
-                            <div class="column col-5" style="padding: 0px"><img src="img/device-opt.png" /></div>
-                            <div class="column col-2" style="padding: 0px">
-                              <div style="height: 54px">
-                                <i class="icon icon-arrow-right center-image "></i>
-                              </div>
-                            </div>
-                            <div class="column col-5" style="padding: 0px"><img src="img/jsonClip.png" /></div>
-                          </div>
-                        </div>
+    <div class="panel-body">
+      <br />
+      <hr />
+      <br />
+      <div id="loader" class="loading loading-lg"></div>
+      <div class="text-center">
+        Set API keys that were generated during device creation in console.insigh.io.
+        <div class="popover popover-bottom">
+          <button class="btn btn-link">Tip: Autofill</button>
+          <div class="popover-container">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title h5">Auto fill fields</div>
+              </div>
+              <div class="card-body">
+                In <a href="https://console.insigh.io/devices/list">Device List view</a> select the required device and press Options
+                <img src="img/devOpt.png" style="margin-bottom: -5px" /> -> JSON <img src="img/copy.png" style="margin-bottom: -5px" />.
+                Then paste in any of the input fields and the contents will be auto-filled.
+                <div class="container">
+                  <div class="columns">
+                    <div class="column col-5" style="padding: 0px"><img src="img/device-opt.png" /></div>
+                    <div class="column col-2" style="padding: 0px">
+                      <div style="height: 54px">
+                        <i class="icon icon-arrow-right center-image "></i>
                       </div>
                     </div>
+                    <div class="column col-5" style="padding: 0px"><img src="img/jsonClip.png" /></div>
                   </div>
                 </div>
-            </div>
-            <br />
-            <div class="columns flex-centered">
-              <div class="column col-7">
-                <form class="form-horizontal">
-                  <div class="form-group">
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-id">ID</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-id" onpaste="fillClipboardData('id')"/>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-key">KEY</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-key" onpaste="fillClipboardData('key')"/>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-channel">Data Channel</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-channel" onpaste="fillClipboardData('channel')"/>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="input-controlChannel">Control Channel</label>
-                    </div>
-                    <div class="col-9 col-sm-12">
-                      <input class="form-input constr-field" type="text" id="input-control-channel" onpaste="fillClipboardData('control-channel')"/>
-                    </div>
-                    <br />
-                    <br />
-                  </div>
-                </form>
-                <div class="column col-12">
-                  <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
-                  <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
-                </div>
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
               </div>
             </div>
           </div>
+        </div>
       </div>
-      <script src="js/js.cookie.min.js"></script>
-      <script src="js/utils.js"></script>
-      <script>
-        function initializeValues() {
-          fetch("/settings").then((response) => {
-            return response.json();
-          }).then(function(data) {
-            setElemValue("input-id", data.insighio_id)
-            setElemValue("input-key", data.insighio_key)
-            setElemValue("input-channel", data.insighio_channel)
-            setElemValue("input-control-channel", data.insighio_control_channel)
+      <br />
+      <div class="container grid-lg">
+        <div class="columns flex-centered">
+          <div class="column col-xl-7 col-md-10 col-sm-12">
+            <div class="form-group">
+              <div class="columns">
+                <div class="col-3 col-sm-12">
+                  <label class="form-label" for="input-id">ID</label>
+                </div>
+                <div class="col-9 col-sm-12">
+                  <input class="form-input constr-field" type="text" id="input-id" onpaste="fillClipboardData('id')" />
+                </div>
+                <br />
+                <br />
+                <div class="col-3 col-sm-12">
+                  <label class="form-label" for="input-key">KEY</label>
+                </div>
+                <div class="col-9 col-sm-12">
+                  <input class="form-input constr-field" type="text" id="input-key" onpaste="fillClipboardData('key')" />
+                </div>
+                <br />
+                <br />
+                <div class="col-3 col-sm-12">
+                  <label class="form-label" for="input-channel">Data Channel</label>
+                </div>
+                <div class="col-9 col-sm-12">
+                  <input class="form-input constr-field" type="text" id="input-channel" onpaste="fillClipboardData('channel')" />
+                </div>
+                <br />
+                <br />
+                <div class="col-3 col-sm-12">
+                  <label class="form-label" for="input-controlChannel">Control Channel</label>
+                </div>
+                <div class="col-9 col-sm-12">
+                  <input class="form-input constr-field" type="text" id="input-control-channel" onpaste="fillClipboardData('control-channel')" />
+                </div>
+                <br />
+                <br />
+              </div>
+              <div class="column col-12">
+                <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
+                <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+              </div>
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            showElement('loader', false)
-          }).catch((err) => {
-            console.log("error completing request", err);
-            showElement('loader', false)
-          });
+  <script src="js/js.cookie.min.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    function initializeValues() {
+      fetch("/settings").then((response) => {
+        return response.json();
+      }).then(function (data) {
+        if (data.board_mac !== undefined && data.board_mac !== Cookies.get('board-mac')) {
+          alert("board change detected...restarting configuration")
+          location.href = "step-2-select.html"
+          return
         }
 
-        function fillClipboardData(field) {
-          setTimeout( function() {
-            try {
-              var obj = JSON.parse(document.getElementById('input-' + field).value)
-              document.getElementById('input-id').value = obj.id
-              document.getElementById('input-key').value = obj.key
-              document.getElementById('input-channel').value = obj.channel
-              document.getElementById('input-control-channel').value = obj.controlChannel
+        setElemValue("input-id", data.insighio_id)
+        setElemValue("input-key", data.insighio_key)
+        setElemValue("input-channel", data.insighio_channel)
+        setElemValue("input-control-channel", data.insighio_control_channel)
 
-            }
-            catch(e) {
-            }
-          }, 250);
+        showElement('loader', false)
+      }).catch((err) => {
+        console.log("error completing request", err);
+        showElement('loader', false)
+      });
+    }
+
+    function fillClipboardData(field) {
+      setTimeout(function () {
+        try {
+          var obj = JSON.parse(document.getElementById('input-' + field).value)
+          document.getElementById('input-id').value = obj.id
+          document.getElementById('input-key').value = obj.key
+          document.getElementById('input-channel').value = obj.channel
+          document.getElementById('input-control-channel').value = obj.controlChannel
+
         }
-
-        function clearCookies() {
-          Cookies.remove('insighio-id')
-          Cookies.remove('insighio-key')
-          Cookies.remove('insighio-channel')
-          Cookies.remove('insighio-channel-control')
+        catch (e) {
         }
+      }, 250);
+    }
 
-        function validateMyForm(){
-          var idRegex = "[0-9a-f]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}"
-          if(!validateElemValue('input-id', "device ID", idRegex) ||
-             !validateElemValue('input-key', "device Key", idRegex) ||
-             !validateElemValue('input-channel', "channel ID", idRegex)
-          )
-            return false
+    function clearCookies() {
+      Cookies.remove('insighio-id')
+      Cookies.remove('insighio-key')
+      Cookies.remove('insighio-channel')
+      Cookies.remove('insighio-channel-control')
+    }
 
-          storeData()
-          return true
-        }
+    function validateMyForm() {
+      var idRegex = "[0-9a-f]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}"
+      if (!validateElemValue('input-id', "device ID", idRegex) ||
+        !validateElemValue('input-key', "device Key", idRegex) ||
+        !validateElemValue('input-channel', "channel ID", idRegex)
+      )
+        return false
 
-        function storeData(){
-          disableNavigationButtons()
-          clearCookies()
+      storeData()
+      return true
+    }
 
-          Cookies.set('insighio-id', document.getElementById('input-id').value.trim())
-          Cookies.set('insighio-key', document.getElementById('input-key').value.trim())
-          Cookies.set('insighio-channel', document.getElementById('input-channel').value.trim())
-          Cookies.set('insighio-control-channel', document.getElementById('input-control-channel').value.trim())
+    function storeData() {
+      disableNavigationButtons()
+      clearCookies()
 
-          location.href = "step-5-measurements.html"
-          enableNavigationButtons()
-        }
+      Cookies.set('insighio-id', document.getElementById('input-id').value.trim())
+      Cookies.set('insighio-key', document.getElementById('input-key').value.trim())
+      Cookies.set('insighio-channel', document.getElementById('input-channel').value.trim())
+      Cookies.set('insighio-control-channel', document.getElementById('input-control-channel').value.trim())
 
-        initializeValues()
-      </script>
-    </body>
+      location.href = "step-5-measurements.html"
+      enableNavigationButtons()
+    }
+
+    initializeValues()
+  </script>
+</body>
 
 </html>
