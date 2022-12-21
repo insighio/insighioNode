@@ -4,6 +4,7 @@
 
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>insigh.io Device</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/spectre.min.css" />
@@ -107,185 +108,203 @@
                 <br />
                 <div id="i2c-scale-board-options" class="tabcontent columns col-12" style="display: block">
                   <br />
-                  <br />
-                  <div class="col-4 col-lg-6">
-                    <label class="form-label" for="measurements">I²C #1</label>
+                  <div class="form-group columns">
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6">
+                      <label class="form-label" for="measurements">I²C #1</label>
+                    </div>
+                    <div class="col-8 col-lg-6">
+                      <select class="form-select" id="input-ins-esp-i2c-1">
+                      </select>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6">
+                      <label class="form-label" for="measurements">I²C #2</label>
+                    </div>
+                    <div class="col-8 col-lg-6">
+                      <select class="form-select" id="input-ins-esp-i2c-2">
+                      </select>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6">
+                      <label class="form-label" for="measurements">Analog / Digital P1</label>
+                    </div>
+                    <div class="col-8 col-lg-6">
+                      <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
+                      </select>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6">
+                      <label class="form-label" for="measurements">Weight Scale</label>
+                    </div>
+                    <div class="col-8 col-lg-6">
+                      <label class="form-switch">
+                        <input type="checkbox" id="input-ins-esp-weight-scale" />
+                        <i class="form-icon"></i>
+                      </label>
+                    </div>
+                    <br />
+                    <br />
                   </div>
-                  <div class="col-8 col-lg-6">
-                    <select class="form-select" id="input-ins-esp-i2c-1">
-                    </select>
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-lg-6">
-                    <label class="form-label" for="measurements">I²C #2</label>
-                  </div>
-                  <div class="col-8 col-lg-6">
-                    <select class="form-select" id="input-ins-esp-i2c-2">
-                    </select>
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-lg-6">
-                    <label class="form-label" for="measurements">Analog / Digital P1</label>
-                  </div>
-                  <div class="col-8 col-lg-6">
-                    <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
-                    </select>
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-lg-6">
-                    <label class="form-label" for="measurements">Weight Scale</label>
-                  </div>
-                  <div class="col-8 col-lg-6">
-                    <label class="form-switch">
-                      <input type="checkbox" id="input-ins-esp-weight-scale" />
-                      <i class="form-icon"></i>
-                    </label>
-                  </div>
-                  <br />
-                  <br />
                 </div>
-                <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent" style="display: none">
+                <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent columns col-12" style="display: none">
                   <br />
-                  <br />
-                  <div class="col-4 col-lg-6 ">
-                    <label class="form-label" for="measurements">I²C</label>
-                  </div>
-                  <div class="col-8 col-lg-6 ">
-                    <select class="form-select" id="input-ins-esp-s1-i2c">
-                    </select>
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-lg-6">
-                    <label class="form-label" for="measurements">Analog / Digital P1</label>
-                  </div>
-                  <div class="col-8 col-lg-6">
-                    <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
-                    </select>
-                  </div>
-                  <br />
-                  <div id="input-ins-esp-s1-sensor-a-d-p1-trans-div" class="col-12" style="display:block">
-                    <div class="column col-1 col-mr-auto"></div>
-                    <div class="col-3  col-sm-12">
-                      <label class="form-label" for="measurements">transformation
-                        <button class="btn btn-link tooltip"
-                          data-tooltip="python script to&#xa;transform raw Value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
-                          <i class="icon icon-flag"></i>
-                        </button>
-                      </label>
+                  <div class="form-group columns">
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6 ">
+                      <label class="form-label" for="measurements">I²C</label>
                     </div>
-                    <div class="col-6 col-sm-12">
-                      <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p1-t" />
+                    <div class="col-8 col-lg-6 ">
+                      <select class="form-select" id="input-ins-esp-s1-i2c">
+                      </select>
                     </div>
-                    <div class="column col-2 col-mr-auto"></div>
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-lg-6">
-                    <label class="form-label" for="measurements">Analog / Digital P2</label>
-                  </div>
-                  <div class="col-8 col-lg-6">
-                    <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
-                    </select>
-                  </div>
-                  <div id="input-ins-esp-s1-sensor-a-d-p2-trans-div" class="col-12" style="display:none">
-                    <div class="column col-1 col-mr-auto"></div>
-                    <div class="col-3  col-sm-12">
-                      <label class="form-label" for="measurements">transformation
-                        <button class="btn btn-link tooltip"
-                          data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
-                          <i class="icon icon-flag"></i>
-                        </button>
-                      </label>
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6">
+                      <label class="form-label" for="measurements">Analog / Digital P1</label>
                     </div>
-                    <div class="col-6 col-sm-12">
-                      <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" />
+                    <div class="col-8 col-lg-6">
+                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
+                      </select>
                     </div>
-                    <div class="column col-2 col-mr-auto"></div>
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-lg-6">
-                    <label class="form-label" for="measurements">Analog / Digital P3</label>
-                  </div>
-                  <div class="col-8 col-lg-6">
-                    <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
-                    </select>
-                  </div>
-                  <div id="input-ins-esp-s1-sensor-a-d-p3-trans-div" class="col-12" style="display:none">
-                    <div class="column col-1 col-mr-auto"></div>
-                    <div class="col-3  col-sm-12">
-                      <label class="form-label" for="measurements">transformation
-                        <button class="btn btn-link tooltip"
-                          data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
-                          <i class="icon icon-flag"></i>
-                        </button>
-                      </label>
+                    <br />
+                    <div id="input-ins-esp-s1-sensor-a-d-p1-trans-div" class="col-12" style="display:block">
+                      <br />
+                      <div class="form-group columns">
+                        <div class="column col-1 col-mr-auto"></div>
+                        <div class="col-3  col-sm-12">
+                          <label class="form-label" for="measurements">transformation
+                            <button class="btn btn-link tooltip"
+                              data-tooltip="python script to&#xa;transform raw Value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                              <i class="icon icon-flag"></i>
+                            </button>
+                          </label>
+                        </div>
+                        <div class="col-6 col-sm-12">
+                          <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p1-t" />
+                        </div>
+                        <div class="column col-2 col-mr-auto"></div>
+                      </div>
                     </div>
-                    <div class="col-6 col-sm-12">
-                      <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p3-t" />
+                    <br />
+                    <div class="col-4 col-lg-6">
+                      <label class="form-label" for="measurements">Analog / Digital P2</label>
                     </div>
-                    <div class="column col-2 col-mr-auto"></div>
+                    <div class="col-8 col-lg-6">
+                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
+                      </select>
+                    </div>
+                    <div id="input-ins-esp-s1-sensor-a-d-p2-trans-div" class="col-12" style="display:none">
+                      <br />
+                      <div class="form-group columns">
+                        <div class="column col-1 col-mr-auto"></div>
+                        <div class="col-3  col-sm-12">
+                          <label class="form-label" for="measurements">transformation
+                            <button class="btn btn-link tooltip"
+                              data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                              <i class="icon icon-flag"></i>
+                            </button>
+                          </label>
+                        </div>
+                        <div class="col-6 col-sm-12">
+                          <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" />
+                        </div>
+                        <div class="column col-2 col-mr-auto"></div>
+                      </div>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6">
+                      <label class="form-label" for="measurements">Analog / Digital P3</label>
+                    </div>
+                    <div class="col-8 col-lg-6">
+                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
+                      </select>
+                    </div>
+                    <div id="input-ins-esp-s1-sensor-a-d-p3-trans-div" class="col-12" style="display:none">
+                      <br />
+                      <div class="form-group columns">
+                        <div class="column col-1 col-mr-auto"></div>
+                        <div class="col-3  col-sm-12">
+                          <label class="form-label" for="measurements">transformation
+                            <button class="btn btn-link tooltip"
+                              data-tooltip="python script to&#xa;transform raw value (v)&#xa;from millivolt&#xa;to meaningful value&#xa;ex: 2*v + v**2">
+                              <i class="icon icon-flag"></i>
+                            </button>
+                          </label>
+                        </div>
+                        <div class="col-6 col-sm-12">
+                          <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p3-t" />
+                        </div>
+                        <div class="column col-2 col-mr-auto"></div>
+                      </div>
+                    </div>
+                    <br />
+                    <br />
                   </div>
-                  <br />
-                  <br />
-                  <br />
-                  <br />
                 </div>
                 <!-- sdi board related settings -->
-                <div id="ins-esp-gen-sdi12-board-options" class="tabcontent" style="display: none">
+                <div id="ins-esp-gen-sdi12-board-options" class="tabcontent columns col-12" style="display: none">
                   <br />
-                  <br />
-                  <table class="table table-striped table-hover">
-                    <thead>
-                      <tr>
-                        <th>Index</th>
-                        <th>Sensor ID</th>
-                        <th>Board Location</th>
-                        <th>Active</th>
-                      </tr>
-                    </thead>
-                    <tbody id="option-sdi12-table-rows">
-                    </tbody>
-                  </table>
-                  <div id="options-sdi12"></div>
-                  <div class="col-4 col-lg-6 col-sm-6">
-                    <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
+                  <div class="form-group columns">
+                    <br />
+                    <br />
+                    <table class="table table-striped table-hover">
+                      <thead>
+                        <tr>
+                          <th>Index</th>
+                          <th>Sensor ID</th>
+                          <th>Board Location</th>
+                          <th>Active</th>
+                        </tr>
+                      </thead>
+                      <tbody id="option-sdi12-table-rows">
+                      </tbody>
+                    </table>
+                    <div id="options-sdi12"></div>
+                    <div class="col-4 col-lg-6 col-sm-6">
+                      <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
+                    </div>
+                    <div class="col-8 col-lg-6 col-sm-6">
+                      <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time" />
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6 col-sm-6">
+                      <label class="form-label" for="measurements">4-20mA sensor n.1</label>
+                    </div>
+                    <div class="col-8 col-lg-6 col-sm-6">
+                      <label class="form-switch">
+                        <input type="checkbox" id="ins-esp-gen-4-20-snsr-1-enable" />
+                        <i class="form-icon"></i>
+                      </label>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6 col-sm-6">
+                      <label class="form-label" for="measurements">4-20mA sensor n.2</label>
+                    </div>
+                    <div class="col-8 col-lg-6 col-sm-6">
+                      <label class="form-switch">
+                        <input type="checkbox" id="ins-esp-gen-4-20-snsr-2-enable" />
+                        <i class="form-icon"></i>
+                      </label>
+                    </div>
+                    <br />
+                    <br />
                   </div>
-                  <div class="col-8 col-lg-6 col-sm-6">
-                    <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time" />
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-lg-6 col-sm-6">
-                    <label class="form-label" for="measurements">4-20mA sensor n.1</label>
-                  </div>
-                  <div class="col-8 col-lg-6 col-sm-6">
-                    <label class="form-switch">
-                      <input type="checkbox" id="ins-esp-gen-4-20-snsr-1-enable" />
-                      <i class="form-icon"></i>
-                    </label>
-                  </div>
-                  <br />
-                  <br />
-                  <div class="col-4 col-lg-6 col-sm-6">
-                    <label class="form-label" for="measurements">4-20mA sensor n.2</label>
-                  </div>
-                  <div class="col-8 col-lg-6 col-sm-6">
-                    <label class="form-switch">
-                      <input type="checkbox" id="ins-esp-gen-4-20-snsr-2-enable" />
-                      <i class="form-icon"></i>
-                    </label>
-                  </div>
-                  <br />
-                  <br />
                 </div>
-                <div class="divider text-center" data-content="Explicit key-values"></div>
+                <div class="col-12">
+                  <div class="divider text-center" data-content="Explicit key-values"></div>
+                </div>
                 <br />
-                <div id="keyvalue">
+                <div id="keyvalue" class="form-group col-12">
+                  <br />
                   <div class="cardcontainer">
                     <div class="card">
                       <div class="card-body">
@@ -317,16 +336,15 @@
                   </div>
                 </div>
               </div>
+              <div class="column col-12">
+                <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
+                <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+              </div>
+              <br />
+              <br />
             </div>
-            <div class="column col-12">
-              <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
-              <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
-            </div>
-            <br />
-            <br />
           </div>
         </div>
-
       </div>
     </div>
   </div>
