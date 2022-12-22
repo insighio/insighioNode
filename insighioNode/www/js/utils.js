@@ -176,3 +176,12 @@ function disableNavigationButtons() {
   document.getElementById("save-button").disabled = true
   document.getElementById("back-button").disabled = true
 }
+
+function detectBoardChange(settings_mac, cookies_mac){
+  console.log("Board mac: ", settings_mac, ", Cookie mac: ", cookies_mac)
+  if (settings_mac !== undefined && settings_mac !== cookies_mac) {
+    alert("board change detected...restarting configuration")
+    location.href = "step-2-select.html"
+    return
+  }
+}

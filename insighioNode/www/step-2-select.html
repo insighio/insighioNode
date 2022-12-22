@@ -5,6 +5,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>insigh.io Device</title>
+
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/spectre.min.css" />
 </head>
@@ -18,16 +19,18 @@
       <div class="panel-title text-center">Select desired operation</div>
     </div>
 
-    <div class="panel-nav">
-      <ul class="step">
-        <li class="step-item"><a>Login</a></li>
-        <li class="step-item active"><a>Select Network</a></li>
-        <li class="step-item"><a>Network Params</a></li>
-        <li class="step-item"><a>API Keys</a></li>
-        <li class="step-item"><a>Measurements</a></li>
-        <li class="step-item"><a>Timing</a></li>
-        <li class="step-item"><a>Verify</a></li>
-      </ul>
+    <div class="columns">
+      <div class="panel-nav col-12 hide-sm">
+        <ul class="step">
+          <li class="step-item"><a>Login</a></li>
+          <li class="step-item active"><a>Select Network</a></li>
+          <li class="step-item"><a>Network Params</a></li>
+          <li class="step-item"><a>API Keys</a></li>
+          <li class="step-item"><a>Measurements</a></li>
+          <li class="step-item"><a>Timing</a></li>
+          <li class="step-item"><a>Verify</a></li>
+        </ul>
+      </div>
     </div>
 
     <div class="panel-body">
@@ -38,10 +41,9 @@
       <br />
       <div id="loader" class="loading loading-lg"></div>
       <br />
-      <div class="container">
+      <div class="container grid-lg">
         <div class="columns flex-centered">
-          <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
-            <!-- <div class="column col-8 col-mr-auto img-center"> -->
+          <div class="column col-xl-7 col-md-10 col-sm-12">
             <div class="btn-group btn-group-block img-center">
               <button class="btn" id="button-wifi" disabled onclick="operationSelected('WiFi')">WiFi</button>
               <button class="btn" id="button-cellular" disabled onclick="operationSelected('Cellular')">Cellular</button>

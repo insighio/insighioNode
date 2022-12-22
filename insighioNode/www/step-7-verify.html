@@ -20,16 +20,18 @@
       <div class="panel-title text-center">Verify and continue</div>
     </div>
 
-    <div class="panel-nav">
-      <ul class="step">
-        <li class="step-item"><a>Login</a></li>
-        <li class="step-item"><a>Select Network</a></li>
-        <li class="step-item"><a>Network Params</a></li>
-        <li class="step-item"><a>API Keys</a></li>
-        <li class="step-item"><a>Measurements</a></li>
-        <li class="step-item"><a>Timing</a></li>
-        <li class="step-item active"><a>Verify</a></li>
-      </ul>
+    <div class="columns">
+      <div class="panel-nav col-12 hide-sm">
+        <ul class="step">
+          <li class="step-item"><a>Login</a></li>
+          <li class="step-item"><a>Select Network</a></li>
+          <li class="step-item"><a>Network Params</a></li>
+          <li class="step-item"><a>API Keys</a></li>
+          <li class="step-item"><a>Measurements</a></li>
+          <li class="step-item"><a>Timing</a></li>
+          <li class="step-item active"><a>Verify</a></li>
+        </ul>
+      </div>
     </div>
 
     <div class="panel-body">
@@ -41,7 +43,8 @@
           <i class="icon icon-2x icon-download"></i>
         </div>
         <p class="empty-title h5">Configuration Ready</p>
-        <p class="empty-subtitle">The configuration is ready to be applied. By pressing the <span class="text-bold">Finish</span> button the device will reboot and start operating
+        <p class="empty-subtitle">The configuration is ready to be applied. By pressing the <span class="text-bold">Finish</span> button the device will reboot and start
+          operating
           with the desired settings.</p>
         <div class="empty-action">
           <button class="btn btn-primary" id="back-button" onclick="goBack()">Back</button>

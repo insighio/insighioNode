@@ -19,16 +19,18 @@
       <div class="panel-title text-center">Set measurement frequency</div>
     </div>
 
-    <div class="panel-nav">
-      <ul class="step">
-        <li class="step-item"><a>Login</a></li>
-        <li class="step-item"><a>Select Network</a></li>
-        <li class="step-item"><a>Network Params</a></li>
-        <li class="step-item"><a>API Keys</a></li>
-        <li class="step-item"><a>Measurements</a></li>
-        <li class="step-item active"><a>Timing</a></li>
-        <li class="step-item"><a>Verify</a></li>
-      </ul>
+    <div class="columns">
+      <div class="panel-nav col-12 hide-sm">
+        <ul class="step">
+          <li class="step-item"><a>Login</a></li>
+          <li class="step-item"><a>Select Network</a></li>
+          <li class="step-item"><a>Network Params</a></li>
+          <li class="step-item"><a>API Keys</a></li>
+          <li class="step-item"><a>Measurements</a></li>
+          <li class="step-item active"><a>Timing</a></li>
+          <li class="step-item"><a>Verify</a></li>
+        </ul>
+      </div>
     </div>
 
     <div class="panel-body">
@@ -36,27 +38,26 @@
       <hr />
       <br />
       <div id="loader" class="loading loading-lg"></div>
-      <div class="columns flex-centered">
-        <div class="column col-7">
-          <div class="form-group">
-            <div class="text-center">
-              Timing
-            </div>
-            <br />
-            <ul class="tab tab-block">
-              <li id="tab-periodic" class="tab-item active" onclick="timingChanged(event, 'periodic')">
-                <a class="pointer">Periodic</a>
-              </li>
-              <li id="tab-scheduled" class="tab-item" onclick="timingChanged(event, 'scheduled')">
-                <a class="pointer">Time Scheduled</a>
-              </li>
-            </ul>
-            <div id="periodic" class="tabcontent" style="display: block">
+      <div class="container grid-lg">
+        <div class="columns flex-centered">
+          <div class="column col-xl-7 col-md-10 col-sm-12">
+            <div class="form-group">
+              <div class="text-center">
+                Timing
+              </div>
               <br />
-              <br />
-              <div class="columns flex-centered">
-                <div class="form-group">
-
+              <ul class="tab tab-block">
+                <li id="tab-periodic" class="tab-item active" onclick="timingChanged(event, 'periodic')">
+                  <a class="pointer">Periodic</a>
+                </li>
+                <li id="tab-scheduled" class="tab-item" onclick="timingChanged(event, 'scheduled')">
+                  <a class="pointer">Time Scheduled</a>
+                </li>
+              </ul>
+              <div id="periodic" class="tabcontent" style="display: block">
+                <br />
+                <br />
+                <div class="columns flex-centered">
                   <div class="col-4 col-sm-12">
                     <label class="form-label" for="input-example-cellular">Sleep Period (s)</label>
                   </div>
@@ -65,7 +66,7 @@
                   </div>
                   <br />
                   <br />
-                  <div id="option-always-on-switches" class="column col-12" style="padding-right: 0px; padding-left: 0px">
+                  <div id="option-always-on-switches" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
                   </div>
 
                   <div class="col-4 col-sm-12">
@@ -76,64 +77,64 @@
                   </div>
                 </div>
               </div>
-            </div>
-            <div id="scheduled" class="tabcontent" style="display: none">
-              <br />
-              <br />
-              Run two times in a day, at the timestamps defined below:
-              <br />
-              <br />
-              <div class="columns flex-centered">
-                <div class="col-1 col-sm-12">
-                  <label class="form-label" for="input-scheduled-time-a">A:</label>
+              <div id="scheduled" class="tabcontent" style="display: none">
+                <br />
+                <br />
+                Run two times in a day, at the timestamps defined below:
+                <br />
+                <br />
+                <div class="columns flex-centered">
+                  <div class="col-1 col-sm-12">
+                    <label class="form-label" for="input-scheduled-time-a">A:</label>
+                  </div>
+                  <div class="col-3 col-sm-12">
+                    <input type="time" id="input-scheduled-time-a" name="appt" value="05:30">
+                  </div>
+                  <div class="col-1 col-sm-12">
+                    <label class="form-label" for="input-scheduled-time-b">B:</label>
+                  </div>
+                  <div class="col-3 col-sm-12">
+                    <input type="time" id="input-scheduled-time-b" name="appt" value="21:30">
+                  </div>
+                  <div class="column col-6 col-mr-auto"></div>
                 </div>
-                <div class="col-3 col-sm-12">
-                  <input type="time" id="input-scheduled-time-a" name="appt" value="05:30">
-                </div>
-                <div class="col-1 col-sm-12">
-                  <label class="form-label" for="input-scheduled-time-b">B:</label>
-                </div>
-                <div class="col-3 col-sm-12">
-                  <input type="time" id="input-scheduled-time-b" name="appt" value="21:30">
-                </div>
-                <div class="column col-6 col-mr-auto"></div>
               </div>
-            </div>
-            <div>
-              <br />
-              <hr />
-              <div class="columns flex-centered">
-                <div id="options-batch-upload" class="column col-12">
-                </div>
-                <div id="address-ins-batch-upload" class="col-12" style="display:none">
-                  <br />
-                  <div class="form-group">
-                    <div class="column col-1 col-mr-auto"></div>
-                    <div class="col-3 col-sm-12">
-                      <label class="form-label" for="measurements">Message Buffer Size
-                        <button class="btn btn-link tooltip"
-                          data-tooltip="Defines the number of measurements that&#xa;should be executed before the device&#xa;connects to the network and upload&#xa;Connection period:&#xa;   Sleep Period * Buffer Size">
-                          <i class="icon icon-flag"></i>
-                        </button>
-                      </label>
+              <div>
+                <br />
+                <hr />
+                <div class="columns flex-centered">
+                  <div id="options-batch-upload" class="columns col-12">
+                  </div>
+                  <div id="address-ins-batch-upload" class="col-12" style="display:none">
+                    <br />
+                    <div class="form-group columns">
+                      <div class="col-1 col-mr-auto"></div>
+                      <div class="col-3 col-sm-12">
+                        <label class="form-label" for="measurements">Message Buffer Size
+                          <button class="btn btn-link tooltip"
+                            data-tooltip="Defines the number of measurements that&#xa;should be executed before the device&#xa;connects to the network and upload&#xa;Connection period:&#xa;   Sleep Period * Buffer Size">
+                            <i class="icon icon-flag"></i>
+                          </button>
+                        </label>
+                      </div>
+                      <div class="col-3 col-sm-12">
+                        <input class="form-input constr-field" type="number" id="input-message-buffer-size" />
+                      </div>
+                      <div class="column col-5 col-mr-auto"></div>
                     </div>
-                    <div class="col-3 col-sm-12">
-                      <input class="form-input constr-field" type="number" id="input-message-buffer-size" />
-                    </div>
-                    <div class="column col-5 col-mr-auto"></div>
                   </div>
                 </div>
+                <br />
+                <br />
               </div>
-              <br />
-              <br />
             </div>
+            <div class="column col-12">
+              <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
+              <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+            </div>
+            <br />
+            <br />
           </div>
-          <div class="column col-12">
-            <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
-            <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
-          </div>
-          <br />
-          <br />
         </div>
       </div>
     </div>
@@ -180,6 +181,7 @@
         setElemValue('input-always-on-period', data.always_on_period, 60)
 
         checkboxStatusChanged('ins-batch-upload')
+        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
         showElement('loader', false)
       }).catch((err) => {
         console.log("error completing request", err);

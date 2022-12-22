@@ -20,16 +20,18 @@
       <div class="panel-title text-center">Set active measurements</div>
     </div>
 
-    <div class="panel-nav">
-      <ul class="step">
-        <li class="step-item"><a>Login</a></li>
-        <li class="step-item"><a>Select Network</a></li>
-        <li class="step-item"><a>Network Params</a></li>
-        <li class="step-item"><a>API Keys</a></li>
-        <li class="step-item active"><a>Measurements</a></li>
-        <li class="step-item"><a>Timing</a></li>
-        <li class="step-item"><a>Verify</a></li>
-      </ul>
+    <div class="columns">
+      <div class="panel-nav col-12 hide-sm">
+        <ul class="step">
+          <li class="step-item"><a>Login</a></li>
+          <li class="step-item"><a>Select Network</a></li>
+          <li class="step-item"><a>Network Params</a></li>
+          <li class="step-item"><a>API Keys</a></li>
+          <li class="step-item active"><a>Measurements</a></li>
+          <li class="step-item"><a>Timing</a></li>
+          <li class="step-item"><a>Verify</a></li>
+        </ul>
+      </div>
     </div>
 
     <div class="panel-body">
@@ -70,6 +72,8 @@
       }).then(function (data) {
         document.getElementById('save-button').disabled = false
         document.getElementById('idle-weight-value').innerHTML = data.raw
+
+        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
         showElement('loader', false)
       }).catch((err) => {
         console.log("Booo", err);

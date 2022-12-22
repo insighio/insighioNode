@@ -19,16 +19,18 @@
       <div class="panel-title text-center">Set network connection details</div>
     </div>
 
-    <div class="panel-nav">
-      <ul class="step">
-        <li class="step-item"><a>Login</a></li>
-        <li class="step-item"><a>Select Network</a></li>
-        <li class="step-item active"><a>Network Params</a></li>
-        <li class="step-item"><a>API Keys</a></li>
-        <li class="step-item"><a>Measurements</a></li>
-        <li class="step-item"><a>Timing</a></li>
-        <li class="step-item"><a>Verify</a></li>
-      </ul>
+    <div class="columns">
+      <div class="panel-nav col-12 hide-sm">
+        <ul class="step">
+          <li class="step-item"><a>Login</a></li>
+          <li class="step-item"><a>Select Network</a></li>
+          <li class="step-item active"><a>Network Params</a></li>
+          <li class="step-item"><a>API Keys</a></li>
+          <li class="step-item"><a>Measurements</a></li>
+          <li class="step-item"><a>Timing</a></li>
+          <li class="step-item"><a>Verify</a></li>
+        </ul>
+      </div>
     </div>
 
     <div class="panel-body">
@@ -158,18 +160,13 @@
       fetch("/settings?update_wifi_list=1").then((response) => {
         return response.json();
       }).then(function (data) {
-        console.log("Board mac: ", data.board_mac, ", Cookie mac: ", Cookies.get('board-mac'))
-        if (data.board_mac !== undefined && data.board_mac !== Cookies.get('board-mac')) {
-          alert("board change detected...restarting configuration")
-          location.href = "step-2-select.html"
-          return
-        }
 
         protocol = data.protocol
         setElemValue('input-ssid', data.wifi_ssid)
         setElemValue('input-ssid-pass', data.wifi_pass)
         setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
         populateAvailableNets(data.wifiAvailableNets)
+        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
         showElement('loader', false)
       }).catch((err) => {
         console.log("error completing request", err);

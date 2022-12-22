@@ -20,16 +20,18 @@
       <div class="panel-title text-center">Set active measurements</div>
     </div>
 
-    <div class="panel-nav">
-      <ul class="step">
-        <li class="step-item"><a>Login</a></li>
-        <li class="step-item"><a>Select Network</a></li>
-        <li class="step-item"><a>Network Params</a></li>
-        <li class="step-item"><a>API Keys</a></li>
-        <li class="step-item active"><a>Measurements</a></li>
-        <li class="step-item"><a>Timing</a></li>
-        <li class="step-item"><a>Verify</a></li>
-      </ul>
+    <div class="columns">
+      <div class="panel-nav col-12 hide-sm">
+        <ul class="step">
+          <li class="step-item"><a>Login</a></li>
+          <li class="step-item"><a>Select Network</a></li>
+          <li class="step-item"><a>Network Params</a></li>
+          <li class="step-item"><a>API Keys</a></li>
+          <li class="step-item active"><a>Measurements</a></li>
+          <li class="step-item"><a>Timing</a></li>
+          <li class="step-item"><a>Verify</a></li>
+        </ul>
+      </div>
     </div>
 
     <div class="panel-body">
@@ -87,6 +89,8 @@
           document.getElementById('measured-ref-weight-value').innerHTML = data.raw
           document.getElementById('scale-value').innerHTML = scale
           document.getElementById('scale-weight-value').innerHTML = referenceExpectedWeight
+
+          detectBoardChange(data.board_mac, Cookies.get('board-mac'))
 
           showElement('loader1', false)
           showElement('loader2', false)
