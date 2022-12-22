@@ -19,7 +19,7 @@ import device_info
 device_info.bq_charger_exec(device_info.bq_charger_setup)
 
 device_info.initialize_led()
-device_info.set_led_color(0x252525)
+device_info.blink_led(0x252525)
 
 demo_config_exists = False
 try:

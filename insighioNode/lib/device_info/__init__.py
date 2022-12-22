@@ -211,9 +211,9 @@ def set_led_color(color):
 
 
 def blink_led(color):
-    device_info.set_led_color(color)
+    set_led_color(color)
     utime.sleep_ms(100)
-    device_info.set_led_color('black')
+    set_led_color(0x000000)
 
 
 def wdt_reset():
