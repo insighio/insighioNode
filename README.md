@@ -8,8 +8,39 @@ The project is based on MicroPython and tested on Pycom and ESP32 devices.
 
 A complete description of all the supported APIs along with tutorials can be found in [insigh.io docs](https://docs.insigh.io).
 
-# How to use
+# Install
 
+## Release binaries
+
+Download the [latest release binary](https://github.com/insighio/insighioNode/releases) and extract localy. 
+The archive can be found in the release assets and its file name is:
+ * insighio-__\<release-version\>__-__\<commit-hash\>__-__\<board-version\>__.tar.gz
+ * example: _insighio-v2.2.0-f49e354-esp32s3.tar.gz_
+ 
+The archive includes the required binaries including a flash script. 
+
+The flash script uses [esptool](https://github.com/espressif/esptool) to download the binaries on the board, so before proceeding make sure esptool is installed.
+
+```bash
+# 1) power on device into download mode
+#    hold "boot" button and click "reset" button. Ready to download the binary
+
+# 2) donwload binaries
+
+bash flash_usb0.sh
+#   or
+# bash flash.sh /dev/ttyUSB0
+
+# 3) click "reset" button once and wait till the initialization finishes. 
+#
+# 4) When ready the device will light up the RGB led. 
+#       - If it is the first boot, it will directly enter configuration mode. 
+#       - If the device is already configured, it will continue the normal execution circle.
+
+```
+For extended configuration details, advice [insigh.io documentation](https://docs.insigh.io/gettingstarted/configuration/)
+
+## From source code
 First thing first, clone repository and get all required submodules:
 
 ```bash
@@ -19,13 +50,13 @@ cd insighioNode
 git submodule update --init --recursive
 ```
 
-## Code upload via [Pymakr](https://pycom.io/products/supported-networks/pymakr/)
+### Code upload via [Pymakr](https://pycom.io/products/supported-networks/pymakr/)
 
 1. Install Pymakr addon for VSCode or Atom
 1. Open project folder `insighioNode/insighioNode`
 1. Upload the code
 
-## Code upload via [ampy](https://github.com/scientifichackers/ampy)
+### Code upload via [ampy](https://github.com/scientifichackers/ampy)
 
 [ampy](https://github.com/scientifichackers/ampy) is a command line tool to operate on micropython devices. To upload the code follow the commands:
 
@@ -45,7 +76,7 @@ ampy -p /dev/ttyUSB0 -b 115200 put web_server.py $ROOT_PATH/web_server.py
 ampy -p /dev/ttyUSB0 -b 115200 put www $ROOT_PATH/www
 ```
 
-## Configure
+# Configure
 
 The configuration of the device operation, security keys, network connection etc. can be done through the implemented [Web UI configuration wizard](https://docs.insigh.io/gettingstarted/configuration/).
 
