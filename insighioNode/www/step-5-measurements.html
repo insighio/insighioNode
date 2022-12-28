@@ -91,10 +91,10 @@
                 <!-- board selector -->
                 <div class="col-12">
                   <ul class="tab tab-block">
-                    <li id="tab-i2c-scale-board-options" class="tab-item active" onclick="boardChanged(event, 'i2c-scale-board-options')">
+                    <li id="tab-i2c-scale-board-options" class="tab-item" onclick="boardChanged(event, 'i2c-scale-board-options')">
                       <a class="pointer">Cellular Digital/Scale</a>
                     </li>
-                    <li id="tab-esp32s3-bg600-i2c-analog-options" class="tab-item" onclick="boardChanged(event, 'esp32s3-bg600-i2c-analog-options')">
+                    <li id="tab-esp32s3-bg600-i2c-analog-options" class="tab-item active" onclick="boardChanged(event, 'esp32s3-bg600-i2c-analog-options')">
                       <a class="pointer">Cellular + Shield I²C/Analog</a>
                     </li>
                     <li id="tab-ins-esp-gen-sdi12-board-options" class="tab-item" onclick="boardChanged(event, 'ins-esp-gen-sdi12-board-options')">
@@ -104,8 +104,9 @@
                 </div>
                 <br />
                 <br />
-                <div id="i2c-scale-board-options" class="tabcontent columns col-12" style="display: block; margin-left:5px; margin-right:5px">
+                <div id="i2c-scale-board-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
                   <br />
+                  <fieldset disabled>
                   <div class="form-group columns">
                     <br />
                     <br />
@@ -148,8 +149,9 @@
                     <br />
                     <br />
                   </div>
+                </fieldset>
                 </div>
-                <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
+                <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent columns col-12" style="display: block; margin-left:5px; margin-right:5px">
                   <br />
                   <div class="form-group columns">
                     <br />
