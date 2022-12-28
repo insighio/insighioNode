@@ -38,7 +38,7 @@ def apply_configuration(keyValuePairDictionary):
     elif operation == 'lora':
         contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/lora_config_templ.py')
     elif operation == 'satellite':
-        contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/statellite_config_templ.py')
+        contents += '\n' + utils.readFromFile(rootFolder + 'apps/demo_console/templ/satellite_config_templ.py')
 
     for param in keyValuePairDictionary:
         contents = contents.replace('<' + param + '>', keyValuePairDictionary[param])
