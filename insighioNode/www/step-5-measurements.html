@@ -45,10 +45,10 @@
                 <br />
                 <div id="board-default-options" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
                 </div>
-                <div class="col-4 col-lg-6 col-sm-10">
+                <div class="col-4 col-lg-6">
                   <label class="form-label" for="measurements">Temperature Unit</label>
                 </div>
-                <div class="col-8 col-sm-12">
+                <div class="col-8 col-lg-6">
                   <select class="form-select" id="input-temp-unit" style="padding-right: 0px; padding-left: 0px">
                     <option value=true>Celsius (°C)</option>
                     <option value=false>Fahrenheit (°F)</option>
@@ -104,7 +104,7 @@
                 </div>
                 <br />
                 <br />
-                <div id="i2c-scale-board-options" class="tabcontent columns col-12" style="display: block">
+                <div id="i2c-scale-board-options" class="tabcontent columns col-12" style="display: block; margin-left:5px; margin-right:5px">
                   <br />
                   <div class="form-group columns">
                     <br />
@@ -149,7 +149,7 @@
                     <br />
                   </div>
                 </div>
-                <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent columns col-12" style="display: none">
+                <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
                   <br />
                   <div class="form-group columns">
                     <br />
@@ -247,7 +247,7 @@
                   </div>
                 </div>
                 <!-- sdi board related settings -->
-                <div id="ins-esp-gen-sdi12-board-options" class="tabcontent columns col-12" style="display: none">
+                <div id="ins-esp-gen-sdi12-board-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
                   <br />
                   <div class="form-group columns">
                     <br />
@@ -265,6 +265,7 @@
                       </tbody>
                     </table>
                     <div id="options-sdi12"></div>
+                    <br/>
                     <div class="col-4 col-lg-6 col-sm-6">
                       <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
                     </div>
@@ -303,35 +304,37 @@
                 <br />
                 <div id="keyvalue" class="form-group col-12">
                   <br />
-                  <div class="cardcontainer">
-                    <div class="card">
-                      <div class="card-body">
-                        <div class="columns flex-centered">
-                          <div class="col-1 col-sm-6" style="text-align: center;">
-                            <label class="form-label" for="measurements">key
-                            </label>
-                          </div>
-                          <div class="col-4 col-sm-6" style="text-align: center;">
-                            <input class="form-input constr-field" id="key0" placeholder="field name" />
-                          </div>
-                          <div class="column col-1 col-mr-auto"></div>
-                          <div class="col-1 col-sm-6" style="text-align: center;">
-                            <label class="form-label" for="measurements">value
-                            </label>
-                          </div>
-                          <div class="col-4 col-sm-6" style="text-align: center;">
-                            <input class="form-input constr-field" id="value0" placeholder="field value" />
-                          </div>
-                          <div class="col-1">
-                            <div class="p-centered" style="text-align: center;">
-                              <button class="btn btn-action" onclick="addKeyValue()"><i class="icon icon-plus"></i></button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <br />
-                  </div>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>key</th>
+                        <th>value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="active">
+                        <td><input type="text" id="input-key-name-0" placeholder="key name" style="width: 100%"></td>
+                        <td><input type="text" id="input-key-value-0" placeholder="key value" style="width: 100%"></td>
+                      </tr>
+                      <tr>
+                        <td><input type="text" id="input-key-name-1" placeholder="key name" style="width: 100%"></td>
+                        <td><input type="text" id="input-key-value-1" placeholder="key value" style="width: 100%"></td>
+                      </tr>
+                      <tr class="active">
+                        <td><input type="text" id="input-key-name-2" placeholder="key name" style="width: 100%"></td>
+                        <td><input type="text" id="input-key-value-2" placeholder="key value" style="width: 100%"></td>
+                      </tr>
+                      <tr>
+                        <td><input type="text" id="input-key-name-3" placeholder="key name" style="width: 100%"></td>
+                        <td><input type="text" id="input-key-value-3" placeholder="key value" style="width: 100%"></td>
+                      </tr>
+                      <tr class="active">
+                        <td><input type="text" id="input-key-name-4" placeholder="key name" style="width: 100%"></td>
+                        <td><input type="text" id="input-key-value-4" placeholder="key value" style="width: 100%"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <br />
                 </div>
               </div>
               <div class="column col-12">
@@ -435,7 +438,7 @@
         setElemValueBool('input-gps-enable', gps, true)
         setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
 
-        checkboxStatusChanged('gps')
+        //checkboxStatusChanged('gps')
         var boardType = data.selected_board
         if (boardType && tabNamePerBoard[boardType])
           boardChanged(undefined, tabNamePerBoard[boardType])
@@ -489,20 +492,7 @@
 
         //setElemValueBool('input-store-meas-if-failed-conn', data.store_meas_if_failed_conn, false)
 
-        var index = 0
-        var keyValueDict = data.meas_keyvalue
-        // bypass issue of html encoding that is enforced by an unknown module
-        try {
-          if (keyValueDict !== 'undefined') {
-            keyValueDict = JSON.parse(keyValueDict)
-            for (i in keyValueDict) {
-              document.getElementById('key' + index).value = i
-              document.getElementById('value' + index).value = keyValueDict[i]
-              addKeyValue()
-              index += 1
-            }
-          }
-        } catch (e) { }
+        fillKeyValuePairsFromDictionary(data.meas_keyvalue)
 
         detectBoardChange(data.board_mac, Cookies.get('board-mac'))
         showElement('loader', false)
@@ -670,57 +660,34 @@
       showElement(selectObj.id + "-trans-div", selectObj.value === "analog")
     }
 
-    let keyValuePairCnt = 1
-
-    function addKeyValue() {
-      var elements = document.getElementsByClassName('cardcontainer');
-      var requiredElement = elements[0];
-      var parent = document.getElementById("keyvalue");
-
-      NodeList.prototype.forEach = Array.prototype.forEach;
-      var children = requiredElement.childNodes;
-      children.forEach(function (item) {
-        var cln = item.cloneNode(true);
-        if (item.tagName && cln.tagName.toLowerCase() === "div") {
-          clearAndMarkAllInputFields(cln, keyValuePairCnt++)
-        }
-
-        parent.appendChild(cln);
-      });
-    }
-
-    function clearAndMarkAllInputFields(parent, index) {
-      var children = parent.childNodes;
-      children.forEach(function (item) {
-        if (item.tagName && item.tagName.toLowerCase() === "input") {
-          item.value = ''
-          if (item.id === "key0") item.id = "key" + index
-          else if (item.id === "value0") item.id = "value" + index
-        }
-        else clearAndMarkAllInputFields(item, index)
-      })
-    }
-
     function getKeyValuePairs() {
-      let cnt = 0
       let returnObj = {}
-      while (1) {
-        var elemKey = document.getElementById("key" + cnt);
-        var elemValue = document.getElementById("value" + cnt);
+      for(var i=0; i<5; i++) {
+        var elemKey = document.getElementById("input-key-name-" + i);
+        var elemValue = document.getElementById("input-key-value-" + i);
 
-        if (!elemKey && !elemValue)
-          break
-
-        if (elemKey.value !== '' && elemValue.value !== '')
+        if (elemKey && elemValue && elemKey.value !== '' && elemValue.value !== '')
           returnObj[elemKey.value] = elemValue.value
-        cnt++
       }
 
       return returnObj
     }
 
-    function checkboxGPSStatusChanged() {
-      checkboxStatusChanged('gps')
+    function fillKeyValuePairsFromDictionary(dictionaryString) {
+      try {
+        if (dictionaryString !== 'undefined') {
+          var i = 0
+          keyValueDict = JSON.parse(dictionaryString)
+          console.log("keyValueDict: ", keyValueDict )
+          for (keyName in keyValueDict) {
+            if(i >= 5 )
+              break
+            document.getElementById('input-key-name-' + i).value = keyName
+            document.getElementById('input-key-value-' + i).value = keyValueDict[keyName]
+            i += 1
+          }
+        }
+      } catch (e) { console.log("error in fillKeyValuePairsFromDictionary: ", e)}
     }
 
     function generateSdi12Options() {

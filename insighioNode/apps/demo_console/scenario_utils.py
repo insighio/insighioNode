@@ -114,6 +114,9 @@ def get_measurements(cfg):
         elif shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
 
+        if hasattr(cfg, '_MEAS_KEYVALUE') and cfg._MEAS_KEYVALUE:
+            add_explicit_key_values(measurements)
+
     except Exception as e:
         logging.exception(e, "unable to complete sensor measurements")
 
@@ -174,9 +177,6 @@ def default_board_measurements(measurements):
 
     if hasattr(cfg, '_MEAS_SCALE_ENABLED') and cfg._MEAS_SCALE_ENABLED:
         read_scale(measurements)
-
-    if hasattr(cfg, '_MEAS_KEYVALUE') and cfg._MEAS_KEYVALUE:
-        add_explicit_key_values(measurements)
 
 
 def add_explicit_key_values(measurements):
