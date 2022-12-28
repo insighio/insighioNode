@@ -107,7 +107,7 @@ def eraseKeyValue(key):
     try:
         key_value_storage.erase_key(key)
     except Exception as e:
-        logging.exception(e, "Error erasing key [{}]".format(key))
+        logging.debug("Key [{}] not set".format(key))
 
 
 def clearCachedStates():
