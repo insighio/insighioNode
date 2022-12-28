@@ -68,10 +68,17 @@
             document.getElementById('button-satellite').disabled = true
           }
 
+          function clearCookies(){
+            for (let key in Cookies.get()) {
+              Cookies.remove(key)
+            }
+          }
+
           function initializeValues() {
             fetch("/devid").then((response) => {
               return response.json();
             }).then(function (data) {
+              clearCookies()
               mac = data.id
               enableButtonsLocal()
               showElement('loader', false)
