@@ -38,7 +38,7 @@ bash flash_usb0.sh
 #       - If the device is already configured, it will continue the normal execution circle.
 
 ```
-For extended configuration details, advice [insigh.io documentation](https://docs.insigh.io/gettingstarted/configuration/)
+For extended instructions, see [documentation](https://docs.insigh.io/firmwareapi/flashing/).
 
 ## From source code
 First thing first, clone repository and get all required submodules:
