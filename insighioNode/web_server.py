@@ -63,8 +63,13 @@ class Settings():
         if data.get("update_wifi_list") == '1':
             populateAvailableNets()
             insighioSettings["wifiAvailableNets"] = available_nets
+        else:
+            insighioSettings["wifiAvailableNets"] = []
 
-        return insighioSettings, 200
+        import ujson
+        res = ujson.dumps(insighioSettings, separators=(',', ':'))
+        res_str = res.encode('utf-8')
+        return res_str, 200
 
 class RawWeightIdle():
     def get(self, data):
@@ -247,6 +252,9 @@ def start(timeoutMs=120000):
         logging.exception(e, "web server exception")
     finally:
         app.loop.close()
+
+    from sensors import hx711
+    hx711.deinit_instance()
 
     device_info.set_led_color('black')
 

@@ -696,7 +696,7 @@
       var parent = document.getElementById("option-sdi12-table-rows");
 
       for (let i = 0; i < 10; i++) {
-        sdi12Options["" + i] = i
+        sdi12Options[i.toString()] = i
       }
 
       for (let i = 1; i <= 10; i++) {
@@ -742,7 +742,7 @@
 
         generateOptions(selectElem_address.id, sdi12Options)
         generateOptions(selectElem_location.id, sdi12LocationOptions)
-        setElemValue(selectElem_address.id, "" + (i - 1), "" + 0)
+        setElemValue(selectElem_address.id, (i - 1).toString(), "0")
       }
     }
 

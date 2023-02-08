@@ -133,8 +133,9 @@
         rssiVal.classList.add('pointer');
         rssiVal.appendChild(document.createTextNode(network.rssi));
 
-        var rssiSsid = document.createElement("td")
-        rssiSsid.classList.add('pointer')
+        var rssiValText = document.createElement("td")
+        rssiValText.classList.add('pointer')
+        rssiValText.id = "rssiValText-"+Math.floor(Math.random()*1000)
 
         var colorName = network.rssi >= -67 ? "green" : network.rssi < -67 && network.rssi >= -89 ? "#E2B200" : "#A2021A"
         var rssidText = network.rssi >= -50 ? "very good" : network.rssi < -50 && network.rssi >= -67 ? "good" : network.rssi < -67 && network.rssi >= -89 ? "fair" : "bad"
@@ -142,11 +143,11 @@
         var signal = document.createElement("span")
         signal.style.color = colorName
         signal.appendChild(document.createTextNode(rssidText));
-        rssiSsid.appendChild(signal);
+        rssiValText.appendChild(signal);
 
         row.appendChild(colSsid)
         row.appendChild(rssiVal)
-        row.appendChild(rssiSsid)
+        row.appendChild(rssiValText)
 
         parent.appendChild(row)
       });
@@ -193,10 +194,8 @@
       clearCookies();
       //wifi
       Cookies.set('network', "wifi")
-      Cookies.set('wifi-ssid', document.getElementById('input-ssid').value.trim())
-      Cookies.set('wifi-pass', document.getElementById('input-ssid-pass').value)
-
-
+      Cookies.set('wifi-ssid', encodeURIComponent(document.getElementById('input-ssid').value.trim()))
+      Cookies.set('wifi-pass', encodeURIComponent(document.getElementById('input-ssid-pass').value.trim()))
 
       setProtocolCookie();
 
@@ -210,7 +209,11 @@
       if (e.stopPropagation) e.stopPropagation();  // Other Broswers
       console.log("event: ", event)
       console.log("parent: ", event.srcElement.parentElement)
-      document.getElementById('input-ssid').value = event.srcElement.parentElement.children[0].textContent
+      let selectedParentElement = event.srcElement.parentElement
+      if(event.srcElement.parentElement && event.srcElement.parentElement.id && event.srcElement.parentElement.id.startsWith("rssiValText"))
+        selectedParentElement = selectedParentElement.parentElement
+
+      document.getElementById('input-ssid').value = selectedParentElement.children[0].textContent
     }
 
     function validateMyForm() {

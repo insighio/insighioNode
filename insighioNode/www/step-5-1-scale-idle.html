@@ -34,10 +34,8 @@
 
     <div class="panel-body">
       <br />
+      <div id="loader" class="loading loading-lg"></div>
       <div class="empty">
-        <!-- <div class="empty-icon">
-                <i class="icon icon-2x icon-minus"></i>
-              </div> -->
         <p class="empty-title h5">Weight Scale Calibration</p>
         <p class="empty-subtitle">Ready for weight scale calibration. Remove any weight from the scale and hit <span class="text-bold">Measure</span> button to save the idle state
           of the scale.</p>
@@ -51,9 +49,27 @@
   <script src="js/js.cookie.min.js"></script>
   <script src="js/utils.js"></script>
   <script>
+  function initializeValues() {
+        disableNavigationButtons()
+
+        fetch("/settings").then((response) => {
+          return response.json();
+        }).then(function(data) {
+          detectBoardChange(data.board_mac, Cookies.get('board-mac'))
+          enableNavigationButtons()
+          showElement('loader', false)
+        }).catch((err) => {
+          console.log("error completing request", err);
+          enableNavigationButtons()
+          showElement('loader', false)
+        });
+      }
+
     function saveIdleWeight() {
       location.href = "step-5-2-scale-reference.html"
     }
+
+    initializeValues()
   </script>
 </body>
 
