@@ -6,7 +6,7 @@ start_time = utime.ticks_ms()
 import logging
 import machine
 import device_info
-from apps.demo_console import scenario_utils
+from . import scenario_utils
 import gc
 import utils
 from math import floor
@@ -182,8 +182,8 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
     elif cfg.network == "satellite":
         from apps.demo_console import satellite as network
 
-        network.init(cfg)
-        logging.debug("Network modules loaded")
+    network.init(cfg)
+    logging.debug("Network modules loaded")
 
     if cfg.network == "cellular":
         network.prepareForConnectAndUpload()

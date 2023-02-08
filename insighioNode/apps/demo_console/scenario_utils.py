@@ -109,7 +109,7 @@ def get_measurements(cfg):
         shield_name = get_config("_SHIELD_NAME")
         board_name = get_config("_BOARD_TYPE")
         if (shield_name and shield_name == get_config("_CONST_SHIELD_ADVIND")) or (board_name and board_name == get_config("_CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12")):
-            from apps.demo_console import scenario_sdi12_utils
+            from . import scenario_sdi12_utils
             scenario_sdi12_utils.sdi12_board_measurements(measurements)
         elif shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
