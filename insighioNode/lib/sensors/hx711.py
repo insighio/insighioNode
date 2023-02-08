@@ -4,6 +4,8 @@ import sensors
 from external.hx711.hx711_spi import HX711
 from machine import Pin, SPI
 
+sensor = None
+
 class ScaleSensor:
     def __init__(self, data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=None):
         self.data_pin = data_pin
@@ -14,8 +16,10 @@ class ScaleSensor:
         self.vcc_pin = vcc_pin
         self.hx = None
         self.spi = None
+        self.is_busy = False
 
     def init(self):
+        self.is_busy = True
         try:
             sensors.set_sensor_power_on(self.vcc_pin)
 
@@ -36,16 +40,24 @@ class ScaleSensor:
             else:
                 self.hx.set_offset(0.0)
                 self.hx.set_scale(1)
+
             logging.debug("scale offset: {}, scale: {}".format(self.hx.OFFSET, self.hx.SCALE))
         except Exception as e:
             logging.exception(e, "failed to initialize scale")
+
+            self.is_busy = False
             return False
+
+        self.is_busy = False
         return True
 
     def deinit(self):
+        self.is_busy = False
         if self.spi is not None:
             self.spi.deinit()
             self.spi = None
+
+        self.hx = None
         sensors.set_sensor_power_off(self.vcc_pin)
 
     def set_offset(self, offset):
@@ -78,10 +90,19 @@ class ScaleSensor:
             logging.debug("get_reading_raw: self.hx is None")
             return 0
 
+        if self.is_busy:
+            logging.debug("HX711: ignoring call as there is an other request pending")
+            return -1
+
+        self.is_busy = True
+
         try:
-            return self.hx.read_average(times)
+            res = self.hx.read_average(times)
+            self.is_busy = False
+            return res
         except Exception as e:
             logging.exception(e, "get_reading_raw: exception reading average: ")
+            self.is_busy = False
             return -1
 
     def convert_reading_to_weight(self, weight_raw):
@@ -130,11 +151,16 @@ class ScaleSensor:
 
 
 def  get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=None, get_raw=False):
-    sensor = ScaleSensor(data_pin, clock_pin, spi_pin, offset, scale, vcc_pin)
+    global sensor
 
-    if not sensor.init():
-        logging.error("Error initializing scale sensor")
-        return -1
+    if sensor is None:
+        sensor = ScaleSensor(data_pin, clock_pin, spi_pin, offset, scale, vcc_pin)
+
+        if not sensor.init():
+            logging.error("Error initializing scale sensor")
+            sensor = None
+            return -1
+
     raw = sensor.get_reading_raw(10)
 
     if get_raw:
@@ -142,21 +168,28 @@ def  get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=
     else:
         weight = sensor.convert_reading_to_weight(raw)
 
-    sensor.deinit()
-
     logging.debug("weight: {}".format(weight))
 
     return weight
 
 def get_reading_raw_idle_value(data_pin, clock_pin, spi_pin, vcc_pin=None):
-    sensor = ScaleSensor(data_pin, clock_pin, spi_pin, None, None, vcc_pin)
+    global sensor
 
-    if not sensor.init():
-        logging.error("Error initializing scale sensor")
-        return -1
+    if sensor is None:
+        sensor = ScaleSensor(data_pin, clock_pin, spi_pin, None, None, vcc_pin)
+
+        if not sensor.init():
+            logging.error("Error initializing scale sensor")
+            sensor = None
+            return -1
 
     raw_idle = sensor._get_reading_raw_idle_value()
 
-    sensor.deinit()
-
     return raw_idle
+
+def deinit_instance():
+    global sensor
+
+    if sensor is not None:
+        sensor.deinit()
+        sensor = None
