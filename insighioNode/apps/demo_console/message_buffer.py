@@ -12,6 +12,11 @@ import _thread
 storage_file_name = "measurements.log"
 MAX_NUMBER_OF_FORCED_MESSAGES=const(1000)
 
+def get_config(key):
+    return getattr(cfg, key) if hasattr(cfg, key) else None
+
+message_buffer_size = get_config("_BATCH_UPLOAD_MESSAGE_BUFFER")
+
 mutex = _thread.allocate_lock()
 
 def buffered_measurements_count():
@@ -32,17 +37,19 @@ def timestamp_measurements(measurements):
         measurements["dt"] = {"value": epoch}   # time offset 1970 -> 2000
 
 
-def store_measurement(measurements):
+def store_measurement(measurements, force_store=False):
     global mutex
     # +1 is added to count the current measurement that has not been stored to the file
     number_of_measurements = utils.countFileLines(storage_file_name) + 1
     logging.info("Message #" + str(number_of_measurements))
 
-    data = json.dumps(measurements) + "\n"
-    with mutex:
-        utils.appendToFile(storage_file_name, data)
-        logging.debug("Measurement stored: " + str(measurements))
-        return True
+    if message_buffer_size and number_of_measurements < message_buffer_size or (force_store and number_of_measurements < MAX_NUMBER_OF_FORCED_MESSAGES):
+        data = json.dumps(measurements) + "\n"
+        with mutex:
+            utils.appendToFile(storage_file_name, data)
+            logging.debug("Measurement stored: " + str(measurements))
+            return True
+    return False
 
 
 def parse_stored_measurements_and_upload(network):
