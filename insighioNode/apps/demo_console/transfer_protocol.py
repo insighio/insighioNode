@@ -141,7 +141,7 @@ class TransferProtocolMQTT(TransferProtocol):
             logging.info("TransferProtocol not connected")
             return False
 
-        logging.info("About to send: " + message)
+        logging.debug("About to send: " + message)
         for i in range(0, 3):
             with locks.network_transmit_mutex:
                 message_publish_ok = self.client.sendMessage(message, channel, False, self.require_message_delivery_ack)
@@ -156,7 +156,7 @@ class TransferProtocolMQTT(TransferProtocol):
             logging.info("TransferProtocol not connected")
             return False
 
-        logging.info("About to send control message")
+        logging.debug("About to send control message")
         with locks.network_transmit_mutex:
             return self.client.sendControlMessage(message, subtopic)
 
@@ -207,7 +207,7 @@ class TransferProtocolCoAP(TransferProtocol):
             logging.info("TransferProtocol not connected")
             return False
 
-        logging.info("About to send: " + message)
+        logging.debug("About to send: " + message)
         self.client.postMessage(message)
         logging.info("Done.")
         return True
