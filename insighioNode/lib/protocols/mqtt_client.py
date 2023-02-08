@@ -23,10 +23,10 @@ class MQTTClientCustom:
         self.mutex = _thread.allocate_lock()
 
     def prepareChannelNames(self, mqtt_config):
-        controlChannel = "channels/" + mqtt_config.control_channel_id + "/messages"
-        self.controlChannelGeneric = controlChannel + "/" + mqtt_config.thing_id
-        self.otaChannel = controlChannel + "/" + mqtt_config.thing_id + "/ota"
-        self.messageChannel = "channels/" + mqtt_config.message_channel_id + "/messages/" + mqtt_config.thing_id
+        controlChannel = "channels/" + mqtt_config.control_channel_id + "/messages" if mqtt_config.control_channel_id else ""
+        self.controlChannelGeneric = controlChannel + "/" + mqtt_config.thing_id if mqtt_config.control_channel_id and mqtt_config.thing_id else ""
+        self.otaChannel = controlChannel + "/" + mqtt_config.thing_id + "/ota" if mqtt_config.control_channel_id and mqtt_config.thing_id else ""
+        self.messageChannel = "channels/" + mqtt_config.message_channel_id + "/messages/" + mqtt_config.thing_id  if mqtt_config.message_channel_id and mqtt_config.thing_id else ""
 
         logging.debug("Selected channels:")
         logging.debug(" ota channel: " + self.otaChannel)
