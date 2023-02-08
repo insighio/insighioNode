@@ -40,6 +40,11 @@ class TransferProtocolModemAT(TransferProtocol):
         super().__init__(cfg, modem_instance)
         self.modem_instance = modem_instance
         self.modem_based = (modem_instance is not None)
+        self.require_message_delivery_ack = get_config(self.protocol_config, "REQ_MESG_DEL_ACK")
+        if self.require_message_delivery_ack is None:
+            self.require_message_delivery_ack = True # enable if configuration is missing
+
+        logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
 
     def connect(self):
         if self.is_connected():
@@ -65,7 +70,7 @@ class TransferProtocolModemAT(TransferProtocol):
             return False
 
         topic = 'channels/{}/messages/{}'.format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
-        return self.modem_instance.mqtt_publish(topic, message)
+        return self.modem_instance.mqtt_publish(topic, message, 3, False, self.require_message_delivery_ack)
 
     def send_control_packet(self, message, subtopic):
         if not self.connected:
@@ -97,6 +102,10 @@ class TransferProtocolMQTT(TransferProtocol):
         self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
         self.enable_last_will(self.protocol_config)
         self.require_message_delivery_ack = get_config(self.protocol_config, "REQ_MESG_DEL_ACK")
+        if self.require_message_delivery_ack is None:
+            self.require_message_delivery_ack = True # enable if configuration is missing
+
+        logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
 
     def connect(self):
         if self.connected:

@@ -162,13 +162,13 @@ class ModemBG600(modem_base.Modem):
             return False
 
         #setup keepalive
-        self.send_at_cmd('AT+QMTCFG="keepalive",0,' + str(keepalive))
+        self.send_at_cmd('AT+QMTCFG="keepalive",1,' + str(keepalive))
 
         max_retries = 3
         retry = 0
         while retry < max_retries:
             retry += 1
-            (mqtt_ready, lines) = self.send_at_cmd('AT+QMTOPEN=0,"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s+0,\d")
+            (mqtt_ready, lines) = self.send_at_cmd('AT+QMTOPEN=1,"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s+1,\d")
             if mqtt_ready:
                 # if MQTT already connected
                 if len(lines) > 0 and lines[-1].endswith ("0,2"):
@@ -180,7 +180,7 @@ class ModemBG600(modem_base.Modem):
             retry = 0
             while retry < max_retries:
                 retry += 1
-                (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN=0,"{}","{}","{}"'.format(username, username, password), 15000, "\\+QMTCONN:\\s+0,0,0")
+                (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN=1,"{}","{}","{}"'.format(username, username, password), 15000, "\\+QMTCONN:\\s+1,0,0")
                 if mqtt_connected:
                     break
                 utime.sleep_ms(1000)
@@ -190,21 +190,22 @@ class ModemBG600(modem_base.Modem):
         return False
 
     def mqtt_is_connected(self):
-         (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN?', 2000, r"\+QMTOPEN:\s+0.*")
-         (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN?', 2000, r"\+QMTCONN:\s+0.*")
+         (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN?', 2000, r"\+QMTOPEN:\s+1.*")
+         (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN?', 2000, r"\+QMTCONN:\s+1.*")
          return mqtt_ready and mqtt_connected
 
-    def mqtt_publish(self, topic, message, num_of_retries=3, retain=False):
+    def mqtt_publish(self, topic, message, num_of_retries=3, retain=False, qos=1):
         mqtt_send_ready = False
         mqtt_send_ok = False
 
         message_sent = False
         general_retry_num = 0
         import random
-        message_id = int(random.random() * 65530) + 1
+        logging.debug("mqtt_publish: qos: {}".format(qos))
+        message_id = (int(random.random() * 65530) + 1) if qos else 0
         while not message_sent and general_retry_num < num_of_retries:
             for i in range(0, num_of_retries):
-                (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=0,{},1,{},"{}"'.format(message_id, "1" if retain else "0", topic), 15000, '>.*')
+                (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=1,{},{},{},"{}"'.format(message_id , 1 if qos else 0, 1 if retain else 0, topic), 15000, '>.*')
                 if mqtt_send_ready:
                     break
                 logging.error("Mqtt not ready to send")
@@ -215,7 +216,7 @@ class ModemBG600(modem_base.Modem):
                     (mqtt_send_ok, lines) = self.send_at_cmd(message + '\x1a', 30000, r"\+QMTPUB:\s*\d+,\d+,[012]")
 
                     for line in lines:
-                        if "0,{},0".format(message_id) in line or "0,{},1".format(message_id) in line:
+                        if "1,{},0".format(message_id) in line or "1,{},1".format(message_id) in line:
                             message_sent = True
 
                     if mqtt_send_ok :
@@ -235,9 +236,9 @@ class ModemBG600(modem_base.Modem):
         reg = r"\+QMTRECV:\s*0,"
         # subscribe and receive message if any
         message_id = int(random.random() * 65530) + 1
-        (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=0,{},"{}",1'.format(message_id, topic), timeout_ms, reg)
+        (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=1,{},"{}",1'.format(message_id, topic), timeout_ms, reg)
         # unsubscribe
-        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=0,{},"{}"'.format(message_id, topic), 30000, r"\+QMTUNS:\s*0,")
+        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=1,{},"{}"'.format(message_id, topic), 30000, r"\+QMTUNS:\s*1,")
 
         selected_line = None
         for line in lines:
@@ -289,8 +290,8 @@ class ModemBG600(modem_base.Modem):
         return res
 
     def mqtt_disconnect(self):
-        (statusMqttDisconnect, _) = self.send_at_cmd("AT+QMTDISC=0", 20000, r"\+QMTDISC:\s+0.*")
-        (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE=0", 20000, r"\+QMTCLOSE:\s+0.*")
+        (statusMqttDisconnect, _) = self.send_at_cmd("AT+QMTDISC=1", 20000, r"\+QMTDISC:\s+0.*")
+        (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE=1", 20000, r"\+QMTCLOSE:\s+0.*")
 
         return statusMqttDisconnect and statusNetworkClose
 
