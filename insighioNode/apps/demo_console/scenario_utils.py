@@ -20,7 +20,7 @@ def get_config(key):
 
 
 def device_init():
-    if device_info.get_hw_module_verison() != device_info._CONST_ESP32:
+    if device_info.get_hw_module_verison() != device_info._CONST_ESP32 and device_info.get_hw_module_verison() != device_info._CONST_ESP32_WROOM:
         device_info.bq_charger_exec(device_info.bq_charger_setup)
     else:
         if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
