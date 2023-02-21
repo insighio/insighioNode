@@ -614,9 +614,10 @@
             Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
             location.href = "step-5-3-scale-calibr-res.html"
           }
-          else
+          else {
             Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-          location.href = "step-5-1-scale-idle.html"
+            location.href = "step-5-1-scale-idle.html"
+          }
         }
       }
       else if (elementIsVisible("shield-dig-analog-options")) {
