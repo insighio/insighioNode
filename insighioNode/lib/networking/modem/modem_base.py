@@ -126,23 +126,25 @@ class Modem:
                         year = int(reg_res.group(1))
                         if year < 100:
                             year += 2000
-                        timezone_quarter_minute_offset = float(reg_res.group(7))
-                        result = (year,
-                            int(reg_res.group(2)),
-                            int(reg_res.group(3)),
-                            0,  # day of week
-                            int(reg_res.group(4)) + int(timezone_quarter_minute_offset // 4),
-                            int(reg_res.group(5)) + int((timezone_quarter_minute_offset % 4) * 15),
-                            int(reg_res.group(6)),
-                            0)  # usec
-                        utils.saveKeyValueInteger("tz_sec_offset", int(timezone_quarter_minute_offset * 15 * 60))
-                        return result
+
+                        if year >= 2023:
+                            timezone_quarter_minute_offset = float(reg_res.group(7))
+                            result = (year,
+                                int(reg_res.group(2)),
+                                int(reg_res.group(3)),
+                                0,  # day of week
+                                int(reg_res.group(4)) + int(timezone_quarter_minute_offset // 4),
+                                int(reg_res.group(5)) + int((timezone_quarter_minute_offset % 4) * 15),
+                                int(reg_res.group(6)),
+                                0)  # usec
+                            utils.saveKeyValueInteger("tz_sec_offset", int(timezone_quarter_minute_offset * 15 * 60))
+                            return result
                     except Exception as e:
                         logging.exception(e, "Error reading network time: ", e)
                         pass
-                else:
-                    logging.debug("Network time not ready yet")
+                logging.debug("Network time not ready yet")
             utime.sleep_ms(250)
+        return (2000, 0, 0, 0, 0, 0, 0, 0)
 
     def wait_for_registration(self, timeoutms=30000):
         status = False
