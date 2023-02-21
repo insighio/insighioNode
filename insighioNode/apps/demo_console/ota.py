@@ -3,6 +3,23 @@ from apps.demo_console import transfer_protocol
 import device_info
 import utils
 
+# to change
+try:
+    from apps.demo_console import demo_config as cfg
+except Exception as e:
+    cfg = type('', (), {})()
+
+def get_config(key):
+    return getattr(cfg, key) if hasattr(cfg, key) else None
+####
+
+def updateConfigValue(key, new_value):
+    import utils
+    import ure
+    config_file_path = "/apps/demo_console/demo_config.py"
+    configContent = utils.readFromFile(config_file_path)
+    configContent = ure.sub(key + "\s+=\s+-?\w+(\.\w+)?", "{} = {}".format(key, new_value), configContent)
+    utils.writeToFile(config_file_path, configContent)
 
 def checkAndApply(client):
     if client is None:
@@ -53,6 +70,32 @@ def checkAndApply(client):
         config_content = downloadDeviceConfigurationHTTP(client)
 
         applyDeviceConfiguration(client, config_content, topic)
+    elif topic.endswith("/cmd") and message == "tare":
+        import utils
+        from sensors import hx711
+
+        # to change
+        import gpio_handler
+        new_gnd_pin = get_config("_UC_IO_SENSOR_SWITCH_ON")
+        old_gnd_pin = get_config("_UC_IO_SENSOR_GND_ON")
+        sensor_pin = new_gnd_pin if new_gnd_pin is not None else old_gnd_pin
+        gpio_handler.set_pin_value(sensor_pin, 1)
+        ####
+
+        new_offset = hx711.get_reading_raw_idle_value()
+
+        #to change
+        gpio_handler.set_pin_value(sensor_pin, 0)
+        ####
+
+        hx711.set_offset(new_offset)
+        cfg._UC_IO_SCALE_OFFSET = new_offset
+        updateConfigValue("_UC_IO_SCALE_OFFSET", new_offset)
+        client.clear_retained(topic)
+    elif topic.endswith("/cmd") and message == "reboot":
+        client.clear_retained(topic)
+        import machine
+        machine.reset()
     # topic is None ? why is this?
     elif topic is None or topic.endswith("/ota"):
         from external.kpn_senml.senml_pack_json import SenmlPackJson

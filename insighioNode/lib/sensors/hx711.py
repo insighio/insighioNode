@@ -167,10 +167,10 @@ class ScaleSensor:
 
         return raw_idle
 
-def get_reading_raw_idle_value(data_pin, clock_pin, spi_pin, vcc_pin=None):
+def get_reading_raw_idle_value(data_pin=None, clock_pin=None, spi_pin=None, vcc_pin=None):
     global sensor
 
-    if sensor is None:
+    if sensor is None and data_pin is not None and clock_pin is not None and spi_pin is not None:
         sensor = ScaleSensor(data_pin, clock_pin, spi_pin, None, None, vcc_pin)
 
         if not sensor.init():
@@ -178,9 +178,10 @@ def get_reading_raw_idle_value(data_pin, clock_pin, spi_pin, vcc_pin=None):
             sensor = None
             return -1
 
-    raw_idle = sensor._get_reading_raw_idle_value()
+    if sensor is not None:
+        return sensor._get_reading_raw_idle_value()
 
-    return raw_idle
+    return -1
 
 def  get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=None, get_raw=False):
     global sensor
@@ -203,6 +204,10 @@ def  get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=
     logging.debug("raw: {}, weight: {}".format(raw, weight))
 
     return weight
+
+def set_offset(new_offset):
+    if sensor is not None:
+        sensor.set_offset(new_offset)
 
 def deinit_instance():
     global sensor
