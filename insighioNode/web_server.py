@@ -11,13 +11,12 @@ import logging
 import ure
 import uasyncio
 
-available_nets = []
 insighioSettings = None
 wlan = None
 app = None
 
 def populateAvailableNets():
-    global available_nets
+    available_nets = []
     logging.info("Initializing WiFi APs in range")
     wlan = None
     try:
@@ -35,6 +34,7 @@ def populateAvailableNets():
         tmpObj["ssid"] = net[0].decode('UTF-8')
         tmpObj["rssi"] = net[3]
         available_nets.append(tmpObj)
+    return available_nets
 
 ssidCustom = "insigh-" + device_info.get_device_id()[0][-4:]
 logging.info("SSID: " + ssidCustom)
@@ -63,8 +63,7 @@ class Settings():
             insighioSettings["board_mac"] = device_info.get_device_id()[0]
 
         if data.get("update_wifi_list") == '1':
-            populateAvailableNets()
-            insighioSettings["wifiAvailableNets"] = available_nets
+            insighioSettings["wifiAvailableNets"] = populateAvailableNets()
         else:
             insighioSettings["wifiAvailableNets"] = []
 
