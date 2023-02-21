@@ -2,6 +2,7 @@ import utime
 import logging
 import sensors
 from external.hx711.hx711_spi import HX711
+#from external.hx711.hx711_gpio import HX711
 from machine import Pin, SPI
 
 sensor = None
@@ -17,6 +18,7 @@ class ScaleSensor:
         self.hx = None
         self.spi = None
         self.is_busy = False
+        self.raw_data = [0 for _ in range(10)]
 
     def init(self):
         self.is_busy = True
@@ -28,7 +30,6 @@ class ScaleSensor:
             spi_sck = Pin(self.spi_pin)
             self.spi = SPI(1, baudrate=1000000, polarity=0,
                   phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
-
             self.hx = HX711(pin_SCK, pin_OUT, self.spi)
         #    hx.tare()
             self.hx.set_gain(128)
@@ -97,20 +98,26 @@ class ScaleSensor:
         self.is_busy = True
 
         try:
-            res = self.hx.read_average(times)
+            if len(self.raw_data) != times:
+                self.raw_data = [0 for _ in range(times)]
+
+            for _ in range(times):
+                self.raw_data[_] = self.hx.read()
+                #logging.debug("raw: {}".format(self.raw_data[_]))
+            self.raw_data.sort()
             self.is_busy = False
-            return res
+            return self.raw_data[times // 2]
         except Exception as e:
             logging.exception(e, "get_reading_raw: exception reading average: ")
             self.is_busy = False
             return -1
 
     def convert_reading_to_weight(self, weight_raw):
-        return (weight_raw - self.hx.OFFSET) / self.hx.SCALE
+        return round((weight_raw - self.hx.OFFSET) / self.hx.SCALE)
 
     def _get_reading_raw_idle_value(self):
         number_of_measurements_for_idle = 5
-        weigth_diff_threshold_percent = 0.01
+        weigth_diff_threshold_percent = 0.05
 
         sequential_identical_values = 0
         raw_before_event = 0
@@ -119,15 +126,21 @@ class ScaleSensor:
 
         raw_idle = -1
 
-        while True:
+        start_time = utime.ticks_ms()
+        timeout_ms = 15000 + start_time
+
+        value_buffer = []
+
+        while utime.ticks_ms()  < timeout_ms:
             raw = self.get_reading_raw(10)
+            value_buffer.append(raw)
 
             if last_raw == 0:
                 last_raw = -1
 
             value_diff = abs(raw - last_raw) / last_raw
 
-            logging.debug("detecting idle raw weight: {}, diff percent from previous: {}".format(raw, value_diff))
+            logging.debug("detecting idle raw: {}, diff percent from previous: {}".format(raw, value_diff))
 
             if value_diff > weigth_diff_threshold_percent:
                 sequential_identical_values = 0
@@ -145,10 +158,29 @@ class ScaleSensor:
                 break
 
             last_raw = raw
-            utime.sleep_ms(10)
+            utime.sleep_ms(5)
+
+        if raw_idle == -1 and len(value_buffer) > 0:
+            logging.debug("fallback due to timeout")
+            value_buffer.sort()
+            return value_buffer[len(value_buffer) // 2]
 
         return raw_idle
 
+def get_reading_raw_idle_value(data_pin, clock_pin, spi_pin, vcc_pin=None):
+    global sensor
+
+    if sensor is None:
+        sensor = ScaleSensor(data_pin, clock_pin, spi_pin, None, None, vcc_pin)
+
+        if not sensor.init():
+            logging.error("Error initializing scale sensor")
+            sensor = None
+            return -1
+
+    raw_idle = sensor._get_reading_raw_idle_value()
+
+    return raw_idle
 
 def  get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=None, get_raw=False):
     global sensor
@@ -168,24 +200,9 @@ def  get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=
     else:
         weight = sensor.convert_reading_to_weight(raw)
 
-    logging.debug("weight: {}".format(weight))
+    logging.debug("raw: {}, weight: {}".format(raw, weight))
 
     return weight
-
-def get_reading_raw_idle_value(data_pin, clock_pin, spi_pin, vcc_pin=None):
-    global sensor
-
-    if sensor is None:
-        sensor = ScaleSensor(data_pin, clock_pin, spi_pin, None, None, vcc_pin)
-
-        if not sensor.init():
-            logging.error("Error initializing scale sensor")
-            sensor = None
-            return -1
-
-    raw_idle = sensor._get_reading_raw_idle_value()
-
-    return raw_idle
 
 def deinit_instance():
     global sensor
