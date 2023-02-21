@@ -20,7 +20,7 @@ def get_config(key):
 
 
 def device_init():
-    if cfg._BOARD_TYPE == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+    if hasattr(cfg, "_CONST_BOARD_TYPE_ESP_GEN_1") and get_config("_BOARD_TYPE") == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
         device_info.bq_charger_exec(device_info.bq_charger_setup)
     else:
         if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
@@ -92,7 +92,11 @@ def get_measurements(cfg):
         logging.exception(e, "unable to measure board sensors")
 
     #enable sensors
-    gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_GND_ON, 1)
+    new_gnd_pin = get_config("_UC_IO_SENSOR_SWITCH_ON")
+    old_gnd_pin = get_config("_UC_IO_SENSOR_GND_ON")
+
+    sensor_pin = new_gnd_pin if new_gnd_pin is not None else old_gnd_pin
+    gpio_handler.set_pin_value(sensor_pin, 1)
 
     # read internal temperature and humidity
     try:
@@ -121,7 +125,7 @@ def get_measurements(cfg):
         logging.exception(e, "unable to complete sensor measurements")
 
     #enable sensors
-    gpio_handler.set_pin_value(cfg._UC_IO_SENSOR_GND_ON, 0)
+    gpio_handler.set_pin_value(sensor_pin, 0)
 
     return measurements
 
