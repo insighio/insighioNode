@@ -149,6 +149,7 @@ def connect(cfg):
                 # signal quality
                 rssi = modemInst.get_rssi()
                 (rsrp, rsrq) = modemInst.get_extended_signal_quality()
+                modemInst.get_lac_n_cell_id()
 
                 logging.debug('Signal Quality - RSSI/RSRP/RSRQ: {}, {}, {}'.format(rssi, rsrp, rsrq))
 
@@ -173,7 +174,7 @@ def connect(cfg):
     except Exception as e:
         logging.exception(e, "Outer Exception: {}".format(e))
 
-    return (status, activation_duration, attachment_duration, connection_duration, rssi, rsrp, rsrq)
+    return (status, activation_duration, attachment_duration, connection_duration)
 
 
 def update_rtc_from_network_time(modem):

@@ -213,58 +213,62 @@ class Modem:
         return status_att and status_act
 
     def get_rssi(self):
-        rssi = -141
-        (status, lines) = self.send_at_cmd('AT+CSQ')
-        if status and len(lines) > 0:
-            rssi_tmp = int(lines[0].split(',')[0].split(' ')[-1])
-            if(rssi_tmp >= 0 and rssi_tmp <= 31):
-                rssi = -113 + rssi_tmp * 2
-        return rssi
+        if self.ppp is None:
+            self.rssi = -141
+            (status, lines) = self.send_at_cmd('AT+CSQ')
+            if status and len(lines) > 0:
+                rssi_tmp = int(lines[0].split(',')[0].split(' ')[-1])
+                if(rssi_tmp >= 0 and rssi_tmp <= 31):
+                    self.rssi = -113 + rssi_tmp * 2
+        return self.rssi
 
     def get_extended_signal_quality(self):
-        rsrp = -141
-        rsrq = -40
-        (status, lines) = self.send_at_cmd('AT+CESQ')
-        if status and len(lines) > 0:
-            cesq_data = lines[0].split(',')
-            rsrq_tmp = int(cesq_data[-2])
-            rsrp_tmp = int(cesq_data[-1])
-            if(rsrq_tmp >= 0 and rsrq_tmp <= 34):
-                rsrq = -20 + rsrq_tmp * 0.5
-            if(rsrp_tmp >= 0 and rsrp_tmp <= 97):
-                rsrp = -141 + rsrp_tmp
-        return (rsrp, rsrq)
+        if self.ppp is None:
+            self.rsrp = -141
+            self.rsrq = -40
+            (status, lines) = self.send_at_cmd('AT+CESQ')
+            if status and len(lines) > 0:
+                cesq_data = lines[0].split(',')
+                rsrq_tmp = int(cesq_data[-2])
+                rsrp_tmp = int(cesq_data[-1])
+                if(rsrq_tmp >= 0 and rsrq_tmp <= 34):
+                    self.rsrq = -20 + rsrq_tmp * 0.5
+                if(rsrp_tmp >= 0 and rsrp_tmp <= 97):
+                    self.rsrp = -141 + rsrp_tmp
+        return (self.rsrp, self.rsrq)
 
     def get_lac_n_cell_id(self):
-        regex_creg = r"\+CREG:\s+\d,\d,\"(\w+)\",\"(\w+)\""
-        lac = None
-        ci = None
-        (status, lines) = self.send_at_cmd('AT+CREG?')
-        if status:
-            for line in lines:
-                match_res = ure.search(regex_creg, line)
-                if match_res is not None:
-                    lac = int('0x' + match_res.group(1))
-                    ci = int('0x' + match_res.group(2))
-                    break
-        return (lac, ci)
+        if self.ppp is None:
+            regex_creg = r"\+CREG:\s+\d,\d,\"(\w+)\",\"(\w+)\""
+            self.lac = None
+            self.ci = None
+            (status, lines) = self.send_at_cmd('AT+CREG?')
+            if status:
+                for line in lines:
+                    match_res = ure.search(regex_creg, line)
+                    if match_res is not None:
+                        self.lac = int('0x' + match_res.group(1))
+                        self.ci = int('0x' + match_res.group(2))
+                        break
+        return (self.lac, self.ci)
 
     def get_registered_mcc_mnc(self):
-        regex_cops = r"\+COPS:\s+\d,2,\"(\d+)"
-        mcc = None
-        mnc = None
-        (status, lines) = self.send_at_cmd('AT+COPS?')
-        if status:
-            for line in lines:
-                match_res = ure.search(regex_cops, line)
-                if match_res is not None:
-                    try:
-                        mcc = int(match_res.group(1)[0:3])
-                        mnc = int(match_res.group(1)[3:5])
-                    except:
-                        pass
-                    break
-        return (mcc, mnc)
+        if self.ppp is None:
+            regex_cops = r"\+COPS:\s+\d,2,\"(\d+)"
+            self.mcc = None
+            self.mnc = None
+            (status, lines) = self.send_at_cmd('AT+COPS?')
+            if status:
+                for line in lines:
+                    match_res = ure.search(regex_cops, line)
+                    if match_res is not None:
+                        try:
+                            self.mcc = int(match_res.group(1)[0:3])
+                            self.mnc = int(match_res.group(1)[3:5])
+                        except:
+                            pass
+                        break
+        return (self.mcc, self.mnc)
 
     # to be overriden by children
     def set_gps_state(self, poweron=True):
