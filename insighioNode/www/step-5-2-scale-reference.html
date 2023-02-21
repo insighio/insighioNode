@@ -36,24 +36,21 @@
       <br />
       <div class="empty">
         <p class="empty-title h5">Weight Scale Calibration</p>
-        <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold">
-            <div id="loader" class="loading"></div>
-          </span></p>
-        <p class="empty-subtitle">Place your reference weight on the scale, fill its exact weight in grams at the following field and press <span class="text-bold">Measure</span>
-          to complete calibration.</p>
+        <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold"><div id="loader" class="loading"></div></span></p>
+        <p class="empty-subtitle">Place your reference weight on the scale, fill its exact weight in grams at the following field and press <span class="text-bold">Measure</span> to complete calibration.</p>
         <p class="empty-subtitle p-centered">
-        <div class="form-group p-centered">
-          <div class="col-2 col-sm-12 col-ml-auto ">
-            <label class="form-label p-centered" for="input-example-1">Reference Weight (g)</label>
+          <div class="columns">
+            <div class="col-2 col-sm-12 col-ml-auto ">
+              <label class="form-label p-centered" for="input-example-1">Reference Weight (g)</label>
+            </div>
+            <div class="col-2 col-sm-12 col-mr-auto">
+              <input class="form-input p-centered" type="number" id="input-ref-weight" style="width: 300px">
+            </div>
           </div>
-          <div class="col-2 col-sm-12 col-mr-auto">
-            <input class="form-input p-centered" type="number" id="input-ref-weight" style="width: 300px">
-          </div>
-        </div>
         </p>
         <div class="empty-action">
-          <button class="btn btn-primary" id="back-button" onclick="goBack()">Back</button>
-          <button class="btn btn-primary" id="save-button" onclick="validateMyForm()">Measure</button>
+          <button class="btn btn-primary" id="back-button" disabled onclick="goBack()">Back</button>
+          <button class="btn btn-primary" id="save-button" disabled onclick="validateMyForm()">Measure</button>
         </div>
       </div>
     </div>
