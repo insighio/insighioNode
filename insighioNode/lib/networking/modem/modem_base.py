@@ -347,7 +347,7 @@ class Modem:
                     elif ure.search(error_regex, line) is not None:
                         status = False
 
-            utime.sleep_ms(50)
+            utime.sleep_ms(5)
 
         if status is None:
             status = False

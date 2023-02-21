@@ -1,20 +1,15 @@
-_CONST_BOARD_TYPE_DEFAULT = "default"
-_CONST_BOARD_TYPE_SDI_12 = "sdi12"
-_CONST_BOARD_TYPE_ESP_GEN_1 = "ins_esp_gen_1"
-_CONST_BOARD_TYPE_ESP_GEN_SHIELD_1 = "ins_esp_gen_s1"
-_CONST_BOARD_TYPE_ESP_GEN_SHIELD_2_S3 = "ins_esp_gen_s2_s3"
-_CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12 = "ins_esp_gen_sdi12"
-_CONST_BOARD_TYPE_GEN_S3 = "ins_gen_s3"
-
 _CONST_SHIELD_ADVIND = "advind"
 _CONST_SHIELD_DIG_ANALOG = "dig_analog"
+_CONST_SHIELD_SCALE = "scale"
+_CONST_RADIO_SHIELD_LORA = "hoperf"
+_CONST_RADIO_SHIELD_ASTROCAST = "astrocast"
 
 _CONST_SENSOR_SI7021 = 'si7021'
 _CONST_SENSOR_SHT40 = 'SHT40'
 
 _CONST_MEAS_DISABLED = "disabled"
 
-_BOARD_TYPE = "<selected-board>"
+_DEPRECATED_BOARD_TYPE = "<selected-board>"
 
 """ System-related configuration options """
 _DEEP_SLEEP_PERIOD_SEC = <period>  # tx period in secs

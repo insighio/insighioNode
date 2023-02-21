@@ -53,6 +53,7 @@
         <script src="js/utils.js"></script>
         <script>
           var mac = undefined
+          var hw_module = undefined
 
           function enableButtonsLocal() {
             document.getElementById('button-wifi').disabled = false
@@ -80,6 +81,7 @@
             }).then(function (data) {
               clearCookies()
               mac = data.id
+              hw_module = data.hw_module
               enableButtonsLocal()
               showElement('loader', false)
             }).catch((err) => {
@@ -93,6 +95,7 @@
 
             clearCookies();
             Cookies.set('board-mac', mac)
+            Cookies.set('hw-module', hw_module)
 
             if (operationName == "WiFi")
               location.href = "step-3-net-wifi.html";

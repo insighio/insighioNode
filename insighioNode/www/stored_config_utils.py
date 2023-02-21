@@ -40,6 +40,7 @@ configDict = {
 "_MEAS_SCALE_ENABLED": "meas_scale_enabled",
 "_MEAS_TEMP_UNIT_IS_CELSIUS": "meas_temp_unit",
 "_NOTIFICATION_LED_ENABLED": "meas_led_enabled",
+"_SELECTED_SHIELD": "selected_shield",
 "_SCHEDULED_TIMESTAMP_A_SECOND": "scheduled_time_a",
 "_SCHEDULED_TIMESTAMP_B_SECOND": "scheduled_time_b",
 "_SDI12_SENSOR_1_ADDRESS": "meas_sdi_1_address",

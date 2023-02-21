@@ -29,6 +29,12 @@ machine_data = uos_version_data.machine
 firmware_data = uos_version_data.version.split(" ")[0].split("-")
 firmware_data[0] = firmware_data[0][1:] # "from 'v1.18' to '1.18'"
 
+_CONST_ESP32='esp32'
+_CONST_ESP32S2='esp32s2'
+_CONST_ESP32S3='esp32s3'
+_CONST_ESP8266='esp8266'
+
+
 def is_wdt_enabled():
     return wdt is not None
 
@@ -36,14 +42,14 @@ def is_wdt_enabled():
 def get_hw_module_verison():
     hw_info = machine_data
     hw_info = hw_info.lower()
-    if "esp32s2" in hw_info or "esp32-s2" in hw_info:
-        return "esp32s2"
-    elif "esp32s3" in hw_info or "esp32-s3" in hw_info:
-        return "esp32s3"
-    elif "esp32" in hw_info:
-        return "esp32"
-    elif "esp8266" in hw_info:
-        return "esp8266"
+    if _CONST_ESP32 in hw_info or "esp32-s2" in hw_info:
+        return _CONST_ESP32
+    elif _CONST_ESP32S3 in hw_info or "esp32-s3" in hw_info:
+        return _CONST_ESP32S3
+    elif _CONST_ESP32 in hw_info:
+        return _CONST_ESP32
+    elif _CONST_ESP8266 in hw_info:
+        return _CONST_ESP8266
     return "other"
 
 

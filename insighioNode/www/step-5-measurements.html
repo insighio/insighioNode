@@ -91,20 +91,20 @@
                 <!-- board selector -->
                 <div class="col-12">
                   <ul class="tab tab-block">
-                    <li id="tab-i2c-scale-board-options" class="tab-item" onclick="boardChanged(event, 'i2c-scale-board-options')">
+                    <li id="tab-shield-scale-options" class="tab-item" onclick="boardChanged(event, 'shield-scale-options')">
                       <a class="pointer">Cellular Digital/Scale</a>
                     </li>
-                    <li id="tab-esp32s3-bg600-i2c-analog-options" class="tab-item active" onclick="boardChanged(event, 'esp32s3-bg600-i2c-analog-options')">
+                    <li id="tab-shield-dig-analog-options" class="tab-item active" onclick="boardChanged(event, 'shield-dig-analog-options')">
                       <a class="pointer">Cellular + Shield I²C/Analog</a>
                     </li>
-                    <li id="tab-ins-esp-gen-sdi12-board-options" class="tab-item" onclick="boardChanged(event, 'ins-esp-gen-sdi12-board-options')">
+                    <li id="tab-shield-advind-options" class="tab-item" onclick="boardChanged(event, 'shield-advind-options')">
                       <a class="pointer">Cellular + Shield SDI-12</a>
                     </li>
                   </ul>
                 </div>
                 <br />
                 <br />
-                <div id="i2c-scale-board-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
+                <div id="shield-scale-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
                   <br />
                   <!-- <fieldset disabled> -->
                   <div class="form-group columns">
@@ -151,7 +151,7 @@
                   </div>
                 <!-- </fieldset> -->
                 </div>
-                <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent columns col-12" style="display: block; margin-left:5px; margin-right:5px">
+                <div id="shield-dig-analog-options" class="tabcontent columns col-12" style="display: block; margin-left:5px; margin-right:5px">
                   <br />
                   <div class="form-group columns">
                     <br />
@@ -249,7 +249,7 @@
                   </div>
                 </div>
                 <!-- sdi board related settings -->
-                <div id="ins-esp-gen-sdi12-board-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
+                <div id="shield-advind-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
                   <br />
                   <div class="form-group columns">
                     <br />
@@ -356,16 +356,19 @@
   <script src="js/js.cookie.min.js"></script>
   <script src="js/utils.js"></script>
   <script>
-    var boardNamePerTab = {
-      "ins-esp-gen-sdi12-board-options": "ins_esp_gen_sdi12",
-      "i2c-scale-board-options": "ins_esp_gen_1",
-      "esp32s3-bg600-i2c-analog-options": "ins_gen_s3"
+    var shieldNamePerTab = {
+      "shield-advind-options": "advind",
+      "shield-scale-options": "scale",
+      "shield-dig-analog-options": "dig_analog"
     }
 
-    var tabNamePerBoard = {
-      "ins_esp_gen_sdi12": "ins-esp-gen-sdi12-board-options",
-      "ins_esp_gen_1": "i2c-scale-board-options",
-      "ins_gen_s3": "esp32s3-bg600-i2c-analog-options"
+    var tabNamePerShield = {
+      "ins_esp_gen_sdi12": "shield-advind-options",
+      "ins_esp_gen_1": "shield-scale-options",
+      "ins_gen_s3": "shield-dig-analog-options",
+      "advind": "shield-advind-options",
+      "scale": "shield-scale-options",
+      "dig_analog": "shield-dig-analog-options",
     }
 
     const i2cOptions = {
@@ -442,10 +445,9 @@
         setElemValueBool('input-gps-enable', gps, true)
         setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
 
-        //checkboxStatusChanged('gps')
-        var boardType = data.selected_board
-        if (boardType && tabNamePerBoard[boardType])
-          boardChanged(undefined, tabNamePerBoard[boardType])
+        var selectedShield = data.selected_shield ? data.selected_shield : data.selected_board
+        if (selectedShield && tabNamePerShield[selectedShield])
+          boardChanged(undefined, tabNamePerShield[selectedShield])
 
         setElemValue('input-gps-timeout', data.meas_gps_timeout, 120, false)
         setElemValue('input-gps-sat-num', data.meas_gps_sat_num, 4, false)
@@ -529,7 +531,7 @@
       Cookies.remove('meas-sensor-a-d-p3-t')
       Cookies.remove('meas-sensor-scale-enabled')
       Cookies.remove('meas-temp-unit')
-      Cookies.remove('selected-board')
+      Cookies.remove('selected-shield')
       Cookies.remove('system-enable-ota')
       Cookies.remove('meas-keyvalue')
       Cookies.remove('store-meas-if-failed-conn')
@@ -573,8 +575,8 @@
 
       Cookies.set('store-meas-if-failed-conn', boolElemToPyStr('input-store-meas-if-failed-conn'))
 
-      if (elementIsVisible("ins-esp-gen-sdi12-board-options")) {
-        Cookies.set('selected-board', boardNamePerTab["ins-esp-gen-sdi12-board-options"])
+      if (elementIsVisible("shield-advind-options")) {
+        Cookies.set('selected-shield', shieldNamePerTab["shield-advind-options"])
 
         for (let i = 1; i < 11; ++i) {
           setSDI12Cookie(i)
@@ -588,8 +590,8 @@
         Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
         location.href = "step-6-timing.html"
       }
-      else if (elementIsVisible("i2c-scale-board-options")) {
-        Cookies.set('selected-board', boardNamePerTab["i2c-scale-board-options"])
+      else if (elementIsVisible("shield-scale-options")) {
+        Cookies.set('selected-shield', shieldNamePerTab["shield-scale-options"])
         Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-i2c-1').value)
         Cookies.set('meas-i2c-2', document.getElementById('input-ins-esp-i2c-2').value)
         Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
@@ -617,8 +619,8 @@
           location.href = "step-5-1-scale-idle.html"
         }
       }
-      else if (elementIsVisible("esp32s3-bg600-i2c-analog-options")) {
-        Cookies.set('selected-board', boardNamePerTab["esp32s3-bg600-i2c-analog-options"])
+      else if (elementIsVisible("shield-dig-analog-options")) {
+        Cookies.set('selected-shield', shieldNamePerTab["shield-dig-analog-options"])
         Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-s1-i2c').value)
         Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-s1-sensor-a-d-p1').value)
         Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-ins-esp-s1-sensor-a-d-p2').value)

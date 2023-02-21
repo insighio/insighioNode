@@ -1,3 +1,5 @@
+_SELECTED_RADIO_SHIELD = _CONST_RADIO_SHIELD_ASTROCAST
+
 network="satellite"
 
 _SATELLITE_ASTROCAST_DEVKIT_EN=<sat-astro-devkit-en>

@@ -20,7 +20,7 @@ def get_config(key):
 
 
 def device_init():
-    if hasattr(cfg, "_CONST_BOARD_TYPE_ESP_GEN_1") and get_config("_BOARD_TYPE") == cfg._CONST_BOARD_TYPE_ESP_GEN_1:
+    if device_info.get_hw_module_verison() != device_info._CONST_ESP32:
         device_info.bq_charger_exec(device_info.bq_charger_setup)
     else:
         if get_config("_UC_IO_LOAD_PWR_SAVE_OFF") is not None:
@@ -111,11 +111,11 @@ def get_measurements(cfg):
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
         shield_name = get_config("_SHIELD_NAME")
-        board_name = get_config("_BOARD_TYPE")
-        if (shield_name and shield_name == get_config("_CONST_SHIELD_ADVIND")) or (board_name and board_name == get_config("_CONST_BOARD_TYPE_ESP_GEN_SHIELD_SDI12")):
+        shield_name = get_config("_SELECTED_SHIELD")
+        if (shield_name and shield_name == get_config("_CONST_SHIELD_ADVIND")) or (shield_name and shield_name == get_config("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")):
             from . import scenario_sdi12_utils
             scenario_sdi12_utils.sdi12_board_measurements(measurements)
-        elif shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
+        else: #if shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
 
         if hasattr(cfg, '_MEAS_KEYVALUE') and cfg._MEAS_KEYVALUE:

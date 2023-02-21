@@ -1,3 +1,5 @@
+_SELECTED_RADIO_SHIELD = _CONST_RADIO_SHIELD_LORA
+
 """ Shield generic """
 _UC_IO_RADIO_GPS_ON = 35
 
