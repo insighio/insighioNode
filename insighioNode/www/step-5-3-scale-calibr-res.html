@@ -66,16 +66,18 @@
       var offset = Cookies.get('meas-scale-offset')
       var scale = Cookies.get('meas-scale-scale')
 
-      var offset = offset !== undefined ? parseFloat(offset) : undefined
-      var scale = scale !== undefined ? parseFloat(scale) : undefined
+      offset = offset !== undefined ? parseFloat(offset) : undefined
+      scale = scale !== undefined ? parseFloat(scale) : undefined
 
       document.getElementById('idle-weight-value').innerHTML = offset
 
-      if (offset === undefined || scale === undefined) {
+      console.log("offset: ", offset, ", scale:", scale)
+
+      if (offset === undefined || scale === undefined || isNaN(scale)) {
         showElement('loader1', true)
         showElement('loader2', true)
         document.getElementById('save-button').disabled = true
-        fetch("/raw-weight-idle?board=" + Cookies.get('selected-board')).then((response) => {
+        fetch("/raw-weight-idle?board=" + Cookies.get('hw-module')).then((response) => {
           return response.json();
         }).then(function (data) {
           var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
@@ -124,7 +126,7 @@
     function requestTare() {
       showElement('loader4', true)
       document.getElementById('save-button').disabled = true
-      fetch("/raw-weight?board=" + Cookies.get('selected-board')).then((response) => {
+      fetch("/raw-weight-idle?board=" + Cookies.get('hw-module')).then((response) => {
         return response.json();
       }).then(function (data) {
         document.getElementById('idle-weight-value').innerHTML = data.raw
@@ -143,7 +145,7 @@
     function requestMeasure() {
       showElement('loader3', true)
       document.getElementById('save-button').disabled = true
-      fetch("/raw-weight?board=" + Cookies.get('selected-board')).then((response) => {
+      fetch("/raw-weight-idle?board=" + Cookies.get('hw-module')).then((response) => {
         return response.json();
       }).then(function (data) {
         const offset = parseFloat(document.getElementById('idle-weight-value').innerHTML)

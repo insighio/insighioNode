@@ -106,7 +106,7 @@
                 <br />
                 <div id="i2c-scale-board-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
                   <br />
-                  <fieldset disabled>
+                  <!-- <fieldset disabled> -->
                   <div class="form-group columns">
                     <br />
                     <br />
@@ -149,7 +149,7 @@
                     <br />
                     <br />
                   </div>
-                </fieldset>
+                <!-- </fieldset> -->
                 </div>
                 <div id="esp32s3-bg600-i2c-analog-options" class="tabcontent columns col-12" style="display: block; margin-left:5px; margin-right:5px">
                   <br />
@@ -436,6 +436,8 @@
         setElemValueBool('input-network', strToJSValue(data.meas_network_stat), true)
         setElemValueBool('input-ota', strToJSValue(data.system_enable_ota), true)
         setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_enabled), false)
+        // setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_offset), false)
+        // setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_scale), false)
 
         setElemValueBool('input-gps-enable', gps, true)
         setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
@@ -601,6 +603,8 @@
         else {
           var scale = settings.meas_scale_scale
           var offset = settings.meas_scale_offset
+
+          console.log("offset: ", offset, ", scale:", scale)
 
           if (scale && offset) {
             Cookies.set('meas-scale-offset', offset)

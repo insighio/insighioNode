@@ -49,16 +49,18 @@ class Settings():
     def get(self, data):
         global insighioSettings
 
-        logging.debug("[web-server][GET]: /settings, data: [{}]".format(data))
+        logging.debug("[web-server][GET]: /settings, params: [{}]".format(data))
 
         if not insighioSettings:
+            insighioSettings = {}
             from www import stored_config_utils
             try:
                 insighioSettings = stored_config_utils.get_config_values()
-                insighioSettings["hw_module"] = device_info.get_hw_module_verison()
-                insighioSettings["board_mac"] = device_info.get_device_id()[0]
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
+
+            insighioSettings["hw_module"] = device_info.get_hw_module_verison()
+            insighioSettings["board_mac"] = device_info.get_device_id()[0]
 
         if data.get("update_wifi_list") == '1':
             populateAvailableNets()
@@ -68,31 +70,32 @@ class Settings():
 
         import ujson
         res = ujson.dumps(insighioSettings, separators=(',', ':'))
-        res_str = res.encode('utf-8')
-        return res_str, 200
+        res_bytes = res.encode('utf-8')
+        logging.debug("Settings: " + res)
+        return res_bytes, 200
 
 class RawWeightIdle():
     def get(self, data):
         logging.debug("[web-server][GET]: /raw-weight-idle")
 
         from sensors import hx711
-        if data and data["board"] == "old_esp_cyclefi":
-            raw_val = hx711.get_reading_raw_idle_value(21, 22, 23, None)
-        else:
-            raw_val = hx711.get_reading_raw_idle_value(4, 33, 12, 25)
+        # if data and data["board"] == "old_esp_cyclefi":
+        #     raw_val = hx711.get_reading_raw_idle_value(21, 22, 23, None)
+        # else:
+        raw_val = hx711.get_reading_raw_idle_value(4, 33, 12, 25)
         logging.debug("raw val about to return: " + str(raw_val))
         return {"raw": raw_val}, 200
 
-class RawWeight:
-    def get(self, data):
-        logging.debug("[web-server][GET]: /raw-weight")
-        from sensors import hx711
-        if data and data["board"] == "old_esp_cyclefi":
-            raw_val = hx711.get_reading(21, 22, 23, None, None, None, True)
-        else:
-            raw_val = hx711.get_reading(4, 33, 12, None, None, 25, True)
-        logging.debug("raw weight about to return: " + str(raw_val))
-        return {"raw": raw_val}, 200
+# class RawWeight:
+#     def get(self, data):
+#         logging.debug("[web-server][GET]: /raw-weight")
+#         from sensors import hx711
+#         # if data and data["board"] == "old_esp_cyclefi":
+#         #     raw_val = hx711.get_reading(21, 22, 23, None, None, None, True)
+#         # else:
+#         raw_val = hx711.get_reading(4, 33, 12, None, None, 25, True)
+#         logging.debug("raw weight about to return: " + str(raw_val))
+#         return {"raw": raw_val}, 200
 
 class Config:
     def post(self, data):
@@ -235,7 +238,7 @@ def start(timeoutMs=120000):
 
     app.add_resource(Settings, '/settings')
     app.add_resource(RawWeightIdle, '/raw-weight-idle')
-    app.add_resource(RawWeight, '/raw-weight')
+    #app.add_resource(RawWeight, '/raw-weight')
     app.add_resource(Config, '/save-config')
     app.add_resource(DevID, '/devid')
 

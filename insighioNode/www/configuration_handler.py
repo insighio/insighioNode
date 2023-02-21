@@ -19,7 +19,11 @@ def apply_configuration(keyValuePairDictionary):
     contents = utils.readFromFile(rootFolder + 'apps/demo_console/templ/common_templ.py')
 
     # set project configuration content
-    contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s3_config_templ.py')
+    if board == "ins_esp_gen_1":
+        contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp32_scale_templ.py')
+    else:
+        contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s3_config_templ.py')
+
     contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
     if  board == "ins_esp_gen_sdi12":
         contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_advind_templ.py')

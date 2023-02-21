@@ -63,7 +63,7 @@
   <script>
     function initialize() {
       document.getElementById('save-button').disabled = true
-      fetch("/raw-weight?board=" + Cookies.get('selected-board')).then((response) => {
+      fetch("/raw-weight-idle?board=" + Cookies.get('hw-module')).then((response) => {
         return response.json();
       }).then(function (data) {
         document.getElementById('save-button').disabled = false
