@@ -43,8 +43,8 @@ def is_wdt_enabled():
 def get_hw_module_verison():
     hw_info = machine_data
     hw_info = hw_info.lower()
-    if _CONST_ESP32 in hw_info or "esp32-s2" in hw_info:
-        return _CONST_ESP32
+    if _CONST_ESP32S2 in hw_info or "esp32-s2" in hw_info:
+        return _CONST_ESP32S2
     elif _CONST_ESP32S3 in hw_info or "esp32-s3" in hw_info:
         return _CONST_ESP32S3
     elif _CONST_ESP32 in hw_info:
