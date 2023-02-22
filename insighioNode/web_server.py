@@ -68,9 +68,21 @@ class Settings():
             insighioSettings["wifiAvailableNets"] = []
 
         import ujson
-        res = ujson.dumps(insighioSettings, separators=(',', ':'))
-        res_bytes = res.encode('utf-8')
-        logging.debug("Settings: " + res)
+        res = None
+        try:
+            res = ujson.dumps(insighioSettings, separators=(',', ':'))
+        except:
+            pass
+
+        if res is None:
+            try:
+                res = ujson.dumps(insighioSettings)
+            except:
+                pass
+
+        if res is not None:
+            res_bytes = res.encode('utf-8')
+            logging.debug("Settings: " + res)
         return res_bytes, 200
 
 class RawWeightIdle():
