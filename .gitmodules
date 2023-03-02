@@ -4,9 +4,6 @@
 [submodule "lib-external/senml-micropython-library"]
 	path = lib-external/senml-micropython-library
 	url = https://github.com/insighio/senml-micropython-library.git
-[submodule "lib-external/microATsocket"]
-	path = lib-external/microATsocket
-	url = https://github.com/insighio/microATsocket.git
 [submodule "lib-external/microsdi12"]
 	path = lib-external/microsdi12
 	url = https://github.com/insighio/microSDI12.git
