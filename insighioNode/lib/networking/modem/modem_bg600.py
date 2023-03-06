@@ -122,6 +122,7 @@ class ModemBG600(modem_base.Modem):
         last_valid_gps_lon = None
         max_satellites = 0
         hdop = None
+        hdop_thresh = 2
         timeout_timestamp = start_timestamp + timeoutms
         try:
             while utime.ticks_ms() < timeout_timestamp:
@@ -147,7 +148,7 @@ class ModemBG600(modem_base.Modem):
                             self.gps_timestamp[6] = math.floor(self.gps_timestamp[6])
 
                         logging.debug("{} {} Lat: {}, Lon: {}, NumSats: {}, hdop: {}".format(my_gps.date, my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop))
-                        if my_gps.satellites_in_use >= satellite_number_threshold:
+                        if my_gps.satellites_in_use >= satellite_number_threshold or (my_gps.hdop > 0 and my_gps.hdop <= hdop_thresh):
                             gps_fix = True
                             return (self.gps_timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
                 utime.sleep_ms(1000)
@@ -233,12 +234,12 @@ class ModemBG600(modem_base.Modem):
         import random
         #channels/f1937d78-6745-4b6b-98c3-62e2201c21ab/messages/5de93307-344f-48f2-a66d-1d2f7e359504/#
         #reg = r"\+QMTRECV:\s*\d+,\d+,\"([a-z\-0-9\/]+)\",\"(.*)\"" -> can not be used as it causes: RuntimeError: maximum recursion depth exceeded
-        reg = r"\+QMTRECV:\s*0,"
+        reg = r"\+QMTRECV:.*"
         # subscribe and receive message if any
         message_id = int(random.random() * 65530) + 1
         (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=1,{},"{}",1'.format(message_id, topic), timeout_ms, reg)
         # unsubscribe
-        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=1,{},"{}"'.format(message_id, topic), 30000, r"\+QMTUNS:\s*1,")
+        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=1,{},"{}"'.format(message_id, topic), 30000, r"\+QMTUNS:.*")
 
         selected_line = None
         for line in lines:
@@ -290,8 +291,8 @@ class ModemBG600(modem_base.Modem):
         return res
 
     def mqtt_disconnect(self):
-        (statusMqttDisconnect, _) = self.send_at_cmd("AT+QMTDISC=1", 20000, r"\+QMTDISC:\s+0.*")
-        (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE=1", 20000, r"\+QMTCLOSE:\s+0.*")
+        (statusMqttDisconnect, _) = self.send_at_cmd("AT+QMTDISC=1", 20000, r"\+QMTDISC:.*")
+        (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE=1", 20000, r"\+QMTCLOSE:.*")
 
         return statusMqttDisconnect and statusNetworkClose
 
