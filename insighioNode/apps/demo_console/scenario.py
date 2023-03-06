@@ -221,25 +221,25 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
     try:
         if is_first_run:
             logging.debug("Network [" + cfg.network + "] connected: " + str(is_connected))
-        if not is_connected:
+
+        if is_connected:
+            device_info.set_led_color("green")
+
+            if is_first_run:
+                executeDeviceConfigurationUpload(cfg, network)
+
+            # create packet
+            uptime = getUptime(timeDiffAfterNTP)
+            measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": uptime if is_first_run else (uptime - measurement_run_start_timestamp)}
+            message_sent = network.send_message(cfg, network.create_message(cfg.device_id, measurements))
+            logging.info("measurement sent: {}".format(message_sent))
+            message_buffer.parse_stored_measurements_and_upload(network)
+
+            if not always_on or (always_on and is_first_run):
+                network.check_and_apply_ota(cfg)
+        else:
             logging.debug("Network [" + cfg.network + "] connected: False")
             device_info.set_led_color("red")
-            return False
-
-        device_info.set_led_color("green")
-
-        if is_first_run:
-            executeDeviceConfigurationUpload(cfg, network)
-
-        # create packet
-        uptime = getUptime(timeDiffAfterNTP)
-        measurements["uptime"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": uptime if is_first_run else (uptime - measurement_run_start_timestamp)}
-        message_sent = network.send_message(cfg, network.create_message(cfg.device_id, measurements))
-        logging.info("measurement sent: {}".format(message_sent))
-        message_buffer.parse_stored_measurements_and_upload(network)
-
-        if not always_on or (always_on and is_first_run):
-            network.check_and_apply_ota(cfg)
 
     except Exception as e:
         device_info.set_led_color("red")
