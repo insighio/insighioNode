@@ -3,6 +3,11 @@ import utils
 import ure
 import logging
 
+try:
+    import apps.demo_console.demo_config as cfg
+except:
+    cfg = {}
+
 app_name = "demo_console"
 rootFolder = "/"
 config_file = '{}apps/{}/demo_config.py'.format(rootFolder, app_name)
@@ -105,8 +110,6 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
     logging.debug("Loading local configuration...")
 
     try:
-        import apps.demo_console.demo_config as cfg
-
         for key in dir(cfg):
             try:
                 webUIKey = configDict[key]
@@ -179,12 +182,10 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
         return configKeyValues
 
 def get_config_URI_param():
-    config_obj = get_config_values(False)
+    configDict = get_config_values(False)
 
     uri_str = ""
     try:
-        import apps.demo_console.demo_config as cfg
-
         for key in configDict.keys():
             if uri_str != "" :
                 uri_str += "&"
@@ -208,14 +209,33 @@ def get_config_URI_param():
             pass
 
         return uri_str
-    except:
-        pass
+    except Exception as e:
+        logging.exception(e, "get_config_URI_param:")
 
 def updateConfigValue(key, new_value):
+    logging.debug("about to update config key: {} to value: {}".format(key, new_value))
     configContent = utils.readFromFile(config_file)
-    configContent = ure.sub(key + "\s+=\s+-?\w+(\.\w+)?", "{} = {}".format(key, new_value), configContent)
+
+    if isinstance(new_value, str):
+        regex = '{}\s+=\s+".*"'.format(key)
+        new_key_value_str = '{}="{}"'.format(key, new_value)
+    elif isinstance(new_value, int) or isinstance(new_value, float):
+        regex = "{}\s+=\s+-?\w+(\.\w+)?".format(key)
+        new_key_value_str = "{}={}".format(key, new_value)
+    else:
+        logging.error("config [{}] type not supported: ".format(key, type(new_value)))
+        return
+
+    if ure.search(regex, configContent):
+        configContent = ure.sub(regex, new_key_value_str, configContent)
+    else:
+        configContent += "\n" + new_key_value_str
+
+    setattr(cfg, key, new_value)
+
     utils.writeToFile(config_file, configContent)
     notifyServerWithNewConfig()
+    logging.info("finished updating config ")
 
 def notifyServerWithNewConfig():
     newConfig = get_config_URI_param()
