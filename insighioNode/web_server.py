@@ -53,9 +53,9 @@ class Settings():
 
         if not insighioSettings:
             insighioSettings = {}
-            from www import stored_config_utils
+            from www import configuration_handler
             try:
-                insighioSettings = stored_config_utils.get_config_values()
+                insighioSettings = configuration_handler.get_config_values()
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
 

@@ -13,14 +13,6 @@ def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
 ####
 
-def updateConfigValue(key, new_value):
-    import utils
-    import ure
-    config_file_path = "/apps/demo_console/demo_config.py"
-    configContent = utils.readFromFile(config_file_path)
-    configContent = ure.sub(key + "\s+=\s+-?\w+(\.\w+)?", "{} = {}".format(key, new_value), configContent)
-    utils.writeToFile(config_file_path, configContent)
-
 def checkAndApply(client):
     if client is None:
         logging.debug("OTA check aborted, no active transfer client")
@@ -70,6 +62,23 @@ def checkAndApply(client):
         config_content = downloadDeviceConfigurationHTTP(client)
 
         applyDeviceConfiguration(client, config_content, topic)
+    elif topic.endswith("/partialConfig"):
+        # first clear non-modem based config request
+        client.clear_retained(topic)
+
+        try:
+            from www import configuration_handler
+            keyValueDict = configuration_handler.stringParamsToDict(message)
+
+            from www import configuration_handler
+            for key in keyValueDict:
+                configuration_handler.updateConfigValue(key, keyValueDict[key])
+
+            import machine
+            machine.reset()
+        except Exception as e:
+            logging.exception(e, "unable to apply partial configuration")
+
     elif topic.endswith("/cmd") and message == "tare":
         import utils
         from sensors import hx711
@@ -90,7 +99,8 @@ def checkAndApply(client):
 
         hx711.set_offset(new_offset)
         cfg._UC_IO_SCALE_OFFSET = new_offset
-        updateConfigValue("_UC_IO_SCALE_OFFSET", new_offset)
+        from www import configuration_handler
+        configuration_handler.updateConfigValue("_UC_IO_SCALE_OFFSET", new_offset)
         client.clear_retained(topic)
     elif topic.endswith("/cmd") and message == "reboot":
         client.clear_retained(topic)
@@ -278,29 +288,14 @@ def downloadOTA(client, fileId, fileType, fileSize):
 def applyDeviceConfiguration(client, configurationParameters, topic):
     if configurationParameters is None:
         return
-    # remove '?' if the string starts with it
-    if configurationParameters.startswith("?"):
-        configurationParameters = str(configurationParameters[1:])
-
-    keyValueDict = dict()
-    keyValueStrings = configurationParameters.split("&")
-    for keyValueStr in keyValueStrings:
-        keyValue = keyValueStr.split("=")
-        if len(keyValue) == 2:
-            if keyValue[1] == "true":
-                keyValue[1] = "True"
-            elif keyValue[1] == "false":
-                keyValue[1] = "False"
-            keyValueDict[keyValue[0]] = keyValue[1]
-            logging.debug("key value added [{}] -> {}".format(keyValue[0], keyValue[1]))
-        else:
-            logging.error("key value error |{}|".format(keyValue))
 
     from www import configuration_handler
+
+    keyValueDict = configuration_handler.stringParamsToDict(configurationParameters)
+
     configuration_handler.apply_configuration(keyValueDict)
     client.clear_retained(topic)
     client.disconnect()
     import machine
     logging.info("about to reset to use new configuration")
     machine.reset()
-    logging.info("why am I here?")
