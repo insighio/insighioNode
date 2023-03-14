@@ -12,7 +12,7 @@
 </head>
 
 <body class="body-custom">
-  <img src="img/logo.png" class="img-responsive img-center">
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center" >
 
   <div class="panel panel-custom">
     <div class="columns">
@@ -159,7 +159,7 @@
         var timeA = data.scheduled_time_a
         var timeB = data.scheduled_time_b
 
-        if (timeA !== "undefined" && timeB !== "undefined") {
+        if (timeA && timeB) {
           timingChanged(undefined, 'scheduled')
 
           document.getElementById('input-scheduled-time-a').value = secondsToStringTime(timeA)

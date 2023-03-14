@@ -12,7 +12,7 @@
 </head>
 
 <body class="body-custom">
-  <img src="img/logo.png" class="img-responsive img-center">
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center" >
 
   <div class="panel panel-custom">
     <div class="columns">
@@ -446,6 +446,8 @@
         setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
 
         var selectedShield = data.selected_shield ? data.selected_shield : data.selected_board
+
+        console.log("selected shield/board: ", data.selected_shield , data.selected_board, tabNamePerShield[selectedShield])
         if (selectedShield && tabNamePerShield[selectedShield])
           boardChanged(undefined, tabNamePerShield[selectedShield])
 
@@ -476,9 +478,9 @@
 
         setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
 
-        var adp1 = data.meas_sensor_a_d_p1
-        var adp2 = data.meas_sensor_a_d_p2
-        var adp3 = data.meas_sensor_a_d_p3
+        var adp1 = fromMultiWordToOne(data.meas_sensor_a_d_p1)
+        var adp2 = fromMultiWordToOne(data.meas_sensor_a_d_p2)
+        var adp3 = fromMultiWordToOne(data.meas_sensor_a_d_p3)
 
         setElemValue('input-ins-esp-i2c-1', data.meas_i2c_1, "disabled")
         setElemValue('input-ins-esp-s1-i2c', data.meas_i2c_1, "disabled")
@@ -644,6 +646,7 @@
     }
 
     function boardChanged(evt, boardDivId) {
+      console.log("boardChanged: ", boardDivId)
       var i, tabcontent, tablinks;
 
       tabcontent = document.getElementsByClassName("tabcontent");

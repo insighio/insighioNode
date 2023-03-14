@@ -55,7 +55,7 @@ class Settings():
             insighioSettings = {}
             from utils import configuration_handler
             try:
-                insighioSettings = configuration_handler.get_config_values()
+                insighioSettings = configuration_handler.get_config_values(False)
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
 
@@ -188,7 +188,7 @@ def start(timeoutMs=120000):
 
     device_info.wdt_reset()
 
-    app = tinyweb.webserver(3, 6, 16, False)
+    app = tinyweb.webserver(10, 6, 16, False)
 
     ############################################################################
     # callback registration

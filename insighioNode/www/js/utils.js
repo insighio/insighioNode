@@ -48,7 +48,7 @@ function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = 
   }
 
   elem.value =
-    newValue !== "undefined" && newValue !== undefined && (intZeroAccepted || (!intZeroAccepted && newValue !== 0))
+    newValue !== "" && newValue !== "undefined" && newValue !== undefined && (intZeroAccepted || (!intZeroAccepted && newValue !== 0))
       ? newValue
       : defaultValue
 }
@@ -60,7 +60,7 @@ function setElemValueBool(elementId, newValue, defaultValue = "", boolField = "c
     return
   }
 
-  elem[boolField] = newValue !== "undefined" && newValue !== undefined ? Boolean(newValue) : defaultValue
+  elem[boolField] = newValue !== "" && newValue !== "undefined" && newValue !== undefined ? Boolean(newValue) : defaultValue
 }
 
 function validateElemValue(elemId, message, regex = undefined) {
@@ -150,7 +150,7 @@ function addSwitch(parentId, switchId, switchLabel, onClickCallback = undefined)
 }
 
 function strToJSValue(strVal) {
-  if (strVal === "undefined") return undefined
+  if (strVal === "undefined" || strVal === "") return undefined
   else if (strVal === "true") return true
   else if (strVal === "false") return false
   return strVal
@@ -183,5 +183,17 @@ function detectBoardChange(settings_mac, cookies_mac){
     alert("board change detected...restarting configuration")
     location.href = "step-2-select.html"
     return
+  }
+}
+
+function fromMultiWordToOne(initialString, delimeter=" ") {
+  try {
+    if(!initialString || typeof(initialString) !== "string")
+      return initialString
+
+    return initialString.split(delimeter)[0]
+  }
+  catch {
+    return initialString
   }
 }

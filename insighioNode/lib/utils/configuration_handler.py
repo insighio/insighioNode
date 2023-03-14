@@ -122,7 +122,7 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
             elif isinstance(value, bool):
                 configKeyValues[webUIKey] = str(value).lower()
             elif isinstance(value, NoneType):
-                configKeyValues[webUIKey] = "undefined"
+                configKeyValues[webUIKey] = ""
             elif isinstance(value, dict):
                 import ujson
                 configKeyValues[webUIKey] = ujson.dumps(value)
@@ -161,7 +161,7 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
             try:
                 configKeyValues[sec_key]
             except KeyError:
-                configKeyValues[sec_key] = "undefined"
+                configKeyValues[sec_key] = ""
 
     logging.debug("Configuration loading done.")
 
@@ -174,7 +174,7 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
                 newValue = "True"
             elif newValue == "false":
                 newValue = "False"
-            elif newValue == "undefined":
+            elif newValue == "":
                 newValue = "None"
             tmpDict[newKey] = newValue
         return  tmpDict

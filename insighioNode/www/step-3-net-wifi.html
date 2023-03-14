@@ -12,7 +12,7 @@
 </head>
 
 <body class="body-custom">
-  <img src="img/logo.png" class="img-responsive img-center">
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center" >
 
   <div class="panel panel-custom">
     <div class="columns">
@@ -161,7 +161,7 @@
         protocol = data.protocol
         setElemValue('input-ssid', data.wifi_ssid)
         setElemValue('input-ssid-pass', data.wifi_pass)
-        setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
+        setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
         populateAvailableNets(data.wifiAvailableNets)
         detectBoardChange(data.board_mac, Cookies.get('board-mac'))
         showElement('loader', false)

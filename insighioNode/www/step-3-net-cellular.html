@@ -11,7 +11,7 @@
 </head>
 
 <body class="body-custom">
-  <img src="img/logo.png" class="img-responsive img-center">
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center" >
 
   <div class="panel panel-custom">
     <div class="columns">
@@ -136,8 +136,8 @@
         setElemValue('input-apn', data.cell_apn, "internet")
         setElemValue('input-band', data.cell_band, 20)
 
-        setRadioGroupValue('protocol', protocol !== "undefined" ? protocol : "mqtt")
-        setRadioGroupValue('ipversion', ipv !== "undefined" ? ipv : "IP")
+        setRadioGroupValue('protocol', protocol !== "" ? protocol : "mqtt")
+        setRadioGroupValue('ipversion', ipv !== "" ? ipv : "IP")
 
         detectBoardChange(data.board_mac, Cookies.get('board-mac'))
         showElement('loader', false)
