@@ -67,10 +67,10 @@ def checkAndApply(client):
         client.clear_retained(topic)
 
         try:
-            from www import configuration_handler
+            from utils import configuration_handler
             keyValueDict = configuration_handler.stringParamsToDict(message)
 
-            from www import configuration_handler
+            from utils import configuration_handler
             for key in keyValueDict:
                 configuration_handler.updateConfigValue(key, keyValueDict[key])
 
@@ -99,7 +99,7 @@ def checkAndApply(client):
 
         hx711.set_offset(new_offset)
         cfg._UC_IO_SCALE_OFFSET = new_offset
-        from www import configuration_handler
+        from utils import configuration_handler
         configuration_handler.updateConfigValue("_UC_IO_SCALE_OFFSET", new_offset)
         client.clear_retained(topic)
     elif topic.endswith("/cmd") and message == "reboot":
@@ -289,7 +289,7 @@ def applyDeviceConfiguration(client, configurationParameters, topic):
     if configurationParameters is None:
         return
 
-    from www import configuration_handler
+    from utils import configuration_handler
 
     keyValueDict = configuration_handler.stringParamsToDict(configurationParameters)
 

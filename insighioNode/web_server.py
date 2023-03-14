@@ -53,7 +53,7 @@ class Settings():
 
         if not insighioSettings:
             insighioSettings = {}
-            from www import configuration_handler
+            from utils import configuration_handler
             try:
                 insighioSettings = configuration_handler.get_config_values()
             except Exception as e:
@@ -117,7 +117,7 @@ class Config:
         utils.writeToFile("/configLog", data["queryString"])
 
         try:
-            from www import configuration_handler
+            from utils import configuration_handler
             configuration_handler.apply_configuration(data["queryParams"])
             return {}, 200
         except Exception as e:
