@@ -43,7 +43,7 @@ logging.info("Original device id: " + device_info.get_device_id()[0])
 class DevID():
     def get(self, data):
         logging.debug("[web-server][GET]: /devid")
-        return {"id": device_info.get_device_id()[0]}, 200
+        return {"id": device_info.get_device_id()[0], "hw_module": device_info.get_hw_module_verison()}, 200
 
 class Settings():
     def get(self, data):
