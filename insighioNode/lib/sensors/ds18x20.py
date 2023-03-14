@@ -11,12 +11,8 @@ import sensors
 import machine
 import sys
 
-if sys.platform == 'esp32':
-    from onewire import OneWire
-    from ds18x20 import DS18X20
-else:
-    from sensors.protocol.onewire import OneWire
-    from sensors.sensor.ds18x20 import DS18X20
+from onewire import OneWire
+from ds18x20 import DS18X20
 
 
 def get_reading(data_pin, vcc_pin=None):
