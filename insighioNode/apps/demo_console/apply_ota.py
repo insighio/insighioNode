@@ -116,6 +116,8 @@ class TarFile:
 
 def mkdir(directoryPath):
     try:
+        if directoryPath.endswith("/"):
+            directoryPath = directoryPath[:-1]
         uos.mkdir(directoryPath)
         logging.info("Made directory: {}".format(directoryPath))
     except OSError as e:
