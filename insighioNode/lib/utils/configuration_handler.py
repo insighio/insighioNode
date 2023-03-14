@@ -189,24 +189,7 @@ def get_config_URI_param():
         for key in configDict.keys():
             if uri_str != "" :
                 uri_str += "&"
-            uri_str += "{}={}".format(configDict[key], getattr(cfg, key) if hasattr(cfg, key) else None)
-
-        try:
-            proto_config = cfg.get_protocol_config()
-
-            uri_str += "&{}={}".format("insighio_channel", proto_config.message_channel_id)
-            uri_str += "&{}={}".format("insighio_control_channel", proto_config.control_channel_id)
-            uri_str += "&{}={}".format("insighio_id", proto_config.thing_id)
-            uri_str += "&{}={}".format("insighio_key", proto_config.thing_token)
-        except:
-            pass
-
-        try:
-            ssid = list(cfg._CONF_NETS.keys())[0]
-            uri_str += "&{}={}".format("wifi_ssid", ssid)
-            uri_str += "&{}={}".format("wifi_pass", cfg._CONF_NETS[ssid]['pwd'])
-        except:
-            pass
+            uri_str += "{}={}".format(key, configDict[key])
 
         return uri_str
     except Exception as e:
