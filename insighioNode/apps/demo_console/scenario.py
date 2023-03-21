@@ -309,21 +309,25 @@ def executeDeviceDeinitialization():
 
 def executeTimingConfiguration():
     if(scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") is not None):
-        sleep_period = scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")*1000
-        # utime.ticks_ms() is being reset after each deepsleep
         uptime = getUptime(timeDiffAfterNTP)
-        logging.debug("end timestamp: " + str(uptime))
-        logging.info("Getting into deep sleep...")
-
-        #############
-        ### Time controlled by Web UI defined period
-        ###
-        sleep_period = sleep_period if sleep_period is not None else 600000  # default 10 minute sleep
-        remaining_milliseconds = sleep_period - uptime
-        if remaining_milliseconds < 0:
-            remaining_milliseconds = 1000  # dummy wait 1 sec before waking up again
-        sleep_period = remaining_milliseconds % 86400000  # if sleep period is longer than a day, keep the 24h period as max
-        logging.info("will sleep for {} hours, {} minutes, {} seconds".format(floor((sleep_period/1000)/3600), floor(((sleep_period/1000) % 3600)/60), floor(((sleep_period/1000) % 60))))
+        logging.debug('end timestamp: '+str(uptime))
+        logging.info('Getting into deep sleep...')
+        sleep_period = scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
+        sleep_period = sleep_period if sleep_period is not None else 600
+        if sleep_period % 60 == 0:
+        	now_timestamp = utime.time()
+        	next_tick = now_timestamp + sleep_period
+        	remaining = (sleep_period - next_tick % sleep_period) * 1000 - measurement_run_start_timestamp
+        	logging.debug('now_timestamp: {}, next_tick: {}, uptime: {}, measurement_time: {}, remaining: {}'.format(now_timestamp, next_tick, uptime, measurement_run_start_timestamp, remaining))
+        	if remaining <= 0:
+        		remaining = sleep_period * 1000 - uptime
+        else:
+        	remaining = sleep_period * 1000 - uptime
+        if remaining < 0:
+        	remaining = 1000
+        sleep_period = remaining % 86400000
+        from math import floor
+        logging.info('will sleep for {} hours, {} minutes, {} seconds'.format(floor(sleep_period/1000/3600),floor(sleep_period/1000%3600/60),floor(sleep_period/1000%60)))
         machine.deepsleep(sleep_period)
     elif(scenario_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND") is not None and scenario_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND") is not None):
         ### RTC tuple format
