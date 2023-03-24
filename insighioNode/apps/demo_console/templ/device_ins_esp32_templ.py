@@ -37,3 +37,5 @@ _UC_UART_GPS_RX = 14
 
 """ const i2c addresses """
 _I2C_BQ_ADDRESS = 0x6B
+
+_UC_IO_ANALOG_DIGITAL_P1 = 32

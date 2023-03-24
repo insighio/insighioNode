@@ -163,6 +163,10 @@ def default_board_measurements(measurements):
         pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
         meas_key = get_config(meas_key_name)
         pin = get_config(pin_name)
+
+        if pin is None and n == 1:  #backward compatibility towards v1.2
+            pin = 32
+
         if meas_key is not None and pin is not None and meas_key != cfg._CONST_MEAS_DISABLED:
             logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, meas_key, pin))
             read_analog_digital_sensor(pin, meas_key, measurements, "ap" + str(n))
@@ -174,6 +178,10 @@ def default_board_measurements(measurements):
         transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
         meas_key = get_config(meas_key_name)
         pin = get_config(pin_name)
+        
+        if pin is None and n == 1:  #backward compatibility towards v1.2
+            pin = 32
+
         transformation = get_config(transformation_key)
         if meas_key is not None and pin is not None and meas_key != cfg._CONST_MEAS_DISABLED:
             logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, meas_key, pin))
