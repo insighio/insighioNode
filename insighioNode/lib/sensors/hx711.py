@@ -3,7 +3,9 @@ import logging
 import sensors
 from external.hx711.hx711_spi import HX711
 #from external.hx711.hx711_gpio import HX711
-from machine import Pin, SPI
+from machine import Pin
+
+import device_info
 
 sensor = None
 
@@ -28,8 +30,12 @@ class ScaleSensor:
             pin_OUT = Pin(self.data_pin, Pin.IN, pull=Pin.PULL_DOWN)
             pin_SCK = Pin(self.clock_pin, Pin.OUT)
             spi_sck = Pin(self.spi_pin)
-            self.spi = SPI(1, baudrate=1000000, polarity=0,
-                  phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
+            if device_info.get_hw_module_verison() == device_info._CONST_ESP32S3:
+                from machine import SoftSPI
+                self.spi = SoftSPI(baudrate=1000000, polarity=0, phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
+            else:
+                from machine import SPI
+                self.spi = SPI(1, baudrate=1000000, polarity=0, phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
             self.hx = HX711(pin_SCK, pin_OUT, self.spi)
         #    hx.tare()
             self.hx.set_gain(128)

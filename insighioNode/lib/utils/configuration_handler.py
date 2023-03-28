@@ -295,7 +295,10 @@ def apply_configuration(keyValuePairDictionary):
     elif shield == "dig_analog":
         contents += get_file_config('/apps/demo_console/templ/shield_i2c_dig_analog_templ.py', keyValuePairDictionary)
     elif shield == "scale":
-        contents += get_file_config('/apps/demo_console/templ/shield_scale.py', keyValuePairDictionary)
+        if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
+            contents += get_file_config('/apps/demo_console/templ/shield_esp32_scale.py', keyValuePairDictionary)
+        elif board == device_info._CONST_ESP32S3:
+            contents += get_file_config('/apps/demo_console/templ/shield_esp32s3_scale.py', keyValuePairDictionary)
         contents += get_file_config('/apps/demo_console/templ/device_scale_config.py', keyValuePairDictionary)
 
     contents += '\n'

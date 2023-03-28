@@ -15,6 +15,8 @@ insighioSettings = None
 wlan = None
 app = None
 
+hw_version = device_info.get_hw_module_verison()
+
 def populateAvailableNets():
     available_nets = []
     logging.info("Initializing WiFi APs in range")
@@ -59,7 +61,7 @@ class Settings():
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
 
-            insighioSettings["hw_module"] = device_info.get_hw_module_verison()
+            insighioSettings["hw_module"] = hw_version
             insighioSettings["board_mac"] = device_info.get_device_id()[0]
 
         if data.get("update_wifi_list") == '1':
@@ -93,7 +95,12 @@ class RawWeightIdle():
         # if data and data["board"] == "old_esp_cyclefi":
         #     raw_val = hx711.get_reading_raw_idle_value(21, 22, 23, None)
         # else:
-        raw_val = hx711.get_reading_raw_idle_value(4, 33, 12, 25)
+
+        if hw_version == device_info._CONST_ESP32  or hw_version == device_info._CONST_ESP32_WROOM:
+            raw_val = hx711.get_reading_raw_idle_value(4, 33, 12, 25)
+        elif hw_version == device_info._CONST_ESP32S3:
+            raw_val = hx711.get_reading_raw_idle_value(5, 4, 8, 6)
+
         logging.debug("raw val about to return: " + str(raw_val))
         return {"raw": raw_val}, 200
 

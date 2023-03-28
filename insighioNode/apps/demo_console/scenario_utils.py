@@ -92,8 +92,8 @@ def get_measurements(cfg):
         logging.exception(e, "unable to measure board sensors")
 
     #enable sensors
-    new_gnd_pin = get_config("_UC_IO_SENSOR_SWITCH_ON")
-    old_gnd_pin = get_config("_UC_IO_SENSOR_GND_ON")
+    new_gnd_pin = get_config("_UC_IO_SENSOR_GND_ON")
+    old_gnd_pin = get_config("_UC_IO_SENSOR_SWITCH_ON")
 
     sensor_pin = new_gnd_pin if new_gnd_pin is not None else old_gnd_pin
     gpio_handler.set_pin_value(sensor_pin, 1)
@@ -178,7 +178,7 @@ def default_board_measurements(measurements):
         transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
         meas_key = get_config(meas_key_name)
         pin = get_config(pin_name)
-        
+
         if pin is None and n == 1:  #backward compatibility towards v1.2
             pin = 32
 
@@ -197,6 +197,11 @@ def add_explicit_key_values(measurements):
 
 
 def read_scale(measurements):
+    weight_on_pin = get_config('_UC_IO_WEIGHT_ON')
+
+    if weight_on_pin:
+        sensors.set_sensor_power_on(weight_on_pin)
+
     from sensors import hx711
 
     weight = hx711.get_reading(cfg._UC_IO_SCALE_DATA_PIN,
@@ -207,6 +212,9 @@ def read_scale(measurements):
 
     weight = weight if weight > 0 or weight < -100 else 0
     set_value_float(measurements, "scale_weight", weight, SenmlUnits.SENML_UNIT_GRAM)
+
+    if weight_on_pin:
+        sensors.set_sensor_power_off(weight_on_pin)
 
 def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
     sensor_name = sensor_name.split("-")[0].strip()
