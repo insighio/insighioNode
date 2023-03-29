@@ -189,7 +189,7 @@ def get_config_URI_param():
         for key in configDict.keys():
             if uri_str != "" :
                 uri_str += "&"
-            uri_str += "{}={}".format(key, configDict[key])
+            uri_str += "{}={}".format(key.replace("_", "-"), configDict[key])
 
         return uri_str
     except Exception as e:
