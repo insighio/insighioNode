@@ -34,12 +34,14 @@
 
     <div class="panel-body">
       <br />
+      <div id="loader" class="loading loading-lg"></div>
       <div class="empty">
         <div class="empty-icon">
-          <i class="icon icon-2x icon-check"></i>
+          <i id="finished_icon_1" class="icon icon-2x icon-check" style="display: none"></i>
         </div>
-        <p class="empty-title h5">Configuration Applied</p>
-        <p class="empty-subtitle">The device will soon reboot to the desired configuration.</p>
+        <p id="loading_label_1" class="empty-title h5">Appying Configuration...</p>
+        <p id="finished_label_1" class="empty-title h5" style="display: none">Configuration Applied</p>
+        <p id="finished_label_2" class="empty-subtitle" style="display: none">The device will soon reboot to the desired configuration.</p>
         <div class="empty-action">
           <button class="btn btn-primary" id="save-button" onclick="startOver()">Start over?</button>
         </div>
@@ -98,6 +100,12 @@
       }
 
       function requestReboot() {
+        showElement('loader', false)
+        showElement('loading_label_1', false)
+        showElement('finished_icon_1', true)
+        showElement('finished_label_1', true)
+        showElement('finished_label_2', true)
+
         fetch('/reboot', {
           method: 'POST',
           headers: {
