@@ -215,6 +215,7 @@ def read_scale(measurements):
 
     if weight_on_pin:
         sensors.set_sensor_power_off(weight_on_pin)
+    hx711.deinit_instance()
 
 def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
     sensor_name = sensor_name.split("-")[0].strip()

@@ -83,21 +83,12 @@ def checkAndApply(client):
         import utils
         from sensors import hx711
 
-        # to change
-        import gpio_handler
-        new_gnd_pin = get_config("_UC_IO_SENSOR_SWITCH_ON")
-        old_gnd_pin = get_config("_UC_IO_SENSOR_GND_ON")
-        sensor_pin = new_gnd_pin if new_gnd_pin is not None else old_gnd_pin
-        gpio_handler.set_pin_value(sensor_pin, 1)
-        ####
+        hw_version = device_info.get_hw_module_verison()
+        if hw_version == device_info._CONST_ESP32  or hw_version == device_info._CONST_ESP32_WROOM:
+            new_offset = hx711.get_reading_raw_idle_value(4, 33, 12, 25)
+        elif hw_version == device_info._CONST_ESP32S3:
+            new_offset = hx711.get_reading_raw_idle_value(5, 4, 8, 6)
 
-        new_offset = hx711.get_reading_raw_idle_value()
-
-        #to change
-        gpio_handler.set_pin_value(sensor_pin, 0)
-        ####
-
-        hx711.set_offset(new_offset)
         cfg._UC_IO_SCALE_OFFSET = new_offset
         from utils import configuration_handler
         configuration_handler.updateConfigValue("_UC_IO_SCALE_OFFSET", new_offset)
