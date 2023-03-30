@@ -85,9 +85,9 @@ def checkAndApply(client):
 
         hw_version = device_info.get_hw_module_verison()
         if hw_version == device_info._CONST_ESP32  or hw_version == device_info._CONST_ESP32_WROOM:
-            new_offset = hx711.get_reading_raw_idle_value(4, 33, 12, 25)
+            new_offset = hx711.get_reading(4, 33, 12, None, None, 25, True)
         elif hw_version == device_info._CONST_ESP32S3:
-            new_offset = hx711.get_reading_raw_idle_value(5, 4, 8, 6)
+            new_offset = hx711.get_reading(5, 4, 8, None, None, 6, True)
 
         cfg._UC_IO_SCALE_OFFSET = new_offset
         from utils import configuration_handler

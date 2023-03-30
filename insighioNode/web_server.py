@@ -97,23 +97,12 @@ class RawWeightIdle():
         # else:
 
         if hw_version == device_info._CONST_ESP32  or hw_version == device_info._CONST_ESP32_WROOM:
-            raw_val = hx711.get_reading_raw_idle_value(4, 33, 12, 25)
+            raw_val = hx711.get_reading(4, 33, 12, None, None, 25, True)
         elif hw_version == device_info._CONST_ESP32S3:
-            raw_val = hx711.get_reading_raw_idle_value(5, 4, 8, 6)
+            raw_val = hx711.get_reading(5, 4, 8, None, None, 6, True)
 
         logging.debug("raw val about to return: " + str(raw_val))
         return {"raw": raw_val}, 200
-
-# class RawWeight:
-#     def get(self, data):
-#         logging.debug("[web-server][GET]: /raw-weight")
-#         from sensors import hx711
-#         # if data and data["board"] == "old_esp_cyclefi":
-#         #     raw_val = hx711.get_reading(21, 22, 23, None, None, None, True)
-#         # else:
-#         raw_val = hx711.get_reading(4, 33, 12, None, None, 25, True)
-#         logging.debug("raw weight about to return: " + str(raw_val))
-#         return {"raw": raw_val}, 200
 
 class Config:
     def post(self, data):
