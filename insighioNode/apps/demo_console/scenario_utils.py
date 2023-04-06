@@ -204,11 +204,23 @@ def read_scale(measurements):
 
     from sensors import hx711
 
-    weight = hx711.get_reading(cfg._UC_IO_SCALE_DATA_PIN,
-                               cfg._UC_IO_SCALE_CLOCK_PIN,
-                               cfg._UC_IO_SCALE_SPI_PIN,
-                               cfg._UC_IO_SCALE_OFFSET if hasattr(cfg, '_UC_IO_SCALE_OFFSET') else None,
-                               cfg._UC_IO_SCALE_SCALE if hasattr(cfg, '_UC_IO_SCALE_SCALE') else None)
+    weight = -1
+    is_sensor_debug_on = get_config("_MEAS_SCALE_MONITORING_ENABLED")
+
+    if is_sensor_debug_on:
+        logging.setLevel(logging.DEBUG)
+
+    while True:
+        weight = hx711.get_reading(cfg._UC_IO_SCALE_DATA_PIN,
+                                   cfg._UC_IO_SCALE_CLOCK_PIN,
+                                   cfg._UC_IO_SCALE_SPI_PIN,
+                                   cfg._UC_IO_SCALE_OFFSET if hasattr(cfg, '_UC_IO_SCALE_OFFSET') else None,
+                                   cfg._UC_IO_SCALE_SCALE if hasattr(cfg, '_UC_IO_SCALE_SCALE') else None)
+        if not is_sensor_debug_on:
+            break
+
+        logging.debug("Detected weight: {}".format(weight))
+        utime.sleep_ms(10)
 
     weight = weight if weight > 0 or weight < -100 else 0
     set_value_float(measurements, "scale_weight", weight, SenmlUnits.SENML_UNIT_GRAM)

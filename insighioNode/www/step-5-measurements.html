@@ -114,7 +114,7 @@
                       <label class="form-label" for="measurements">I²C #1</label>
                     </div>
                     <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-ins-esp-i2c-1">
+                      <select class="form-select" id="input-i2c-1">
                       </select>
                     </div>
                     <br />
@@ -123,7 +123,7 @@
                       <label class="form-label" for="measurements">I²C #2</label>
                     </div>
                     <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-ins-esp-i2c-2">
+                      <select class="form-select" id="input-i2c-2">
                       </select>
                     </div>
                     <br />
@@ -132,7 +132,7 @@
                       <label class="form-label" for="measurements">Analog / Digital P1</label>
                     </div>
                     <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-ins-esp-sensor-a-d-p1">
+                      <select class="form-select" id="input-sensor-a-d-p1">
                       </select>
                     </div>
                     <br />
@@ -142,7 +142,18 @@
                     </div>
                     <div class="col-8 col-lg-6">
                       <label class="form-switch">
-                        <input type="checkbox" id="input-ins-esp-weight-scale" />
+                        <input type="checkbox" id="input-scale-enabled" />
+                        <i class="form-icon"></i>
+                      </label>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="col-4 col-lg-6">
+                      <label class="form-label" for="measurements">[Debug] Enable Scale Sensor Monitoring</label>
+                    </div>
+                    <div class="col-8 col-lg-6">
+                      <label class="form-switch">
+                        <input type="checkbox" id="input-scale-monitoring" />
                         <i class="form-icon"></i>
                       </label>
                     </div>
@@ -160,7 +171,7 @@
                       <label class="form-label" for="measurements">I²C</label>
                     </div>
                     <div class="col-8 col-lg-6 ">
-                      <select class="form-select" id="input-ins-esp-s1-i2c">
+                      <select class="form-select" id="input-s1-i2c">
                       </select>
                     </div>
                     <br />
@@ -169,11 +180,11 @@
                       <label class="form-label" for="measurements">Analog / Digital P1</label>
                     </div>
                     <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
+                      <select class="form-select" id="input-s1-sensor-a-d-p1" onchange="selectionChanged(this)">
                       </select>
                     </div>
                     <br />
-                    <div id="input-ins-esp-s1-sensor-a-d-p1-trans-div" class="col-12" style="display:block">
+                    <div id="input-s1-sensor-a-d-p1-trans-div" class="col-12" style="display:block">
                       <br />
                       <div class="form-group columns">
                         <div class="column col-1 col-mr-auto"></div>
@@ -186,7 +197,7 @@
                           </label>
                         </div>
                         <div class="col-6 col-sm-12">
-                          <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p1-t" />
+                          <input class="form-input constr-field" id="input-s1-sensor-a-d-p1-t" />
                         </div>
                         <div class="column col-2 col-mr-auto"></div>
                       </div>
@@ -196,10 +207,10 @@
                       <label class="form-label" for="measurements">Analog / Digital P2</label>
                     </div>
                     <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
+                      <select class="form-select" id="input-s1-sensor-a-d-p2" onchange="selectionChanged(this)">
                       </select>
                     </div>
-                    <div id="input-ins-esp-s1-sensor-a-d-p2-trans-div" class="col-12" style="display:none">
+                    <div id="input-s1-sensor-a-d-p2-trans-div" class="col-12" style="display:none">
                       <br />
                       <div class="form-group columns">
                         <div class="column col-1 col-mr-auto"></div>
@@ -212,7 +223,7 @@
                           </label>
                         </div>
                         <div class="col-6 col-sm-12">
-                          <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p2-t" />
+                          <input class="form-input constr-field" id="input-s1-sensor-a-d-p2-t" />
                         </div>
                         <div class="column col-2 col-mr-auto"></div>
                       </div>
@@ -223,10 +234,10 @@
                       <label class="form-label" for="measurements">Analog / Digital P3</label>
                     </div>
                     <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-ins-esp-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
+                      <select class="form-select" id="input-s1-sensor-a-d-p3" onchange="selectionChanged(this)">
                       </select>
                     </div>
-                    <div id="input-ins-esp-s1-sensor-a-d-p3-trans-div" class="col-12" style="display:none">
+                    <div id="input-s1-sensor-a-d-p3-trans-div" class="col-12" style="display:none">
                       <br />
                       <div class="form-group columns">
                         <div class="column col-1 col-mr-auto"></div>
@@ -239,7 +250,7 @@
                           </label>
                         </div>
                         <div class="col-6 col-sm-12">
-                          <input class="form-input constr-field" id="input-ins-esp-s1-sensor-a-d-p3-t" />
+                          <input class="form-input constr-field" id="input-s1-sensor-a-d-p3-t" />
                         </div>
                         <div class="column col-2 col-mr-auto"></div>
                       </div>
@@ -272,7 +283,7 @@
                       <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
                     </div>
                     <div class="col-8 col-lg-6 col-sm-6">
-                      <input class="form-input constr-field" type="text" id="input-ins-esp-gen-sdi12-warmup-time" />
+                      <input class="form-input constr-field" type="text" id="input-gen-sdi12-warmup-time" />
                     </div>
                     <br />
                     <br />
@@ -414,14 +425,14 @@
       addSwitch("board-default-option-gps", "input-gps-enable", "GPS")
       addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
 
-      generateOptions("input-ins-esp-i2c-1", i2cOptions)
-      generateOptions("input-ins-esp-i2c-2", i2cOptions)
-      generateOptions("input-ins-esp-s1-i2c", i2cOptions)
+      generateOptions("input-i2c-1", i2cOptions)
+      generateOptions("input-i2c-2", i2cOptions)
+      generateOptions("input-s1-i2c", i2cOptions)
 
-      generateOptions("input-ins-esp-sensor-a-d-p1", adcOptions)
-      generateOptions("input-ins-esp-s1-sensor-a-d-p1", adcOptions)
-      generateOptions("input-ins-esp-s1-sensor-a-d-p2", adcOptions)
-      generateOptions("input-ins-esp-s1-sensor-a-d-p3", adcOptions)
+      generateOptions("input-sensor-a-d-p1", adcOptions)
+      generateOptions("input-s1-sensor-a-d-p1", adcOptions)
+      generateOptions("input-s1-sensor-a-d-p2", adcOptions)
+      generateOptions("input-s1-sensor-a-d-p3", adcOptions)
 
       generateSdi12Options()
 
@@ -438,9 +449,8 @@
         setElemValueBool('input-board-stat', strToJSValue(data.meas_board_stat), false)
         setElemValueBool('input-network', strToJSValue(data.meas_network_stat), true)
         setElemValueBool('input-ota', strToJSValue(data.system_enable_ota), true)
-        setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_enabled), false)
-        // setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_offset), false)
-        // setElemValueBool('input-ins-esp-weight-scale', strToJSValue(data.meas_scale_scale), false)
+        setElemValueBool('input-scale-enabled', strToJSValue(data.meas_scale_enabled), false)
+        setElemValueBool('input-scale-monitoring', strToJSValue(data.meas_scale_monitoring_enabled), false)
 
         setElemValueBool('input-gps-enable', gps, true)
         setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
@@ -476,27 +486,27 @@
           }
         }
 
-        setElemValue('input-ins-esp-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
+        setElemValue('input-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
 
         var adp1 = fromMultiWordToOne(data.meas_sensor_a_d_p1)
         var adp2 = fromMultiWordToOne(data.meas_sensor_a_d_p2)
         var adp3 = fromMultiWordToOne(data.meas_sensor_a_d_p3)
 
-        setElemValue('input-ins-esp-i2c-1', data.meas_i2c_1, "disabled")
-        setElemValue('input-ins-esp-s1-i2c', data.meas_i2c_1, "disabled")
-        setElemValue('input-ins-esp-i2c-2', data.meas_i2c_2, "disabled")
-        setElemValue('input-ins-esp-sensor-a-d-p1', adp1, "disabled")
-        setElemValue('input-ins-esp-s1-sensor-a-d-p1', adp1, "disabled")
-        setElemValue('input-ins-esp-s1-sensor-a-d-p2', adp2, "disabled")
-        setElemValue('input-ins-esp-s1-sensor-a-d-p3', adp3, "disabled")
+        setElemValue('input-i2c-1', data.meas_i2c_1, "disabled")
+        setElemValue('input-s1-i2c', data.meas_i2c_1, "disabled")
+        setElemValue('input-i2c-2', data.meas_i2c_2, "disabled")
+        setElemValue('input-sensor-a-d-p1', adp1, "disabled")
+        setElemValue('input-s1-sensor-a-d-p1', adp1, "disabled")
+        setElemValue('input-s1-sensor-a-d-p2', adp2, "disabled")
+        setElemValue('input-s1-sensor-a-d-p3', adp3, "disabled")
 
-        setElemValue("input-ins-esp-s1-sensor-a-d-p1-t", data.meas_sensor_a_d_p1_t, "v")
-        setElemValue("input-ins-esp-s1-sensor-a-d-p2-t", data.meas_sensor_a_d_p2_t, "v")
-        setElemValue("input-ins-esp-s1-sensor-a-d-p3-t", data.meas_sensor_a_d_p3_t, "v")
+        setElemValue("input-s1-sensor-a-d-p1-t", data.meas_sensor_a_d_p1_t, "v")
+        setElemValue("input-s1-sensor-a-d-p2-t", data.meas_sensor_a_d_p2_t, "v")
+        setElemValue("input-s1-sensor-a-d-p3-t", data.meas_sensor_a_d_p3_t, "v")
 
-        showElement('input-ins-esp-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
-        showElement('input-ins-esp-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
-        showElement('input-ins-esp-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
+        showElement('input-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
+        showElement('input-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
+        showElement('input-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
 
         //setElemValueBool('input-store-meas-if-failed-conn', data.store_meas_if_failed_conn, false)
 
@@ -539,6 +549,7 @@
       Cookies.remove('store-meas-if-failed-conn')
       Cookies.remove('meas-4-20-snsr-1-enable')
       Cookies.remove('meas-4-20-snsr-2-enable')
+      Cookies.remove('meas-scale-monitoring-enabled')
 
       for (let i = 1; i < 11; ++i) {
         Cookies.remove('meas-sdi-' + i + '-enabled')
@@ -587,19 +598,20 @@
         Cookies.set('meas-4-20-snsr-1-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-1-enable'))
         Cookies.set('meas-4-20-snsr-2-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-2-enable'))
 
-        Cookies.set('meas-sdi-warmup-time', document.getElementById('input-ins-esp-gen-sdi12-warmup-time').value)
+        Cookies.set('meas-sdi-warmup-time', document.getElementById('input-gen-sdi12-warmup-time').value)
 
         Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
         location.href = "step-6-timing.html"
       }
       else if (elementIsVisible("shield-scale-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-scale-options"])
-        Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-i2c-1').value)
-        Cookies.set('meas-i2c-2', document.getElementById('input-ins-esp-i2c-2').value)
-        Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-sensor-a-d-p1').value)
-        Cookies.set('meas-scale-enabled', boolElemToPyStr('input-ins-esp-weight-scale'))
+        Cookies.set('meas-i2c-1', document.getElementById('input-i2c-1').value)
+        Cookies.set('meas-i2c-2', document.getElementById('input-i2c-2').value)
+        Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-sensor-a-d-p1').value)
+        Cookies.set('meas-scale-enabled', boolElemToPyStr('input-scale-enabled'))
+        Cookies.set('meas-scale-monitoring-enabled', boolElemToPyStr('input-scale-monitoring'))
 
-        if (!isChecked('input-ins-esp-weight-scale')) {
+        if (!isChecked('input-scale-enabled')) {
           Cookies.set('meas-scale-offset', 0)
           Cookies.set('meas-scale-scale', 1)
           location.href = "step-6-timing.html"
@@ -624,19 +636,19 @@
       }
       else if (elementIsVisible("shield-dig-analog-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-dig-analog-options"])
-        Cookies.set('meas-i2c-1', document.getElementById('input-ins-esp-s1-i2c').value)
-        Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-ins-esp-s1-sensor-a-d-p1').value)
-        Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-ins-esp-s1-sensor-a-d-p2').value)
-        Cookies.set('meas-sensor-a-d-p3', document.getElementById('input-ins-esp-s1-sensor-a-d-p3').value)
+        Cookies.set('meas-i2c-1', document.getElementById('input-s1-i2c').value)
+        Cookies.set('meas-sensor-a-d-p1', document.getElementById('input-s1-sensor-a-d-p1').value)
+        Cookies.set('meas-sensor-a-d-p2', document.getElementById('input-s1-sensor-a-d-p2').value)
+        Cookies.set('meas-sensor-a-d-p3', document.getElementById('input-s1-sensor-a-d-p3').value)
 
-        if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p1-trans-div'))
-          Cookies.set('meas-sensor-a-d-p1-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p1-t').value)
+        if (elementIsVisible('input-s1-sensor-a-d-p1-trans-div'))
+          Cookies.set('meas-sensor-a-d-p1-t', document.getElementById('input-s1-sensor-a-d-p1-t').value)
 
-        if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p2-trans-div'))
-          Cookies.set('meas-sensor-a-d-p2-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p2-t').value)
+        if (elementIsVisible('input-s1-sensor-a-d-p2-trans-div'))
+          Cookies.set('meas-sensor-a-d-p2-t', document.getElementById('input-s1-sensor-a-d-p2-t').value)
 
-        if (elementIsVisible('input-ins-esp-s1-sensor-a-d-p3-trans-div'))
-          Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-ins-esp-s1-sensor-a-d-p3-t').value)
+        if (elementIsVisible('input-s1-sensor-a-d-p3-trans-div'))
+          Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-s1-sensor-a-d-p3-t').value)
 
         Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
         location.href = "step-6-timing.html"

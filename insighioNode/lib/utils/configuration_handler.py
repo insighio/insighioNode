@@ -99,7 +99,8 @@ configDict = {
 "_SATELLITE_ASTROCAST_DEVKIT_EN": "sat_astro_devkit_en",
 "_SATELLITE_ASTROCAST_DEVKIT_SSID": "sat_astro_devkit_ssid",
 "_SATELLITE_ASTROCAST_DEVKIT_PASS": "sat_astro_devkit_pass",
-"_SATELLITE_ASTROCAST_DEVKIT_TOKEN": "sat_astro_devkit_token"
+"_SATELLITE_ASTROCAST_DEVKIT_TOKEN": "sat_astro_devkit_token",
+"_MEAS_SCALE_MONITORING_ENABLED": "meas_scale_monitoring_enabled"
 }
 
 NoneType = type(None)
