@@ -123,7 +123,7 @@ class ScaleSensor:
 
     def _get_reading_raw_idle_value(self):
         number_of_measurements_for_idle = 5
-        weigth_diff_threshold_percent = 0.0005
+        weigth_diff_threshold_percent = 0.001
 
         sequential_identical_values = 0
         raw_before_event = 0
