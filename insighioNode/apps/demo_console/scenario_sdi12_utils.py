@@ -133,7 +133,11 @@ def read_sdi12_sensor(sdi12, address, measurements):
             responseArrayTemperature = sdi12.get_measurement(address, "C5")
             parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
     else:
-        parse_generic_sdi12(address, responseArray, measurements)
+        set_value_float(measurements, "gen_" + address + "_i", manufacturer, None)
+        responseArrayC = sdi12.get_measurement(address, "C")
+        responseArrayM = sdi12.get_measurement(address, "M")
+        parse_generic_sdi12(address, responseArrayC, measurements, "gen_c")
+        parse_generic_sdi12(address, responseArrayM, measurements, "gen_m")
 
 
 def parse_sensor_meter(address, responseArray, measurements):
