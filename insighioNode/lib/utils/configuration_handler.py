@@ -291,7 +291,7 @@ def apply_configuration(keyValuePairDictionary):
 
     contents += get_file_config('/apps/demo_console/templ/device_i2c_analog_config_templ.py', keyValuePairDictionary)
     if shield == "advind":
-        contents += get_file_config('/apps/demo_console/templ/shield_advind_templ.py')
+        contents += get_file_config('/apps/demo_console/templ/shield_advind_templ.py', keyValuePairDictionary)
         contents += get_file_config('/apps/demo_console/templ/device_sdi12_config_templ.py', keyValuePairDictionary)
     elif shield == "dig_analog":
         contents += get_file_config('/apps/demo_console/templ/shield_i2c_dig_analog_templ.py', keyValuePairDictionary)
