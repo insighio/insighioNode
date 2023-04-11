@@ -198,7 +198,7 @@ def get_config_URI_param():
 
 def updateConfigValue(key, new_value):
     logging.debug("about to update config key: {} to value: {}".format(key, new_value))
-    configContent = utils.readFromFile(config_file)
+    configContent = utils.readFromFile(config_file).split('\n')
 
     if isinstance(new_value, str):
         regex = '{}\s+=\s+".*"'.format(key)
@@ -210,14 +210,19 @@ def updateConfigValue(key, new_value):
         logging.error("config [{}] type not supported: ".format(key, type(new_value)))
         return
 
-    if ure.search(regex, configContent):
-        configContent = ure.sub(regex, new_key_value_str, configContent)
-    else:
-        configContent += "\n" + new_key_value_str
+    config_found = False
+    for i in range(0, len(configContent)):
+        if ure.search(regex, configContent[i]):
+            configContent[i] = ure.sub(regex, new_key_value_str, configContent[i])
+            config_found = True
+            break
+
+    if not config_found:
+        configContent.append(new_key_value_str)
 
     setattr(cfg, key, new_value)
 
-    utils.writeToFile(config_file, configContent)
+    utils.writeToFile(config_file, '\n'.join(configContent))
     notifyServerWithNewConfig()
     logging.info("finished updating config ")
 
