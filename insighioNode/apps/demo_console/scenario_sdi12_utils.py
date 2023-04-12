@@ -1,5 +1,5 @@
 import utime
-from apps.demo_console.dictionary_utils import set_value_float
+from apps.demo_console.dictionary_utils import set_value_float, set_value
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 try:
@@ -133,7 +133,7 @@ def read_sdi12_sensor(sdi12, address, measurements):
             responseArrayTemperature = sdi12.get_measurement(address, "C5")
             parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
     else:
-        set_value_float(measurements, "gen_" + address + "_i", manufacturer, None)
+        set_value(measurements, "gen_{}_i".format(address), manufacturer, None)
         responseArrayC = sdi12.get_measurement(address, "C")
         responseArrayM = sdi12.get_measurement(address, "M")
         parse_generic_sdi12(address, responseArrayC, measurements, "gen_c")
