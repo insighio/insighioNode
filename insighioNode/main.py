@@ -11,9 +11,6 @@ import logging
 logging.setLevel(logging.DEBUG)
 logging.debug("start timestamp: " + str(utime.ticks_ms()))
 
-import machine
-machine.freq(240000000)
-
 # main.py -- put your code here!
 import device_info
 device_info.bq_charger_exec(device_info.bq_charger_setup)
