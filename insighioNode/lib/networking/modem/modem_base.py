@@ -88,17 +88,21 @@ class Modem:
     def init(self, ip_version, apn, technology):
         if self.is_alive():
             self.apn = apn
+            self.send_at_cmd("AT+CFUN=1")
+            self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
+
+            self.set_technology(technology)
+            if technology.lower() == "nbiot":
+                self.send_at_cmd("AT+COPS=1,2,20201,9")
+            else:
+                self.send_at_cmd("AT+COPS=0")
+
             # disable command echo
             self.send_at_cmd('ATE0')
             # set auto-registration
             self.send_at_cmd("AT+COPS=3,2")  # set network name as numeric value
             self.send_at_cmd("AT+CREG=2")  # enable LAC, CI reporting
             self.send_at_cmd("AT+CTZU=1")  # automatic time update
-            self.send_at_cmd("AT+CFUN=1")
-
-            self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
-
-            self.set_technology(technology)
 
             return True
         return False

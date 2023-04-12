@@ -26,18 +26,21 @@ class ModemBG600(modem_base.Modem):
         return status
 
     def set_technology(self, technology):
-        if technology == 'NBIoT':
-            self.send_at_cmd('AT+QCFG="nwscanseq",03,1')
-            self.send_at_cmd('AT+QCFG="nwscanmode",3,1')
-        elif technology == 'LTE-M':
-            self.send_at_cmd('AT+QCFG="nwscanseq",02,1')
-            self.send_at_cmd('AT+QCFG="nwscanmode",3,1')
-        elif technology == 'GSM':
+        technology = technology.lower()
+        if technology == 'nbiot':
+            self.send_at_cmd('AT+QCFG="nwscanseq",0301,0')
+            self.send_at_cmd('AT+QCFG="nwscanmode",3,0')
+        elif technology == 'lte-m':
+            self.send_at_cmd('AT+QCFG="nwscanseq",0201,0')
+            self.send_at_cmd('AT+QCFG="nwscanmode",3,0')
+        elif technology == 'gsm':
             self.send_at_cmd('AT+QCFG="nwscanseq",01,1')
             self.send_at_cmd('AT+QCFG="nwscanmode",1,1')
         else:
-            self.send_at_cmd('AT+QCFG="nwscanseq",00,1')
-            self.send_at_cmd('AT+QCFG="nwscanmode",0,1')
+            self.send_at_cmd('AT+QCFG="nwscanseq",00,0')
+            self.send_at_cmd('AT+QCFG="nwscanmode",0,0')
+        self.send_at_cmd('AT+CFUN=1,1', 30000, "APP RDY")
+        utime.sleep_ms(1000)
 
     def prioritizeWWAN(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == True:
