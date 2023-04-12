@@ -136,8 +136,8 @@ def read_sdi12_sensor(sdi12, address, measurements):
         set_value(measurements, "gen_{}_i".format(address), manufacturer, None)
         responseArrayC = sdi12.get_measurement(address, "C")
         responseArrayM = sdi12.get_measurement(address, "M")
-        parse_generic_sdi12(address, responseArrayC, measurements, "gen_c")
-        parse_generic_sdi12(address, responseArrayM, measurements, "gen_m")
+        parse_generic_sdi12(address, responseArrayC, measurements, "gen", None, "_c")
+        parse_generic_sdi12(address, responseArrayM, measurements, "gen", None, "_m")
 
 
 def parse_sensor_meter(address, responseArray, measurements):
@@ -189,13 +189,13 @@ def parse_sensor_implexx(address, responseArray, measurements):
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
 
-def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit=None):
+def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit=None, postfix=""):
     try:
         if not responseArray or len(responseArray) == 0:
             logging.error("Unrecognized responseArray: {}".format(responseArray))
             return
 
-        variable_prefix = prefix + "_" + address
+        variable_prefix = prefix + "_" + address + postfix
 
         for i, val in enumerate(responseArray):
             try:
