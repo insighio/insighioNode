@@ -468,22 +468,9 @@
         for (let i = 1; i <= 10; ++i) {
           var sdi12Enabled = strToJSValue(data["meas_sdi_" + i + "_enabled"])
 
-          if (data["meas_sdi_" + i + "_loc"] !== undefined) { //new version
-            setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
-            setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "" + i)
-            setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', data["meas_sdi_" + i + "_loc"], "1")
-          }
-          else {
-            setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
-            setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], "" + i)
-
-            if (i === 1)
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "1", "1")
-            else if (i === 2)
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "2", "2")
-            else
-              setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', "1", "1")
-          }
+          setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], i-1)
+          setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
+          setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', data["meas_sdi_" + i + "_loc"], 1)
         }
 
         setElemValue('input-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
@@ -764,7 +751,7 @@
 
         generateOptions(selectElem_address.id, sdi12Options)
         generateOptions(selectElem_location.id, sdi12LocationOptions)
-        setElemValue(selectElem_address.id, (i - 1).toString(), "0")
+        setElemValue(selectElem_address.id, i - 1, 0)
       }
     }
 
