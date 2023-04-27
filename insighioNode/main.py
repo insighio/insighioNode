@@ -31,9 +31,12 @@ logging.info("Reset cause: " + str(rstCause))
 if rstCause == 0 or rstCause == 1 or not demo_config_exists:
     logging.info("Starting Web server")
     gc.collect()
-    import web_server
-    web_server.start(120000 if demo_config_exists else -1)
-    del sys.modules["web_server"]
+    try:
+        import web_server
+        web_server.start(120000 if demo_config_exists else -1)
+        del sys.modules["web_server"]
+    except:
+        pass
     gc.collect()
 
 import apps.demo_console.scenario as scenario
