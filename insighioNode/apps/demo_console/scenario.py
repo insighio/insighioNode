@@ -264,13 +264,18 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             logging.exception(e, "Exception during disconenction:")
     return message_sent
 
+def get_var_from_module(module, key):
+    return getattr(module, key) if hasattr(module, key) else None
+
 def executeDeviceStatisticsUpload(cfg, network):
     stats = {}
 
     try:
         import srcInfo
-        stats["sw_branch"] = srcInfo.branch
-        stats["sw_commit"] = srcInfo.commit
+        stats["sw_branch"] = get_var_from_module(srcInfo, "branch")
+        stats["sw_commit"] = get_var_from_module(srcInfo, "commit")
+        stats["sw_custom_branch"] = get_var_from_module(srcInfo, "custom_branch")
+        stats["sw_custom_commit"] = get_var_from_module(srcInfo, "custom_commit")
     except:
         logging.error("no srcInfo file found")
 
