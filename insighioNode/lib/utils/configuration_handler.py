@@ -89,6 +89,7 @@ configDict = {
 "_UC_IO_SCALE_OFFSET": "meas_scale_offset",
 "_UC_IO_SCALE_SCALE": "meas_scale_scale",
 "protocol": "protocol",
+"network": "network",
 "_ALWAYS_ON_CONNECTION": "always_on_connection",
 "_FORCE_ALWAYS_ON_CONNECTION": "force_always_on_connection",
 "_ALWAYS_ON_PERIOD": "always_on_period",
