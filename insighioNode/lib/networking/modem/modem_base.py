@@ -95,7 +95,7 @@ class Modem:
             if technology.lower() == "nbiot":
                 self.send_at_cmd("AT+COPS=1,2,20201,9")
             else:
-                self.send_at_cmd("AT+COPS=0")
+                self.send_at_cmd("AT+COPS=0", 180000)
 
             # disable command echo
             self.send_at_cmd('ATE0')
