@@ -84,10 +84,13 @@ def get_measurements(cfg_dummy=None):
             set_value(measurements, "reset_cause", device_info.get_reset_cause())
             set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
             set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
-            if get_config("_MEAS_TEMP_UNIT_IS_CELSIUS"):
-                set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(), SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-            else:
-                set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+            try:
+                if get_config("_MEAS_TEMP_UNIT_IS_CELSIUS"):
+                    set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(), SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+                else:
+                    set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+            except:
+                logging.error("Error getting cpu_temp.")
     except Exception as e:
         logging.exception(e, "unable to measure board sensors")
 
@@ -318,9 +321,13 @@ def execute_transformation(measurements, name, raw_value, transformator):
         logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass
 
-def storeMeasurement(measurements, force_store):
+def storeMeasurement(measurements, force_store=False):
+    if get_config("_BATCH_UPLOAD_MESSAGE_BUFFER") is None and not force_store:
+        logging.error("Batch upload not activated, ignoring")
+        return False
+
     message_buffer.timestamp_measurements(measurements)
-    return message_buffer.store_measurement(measurements)
+    return message_buffer.store_measurement(measurements, force_store)
 
 def read_accelerometer():
     logging.info("starting XL thread")
