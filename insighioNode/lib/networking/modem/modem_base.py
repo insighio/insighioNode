@@ -93,7 +93,7 @@ class Modem:
 
             self.set_technology(technology)
             if technology.lower() == "nbiot":
-                self.send_at_cmd("AT+COPS=1,2,20201,9")
+                self.send_at_cmd("AT+COPS=1,2,20201,9", 180000)
             else:
                 self.send_at_cmd("AT+COPS=0", 180000)
 
