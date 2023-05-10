@@ -39,7 +39,8 @@ class ModemBG600(modem_base.Modem):
         else:
             self.send_at_cmd('AT+QCFG="nwscanseq",00,0')
             self.send_at_cmd('AT+QCFG="nwscanmode",0,0')
-        self.send_at_cmd('AT+CFUN=1,1', 30000, "APP RDY")
+        self.send_at_cmd('AT+CFUN=1,1', 15000, "APP RDY")
+        self.send_at_cmd('ATE0')
         utime.sleep_ms(1000)
 
     def prioritizeWWAN(self):
