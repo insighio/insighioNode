@@ -99,6 +99,7 @@ class ModemBG600(modem_base.Modem):
         command = ""
         if poweron:
             command = 'AT+QGPS=1'
+            self.send_at_cmd('AT+QGPSCFG="gnssconfig",5')
         else:
             command = 'AT+QGPSEND'
 
