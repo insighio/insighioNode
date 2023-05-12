@@ -27,21 +27,30 @@ class ModemBG600(modem_base.Modem):
 
     def set_technology(self, technology):
         technology = technology.lower()
+        nwscanseq_expected = ""
+        nwscanmode_expected = ""
         if technology == 'nbiot':
-            self.send_at_cmd('AT+QCFG="nwscanseq",0301,0')
-            self.send_at_cmd('AT+QCFG="nwscanmode",3,0')
+            nwscanseq_expected = '030102'
+            nwscanmode_expected = '3'
         elif technology == 'lte-m':
-            self.send_at_cmd('AT+QCFG="nwscanseq",0201,0')
-            self.send_at_cmd('AT+QCFG="nwscanmode",3,0')
+            nwscanseq_expected = '020301'
+            nwscanmode_expected = '3'
         elif technology == 'gsm':
-            self.send_at_cmd('AT+QCFG="nwscanseq",01,1')
-            self.send_at_cmd('AT+QCFG="nwscanmode",1,1')
+            nwscanseq_expected = '010203'
+            nwscanmode_expected = '1'
         else:
-            self.send_at_cmd('AT+QCFG="nwscanseq",00,0')
-            self.send_at_cmd('AT+QCFG="nwscanmode",0,0')
-        self.send_at_cmd('AT+CFUN=1,1', 15000, "APP RDY")
-        self.send_at_cmd('ATE0')
-        utime.sleep_ms(1000)
+            nwscanseq_expected = '00'
+            nwscanmode_expected = '0'
+
+        (nwscanseq_status, nwscanseq_lines) = self.send_at_cmd('AT+QCFG="nwscanseq"')
+        nwscanseq_lines = '\n'.join(nwscanseq_lines)
+
+        if nwscanseq_expected not in nwscanseq_lines:
+            self.send_at_cmd('AT+QCFG="nwscanseq",{},0'.format(nwscanseq_expected))
+            self.send_at_cmd('AT+QCFG="nwscanmode",{},0'.format(nwscanmode_expected))
+            self.send_at_cmd('AT+CFUN=1,1', 15000, "APP RDY")
+            self.send_at_cmd('ATE0')
+            utime.sleep_ms(1000)
 
     def prioritizeWWAN(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == True:
