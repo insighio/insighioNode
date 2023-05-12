@@ -27,6 +27,7 @@ class ModemRak4270(modem_base.Modem):
         logging.debug("modem powered off")
 
     def is_connected(self):
+        status = self.send_at_cmd('at+get_config=lora:channel')
         (status, lines) = self.send_at_cmd('at+get_config=lora:status')
         line_regex = r'Joined Network\s*:\s*(\w+)'
         for line in lines:
@@ -58,6 +59,12 @@ class ModemRak4270(modem_base.Modem):
         return status
 
     def join(self):
+        self.send_at_cmd('at+set_config=lora:ch_mask:8:0')
+        self.send_at_cmd('at+set_config=lora:ch_mask:9:0')
+        self.send_at_cmd('at+set_config=lora:ch_mask:10:0')
+        self.send_at_cmd('at+set_config=lora:ch_mask:11:0')
+        self.send_at_cmd('at+set_config=lora:ch_mask:12:0')
+
         (status, lines) = self.send_at_cmd('at+join')
         return status
 
