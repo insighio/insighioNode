@@ -93,9 +93,9 @@ class Modem:
 
             self.set_technology(technology)
             if technology.lower() == "nbiot":
-                self.send_at_cmd("AT+COPS=1,2,20201,9")
+                self.send_at_cmd("AT+COPS=1,2,20201,9", 180000)
             else:
-                self.send_at_cmd("AT+COPS=0")
+                self.send_at_cmd("AT+COPS=0", 180000)
 
             # disable command echo
             self.send_at_cmd('ATE0')
@@ -220,12 +220,20 @@ class Modem:
 
     def get_rssi(self):
         if self.ppp is None:
+            regex_rssi = r"\+CSQ:\s*(\d+),\d+"
             self.rssi = -141
             (status, lines) = self.send_at_cmd('AT+CSQ')
             if status and len(lines) > 0:
-                rssi_tmp = int(lines[0].split(',')[0].split(' ')[-1])
-                if(rssi_tmp >= 0 and rssi_tmp <= 31):
-                    self.rssi = -113 + rssi_tmp * 2
+                for line in lines:
+                    match_res = ure.search(regex_rssi, line)
+                    if match_res is not None:
+                        try:
+                            rssi_tmp = int(match_res.group(1))
+                            if(rssi_tmp >= 0 and rssi_tmp <= 31):
+                                self.rssi = -113 + rssi_tmp * 2
+                        except:
+                            pass
+                        break
         return self.rssi
 
     def get_extended_signal_quality(self):

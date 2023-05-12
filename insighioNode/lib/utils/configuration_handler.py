@@ -89,6 +89,7 @@ configDict = {
 "_UC_IO_SCALE_OFFSET": "meas_scale_offset",
 "_UC_IO_SCALE_SCALE": "meas_scale_scale",
 "protocol": "protocol",
+"network": "network",
 "_ALWAYS_ON_CONNECTION": "always_on_connection",
 "_FORCE_ALWAYS_ON_CONNECTION": "force_always_on_connection",
 "_ALWAYS_ON_PERIOD": "always_on_period",
@@ -104,6 +105,16 @@ configDict = {
 }
 
 NoneType = type(None)
+
+def fixValue(val):
+    if val == "true":
+        return "True"
+    elif val == "false":
+        return "False"
+    elif val == "":
+        return "None"
+    else:
+        return val
 
 def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=False):
     configKeyValues = dict()
@@ -170,13 +181,7 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
         tmpDict = dict()
         for key in configKeyValues.keys():
             newKey = key.replace("_", "-")
-            newValue = configKeyValues[key]
-            if newValue == "true":
-                newValue = "True"
-            elif newValue == "false":
-                newValue = "False"
-            elif newValue == "":
-                newValue = "None"
+            newValue = fixValue(configKeyValues[key])
             tmpDict[newKey] = newValue
         return  tmpDict
     else:
@@ -247,10 +252,7 @@ def stringParamsToDict(configurationParameters):
     for keyValueStr in keyValueStrings:
         keyValue = keyValueStr.split("=")
         if len(keyValue) == 2:
-            if keyValue[1] == "true":
-                keyValue[1] = "True"
-            elif keyValue[1] == "false":
-                keyValue[1] = "False"
+            keyValue[1] = fixValue(keyValue[1])
             keyValueDict[keyValue[0]] = keyValue[1]
             logging.debug("key value added [{}] -> {}".format(keyValue[0], keyValue[1]))
         else:
@@ -265,12 +267,14 @@ def apply_configuration(keyValuePairDictionary):
     # fix naming of keys to use '-' instead of '_'
     # unfortunatelly it is technical burden from old implementations, to be fixed in future release
     for param in keyValuePairDictionary:
+        val = keyValuePairDictionary[param]
+        key = param
         if '_' in param:
-            new_key = param.replace("_", '-')
-            print("changing key [{}] to [{}]".format(param, new_key))
-            val = keyValuePairDictionary[param]
+            key = param.replace("_", '-')
+            print("changing key [{}] to [{}]".format(param, key))
             del keyValuePairDictionary[param]
-            keyValuePairDictionary[new_key] = val
+
+        keyValuePairDictionary[key] = fixValue(val)
 
     gc.collect()
 
