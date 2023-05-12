@@ -128,6 +128,7 @@ def checkAndApply(client):
                     client.clear_retained(topic)
                     import utils
                     utils.clearCachedStates()
+                    utils.writeToFile('/ota_applied_flag', "done")
                     import machine
                     machine.reset()
                 else:

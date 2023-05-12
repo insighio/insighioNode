@@ -291,7 +291,9 @@ def executeDeviceConfigurationUpload(cfg, network):
         utils.deleteFile("/configLog")
 
         # whenever a new config log is uplaoded, upload also statistics for the device
+    if configUploadFileContent or utils.existsFile('/ota_applied_flag'):
         executeDeviceStatisticsUpload(cfg, network)
+        utils.deleteFile('/ota_applied_flag')
 
 def notifyConnected(network):
     #network.send_control_message(cfg, '{"mac":"' + cfg.device_id + '","connected":true}', "/connStat")
