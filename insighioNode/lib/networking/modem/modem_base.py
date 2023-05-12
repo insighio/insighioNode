@@ -86,26 +86,27 @@ class Modem:
         logging.debug("Output Pin {} {}".format(self.modem_power_on, p0.value()))
 
     def init(self, ip_version, apn, technology):
-        if self.is_alive():
-            self.apn = apn
-            self.send_at_cmd("AT+CFUN=1")
-            self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
+        if not self.is_alive() or not self.has_sim():
+            return False
 
-            self.set_technology(technology)
-            if technology.lower() == "nbiot":
-                self.send_at_cmd("AT+COPS=1,2,20201,9", 180000)
-            else:
-                self.send_at_cmd("AT+COPS=0", 180000)
+        self.apn = apn
+        self.send_at_cmd("AT+CFUN=1")
+        self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
 
-            # disable command echo
-            self.send_at_cmd('ATE0')
-            # set auto-registration
-            self.send_at_cmd("AT+COPS=3,2")  # set network name as numeric value
-            self.send_at_cmd("AT+CREG=2")  # enable LAC, CI reporting
-            self.send_at_cmd("AT+CTZU=1")  # automatic time update
+        self.set_technology(technology)
+        if technology.lower() == "nbiot":
+            self.send_at_cmd("AT+COPS=1,2,20201,9", 180000)
+        else:
+            self.send_at_cmd("AT+COPS=0", 180000)
 
-            return True
-        return False
+        # disable command echo
+        self.send_at_cmd('ATE0')
+        # set auto-registration
+        self.send_at_cmd("AT+COPS=3,2")  # set network name as numeric value
+        self.send_at_cmd("AT+CREG=2")  # enable LAC, CI reporting
+        self.send_at_cmd("AT+CTZU=1")  # automatic time update
+
+        return True
 
     def set_technology(self, technology):
         pass
@@ -220,12 +221,20 @@ class Modem:
 
     def get_rssi(self):
         if self.ppp is None:
+            regex_rssi = r"\+CSQ:\s*(\d+),\d+"
             self.rssi = -141
             (status, lines) = self.send_at_cmd('AT+CSQ')
             if status and len(lines) > 0:
-                rssi_tmp = int(lines[0].split(',')[0].split(' ')[-1])
-                if(rssi_tmp >= 0 and rssi_tmp <= 31):
-                    self.rssi = -113 + rssi_tmp * 2
+                for line in lines:
+                    match_res = ure.search(regex_rssi, line)
+                    if match_res is not None:
+                        try:
+                            rssi_tmp = int(match_res.group(1))
+                            if(rssi_tmp >= 0 and rssi_tmp <= 31):
+                                self.rssi = -113 + rssi_tmp * 2
+                        except:
+                            pass
+                        break
         return self.rssi
 
     def get_extended_signal_quality(self):
