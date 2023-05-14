@@ -14,6 +14,14 @@ from apps.demo_console.dictionary_utils import set_value, set_value_int, set_val
 import ubinascii
 from apps.demo_console import message_buffer
 
+from machine import Pin
+import _thread
+
+_pulse_pin = None
+_pulse_counter = 0
+_pulse_mutex = _thread.allocate_lock()
+_pulse_last_read_timestamp = None
+
 
 def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
@@ -118,6 +126,7 @@ def get_measurements(cfg_dummy=None):
         if (shield_name and shield_name == get_config("_CONST_SHIELD_ADVIND")) or (shield_name and shield_name == get_config("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")):
             from . import scenario_sdi12_utils
             scenario_sdi12_utils.sdi12_board_measurements(measurements)
+            read_pulse_counter(measurements)
         else: #if shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
 
@@ -197,6 +206,47 @@ def default_board_measurements(measurements):
 def add_explicit_key_values(measurements):
     for key in cfg._MEAS_KEYVALUE:
         set_value(measurements, key, cfg._MEAS_KEYVALUE[key])
+
+def _pulse_counter_callback(pin_instance):
+    global _pulse_counter
+    global _pulse_mutex
+    with _pulse_mutex:
+        _pulse_counter += 1
+        logging.debug("counter: #"+str(_pulse_counter))
+
+def read_pulse_counter(measurements):
+    global _pulse_counter
+    global _pulse_mutex
+    global _pulse_pin
+    global _pulse_last_read_timestamp
+
+    if get_config("_PCNT_1_ENABLE"):
+        if _pulse_pin is None:
+            _pulse_last_read_timestamp = utime.ticks_ms()
+            _pulse_counter = 0
+            gpio_handler.set_pin_value(get_config("UC_IO_SNSR_GND_DGTL_SNSR_ΟΝ"), 1)
+            trigger_event = Pin.IRQ_RISING if get_config("_PCNT_1_COUNT_ON_RISING") else Pin.IRQ_FALLING
+            _pulse_pin = Pin(get_config("UC_IO_DGTL_SNSR_READ"), Pin.IN, Pin.PULL_DOWN)
+            _pulse_pin.irq(handler=_pulse_counter_callback, trigger=trigger_event)
+
+        with _pulse_mutex:
+            time_diff_from_prev = utime.ticks_ms() - _pulse_last_read_timestamp
+            cnt = _pulse_counter
+            _pulse_counter = 0
+            _pulse_last_read_timestamp = utime.ticks_ms()
+            #SENML_UNIT_LITER_PER_SECOND
+        set_value_int(measurements, "pcnt_count", cnt)
+        set_value_int(measurements, "pcnt_period_ms", time_diff_from_prev, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+
+        if get_config("_PCNT_1_MULTIPLIER"):
+            try:
+                set_value_float(measurements, "pcnt_count_processed", cnt * float(get_config("_PCNT_1_MULTIPLIER")))
+            except:
+                pass
+    else:
+        if _pulse_pin is not None:
+            _pulse_pin.irq(handler=None)
+        gpio_handler.set_pin_value(get_config("UC_IO_SNSR_GND_DGTL_SNSR_ΟΝ"), 0)
 
 
 def read_scale(measurements):

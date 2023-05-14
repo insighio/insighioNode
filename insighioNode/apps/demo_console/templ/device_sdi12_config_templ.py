@@ -37,3 +37,7 @@ _SDI12_WARM_UP_TIME_MSEC = <meas-sdi-warmup-time>
 
 _4_20_SNSR_1_ENABLE = <meas-4-20-snsr-1-enable>
 _4_20_SNSR_2_ENABLE = <meas-4-20-snsr-2-enable>
+
+_PCNT_1_ENABLE = <meas-pcnt-1-enable>
+_PCNT_1_COUNT_ON_RISING = <meas-pcnt-1-cnt-on-rising>
+_PCNT_1_MULTIPLIER = <meas-pcnt-1-multiplier>
