@@ -124,9 +124,9 @@ def get_measurements(cfg_dummy=None):
         shield_name = get_config("_SHIELD_NAME")
         shield_name = get_config("_SELECTED_SHIELD")
         if (shield_name and shield_name == get_config("_CONST_SHIELD_ADVIND")) or (shield_name and shield_name == get_config("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")):
+            read_pulse_counter(measurements)
             from . import scenario_sdi12_utils
             scenario_sdi12_utils.sdi12_board_measurements(measurements)
-            read_pulse_counter(measurements)
         else: #if shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
 
@@ -212,7 +212,7 @@ def _pulse_counter_callback(pin_instance):
     global _pulse_mutex
     with _pulse_mutex:
         _pulse_counter += 1
-        logging.debug("counter: #"+str(_pulse_counter))
+        #logging.debug("counter: #"+str(_pulse_counter))
 
 def read_pulse_counter(measurements):
     global _pulse_counter
