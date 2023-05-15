@@ -134,6 +134,8 @@ class Modem:
 
                         if year >= 2023:
                             timezone_quarter_minute_offset = float(reg_res.group(7))
+                            # keep timezone info for timestamping in UTC and set time in local time zone
+                            # for proper timing when executing specific time in day
                             result = (year,
                                 int(reg_res.group(2)),
                                 int(reg_res.group(3)),

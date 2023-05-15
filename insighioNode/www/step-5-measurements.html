@@ -436,7 +436,11 @@
         showElement('input-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
         showElement('input-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
 
-        setElemValueBool('input-store-meas-if-failed-conn', data.store_meas_if_failed_conn, false)
+        setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(data.meas_pcnt_1_enable), false)
+        setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(data.meas_pcnt_1_cnt_on_rising) ? "rising" : "falling", "rising")
+        setElemValue('ins-esp-gen-pcnt-1-multiplier', data.meas_pcnt_1_multiplier, 1)
+
+        setElemValueBool('input-store-meas-if-failed-conn', strToJSValue(data.store_meas_if_failed_conn), false)
 
         fillKeyValuePairsFromDictionary(data.meas_keyvalue)
 
@@ -478,6 +482,9 @@
       Cookies.remove('meas-4-20-snsr-1-enable')
       Cookies.remove('meas-4-20-snsr-2-enable')
       Cookies.remove('meas-scale-monitoring-enabled')
+      Cookies.remove('meas-pcnt-1-enable')
+      Cookies.remove('meas-pcnt-1-cnt-on-rising')
+      Cookies.remove('meas-pcnt-1-multiplier')
 
       for (let i = 1; i < 11; ++i) {
         Cookies.remove('meas-sdi-' + i + '-enabled')
@@ -527,6 +534,12 @@
         Cookies.set('meas-4-20-snsr-2-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-2-enable'))
 
         Cookies.set('meas-sdi-warmup-time', document.getElementById('input-gen-sdi12-warmup-time').value)
+
+        Cookies.set('meas-sdi-warmup-time', document.getElementById('input-gen-sdi12-warmup-time').value)
+
+        Cookies.set('meas-pcnt-1-enable', boolElemToPyStr('ins-esp-gen-pcnt-1-enable'))
+        Cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
+        Cookies.set('meas-pcnt-1-multiplier', document.getElementById('ins-esp-gen-pcnt-1-multiplier').value)
 
         Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
         location.href = "step-6-timing.html"

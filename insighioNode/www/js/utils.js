@@ -215,6 +215,7 @@ function addInput(parentId, inputId, inputLabel, inputType = "number") {
   switchInput.classList.add("form-input")
   switchInput.id = inputId
   switchInput.type = inputType
+  if (inputType === "number") switchInput.step = "any"
 
   selectDiv.appendChild(switchInput)
   parent.appendChild(selectDiv)

@@ -136,8 +136,8 @@
         setElemValue('input-apn', data.cell_apn, "internet")
         setElemValue('input-band', data.cell_band, 20)
 
-        setRadioGroupValue('protocol', protocol !== "" ? protocol : "mqtt")
-        setRadioGroupValue('ipversion', ipv !== "" ? ipv : "IP")
+        setRadioGroupValue('protocol', protocol !== undefined && protocol !== "" ? protocol : "mqtt")
+        setRadioGroupValue('ipversion', ipv !== undefined && ipv !== "" ? ipv : "IP")
 
         detectBoardChange(data.board_mac, Cookies.get('board-mac'))
         showElement('loader', false)
