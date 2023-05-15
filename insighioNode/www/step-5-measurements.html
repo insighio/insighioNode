@@ -12,11 +12,11 @@
 </head>
 
 <body class="body-custom">
-  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center" >
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center">
 
   <div class="panel panel-custom">
     <div class="columns">
-      <div class="panel-nav col-12 hide-sm"><br/>
+      <div class="panel-nav col-12 hide-sm"><br />
         <ul class="step">
           <li class="step-item"><a>Login</a></li>
           <li class="step-item"><a>Select Network</a></li>
@@ -44,15 +44,6 @@
                 </div>
                 <br />
                 <div id="board-default-options" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-                </div>
-                <div class="col-4 col-lg-6">
-                  <label class="form-label" for="measurements">Temperature Unit</label>
-                </div>
-                <div class="col-8 col-lg-6">
-                  <select class="form-select" id="input-temp-unit" style="padding-right: 0px; padding-left: 0px">
-                    <option value=true>Celsius (°C)</option>
-                    <option value=false>Fahrenheit (°F)</option>
-                  </select>
                 </div>
                 <div id="board-default-option-gps" class="columns  col-12" style="padding-right: 0px; padding-left: 0px">
                 </div>
@@ -107,60 +98,11 @@
                 <div id="shield-scale-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
                   <br />
                   <!-- <fieldset disabled> -->
-                  <div class="form-group columns">
-                    <br />
-                    <br />
-                    <div class="col-4 col-lg-6">
-                      <label class="form-label" for="measurements">I²C #1</label>
-                    </div>
-                    <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-i2c-1">
-                      </select>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-4 col-lg-6">
-                      <label class="form-label" for="measurements">I²C #2</label>
-                    </div>
-                    <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-i2c-2">
-                      </select>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-4 col-lg-6">
-                      <label class="form-label" for="measurements">Analog / Digital P1</label>
-                    </div>
-                    <div class="col-8 col-lg-6">
-                      <select class="form-select" id="input-sensor-a-d-p1">
-                      </select>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-4 col-lg-6">
-                      <label class="form-label" for="measurements">Weight Scale</label>
-                    </div>
-                    <div class="col-8 col-lg-6">
-                      <label class="form-switch">
-                        <input type="checkbox" id="input-scale-enabled" />
-                        <i class="form-icon"></i>
-                      </label>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-4 col-lg-6">
-                      <label class="form-label" for="measurements">[Debug] Enable Scale Sensor Monitoring</label>
-                    </div>
-                    <div class="col-8 col-lg-6">
-                      <label class="form-switch">
-                        <input type="checkbox" id="input-scale-monitoring" />
-                        <i class="form-icon"></i>
-                      </label>
-                    </div>
+                  <div class="form-group columns" id="shield-scale-options-content">
                     <br />
                     <br />
                   </div>
-                <!-- </fieldset> -->
+                  <!-- </fieldset> -->
                 </div>
                 <div id="shield-dig-analog-options" class="tabcontent columns col-12" style="display: block; margin-left:5px; margin-right:5px">
                   <br />
@@ -277,41 +219,11 @@
                       <tbody id="option-sdi12-table-rows">
                       </tbody>
                     </table>
-                    <div id="options-sdi12"></div>
-                    <br/>
-                    <div class="col-4 col-lg-6 col-sm-6">
-                      <label class="form-label" for="input-example-1">Warm Up time (ms)</label>
+                    <div class="form-group columns" id="options-sdi12">
                     </div>
-                    <div class="col-8 col-lg-6 col-sm-6">
-                      <input class="form-input constr-field" type="text" id="input-gen-sdi12-warmup-time" />
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-4 col-lg-6 col-sm-6">
-                      <label class="form-label" for="measurements">4-20mA sensor n.1</label>
-                    </div>
-                    <div class="col-8 col-lg-6 col-sm-6">
-                      <label class="form-switch">
-                        <input type="checkbox" id="ins-esp-gen-4-20-snsr-1-enable" />
-                        <i class="form-icon"></i>
-                      </label>
-                    </div>
-                    <br />
-                    <br />
-                    <div class="col-4 col-lg-6 col-sm-6">
-                      <label class="form-label" for="measurements">4-20mA sensor n.2</label>
-                    </div>
-                    <div class="col-8 col-lg-6 col-sm-6">
-                      <label class="form-switch">
-                        <input type="checkbox" id="ins-esp-gen-4-20-snsr-2-enable" />
-                        <i class="form-icon"></i>
-                      </label>
-                    </div>
-                    <br />
-                    <br />
                   </div>
                 </div>
-                <div class="col-12">
+                <div class="form-group col-12">
                   <div class="divider text-center" data-content="Explicit key-values"></div>
                 </div>
                 <br />
@@ -403,6 +315,16 @@
       "analog": "generic analog"
     }
 
+    const pcnt_trigger = {
+      "rising": "Count on Rising",
+      "falling": "Count on Falling"
+    }
+
+    const temperature_unit = {
+      "true": "Celsius (°C)",
+      "false": "Fahrenheit (°F)"
+    }
+
     let sdi12Options = {
     }
 
@@ -421,9 +343,25 @@
       addSwitch("board-default-options", "input-network", "Network statistics")
       addSwitch("board-default-options", "input-ota", "Over the Air Updates")
       addSwitch("board-default-options", "input-store-meas-if-failed-conn", "Store measurement if no connection")
-      //addSwitch("board-default-option-gps", "input-gps-enable", "GPS", checkboxGPSStatusChanged)
+
+      addSelect("board-default-options", "input-temp-unit", "Temperature Unit")
+
       addSwitch("board-default-option-gps", "input-gps-enable", "GPS")
       addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
+
+      addSelect("shield-scale-options-content", "input-i2c-1", "I²C #1")
+      addSelect("shield-scale-options-content", "input-i2c-2", "I²C #2")
+      addSelect("shield-scale-options-content", "input-sensor-a-d-p1", "Analog / Digital P1")
+      addSwitch("shield-scale-options-content", "input-scale-enabled", "Weight Scale")
+      addSwitch("shield-scale-options-content", "input-scale-monitoring", "[Debug] Enable Scale Sensor Monitoring")
+
+      addInput('options-sdi12', 'input-gen-sdi12-warmup-time', 'Warm Up time (ms)')
+      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-1-enable", "4-20mA sensor n.1")
+      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-2-enable", "4-20mA sensor n.2")
+      addSwitch("options-sdi12", "ins-esp-gen-pcnt-1-enable", "Pulse Counter Enable")
+      addSelect("options-sdi12", "ins-esp-gen-pcnt-1-cnt-on", "Pulse Counter Trigger")
+      addInput('options-sdi12', 'ins-esp-gen-pcnt-1-multiplier', 'Pulse Counter Multiplier')
+      //addIn
 
       generateOptions("input-i2c-1", i2cOptions)
       generateOptions("input-i2c-2", i2cOptions)
@@ -433,6 +371,9 @@
       generateOptions("input-s1-sensor-a-d-p1", adcOptions)
       generateOptions("input-s1-sensor-a-d-p2", adcOptions)
       generateOptions("input-s1-sensor-a-d-p3", adcOptions)
+
+      generateOptions("ins-esp-gen-pcnt-1-cnt-on", pcnt_trigger)
+      generateOptions("input-temp-unit", temperature_unit)
 
       generateSdi12Options()
 
@@ -457,7 +398,7 @@
 
         var selectedShield = data.selected_shield ? data.selected_shield : data.selected_board
 
-        console.log("selected shield/board: ", data.selected_shield , data.selected_board, tabNamePerShield[selectedShield])
+        console.log("selected shield/board: ", data.selected_shield, data.selected_board, tabNamePerShield[selectedShield])
         if (selectedShield && tabNamePerShield[selectedShield])
           boardChanged(undefined, tabNamePerShield[selectedShield])
 
@@ -468,7 +409,7 @@
         for (let i = 1; i <= 10; ++i) {
           var sdi12Enabled = strToJSValue(data["meas_sdi_" + i + "_enabled"])
 
-          setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], i-1)
+          setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], i - 1)
           setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
           setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', data["meas_sdi_" + i + "_loc"], 1)
         }
@@ -673,7 +614,7 @@
 
     function getKeyValuePairs() {
       let returnObj = {}
-      for(var i=0; i<5; i++) {
+      for (var i = 0; i < 5; i++) {
         var elemKey = document.getElementById("input-key-name-" + i);
         var elemValue = document.getElementById("input-key-value-" + i);
 
@@ -689,16 +630,16 @@
         if (dictionaryString !== 'undefined') {
           var i = 0
           keyValueDict = JSON.parse(dictionaryString)
-          console.log("keyValueDict: ", keyValueDict )
+          console.log("keyValueDict: ", keyValueDict)
           for (keyName in keyValueDict) {
-            if(i >= 5 )
+            if (i >= 5)
               break
             document.getElementById('input-key-name-' + i).value = keyName
             document.getElementById('input-key-value-' + i).value = keyValueDict[keyName]
             i += 1
           }
         }
-      } catch (e) { console.log("error in fillKeyValuePairsFromDictionary: ", e)}
+      } catch (e) { console.log("error in fillKeyValuePairsFromDictionary: ", e) }
     }
 
     function generateSdi12Options() {

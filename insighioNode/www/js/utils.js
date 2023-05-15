@@ -48,7 +48,10 @@ function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = 
   }
 
   elem.value =
-    newValue !== "" && newValue !== "undefined" && newValue !== undefined && (intZeroAccepted || (!intZeroAccepted && newValue !== 0))
+    newValue !== "" &&
+    newValue !== "undefined" &&
+    newValue !== undefined &&
+    (intZeroAccepted || (!intZeroAccepted && newValue !== 0))
       ? newValue
       : defaultValue
 }
@@ -60,7 +63,8 @@ function setElemValueBool(elementId, newValue, defaultValue = "", boolField = "c
     return
   }
 
-  elem[boolField] = newValue !== "" && newValue !== "undefined" && newValue !== undefined ? Boolean(newValue) : defaultValue
+  elem[boolField] =
+    newValue !== "" && newValue !== "undefined" && newValue !== undefined ? Boolean(newValue) : defaultValue
 }
 
 function validateElemValue(elemId, message, regex = undefined) {
@@ -147,6 +151,75 @@ function addSwitch(parentId, switchId, switchLabel, onClickCallback = undefined)
   switchLabel.appendChild(switchIcon)
   switchDiv.appendChild(switchLabel)
   parent.appendChild(switchDiv)
+  parent.appendChild(document.createElement("br"))
+  parent.appendChild(document.createElement("br"))
+}
+
+function addSelect(parentId, selectId, selectLabel) {
+  var parent = document.getElementById(parentId)
+
+  ///////////////////////////////////////////////////////
+  var labelDiv = document.createElement("div")
+  labelDiv.classList.add("col-4")
+  labelDiv.classList.add("col-lg-6")
+  labelDiv.classList.add("col-sm-10")
+
+  var label = document.createElement("label")
+  label.classList.add("form-label")
+  label.appendChild(document.createTextNode(selectLabel))
+
+  labelDiv.appendChild(label)
+  parent.appendChild(labelDiv)
+
+  ///////////////////////////////////////////
+
+  var selectDiv = document.createElement("div")
+  selectDiv.classList.add("col-8")
+  selectDiv.classList.add("col-lg-6")
+  selectDiv.classList.add("col-sm-2")
+
+  var switchInput = document.createElement("select")
+  switchInput.id = selectId
+  switchInput.classList.add("form-select")
+
+  selectDiv.appendChild(switchInput)
+  parent.appendChild(selectDiv)
+  parent.appendChild(document.createElement("br"))
+  parent.appendChild(document.createElement("br"))
+}
+
+function addInput(parentId, inputId, inputLabel, inputType = "number") {
+  var parent = document.getElementById(parentId)
+
+  ///////////////////////////////////////////////////////
+  var labelDiv = document.createElement("div")
+  labelDiv.classList.add("col-4")
+  labelDiv.classList.add("col-lg-6")
+  labelDiv.classList.add("col-sm-10")
+
+  var label = document.createElement("label")
+  label.classList.add("form-label")
+  label.appendChild(document.createTextNode(inputLabel))
+
+  labelDiv.appendChild(label)
+  parent.appendChild(labelDiv)
+
+  ///////////////////////////////////////////
+
+  var selectDiv = document.createElement("div")
+  selectDiv.classList.add("col-8")
+  selectDiv.classList.add("col-lg-6")
+  selectDiv.classList.add("col-sm-2")
+
+  var switchInput = document.createElement("input")
+  switchInput.classList.add("form-input")
+  switchInput.id = inputId
+  switchInput.type = inputType
+
+  selectDiv.appendChild(switchInput)
+  parent.appendChild(selectDiv)
+  parent.appendChild(document.createElement("br"))
+  parent.appendChild(document.createElement("br"))
 }
 
 function strToJSValue(strVal) {
@@ -177,7 +250,7 @@ function disableNavigationButtons() {
   document.getElementById("back-button").disabled = true
 }
 
-function detectBoardChange(settings_mac, cookies_mac){
+function detectBoardChange(settings_mac, cookies_mac) {
   console.log("Board mac: ", settings_mac, ", Cookie mac: ", cookies_mac)
   if (settings_mac !== undefined && settings_mac !== cookies_mac) {
     alert("board change detected...restarting configuration")
@@ -186,14 +259,12 @@ function detectBoardChange(settings_mac, cookies_mac){
   }
 }
 
-function fromMultiWordToOne(initialString, delimeter=" ") {
+function fromMultiWordToOne(initialString, delimeter = " ") {
   try {
-    if(!initialString || typeof(initialString) !== "string")
-      return initialString
+    if (!initialString || typeof initialString !== "string") return initialString
 
     return initialString.split(delimeter)[0]
-  }
-  catch {
+  } catch {
     return initialString
   }
 }
