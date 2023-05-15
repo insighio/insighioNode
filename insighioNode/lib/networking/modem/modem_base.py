@@ -140,8 +140,8 @@ class Modem:
                                 int(reg_res.group(2)),
                                 int(reg_res.group(3)),
                                 0,  # day of week
-                                int(reg_res.group(4)) + int(timezone_quarter_minute_offset // 4),
-                                int(reg_res.group(5)) + int((timezone_quarter_minute_offset % 4) * 15),
+                                int(reg_res.group(4)),
+                                int(reg_res.group(5)),
                                 int(reg_res.group(6)),
                                 0)  # usec
                             utils.saveKeyValueInteger("tz_sec_offset", int(timezone_quarter_minute_offset * 15 * 60))

@@ -25,16 +25,11 @@ def buffered_measurements_count():
 def timestamp_measurements(measurements):
     offset = 946684800
 
-    timezone_offset = utils.getKeyValueInteger("tz_sec_offset")
-
-    if timezone_offset is not None:
-        offset -= timezone_offset
-
     epoch = utime.time() + offset
 
     # Friday, April 15, 2022
     if epoch > 1650000000:
-        measurements["dt"] = {"value": epoch}   # time offset 1970 -> 2000
+        measurements["bt"] = {"value": epoch}   # time offset 1970 -> 2000
 
 
 def store_measurement(measurements, force_store=False):

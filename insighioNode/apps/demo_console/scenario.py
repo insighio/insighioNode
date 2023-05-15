@@ -355,7 +355,14 @@ def executeTimingConfiguration():
             else:
                 return DAY_SECONDS - current_seconds_of_day + MORNING_MEAS
 
-        seconds_of_day = (time_tuple[4] * 3600 + time_tuple[5] * 60 + time_tuple[6])
+        timezone_offset = utils.getKeyValueInteger("tz_sec_offset")
+        hour_offset = 0
+        minute_offset = 0
+        if timezone_offset:
+            hour_offset = timezone_offset // 3600
+            minute_offset = (timezone_offset % 3600) // 60
+
+        seconds_of_day = ((time_tuple [4] + hour_offset) * 3600 + (time_tuple[5] + minute_offset) * 60 + time_tuple[6])
 
         seconds_to_wait = get_seconds_till_next_slot(seconds_of_day)
         MIN_WAIT_THRESHOLD = 900  # 15 minutes
