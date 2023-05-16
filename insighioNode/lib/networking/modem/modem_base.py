@@ -85,6 +85,25 @@ class Modem:
         p0.off()
         logging.debug("Output Pin {} {}".format(self.modem_power_on, p0.value()))
 
+    def set_operator_selection(self, technology):
+        (status, lines) = self.send_at_cmd("AT+COPS?")
+        lines = "\n".join(lines)
+
+        if technology.lower() == "nbiot":
+            expected_configuration = "1" # operator locking
+            command = "AT+COPS=1,2,20201,9"
+        else:
+            expected_configuration = "0" # operator automatic selection
+            command = "AT+COPS=0"
+
+        operator_regex = r'\+COPS:\s*(\d).*'
+        match = ure.search(operator_regex, lines)
+        if match and match.group(1) == expected_configuration:
+            logging.debug("Operator selection already configured")
+            return
+
+        self.send_at_cmd(command, 180000)
+
     def init(self, ip_version, apn, technology):
         if not self.is_alive() or not self.has_sim():
             return False
@@ -94,10 +113,7 @@ class Modem:
         self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
 
         self.set_technology(technology)
-        if technology.lower() == "nbiot":
-            self.send_at_cmd("AT+COPS=1,2,20201,9", 180000)
-        else:
-            self.send_at_cmd("AT+COPS=0", 180000)
+        self.set_operator_selection(technology)
 
         # disable command echo
         self.send_at_cmd('ATE0')
