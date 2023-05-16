@@ -279,8 +279,12 @@ def executeDeviceStatisticsUpload(cfg, network):
     stats["fw_v_commit"] = commit
     stats["free_flash"] = device_info.get_free_flash()
     stats["serial"] = device_info.get_device_id()[0]
-    import platform
-    stats["platform"]=platform.platform()
+    try:
+        import platform
+        stats["platform"]=platform.platform()
+    except:
+        logging.info("Skipping platform info.")
+
     logging.info("Uploading device statistics.")
     network.send_control_message(cfg, network.create_message(None, stats), "/stat")
 
