@@ -209,24 +209,31 @@ def updateConfigValue(key, new_value):
     configContent = utils.readFromFile(config_file).split('\n')
 
     if isinstance(new_value, str):
-        regex = '{}\s+=\s+".*"'.format(key)
+        regex = '{}\s*=\s*"(.*)"'.format(key)
         new_key_value_str = '{}="{}"'.format(key, new_value)
     elif isinstance(new_value, int) or isinstance(new_value, float):
-        regex = "{}\s+=\s+-?\w+(\.\w+)?".format(key)
+        regex = "{}\s*=\s*(-?\w+(\.\w+)?)".format(key)
         new_key_value_str = "{}={}".format(key, new_value)
     else:
         logging.error("config [{}] type not supported: ".format(key, type(new_value)))
         return
 
     config_found = False
+    has_changes = False
     for i in range(0, len(configContent)):
-        if ure.search(regex, configContent[i]):
-            configContent[i] = ure.sub(regex, new_key_value_str, configContent[i])
+        match = ure.search(regex, configContent[i])
+        if match:
+            has_changes = (match.group(1) != str(new_value))
+            if has_changes:
+                configContent[i] = ure.sub(regex, new_key_value_str, configContent[i])
             config_found = True
             break
 
     if not config_found:
         configContent.append(new_key_value_str)
+    elif not has_changes:
+        logging.info("configuration value already set, ignoring request")
+        return
 
     setattr(cfg, key, new_value)
 
