@@ -29,7 +29,7 @@ def timestamp_measurements(measurements):
 
     # Friday, April 15, 2022
     if epoch > 1650000000:
-        measurements["bt"] = {"value": epoch}   # time offset 1970 -> 2000
+        measurements["dt"] = {"value": epoch}   # time offset 1970 -> 2000
 
 
 def store_measurement(measurements, force_store=False):
