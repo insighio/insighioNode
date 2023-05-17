@@ -379,10 +379,13 @@ class Modem:
                     else:
                         logging.debug("  " + str(line))
                     responseLines.append(line)
-                    if ure.search(success_regex, line) is not None:
-                        status = True
-                    elif ure.search(error_regex, line) is not None:
-                        status = False
+                    try:
+                        if ure.search(success_regex, line) is not None:
+                            status = True
+                        elif ure.search(error_regex, line) is not None:
+                            status = False
+                    except Exception as e:
+                        logging.exception(e, "Excluding line from success matching...")
 
             utime.sleep_ms(5)
 
