@@ -436,6 +436,9 @@
         showElement('input-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
         showElement('input-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
 
+
+        setElemValueBool('ins-esp-gen-4-20-snsr-1-enable', strToJSValue(data.meas_4_20_snsr_1_enable), false)
+        setElemValueBool('ins-esp-gen-4-20-snsr-2-enable', strToJSValue(data.meas_4_20_snsr_2_enable), false)
         setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(data.meas_pcnt_1_enable), false)
         setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(data.meas_pcnt_1_cnt_on_rising) ? "rising" : "falling", "rising")
         setElemValue('ins-esp-gen-pcnt-1-multiplier', data.meas_pcnt_1_multiplier, 1)
