@@ -25,6 +25,8 @@ def prepareForConnectAndUpload():
     modem_instance = cellular.get_modem_instance()
     if modem_instance is None:
         return
+
+    modem_instance.reset_uart()
     modem_instance.prioritizeWWAN()
 
 def prepareForGPS():

@@ -18,13 +18,18 @@ class Modem:
         self.gps_timestamp = None
         self.gps_date = None
         self.data_over_ppp = True
+        self.modem_tx = modem_tx
+        self.modem_rx = modem_rx
 
         if modem_tx is not None and modem_rx is not None:
-            self.uart = UART(1, 115200, tx=modem_tx, rx=modem_rx)
-            self.uart.init(115200, bits=8, parity=None, stop=1, tx=modem_tx, rx=modem_rx, timeout=500, timeout_char=1000)
+            self.reset_uart()
 
         self.modem_power_on = power_on
         self.modem_power_key = power_key
+
+    def reset_uart(self):
+        self.uart = UART(1, 115200, tx=self.modem_tx, rx=self.modem_rx)
+        self.uart.init(115200, bits=8, parity=None, stop=1, tx=self.modem_tx, rx=self.modem_rx, timeout=500, timeout_char=1000)
 
     def has_data_over_ppp(self):
         return self.data_over_ppp
