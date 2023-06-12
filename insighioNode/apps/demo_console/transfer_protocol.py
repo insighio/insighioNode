@@ -70,7 +70,7 @@ class TransferProtocolModemAT(TransferProtocol):
             return False
 
         topic = 'channels/{}/messages/{}'.format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
-        return self.modem_instance.mqtt_publish(topic, message, 3, False, self.require_message_delivery_ack)
+        return self.modem_instance.mqtt_publish(topic, message, 3, False, 1 if self.require_message_delivery_ack else 0)
 
     def send_control_packet(self, message, subtopic):
         if not self.connected:
