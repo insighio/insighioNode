@@ -195,7 +195,7 @@ class ModemBG600(modem_base.Modem):
             retry = 0
             while retry < max_retries:
                 retry += 1
-                (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN=1,"{}","{}","{}"'.format(username, username, password), 15000, "\\+QMTCONN:\\s+1,0,0")
+                (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN=1,"{}","{}","{}"'.format(device_info.get_device_id()[0], username, password), 15000, "\\+QMTCONN:\\s+1,0,0")
                 if mqtt_connected:
                     break
                 utime.sleep_ms(1000)
