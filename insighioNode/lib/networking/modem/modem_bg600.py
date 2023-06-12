@@ -465,7 +465,7 @@ class ModemBG600(modem_base.Modem):
         if not url_setup:
             return None
 
-        (url_req_ready, _) = self.send_at_cmd('AT+QHTTPGET=80,' + str(len(requestHeader)), 8000, "CONNECT")
+        (url_req_ready, _) = self.send_at_cmd('AT+QHTTPGET=80,' + str(len(requestHeader)), 90000, "CONNECT")
         if not url_req_ready:
             return None
 

@@ -187,7 +187,7 @@ def downloadDeviceConfigurationHTTP(client):
     )
     if client.modem_based:
         file = "tmpconfig"
-        file_downloaded = client.modem_instance.http_get_with_auth_header(URL_base, URL_PATH + "?" + URL_QUERY_PARAMS, protocol_config.thing_token, file)
+        file_downloaded = client.modem_instance.http_get_with_auth_header(URL_base, URL_PATH + "?" + URL_QUERY_PARAMS, protocol_config.thing_token, file, 120000)
         if file_downloaded:
             local_file_name = device_info.get_device_root_folder() + file
             is_file_locally = client.modem_instance.get_file(file, local_file_name)
@@ -242,8 +242,8 @@ def downloadOTA(client, fileId, fileType, fileSize):
     # TODO: fix support of redirections
     protocol_config = cfg.get_protocol_config()
     URL = 'https://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}'.format(
-        # cfg.protocol_config.server_ip,
-        "console.insigh.io",
+        cfg.protocol_config.server_ip,
+        #"console.insigh.io",
         fileId,
         protocol_config.thing_id,
         protocol_config.thing_token,
