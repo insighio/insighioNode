@@ -73,14 +73,13 @@ class ModemBG600(modem_base.Modem):
         if not status:
             return False
 
-        # (status, lines) = self.send_at_cmd('ATD*99***1#', 30000, "CONNECT(\\s*\\w+)?")
-        # if not status:
-        #     return False
-
         (status1, _) = self.send_at_cmd('AT+QICSGP=1,1,"' + self.apn + '","","",0')
         (status2, _) = self.send_at_cmd('AT+QIACT=1')
 
-        return status1 and status2   # self.connected
+        return status1 and status2
+
+    def force_time_update(self):
+        self.send_at_cmd('AT+QNTP=1,"pool.ntp.org"', 125000, "\+QNTP")
 
     def is_connected(self):
         (status, lines) = self.send_at_cmd('AT+CGACT?')

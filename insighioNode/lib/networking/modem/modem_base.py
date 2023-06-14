@@ -242,6 +242,9 @@ class Modem:
         status_att = self.detach()
         return status_att and status_act
 
+    def force_time_update(self):
+        pass
+
     def get_rssi(self):
         if self.ppp is None:
             regex_rssi = r"\+CSQ:\s*(\d+),\d+"
