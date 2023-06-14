@@ -227,7 +227,7 @@ def updateConfigValue(key, new_value):
             if has_changes:
                 configContent[i] = ure.sub(regex, new_key_value_str, configContent[i])
             config_found = True
-            break
+            #break
 
     if not config_found:
         configContent.append(new_key_value_str)
