@@ -99,8 +99,14 @@ class ModemBG600(modem_base.Modem):
         if status and len(lines) > 0:
             res = ure.match(reg, lines[0])
             if res:
-                rsrp = res.group(2)
-                rsrq = res.group(4)
+                try:
+                    rsrp = int(res.group(2))
+                except:
+                    rsrp = -141 #to be checked for nbiot
+                try:
+                    rsrq = int(res.group(4))
+                except:
+                    rsrq = -20 #to be checked for nbiot
 
         return (rsrp, rsrq)
 
