@@ -242,7 +242,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
     # TODO: fix support of redirections
     protocol_config = cfg.get_protocol_config()
     URL = 'https://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}'.format(
-        cfg.protocol_config.server_ip,
+        protocol_config.server_ip,
         #"console.insigh.io",
         fileId,
         protocol_config.thing_id,
