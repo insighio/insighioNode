@@ -110,7 +110,18 @@ class Modem:
         self.send_at_cmd(command, 180000)
 
     def init(self, ip_version, apn, technology):
-        if not self.is_alive() or not self.has_sim():
+        if not self.is_alive():
+            return False
+
+        has_sim_check = False
+        for i in range(0,5):
+            has_sim_check = self.has_sim()
+            if has_sim_check:
+                break
+            else:
+                utime.sleep_ms(500)
+
+        if not has_sim_check:
             return False
 
         self.apn = apn
