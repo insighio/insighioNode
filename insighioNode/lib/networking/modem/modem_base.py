@@ -249,7 +249,7 @@ class Modem:
             self.ppp.active(False)
 
         self.connected = False
-        (status_act, _) = self.send_at_cmd("AT+CGACT=0,1")
+        (status_act, _) = self.send_at_cmd("AT+CGACT=0,1", 150000)
         status_att = self.detach()
         return status_att and status_act
 

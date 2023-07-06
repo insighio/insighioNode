@@ -8,6 +8,15 @@ class ModemMC60(modem_base.Modem):
     def __init__(self, power_on, power_key, modem_tx, modem_rx):
         super().__init__(power_on, power_key, modem_tx, modem_rx)
 
+    def disconnect(self):
+        if self.ppp:
+            self.ppp.active(False)
+
+        self.connected = False
+        (status_act, _) = self.send_at_cmd("AT+CGACT=0,1", 150000, "NO CARRIER")
+        status_att = self.detach()
+        return status_att and status_act
+
     def set_gps_state(self, poweron=True):
         (status, _) = self.send_at_cmd('AT+QGNSSC=' + ("1" if poweron else "0"))
         return status
