@@ -255,6 +255,15 @@ def read_scale(measurements):
     if weight_on_pin:
         sensors.set_sensor_power_on(weight_on_pin)
 
+    import network
+    wlan = network.WLAN(network.AP_IF)
+    wlan_is_active = wlan.active()
+    if not wlan_is_active:
+        wlan.active(True)
+        logging.debug("WiFi active: {}".format(wlan.active()))
+    else:
+        logging.debug("WiFi already active")
+
     from sensors import hx711
 
     weight = -1
@@ -274,6 +283,9 @@ def read_scale(measurements):
 
         logging.debug("Detected weight: {}".format(weight))
         utime.sleep_ms(10)
+
+    if not wlan_is_active:
+        wlan.active(False)
 
     weight = weight if weight > 0 or weight < -100 else 0
     set_value_float(measurements, "scale_weight", weight, SenmlUnits.SENML_UNIT_GRAM)
