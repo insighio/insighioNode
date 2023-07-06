@@ -92,14 +92,22 @@ class RawWeightIdle():
         logging.debug("[web-server][GET]: /raw-weight-idle")
 
         from sensors import hx711
-        # if data and data["board"] == "old_esp_cyclefi":
-        #     raw_val = hx711.get_reading_raw_idle_value(21, 22, 23, None)
-        # else:
+
+        txpower_save = None
+        try:
+            txpower_save = wlan.config("txpower")
+            logging.debug("wlan.config(txpower): {}".format(txpower_save))
+            wlan.config(txpower=5)
+        except:
+            logging.error("txpower not supported")
 
         if hw_version == device_info._CONST_ESP32  or hw_version == device_info._CONST_ESP32_WROOM:
             raw_val = hx711.get_reading(4, 33, 12, None, None, 25, True)
         elif hw_version == device_info._CONST_ESP32S3:
             raw_val = hx711.get_reading(5, 4, 8, None, None, 6, True)
+
+        if txpower_save is not None:
+            wlan.config(txpower=txpower_save)
 
         logging.debug("raw val about to return: " + str(raw_val))
         return {"raw": raw_val}, 200
