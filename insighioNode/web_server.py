@@ -128,6 +128,17 @@ class Config:
             logging.exception(e, "Error applying configuration")
             return {}, 500
 
+class DeviceMeasurements:
+    def get(self, data):
+        try:
+            from sensors import hx711
+            hx711.deinit_instance()
+            from apps.demo_console import scenario_utils
+            return scenario_utils.get_measurements(), 200
+        except Exception as e:
+            logging.exception(e, "Error applying configuration")
+            return {}, 500
+
 async def server_loop(timeoutMs):
     purple = 0x4c004c
     device_info.set_led_color(purple)
@@ -174,7 +185,7 @@ async def server_loop(timeoutMs):
                     device_info.set_led_color('black')
 
             cnt += 1
-            yield from  uasyncio.sleep_ms(100)
+            await  uasyncio.sleep_ms(1000)
     except KeyboardInterrupt:
         pass
 
@@ -256,6 +267,7 @@ def start(timeoutMs=120000):
     #app.add_resource(RawWeight, '/raw-weight')
     app.add_resource(Config, '/save-config')
     app.add_resource(DevID, '/devid')
+    app.add_resource(DeviceMeasurements, "/device_measurements")
 
     ##################################################################import network
 

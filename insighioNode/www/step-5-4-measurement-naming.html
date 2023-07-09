@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>insigh.io Device</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/spectre.min.css" />
+  <link rel="stylesheet" href="css/spectre-icons.min.css" />
+</head>
+
+<body class="body-custom">
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center">
+
+  <div class="panel panel-custom">
+    <div class="columns">
+      <div class="panel-nav col-12 hide-sm"><br />
+        <ul class="step">
+          <li class="step-item"><a>Login</a></li>
+          <li class="step-item"><a>Select Network</a></li>
+          <li class="step-item"><a>Network Params</a></li>
+          <li class="step-item"><a>API Keys</a></li>
+          <li class="step-item active"><a>Measurements</a></li>
+          <li class="step-item"><a>Timing</a></li>
+          <li class="step-item"><a>Verify</a></li>
+        </ul>
+        <br />
+        <hr />
+      </div>
+    </div>
+
+    <div class="panel-body">
+      <br />
+      <div id="loader" class="loading loading-lg"></div>
+      <div class="container grid-lg">
+        <div class="columns flex-centered">
+          <div class="column col-xl-7 col-md-10 col-sm-12">
+            <div class="form-group">
+              <div class="columns">
+                <div class="col-12">
+                  <div class="divider text-center" data-content="Custom measurement naming"></div>
+                  <button class="btn btn-primary float-right" type="button" id="update-measurements-button" onclick="executeMeasurements()">Update Measurements</button>
+                </div>
+                <br />
+                <div id="board-default-options" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>name</th>
+                        <th>alias</th>
+                        <th>unit</th>
+                        <th>value</th>
+                      </tr>
+                    </thead>
+                    <tbody id="measurementList">
+                      <!-- <tr class="active">
+                        <td>The Shawshank Redemption</td>
+                        <td>Crime, Drama</td>
+                        <td>14 October 1994</td>
+                        <td>123</td>
+                      </tr> -->
+                    </tbody>
+                  </table>
+                </div>
+                <br />
+                <br />
+              </div>
+              <br />
+              <div class="column col-12">
+                <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
+                <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Skip</button>
+                <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+              </div>
+              <br />
+              <br />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="js/js.cookie.min.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    var shieldNamePerTab = {
+      "shield-advind-options": "advind",
+      "shield-scale-options": "scale",
+      "shield-dig-analog-options": "dig_analog"
+    }
+
+    let settings = undefined
+
+    function initializeValues() {
+      // addSelect("board-default-options", "input-temp-unit", "Temperature Unit")
+      //
+      // addSwitch("shield-scale-options-content", "input-scale-monitoring", "[Debug] Enable Scale Sensor Monitoring")
+      // addInput('options-sdi12', 'input-gen-sdi12-warmup-time', 'Warm Up time (ms)')
+      //
+      // generateOptions("input-i2c-1", i2cOptions)
+
+      fetchInternal("/settings")
+      .then((data) => {
+        settings = data
+
+        // setElemValueBool('input-led-enabled', strToJSValue(data.meas_led_enabled), true)
+        // setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], i - 1)
+        // showElement('input-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
+        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
+        showElement('loader', false)
+      }).catch((err) => {
+        console.log("error completing request", err);
+        showElement('loader', false)
+      });
+    }
+
+    function clearCookies() {
+
+    }
+
+    function storeData() {
+      disableNavigationButtons()
+      clearCookies();
+
+      enableNavigationButtons()
+    }
+
+
+    function validateMyForm() {
+      storeData()
+      return true
+    }
+
+    function executeMeasurements() {
+      showElement('loader', true)
+
+      fetchInternal("/device_measurements")
+      .then((measurements) => {
+        populateTable(measurements)
+
+        showElement('loader', false)
+
+      }).catch((err) => {
+        showElement('loader', false)
+      });
+    }
+
+    function populateTable(measurements) {
+      var parent = document.getElementById("measurementList");
+      parent.replaceChildren();
+
+      var index = 0
+      Object.keys(measurements).forEach((measurement_name) => {
+        index++
+        var measurement = measurements[measurement_name]
+        var row = document.createElement("tr")
+        if(index % 2 === 0)
+          row.classList.add('active')
+
+        var colName = document.createElement("td")
+        colName.appendChild(document.createTextNode(measurement_name));
+
+        var colAlias = document.createElement("td")
+        colAlias.appendChild(document.createElement("input"));
+
+        var colUnit = document.createElement("td")
+        colUnit.appendChild(document.createTextNode(measurement.unit ? measurement.unit : ""));
+
+        var colValue = document.createElement("td")
+        colValue.appendChild(document.createTextNode(measurement.value));
+
+        row.appendChild(colName)
+        row.appendChild(colAlias)
+        row.appendChild(colUnit)
+        row.appendChild(colValue)
+
+        parent.appendChild(row)
+      })
+    }
+
+    initializeValues()
+  </script>
+</body>
+
+</html>

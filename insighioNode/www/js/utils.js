@@ -269,3 +269,16 @@ function fromMultiWordToOne(initialString, delimeter = " ") {
     return initialString
   }
 }
+
+function fetchInternal(url) {
+  return new Promise((resolve, reject) => {
+    fetch(url).then((response) => {
+      return response.json();
+    }).then(function (data) {
+      resolve(data)
+    }).catch((err) => {
+      console.log("error fetching: ", url, ", e: ", err)
+      reject()
+    });
+  })
+}
