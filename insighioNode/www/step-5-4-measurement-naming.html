@@ -131,6 +131,37 @@
       location.href = "step-6-timing.html"
     }
 
+    function addStaticValuesForNetwork(obj){
+        var net = Cookies.get('network')
+        var netStats = Cookies.get('meas-network-stat')
+
+        if(net === 'wifi' && netStats === "True") {
+          obj["wifi_conn_duration"] = ""
+          obj["wifi_scan_duration"] =""
+          obj["wifi_channel"] = ""
+          obj["wifi_rssi"] = ""
+        }
+        else if (net === "cellular" && netStats === "True") {
+          obj["cell_rssi"] = ""
+          obj["cell_rsrp"] = ""
+          obj["cell_rsrq"] = ""
+          obj["cell_mcc"] = ""
+          obj["cell_mnc"] = ""
+          obj["cell_lac"] = ""
+          obj["cell_ci"] = ""
+          obj["cell_act_duration"] = ""
+          obj["cell_att_duration"] = ""
+          obj["cell_con_duration"] = ""
+        }
+
+        if(Cookies.get('meas-gps-enabled') === "True") {
+          obj["gps_lat"] = ""
+          obj["gps_lon"] = ""
+          obj["gps_num_of_sat"] = ""
+          obj["gps_hdop"] = ""
+        }
+    }
+
     function executeMeasurements() {
       showElement('loader', true)
 
@@ -168,6 +199,7 @@
         .then(res => {
           fetchInternal("/device_measurements")
           .then((measurements) => {
+            addStaticValuesForNetwork(measurements)
             populateTable(measurements)
 
             showElement('loader', false)
@@ -186,7 +218,7 @@
       parent.replaceChildren();
 
       var index = 0
-      Object.keys(measurements).forEach((measurement_name) => {
+      Object.keys(measurements).sort().forEach((measurement_name) => {
         index++
         var measurement = measurements[measurement_name]
         var row = document.createElement("tr")
