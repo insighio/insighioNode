@@ -39,5 +39,13 @@ if rstCause == 0 or rstCause == 1 or not demo_config_exists:
         pass
     gc.collect()
 
+# in case a temp config has been generated and webserver timesout before
+# deleting it
+try:
+    import uos
+    uos.remove("/apps/demo_temp_config.py")
+except:
+    pass
+
 import apps.demo_console.scenario as scenario
 scenario.execute()

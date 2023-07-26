@@ -5,9 +5,15 @@ import utils
 
 # to change
 try:
-    from apps.demo_console import demo_config as cfg
+    from apps import demo_temp_config as cfg
+    logging.info("loaded config: [temp]")
 except Exception as e:
-    cfg = type('', (), {})()
+    try:
+        from apps.demo_console import demo_config as cfg
+        logging.info("loaded config: [normal]")
+    except Exception as e:
+        cfg = type('', (), {})()
+        logging.info("loaded config: [fallback]")
 
 def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
@@ -174,10 +180,6 @@ def progressCallback(microWebCli, progressSize, totalSize):
 
 def downloadDeviceConfigurationHTTP(client):
     logging.info("About to download device configuration over HTTP...")
-    try:
-        from apps.demo_console import demo_config as cfg
-    except Exception as e:
-        cfg = type('', (), {})()
     protocol_config = cfg.get_protocol_config()
     URL_base = "console.insigh.io"
     URL_PATH = '/mf-rproxy/device/config'
@@ -231,11 +233,6 @@ def downloadOTA(client, fileId, fileType, fileSize):
         return None
 
     logging.debug("OTA size check passed")
-
-    try:
-        from apps.demo_console import demo_config as cfg
-    except Exception as e:
-        cfg = type('', (), {})()
 
     filename = device_info.get_device_root_folder() + fileId + fileType
     # http://<ip>/packages/download?fuid=<file-uid>&did=<device-id>&dk=<device-key>&cid=<control-channel-id>

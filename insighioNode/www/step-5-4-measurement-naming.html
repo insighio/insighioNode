@@ -41,7 +41,6 @@
               <div class="columns">
                 <div class="col-12">
                   <div class="divider text-center" data-content="Custom measurement naming"></div>
-                  <button class="btn btn-primary float-right" type="button" id="update-measurements-button" onclick="executeMeasurements()">Update Measurements</button>
                 </div>
                 <br />
                 <div id="board-default-options" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
@@ -55,12 +54,6 @@
                       </tr>
                     </thead>
                     <tbody id="measurementList">
-                      <!-- <tr class="active">
-                        <td>The Shawshank Redemption</td>
-                        <td>Crime, Drama</td>
-                        <td>14 October 1994</td>
-                        <td>123</td>
-                      </tr> -->
                     </tbody>
                   </table>
                 </div>
@@ -69,8 +62,8 @@
               </div>
               <br />
               <div class="column col-12">
+                <button class="btn btn-primary" type="button" id="update-measurements-button" onclick="executeMeasurements()">Update</button>
                 <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Save</button>
-                <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Skip</button>
                 <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
               </div>
               <br />
@@ -124,7 +117,7 @@
     function storeData() {
       disableNavigationButtons()
       clearCookies();
-
+      location.href = "step-6-timing.html"
       enableNavigationButtons()
     }
 
@@ -134,18 +127,58 @@
       return true
     }
 
+    function skipOperation() {
+      location.href = "step-6-timing.html"
+    }
+
     function executeMeasurements() {
       showElement('loader', true)
 
-      fetchInternal("/device_measurements")
-      .then((measurements) => {
-        populateTable(measurements)
+      var config = Cookies.get()
+      var configString = ""
 
-        showElement('loader', false)
+      for (let key in config) {
+        if (config.hasOwnProperty(key)) {
+          configString += (key + "=" + config[key] + "&")
+          if(key == 'wifi-ssid' || key == 'wifi-pass') {
+            config[key] = decodeURIComponent(config[key]).replaceAll("\\", "\\\\").replaceAll("'", "\\'")
+          }
+        }
+      }
 
-      }).catch((err) => {
-        showElement('loader', false)
-      });
+      if (configString !== "")
+        configString = configString.slice(0, -1)
+
+      console.log("configString: ", configString)
+      const objToSend = { queryParams: config, queryString: configString }
+
+      if (configString == "") {
+        startOver()
+        return
+      }
+
+      fetch('/save-config-temp', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json, text/plain, */*',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(objToSend)
+      }).then(res => res.json())
+        .then(res => {
+          fetchInternal("/device_measurements")
+          .then((measurements) => {
+            populateTable(measurements)
+
+            showElement('loader', false)
+
+          }).catch((err) => {
+            showElement('loader', false)
+          });
+        })
+        .catch(err => {
+          console.log("error saving config: ", err)
+        })
     }
 
     function populateTable(measurements) {

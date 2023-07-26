@@ -1,10 +1,16 @@
+import logging
 try:
-    from apps.demo_console import demo_config as cfg
-except:
-    cfg = type('', (), {})()
+    from apps import demo_temp_config as cfg
+    logging.info("loaded config: [temp]")
+except Exception as e:
+    try:
+        from apps.demo_console import demo_config as cfg
+        logging.info("loaded config: [normal]")
+    except Exception as e:
+        cfg = type('', (), {})()
+        logging.info("loaded config: [fallback]")
 import json
 import utils
-import logging
 import utime
 import device_info
 import _thread
