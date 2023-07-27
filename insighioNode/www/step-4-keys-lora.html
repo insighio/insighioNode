@@ -88,17 +88,13 @@
   <script src="js/utils.js"></script>
   <script>
     function initializeValues() {
-      fetchInternal("/settings")
-      .then(function (data) {
-        setElemValue("input-dev-eui", data.lora_dev_eui)
-        setElemValue("input-app-eui", data.lora_app_eui)
-        setElemValue("input-app-key", data.lora_app_key)
+      disableNavigationButtons()
 
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
+      setElemValue("input-dev-eui", Cookies.get("lora-dev-eui"))
+      setElemValue("input-app-eui", Cookies.get("lora-app-eui"))
+      setElemValue("input-app-key", Cookies.get("lora-app-key"))
+
+      detectBoardChange(enableNavigationButtons)
       });
     }
 

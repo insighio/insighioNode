@@ -37,6 +37,7 @@
       <div class="empty">
         <p class="empty-title h5">Weight Scale Calibration</p>
         <p class="empty-subtitle">Idle value (offset) is <span id="idle-weight-value" class="text-bold"><div id="loader" class="loading"></div></span></p>
+        <progress id="currentWeightProgressMain" class="progress" value="0" max="30" style="display: none"></progress>
         <p class="empty-subtitle">Place your reference weight on the scale, fill its exact weight in grams at the following field and press <span class="text-bold">Measure</span> to complete calibration.</p>
         <p class="empty-subtitle p-centered">
           <div class="columns">
@@ -59,26 +60,26 @@
   <script src="js/utils.js"></script>
   <script>
     function initialize() {
-      document.getElementById('save-button').disabled = true
-      fetchInternal("/raw-weight-idle?board=" + Cookies.get('hw-module'))
-      .then(function (data) {
-        document.getElementById('save-button').disabled = false
+      disableNavigationButtons()
+      startProgressAnimation()
+      fetch("/raw-weight-idle?board=" + Cookies.get('hw-module')).then((response) => {
+        return response.json();
+      }).then(function (data) {
         document.getElementById('idle-weight-value').innerHTML = data.raw
-
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
+        enableNavigationButtons()
+        stopProgressAnimation()
         showElement('loader', false)
       }).catch((err) => {
-        console.log("Booo", err);
+        stopProgressAnimation()
+        showElement('loader', false)
       });
     }
 
     function clearCookies() {
-      Cookies.remove('meas-scale-offset')
-      Cookies.remove('meas-scale-reference')
     }
 
     function validateMyForm() {
-      if (!validateElemValue('input-ref-weight', "ref-weight"))
+      if (!validateElemValue('input-ref-weight', "ref-weight", "^(-)?[0-9]*[1-9][0-9]*$"))
         return false
 
       storeData()
@@ -86,13 +87,16 @@
     }
 
     function storeData() {
-      document.getElementById('save-button').disabled = true
+      enableElement('save-button', false)
       clearCookies()
 
       Cookies.set('meas-scale-offset', document.getElementById('idle-weight-value').innerHTML)
       Cookies.set('meas-scale-reference', document.getElementById('input-ref-weight').value)
 
-      location.href = "step-5-3-scale-calibr-res.html"
+      Cookies.set('scale-calibration-ongoing', true)
+
+      redirectTo("step-5-3-scale-calibr-res.html")
+      enableElement('save-button', true)
     }
 
     initialize()

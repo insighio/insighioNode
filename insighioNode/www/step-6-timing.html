@@ -58,7 +58,7 @@
                     <label class="form-label" for="input-example-cellular">Sleep Period (s)</label>
                   </div>
                   <div class="col-8 col-sm-12">
-                    <input class="form-input constr-field" type="number" id="input-period" />
+                    <input class="form-input constr-field" type="number" onchange="updateEstimatedTime()" id="input-period" />
                   </div>
                   <br />
                   <br />
@@ -71,6 +71,16 @@
                   <div class="col-8 col-sm-12">
                     <input class="form-input constr-field" type="number" id="input-always-on-period" />
                   </div>
+                </div>
+                <div class="form-group columns">
+                  <div class="col-1 col-mr-auto"></div>
+                  <div class="col-3 col-sm-12">
+                    <label class="form-label" for="measurements">Estimated Upload Period</label>
+                  </div>
+                  <div class="col-3 col-sm-12">
+                    <span id="timing-sec"></span> s <i class="icon icon-arrow-right"></i> <span id="timing-proc-h"></span>:<span id="timing-proc-s"></span> h
+                  </div>
+                  <div class="column col-5 col-mr-auto"></div>
                 </div>
               </div>
               <div id="scheduled" class="tabcontent" style="display: none">
@@ -114,7 +124,7 @@
                         </label>
                       </div>
                       <div class="col-3 col-sm-12">
-                        <input class="form-input constr-field" type="number" id="input-message-buffer-size" />
+                        <input class="form-input constr-field" type="number"  onchange="updateEstimatedTime()" id="input-message-buffer-size" />
                       </div>
                       <div class="column col-5 col-mr-auto"></div>
                     </div>
@@ -147,41 +157,36 @@
     }
 
     function initializeValues() {
+      disableNavigationButtons()
       addSwitch("option-always-on-switches", "input-ins-always-on", "Always-On Connection (main current plugged)")
       addSwitch("option-always-on-switches", "input-ins-force-always-on", "Force Always-On (ignore power mode)")
       addSwitch("options-batch-upload", "input-ins-batch-upload-enable", "Batch Upload", batchUploadSelected)
 
-      fetchInternal("/settings")
-      .then(function (data) {
-        var batchBufferSize = data.batch_upload_buffer_size
-        var period = data.period
-        var timeA = data.scheduled_time_a
-        var timeB = data.scheduled_time_b
+      var batchBufferSize = Cookies.get("batch_upload_buffer_size")
+      var period = Cookies.get("period")
+      var timeA = Cookies.get("scheduled_time_a")
+      var timeB = Cookies.get("scheduled_time_b")
 
-        if (timeA && timeB) {
-          timingChanged(undefined, 'scheduled')
+      if (timeA && timeB) {
+        timingChanged(undefined, 'scheduled')
 
-          document.getElementById('input-scheduled-time-a').value = secondsToStringTime(timeA)
-          document.getElementById('input-scheduled-time-b').value = secondsToStringTime(timeB)
-        }
-        else
-          timingChanged(undefined, 'periodic')
+        document.getElementById('input-scheduled-time-a').value = secondsToStringTime(timeA)
+        document.getElementById('input-scheduled-time-b').value = secondsToStringTime(timeB)
+      }
+      else
+        timingChanged(undefined, 'periodic')
 
-        setElemValue('input-period', data.period, 300)
-        setElemValue('input-message-buffer-size', batchBufferSize, 1)
-        document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
+      setElemValue('input-period', Cookies.get("period"), 300)
+      setElemValue('input-message-buffer-size', batchBufferSize, 1)
+      document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
 
-        setElemValueBool('input-ins-always-on', strToJSValue(data.always_on_connection), false)
-        setElemValueBool('input-ins-force-always-on', strToJSValue(data.force_always_on_connection), false)
-        setElemValue('input-always-on-period', data.always_on_period, 60)
+      setElemValueBool('input-ins-always-on', strToJSValue(Cookies.get("always_on_connection")), false)
+      setElemValueBool('input-ins-force-always-on', strToJSValue(Cookies.get("force_always_on_connection")), false)
+      setElemValue('input-always-on-period', Cookies.get("always_on_period"), 60)
 
-        checkboxStatusChanged('ins-batch-upload')
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
-      });
+      checkboxStatusChanged('ins-batch-upload')
+      updateEstimatedTime()
+      detectBoardChange(enableNavigationButtons)
     }
 
     function clearCookies() {
@@ -261,6 +266,21 @@
 
     function batchUploadSelected() {
       checkboxStatusChanged('ins-batch-upload')
+    }
+
+    function updateEstimatedTime() {
+      console.log("to update setimated time")
+
+      var seconds = document.getElementById('input-period').value
+      var batchsize = document.getElementById('input-message-buffer-size').value
+
+      var periodSeconds = seconds
+      if (isChecked('input-ins-batch-upload-enable') && batchsize)
+        periodSeconds = seconds * batchsize
+
+      setElemText('timing-sec', periodSeconds, "-")
+      setElemText('timing-proc-h', (periodSeconds / 3600).toFixed(0).toString().padStart(2, "0"), "-")
+      setElemText('timing-proc-s', ((periodSeconds % 3600) / 60).toFixed(0).toString().padStart(2, "0"), "-")
     }
 
     initializeValues()

@@ -154,16 +154,16 @@
     }
 
     function initializeValues() {
-      fetchInternal("/settings?update_wifi_list=1")
-      .then(function (data) {
+      disableNavigationButtons()
+      var protocol = Cookies.get("protocol")
+      setElemValue('input-ssid', Cookies.get("wifi-ssid"))
+      setElemValue('input-ssid-pass', Cookies.get("wifi-pass"))
+      setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
 
-        protocol = data.protocol
-        setElemValue('input-ssid', data.wifi_ssid)
-        setElemValue('input-ssid-pass', data.wifi_pass)
-        setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
+      fetchInternal("/update_wifi_list")
+      .then(function (data) {
         populateAvailableNets(data.wifiAvailableNets)
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        showElement('loader', false)
+        detectBoardChange(enableNavigationButtons)
       }).catch((err) => {
         console.log("error completing request", err);
         showElement('loader', false)

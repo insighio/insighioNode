@@ -56,6 +56,22 @@ function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = 
       : defaultValue
 }
 
+function setElemText(elementId, newValue, defaultValue = "", intZeroAccepted=false) {
+  var elem = document.getElementById(elementId)
+  if (!elem) {
+    console.log("setElemValue: Element not found: ", elementId)
+    return
+  }
+
+  elem.textContent =
+    newValue !== "" &&
+    newValue !== "undefined" &&
+    newValue !== undefined &&
+    (intZeroAccepted || (!intZeroAccepted && newValue !== 0))
+      ? newValue
+      : defaultValue
+}
+
 function setElemValueBool(elementId, newValue, defaultValue = "", boolField = "checked") {
   var elem = document.getElementById(elementId)
   if (!elem) {
@@ -224,6 +240,11 @@ function addInput(parentId, inputId, inputLabel, inputType = "number") {
 }
 
 function strToJSValue(strVal) {
+  try {
+    strVal = strVal ? strVal.toLowerCase() : strVal
+  }
+  catch(e) {
+  }
   if (strVal === "undefined" || strVal === "") return undefined
   else if (strVal === "true") return true
   else if (strVal === "false") return false
@@ -251,13 +272,32 @@ function disableNavigationButtons() {
   document.getElementById("back-button").disabled = true
 }
 
-function detectBoardChange(settings_mac, cookies_mac) {
-  console.log("Board mac: ", settings_mac, ", Cookie mac: ", cookies_mac)
-  if (settings_mac !== undefined && settings_mac !== cookies_mac) {
-    alert("board change detected...restarting configuration")
-    location.href = "step-2-select.html"
-    return
-  }
+function detectBoardChange(callback) {
+  fetch("/devid").then((response) => {
+    return response.json();
+  }).then(function (data) {
+    var settings_mac = data.id
+    var cookies_mac = Cookies.get('board-mac')
+    console.log("Board mac: ", settings_mac, ", Cookie mac: ", cookies_mac)
+    if (settings_mac !== undefined && settings_mac !== cookies_mac) {
+      alert("board change detected...restarting configuration")
+      redirectTo("index.html")
+      return
+    }
+    showElement('loader', false)
+
+    if(callback)
+      callback()
+  }).catch((err) => {
+    console.log("error completing request", err);
+    showElement('loader', false)
+    if(callback)
+      callback()
+  });
+}
+
+function redirectTo(relUrl) {
+  location.href = relUrl + "?n=" + Math.floor(Math.random()*100000000)
 }
 
 function fromMultiWordToOne(initialString, delimeter = " ") {
@@ -281,4 +321,28 @@ function fetchInternal(url) {
       reject()
     });
   })
+}
+
+var progressTimer=undefined
+var activeProgressElementId=undefined
+function startProgressAnimation(elementId="currentWeightProgressMain") {
+  //<progress id="currentWeightProgressMain" class="progress" value="0" max="30" style="display: none"></progress>
+  showElement(elementId, true)
+  var elem = document.getElementById(elementId)
+  elem.value = 0
+  activeProgressElementId = elementId
+  progressTimer = window.setInterval(increaseProgress, 500);
+}
+
+function stopProgressAnimation() {
+  if(progressTimer) {
+    increaseProgress(30)
+    clearInterval(progressTimer)
+  }
+  showElement(activeProgressElementId, false)
+}
+
+function increaseProgress(increment = 1) {
+  var elem = document.getElementById(activeProgressElementId)
+  elem.value = elem.value + increment
 }

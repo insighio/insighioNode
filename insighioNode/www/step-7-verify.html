@@ -55,23 +55,12 @@
   <script>
   function initializeValues() {
       disableNavigationButtons()
-
-      fetchInternal("/settings")
-      .then(function(data) {
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        enableNavigationButtons()
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        enableNavigationButtons()
-        showElement('loader', false)
-      });
+      detectBoardChange(enableNavigationButtons)
     }
 
     function storeAndReboot() {
       disableNavigationButtons()
-
-      location.href = "step-8-apply.html"
+      redirectTo("step-8-apply.html")
       enableNavigationButtons()
     }
 

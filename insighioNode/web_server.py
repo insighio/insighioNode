@@ -211,6 +211,29 @@ class DeviceMeasurements:
             logging.exception(e, "Error applying configuration")
             return {}, 500
 
+class WiFiList:
+    def get(self, data):
+        result = {}
+        result["wifiAvailableNets"] = populateAvailableNets()
+        import ujson
+
+        res = None
+        try:
+            res = ujson.dumps(result, separators=(",", ":"))
+        except:
+            pass
+
+        if res is None:
+            try:
+                res = ujson.dumps(result)
+            except:
+                pass
+
+        if res is not None:
+            res_bytes = res.encode("utf-8")
+            logging.debug("wifi list: " + res)
+        return res_bytes, 200
+
 async def server_loop(server_instance, timeoutMs):
     server_instance.run(host='192.168.4.1', port=80, loop_forever=False)
     logging.info("Web UI started")
@@ -337,6 +360,7 @@ def start(timeoutMs=120000):
     app.add_resource(Config, '/save-config')
     app.add_resource(ConfigTemp, '/save-config-temp')
     app.add_resource(DevID, '/devid')
+    app.add_resource(WiFiList, "/update_wifi_list")
     app.add_resource(DeviceMeasurements, "/device_measurements")
 
     ##################################################################import network

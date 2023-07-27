@@ -120,24 +120,19 @@
   <script src="js/utils.js"></script>
   <script>
     function initializeValues() {
-      fetchInternal("/settings")
-      .then(function (data) {
-        var adr = data.lora_adr
-        var confirmed = data.lora_confirmed
+      disableNavigationButtons()
 
-        setElemValue('input-region', data.lora_region, "EU868")
-        setElemValue('input-dr', data.lora_dr, 5)
-        setElemValue('input-retries', data.lora_retries, 1)
+      var adr = data.lora_adr
+      var confirmed = data.lora_confirmed
 
-        document.getElementById('input-adr').checked = adr !== undefined ? adr : true
-        document.getElementById('input-confirmed').checked = confirmed !== undefined ? confirmed : false
+      setElemValue('input-region', Cookies.get('lora-region'), "EU868")
+      setElemValue('input-dr', Cookies.get('lora-adr'), 5)
+      setElemValue('input-retries', Cookies.get('lora-retries'), 1)
 
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
-      });
+      document.getElementById('input-adr').checked = adr !== undefined ? adr : true
+      document.getElementById('input-confirmed').checked = confirmed !== undefined ? confirmed : false
+
+      detectBoardChange(enableNavigationButtons)
     }
 
     function clearCookies() {

@@ -98,26 +98,20 @@
   <script>
 
     function initializeValues() {
-      fetchInternal("/settings")
-      .then(function (data) {
-        var dev_enable = data.sat_astro_devkit_en
-        var dev_ssid = data.sat_astro_devkit_ssid
-        var dev_pass = data.sat_astro_devkit_pass
-        var dev_token = data.sat_astro_devkit_token
+      disableNavigationButtons()
 
-        setElemValue('input-satAstroSSID', dev_ssid, "")
-        setElemValue('input-satAstroPass', dev_pass, "")
-        setElemValue('input-satAstroToken', dev_token, "")
+      var dev_enable = Cookies.get('sat-astro-devkit-en')
+      var dev_ssid = Cookies.get('sat-astro-devkit-ssid')
+      var dev_pass = Cookies.get('sat-astro-devkit-pass')
+      var dev_token = Cookies.get('sat-astro-devkit-token')
 
-        document.getElementById('input-satAstroDevkitEnable').checked = dev_enable !== undefined ? dev_enable : false
+      setElemValue('input-satAstroSSID', dev_ssid, "")
+      setElemValue('input-satAstroPass', dev_pass, "")
+      setElemValue('input-satAstroToken', dev_token, "")
 
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
+      document.getElementById('input-satAstroDevkitEnable').checked = dev_enable !== undefined ? dev_enable : false
 
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
-      });
+      detectBoardChange(enableNavigationButtons)
     }
 
     function clearCookies() {
