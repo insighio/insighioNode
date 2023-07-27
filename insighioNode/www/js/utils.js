@@ -361,7 +361,7 @@ function getKeyValuePairs() {
       break
 
     if (elemKey && elemValue && elemKey.value !== '' && elemValue.value !== '')
-      returnObj[elemKey.value] = elemValue.value
+      returnObj[elemKey.value.trim()] = elemValue.value.trim()
     i++
   }
 

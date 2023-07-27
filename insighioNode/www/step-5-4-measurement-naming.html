@@ -85,12 +85,20 @@
       "shield-dig-analog-options": "dig_analog"
     }
 
-    let settings = undefined
+    var storedMapping = undefined
 
     function initializeValues() {
       disableNavigationButtons()
 
-      var storedMapping = Cookies.get("meas-name-mapping")
+      storedMapping = Cookies.get("meas-name-mapping")
+      try{
+        storedMapping = JSON.parse(storedMapping)
+        console.log("successfully parsed name mappings")
+      }
+      catch(e){
+        console.log("failed parsing: ", storedMapping)
+      }
+
       if(storedMapping) {
         var editiedMapping = {}
 
@@ -198,9 +206,9 @@
             console.log("measurements: ",measurements)
             populateTable(measurements)
 
-            document.getElementById("save-button").innerText = "Save"
+            updateFieldsWithMappingFromConfiguration()
 
-            fillKeyValuePairsFromDictionary(Cookies.get("meas-name-mapping"))
+            document.getElementById("save-button").innerText = "Save"
 
             showElement('loader', false)
 
@@ -217,8 +225,6 @@
     function populateTable(measurements) {
       var parent = document.getElementById("measurementList");
       parent.replaceChildren();
-
-      //if measurement is object, ok else, JSON.parse(measurements)
 
       var index = 0
       Object.keys(measurements).sort().forEach((measurement_name) => {
@@ -238,16 +244,16 @@
         var colAlias = document.createElement("td")
         var colAliasInput = document.createElement("input")
         colAliasInput.id = 'input-key-value-' + index
-        if(measurement.alias) {
+        if(measurement.alias)
           colAliasInput.value = measurement.alias
-        }
         colAlias.appendChild(colAliasInput);
 
         var colUnit = document.createElement("td")
+
         colUnit.appendChild(document.createTextNode(measurement.unit ? measurement.unit : ""));
 
         var colValue = document.createElement("td")
-        colValue.appendChild(document.createTextNode(measurement.value));
+        colValue.appendChild(document.createTextNode(measurement.value !== undefined ? measurement.value : ""));
 
         row.appendChild(colName)
         row.appendChild(colAlias)
@@ -258,6 +264,23 @@
 
         index++
       })
+    }
+
+    function updateFieldsWithMappingFromConfiguration(){
+        var i = 0
+        while(1) {
+          var elemKey = document.getElementById("input-key-name-" + i);
+          var elemValue = document.getElementById("input-key-value-" + i);
+
+          if(!elemKey)
+            break
+
+          if (elemKey && elemKey.value !== '' && storedMapping[elemKey.value]) {
+            elemValue.value = storedMapping[elemKey.value]
+          }
+
+          i++
+        }
     }
 
     initializeValues()
