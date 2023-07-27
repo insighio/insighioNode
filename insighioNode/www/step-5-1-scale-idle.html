@@ -52,9 +52,8 @@
   function initializeValues() {
         disableNavigationButtons()
 
-        fetch("/settings").then((response) => {
-          return response.json();
-        }).then(function(data) {
+        fetchInternal("/settings").
+        .then(function(data) {
           detectBoardChange(data.board_mac, Cookies.get('board-mac'))
           enableNavigationButtons()
           showElement('loader', false)

@@ -154,9 +154,8 @@
     }
 
     function initializeValues() {
-      fetch("/settings?update_wifi_list=1").then((response) => {
-        return response.json();
-      }).then(function (data) {
+      fetchInternal("/settings?update_wifi_list=1")
+      .then(function (data) {
 
         protocol = data.protocol
         setElemValue('input-ssid', data.wifi_ssid)

@@ -98,9 +98,8 @@
   <script>
 
     function initializeValues() {
-      fetch("/settings").then((response) => {
-        return response.json();
-      }).then(function (data) {
+      fetchInternal("/settings")
+      .then(function (data) {
         var dev_enable = data.sat_astro_devkit_en
         var dev_ssid = data.sat_astro_devkit_ssid
         var dev_pass = data.sat_astro_devkit_pass

@@ -76,9 +76,8 @@
           }
 
           function initializeValues() {
-            fetch("/devid").then((response) => {
-              return response.json();
-            }).then(function (data) {
+            fetchInternal("/devid")
+            .then(function (data) {
               clearCookies()
               mac = data.id
               hw_module = data.hw_module

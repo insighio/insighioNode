@@ -377,9 +377,8 @@
 
       generateSdi12Options()
 
-      fetch("/settings").then((response) => {
-        return response.json()
-      }).then(function (data) {
+      fetchInternal("/settings")
+      .then(function (data) {
         settings = data
 
         var gps = strToJSValue(data.meas_gps_enabled)

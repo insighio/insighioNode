@@ -77,9 +77,8 @@
         showElement('loader1', true)
         showElement('loader2', true)
         document.getElementById('save-button').disabled = true
-        fetch("/raw-weight-idle?board=" + Cookies.get('hw-module')).then((response) => {
-          return response.json();
-        }).then(function (data) {
+        fetchInternal("/raw-weight-idle?board=" + Cookies.get('hw-module')).
+        .then(function (data) {
           var referenceExpectedWeight = parseFloat(Cookies.get('meas-scale-reference'))
           scale = (data.raw - offset) / referenceExpectedWeight
 
@@ -126,9 +125,8 @@
     function requestTare() {
       showElement('loader4', true)
       document.getElementById('save-button').disabled = true
-      fetch("/raw-weight-idle?board=" + Cookies.get('hw-module')).then((response) => {
-        return response.json();
-      }).then(function (data) {
+      fetchInternal("/raw-weight-idle?board=" + Cookies.get('hw-module'))
+      .then(function (data) {
         document.getElementById('idle-weight-value').innerHTML = data.raw
         document.getElementById('scale-weight-value').innerHTML = 0
 
@@ -145,9 +143,8 @@
     function requestMeasure() {
       showElement('loader3', true)
       document.getElementById('save-button').disabled = true
-      fetch("/raw-weight-idle?board=" + Cookies.get('hw-module')).then((response) => {
-        return response.json();
-      }).then(function (data) {
+      fetchInternal("/raw-weight-idle?board=" + Cookies.get('hw-module'))
+      .then(function (data) {
         const offset = parseFloat(document.getElementById('idle-weight-value').innerHTML)
         const scale = parseFloat(document.getElementById('scale-value').innerHTML)
         if (scale !== 0) {

@@ -111,9 +111,8 @@
   <script src="js/utils.js"></script>
   <script>
     function initializeValues() {
-      fetch("/settings").then((response) => {
-        return response.json();
-      }).then(function (data) {
+      fetchInternal("/settings")
+      .then(function (data) {
         if (data.board_mac !== undefined && data.board_mac !== Cookies.get('board-mac')) {
           alert("board change detected...restarting configuration")
           location.href = "step-2-select.html"

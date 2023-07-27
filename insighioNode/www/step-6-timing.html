@@ -151,9 +151,8 @@
       addSwitch("option-always-on-switches", "input-ins-force-always-on", "Force Always-On (ignore power mode)")
       addSwitch("options-batch-upload", "input-ins-batch-upload-enable", "Batch Upload", batchUploadSelected)
 
-      fetch("/settings").then((response) => {
-        return response.json()
-      }).then(function (data) {
+      fetchInternal("/settings")
+      .then(function (data) {
         var batchBufferSize = data.batch_upload_buffer_size
         var period = data.period
         var timeA = data.scheduled_time_a

@@ -87,8 +87,7 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(objToSend)
-        }).then(res => res.json())
-          .then(res => {
+        }).then(res => {
             for (let key in config) {
               Cookies.remove(key)
             }
@@ -113,8 +112,7 @@
             'Content-Type': 'application/json'
           },
           body: "{}"
-        }).then(res => res.json())
-          .then(res => console.log(res))
+        }).then(res => console.log(res))
           .catch(err => {
             console.log("error rebooting: ", err)
           })

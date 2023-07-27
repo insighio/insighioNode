@@ -120,9 +120,8 @@
   <script src="js/utils.js"></script>
   <script>
     function initializeValues() {
-      fetch("/settings").then((response) => {
-        return response.json();
-      }).then(function (data) {
+      fetchInternal("/settings")
+      .then(function (data) {
         var adr = data.lora_adr
         var confirmed = data.lora_confirmed
 

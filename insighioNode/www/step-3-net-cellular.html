@@ -125,9 +125,8 @@
   <script src="js/utils.js"></script>
   <script>
     function initializeValues() {
-      fetch("/settings").then((response) => {
-        return response.json();
-      }).then(function (data) {
+      fetchInternal("/settings")
+      .then(function (data) {
         var protocol = data.protocol
         var ipv = data.ipversion
 
