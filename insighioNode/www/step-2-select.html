@@ -96,13 +96,13 @@
             disableButtonsLocal()
 
             if (operationName == "WiFi")
-              location.href = "step-3-net-wifi.html";
+              redirectTo("step-3-net-wifi.html")
             else if (operationName == "Cellular")
-              location.href = "step-3-net-cellular.html";
+              redirectTo("step-3-net-cellular.html")
             else if (operationName == "LoRa")
-              location.href = "step-3-net-lora.html";
+              redirectTo("step-3-net-lora.html")
             else if (operationName == "Satellite") {
-              location.href = "step-3-net-sat-astro.html"
+              redirectTo("step-3-net-sat-astro.html")
             }
 
             enableButtonsLocal()

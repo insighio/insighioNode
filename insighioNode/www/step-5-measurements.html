@@ -537,7 +537,7 @@
         Cookies.set('meas-pcnt-1-multiplier', document.getElementById('ins-esp-gen-pcnt-1-multiplier').value)
 
         Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-        location.href = "step-5-4-measurement-naming.html"
+        redirectTo("step-5-4-measurement-naming.html")
       }
       else if (elementIsVisible("shield-scale-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-scale-options"])
@@ -550,7 +550,7 @@
         if (!isChecked('input-scale-enabled')) {
           Cookies.set('meas-scale-offset', 0)
           Cookies.set('meas-scale-scale', 1)
-          location.href = "step-5-4-measurement-naming.html"
+          redirectTo("step-5-4-measurement-naming.html")
         }
         else {
           var scale = Cookies.get("meas-scale-scale")
@@ -562,11 +562,11 @@
             Cookies.set('meas-scale-offset', offset)
             Cookies.set('meas-scale-scale', scale)
             Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-            location.href = "step-5-3-scale-calibr-res.html"
+            redirectTo("step-5-3-scale-calibr-res.html")
           }
           else {
             Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-            location.href = "step-5-1-scale-idle.html"
+            redirectTo("step-5-1-scale-idle.html")
           }
         }
       }
@@ -587,7 +587,7 @@
           Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-s1-sensor-a-d-p3-t').value)
 
         Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-        location.href = "step-5-4-measurement-naming.html"
+        redirectTo("step-5-4-measurement-naming.html")
       }
 
       enableNavigationButtons()
