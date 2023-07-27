@@ -346,3 +346,45 @@ function increaseProgress(increment = 1) {
   var elem = document.getElementById(activeProgressElementId)
   elem.value = elem.value + increment
 }
+
+// key-value pair functions
+
+function getKeyValuePairs() {
+  let returnObj = {}
+
+  var i = 0
+  while(1) {
+    var elemKey = document.getElementById("input-key-name-" + i);
+    var elemValue = document.getElementById("input-key-value-" + i);
+
+    if(!elemKey)
+      break
+
+    if (elemKey && elemValue && elemKey.value !== '' && elemValue.value !== '')
+      returnObj[elemKey.value] = elemValue.value
+    i++
+  }
+
+  return returnObj
+}
+
+function fillKeyValuePairsFromDictionary(dictionaryString, keyElemPrefix='input-key-name-', valueElemPrefix='input-key-value-') {
+  try {
+    if (dictionaryString && dictionaryString !== 'undefined') {
+      var i = 0
+      keyValueDict = JSON.parse(dictionaryString)
+      console.log("keyValueDict: ", keyValueDict)
+      for (keyName in keyValueDict) {
+        var keyElem = document.getElementById(keyElemPrefix + i)
+        var valueElem = document.getElementById(valueElemPrefix + i)
+
+        if(!keyElem || !valueElem)
+          break
+
+        keyElem.value = keyName
+        valueElem.value = keyValueDict[keyName]
+        i += 1
+      }
+    }
+  } catch (e) { console.log("error in fillKeyValuePairsFromDictionary: ", e) }
+}

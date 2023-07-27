@@ -88,26 +88,21 @@
     let settings = undefined
 
     function initializeValues() {
-      // addSelect("board-default-options", "input-temp-unit", "Temperature Unit")
-      //
-      // addSwitch("shield-scale-options-content", "input-scale-monitoring", "[Debug] Enable Scale Sensor Monitoring")
-      // addInput('options-sdi12', 'input-gen-sdi12-warmup-time', 'Warm Up time (ms)')
-      //
-      // generateOptions("input-i2c-1", i2cOptions)
+      disableNavigationButtons()
 
-      fetchInternal("/settings")
-      .then((data) => {
-        settings = data
+      var storedMapping = Cookies.get("meas-name-mapping")
+      if(storedMapping) {
+        var editiedMapping = {}
 
-        // setElemValueBool('input-led-enabled', strToJSValue(data.meas_led_enabled), true)
-        // setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], i - 1)
-        // showElement('input-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
-      });
+        Object.keys(storedMapping).sort().forEach((measurement_name) => {
+          editiedMapping[measurement_name] = {
+            alias: storedMapping[measurement_name]
+          }
+        })
+        populateTable(editiedMapping)
+      }
+
+      detectBoardChange(enableNavigationButtons)
     }
 
     function clearCookies() {
@@ -117,6 +112,7 @@
     function storeData() {
       disableNavigationButtons()
       clearCookies();
+      Cookies.set('meas-name-mapping', JSON.stringify(getKeyValuePairs()))
       redirectTo("step-6-timing.html")
       enableNavigationButtons()
     }
@@ -136,29 +132,29 @@
         var netStats = Cookies.get('meas-network-stat')
 
         if(net === 'wifi' && netStats === "True") {
-          obj["wifi_conn_duration"] = ""
-          obj["wifi_scan_duration"] =""
-          obj["wifi_channel"] = ""
-          obj["wifi_rssi"] = ""
+          obj["wifi_conn_duration"] = {}
+          obj["wifi_scan_duration"] = {}
+          obj["wifi_channel"] = {}
+          obj["wifi_rssi"] = {}
         }
         else if (net === "cellular" && netStats === "True") {
-          obj["cell_rssi"] = ""
-          obj["cell_rsrp"] = ""
-          obj["cell_rsrq"] = ""
-          obj["cell_mcc"] = ""
-          obj["cell_mnc"] = ""
-          obj["cell_lac"] = ""
-          obj["cell_ci"] = ""
-          obj["cell_act_duration"] = ""
-          obj["cell_att_duration"] = ""
-          obj["cell_con_duration"] = ""
+          obj["cell_rssi"] = {}
+          obj["cell_rsrp"] = {}
+          obj["cell_rsrq"] = {}
+          obj["cell_mcc"] = {}
+          obj["cell_mnc"] = {}
+          obj["cell_lac"] = {}
+          obj["cell_ci"] = {}
+          obj["cell_act_duration"] = {}
+          obj["cell_att_duration"] = {}
+          obj["cell_con_duration"] = {}
         }
 
         if(Cookies.get('meas-gps-enabled') === "True") {
-          obj["gps_lat"] = ""
-          obj["gps_lon"] = ""
-          obj["gps_num_of_sat"] = ""
-          obj["gps_hdop"] = ""
+          obj["gps_lat"] = {}
+          obj["gps_lon"] = {}
+          obj["gps_num_of_sat"] = {}
+          obj["gps_hdop"] = {}
         }
     }
 
@@ -188,7 +184,7 @@
         return
       }
 
-      fetchInternal('/save-config-temp', {
+      fetch('/save-config-temp', {
         method: 'POST',
         headers: {
           'Accept': 'application/json, text/plain, */*',
@@ -199,14 +195,18 @@
           fetchInternal("/device_measurements")
           .then((measurements) => {
             addStaticValuesForNetwork(measurements)
+            console.log("measurements: ",measurements)
             populateTable(measurements)
 
             document.getElementById("save-button").innerText = "Save"
+
+            fillKeyValuePairsFromDictionary(Cookies.get("meas-name-mapping"))
 
             showElement('loader', false)
 
           }).catch((err) => {
             showElement('loader', false)
+            console.log("error fetching measurements: ", err)
           });
         })
         .catch(err => {
@@ -218,19 +218,30 @@
       var parent = document.getElementById("measurementList");
       parent.replaceChildren();
 
+      //if measurement is object, ok else, JSON.parse(measurements)
+
       var index = 0
       Object.keys(measurements).sort().forEach((measurement_name) => {
-        index++
         var measurement = measurements[measurement_name]
         var row = document.createElement("tr")
         if(index % 2 === 0)
           row.classList.add('active')
 
         var colName = document.createElement("td")
-        colName.appendChild(document.createTextNode(measurement_name));
+        var colNameText = document.createElement("input")
+        colNameText.id = 'input-key-name-' + index
+        colNameText.value = measurement_name
+        colNameText.readOnly = true
+        colNameText.style="border-width:0px;border:none; box-shadow: none; input:focus, textarea:focus, select:focus{outline: none;}"
+        colName.appendChild(colNameText);
 
         var colAlias = document.createElement("td")
-        colAlias.appendChild(document.createElement("input"));
+        var colAliasInput = document.createElement("input")
+        colAliasInput.id = 'input-key-value-' + index
+        if(measurement.alias) {
+          colAliasInput.value = measurement.alias
+        }
+        colAlias.appendChild(colAliasInput);
 
         var colUnit = document.createElement("td")
         colUnit.appendChild(document.createTextNode(measurement.unit ? measurement.unit : ""));
@@ -244,6 +255,8 @@
         row.appendChild(colValue)
 
         parent.appendChild(row)
+
+        index++
       })
     }
 

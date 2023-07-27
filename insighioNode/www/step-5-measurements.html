@@ -620,36 +620,6 @@
       showElement(selectObj.id + "-trans-div", selectObj.value === "analog")
     }
 
-    function getKeyValuePairs() {
-      let returnObj = {}
-      for (var i = 0; i < 5; i++) {
-        var elemKey = document.getElementById("input-key-name-" + i);
-        var elemValue = document.getElementById("input-key-value-" + i);
-
-        if (elemKey && elemValue && elemKey.value !== '' && elemValue.value !== '')
-          returnObj[elemKey.value] = elemValue.value
-      }
-
-      return returnObj
-    }
-
-    function fillKeyValuePairsFromDictionary(dictionaryString) {
-      try {
-        if (dictionaryString !== 'undefined') {
-          var i = 0
-          keyValueDict = JSON.parse(dictionaryString)
-          console.log("keyValueDict: ", keyValueDict)
-          for (keyName in keyValueDict) {
-            if (i >= 5)
-              break
-            document.getElementById('input-key-name-' + i).value = keyName
-            document.getElementById('input-key-value-' + i).value = keyValueDict[keyName]
-            i += 1
-          }
-        }
-      } catch (e) { console.log("error in fillKeyValuePairsFromDictionary: ", e) }
-    }
-
     function generateSdi12Options() {
       var parent = document.getElementById("option-sdi12-table-rows");
 
