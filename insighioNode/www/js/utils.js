@@ -211,7 +211,7 @@ function addInput(parentId, inputId, inputLabel, inputType = "number") {
   var labelDiv = document.createElement("div")
   labelDiv.classList.add("col-4")
   labelDiv.classList.add("col-lg-6")
-  labelDiv.classList.add("col-sm-10")
+  labelDiv.classList.add("col-sm-12")
 
   var label = document.createElement("label")
   label.classList.add("form-label")
@@ -225,7 +225,7 @@ function addInput(parentId, inputId, inputLabel, inputType = "number") {
   var selectDiv = document.createElement("div")
   selectDiv.classList.add("col-8")
   selectDiv.classList.add("col-lg-6")
-  selectDiv.classList.add("col-sm-2")
+  selectDiv.classList.add("col-sm-12")
 
   var switchInput = document.createElement("input")
   switchInput.classList.add("form-input")
