@@ -91,15 +91,15 @@
       disableNavigationButtons()
 
       storedMapping = Cookies.get("meas-name-mapping")
-      try{
+      try {
         storedMapping = JSON.parse(storedMapping)
         console.log("successfully parsed name mappings")
       }
-      catch(e){
+      catch (e) {
         console.log("failed parsing: ", storedMapping)
       }
 
-      if(storedMapping) {
+      if (storedMapping) {
         var editiedMapping = {}
 
         Object.keys(storedMapping).sort().forEach((measurement_name) => {
@@ -120,7 +120,7 @@
     function storeData() {
       disableNavigationButtons()
       clearCookies();
-      Cookies.set('meas-name-mapping', JSON.stringify(getKeyValuePairs()))
+      Cookies.set('meas-name-mapping', encodeURIComponent(JSON.stringify(getKeyValuePairs())))
       redirectTo("step-6-timing.html")
       enableNavigationButtons()
     }
@@ -135,35 +135,35 @@
       redirectTo("step-6-timing.html")
     }
 
-    function addStaticValuesForNetwork(obj){
-        var net = Cookies.get('network')
-        var netStats = Cookies.get('meas-network-stat')
+    function addStaticValuesForNetwork(obj) {
+      var net = Cookies.get('network')
+      var netStats = Cookies.get('meas-network-stat')
 
-        if(net === 'wifi' && netStats === "True") {
-          obj["wifi_conn_duration"] = {}
-          obj["wifi_scan_duration"] = {}
-          obj["wifi_channel"] = {}
-          obj["wifi_rssi"] = {}
-        }
-        else if (net === "cellular" && netStats === "True") {
-          obj["cell_rssi"] = {}
-          obj["cell_rsrp"] = {}
-          obj["cell_rsrq"] = {}
-          obj["cell_mcc"] = {}
-          obj["cell_mnc"] = {}
-          obj["cell_lac"] = {}
-          obj["cell_ci"] = {}
-          obj["cell_act_duration"] = {}
-          obj["cell_att_duration"] = {}
-          obj["cell_con_duration"] = {}
-        }
+      if (net === 'wifi' && netStats === "True") {
+        obj["wifi_conn_duration"] = {}
+        obj["wifi_scan_duration"] = {}
+        obj["wifi_channel"] = {}
+        obj["wifi_rssi"] = {}
+      }
+      else if (net === "cellular" && netStats === "True") {
+        obj["cell_rssi"] = {}
+        obj["cell_rsrp"] = {}
+        obj["cell_rsrq"] = {}
+        obj["cell_mcc"] = {}
+        obj["cell_mnc"] = {}
+        obj["cell_lac"] = {}
+        obj["cell_ci"] = {}
+        obj["cell_act_duration"] = {}
+        obj["cell_att_duration"] = {}
+        obj["cell_con_duration"] = {}
+      }
 
-        if(Cookies.get('meas-gps-enabled') === "True") {
-          obj["gps_lat"] = {}
-          obj["gps_lon"] = {}
-          obj["gps_num_of_sat"] = {}
-          obj["gps_hdop"] = {}
-        }
+      if (Cookies.get('meas-gps-enabled') === "True") {
+        obj["gps_lat"] = {}
+        obj["gps_lon"] = {}
+        obj["gps_num_of_sat"] = {}
+        obj["gps_hdop"] = {}
+      }
     }
 
     function executeMeasurements() {
@@ -175,7 +175,7 @@
       for (let key in config) {
         if (config.hasOwnProperty(key)) {
           configString += (key + "=" + config[key] + "&")
-          if(key == 'wifi-ssid' || key == 'wifi-pass') {
+          if (key == 'wifi-ssid' || key == 'wifi-pass') {
             config[key] = decodeURIComponent(config[key]).replaceAll("\\", "\\\\").replaceAll("'", "\\'")
           }
         }
@@ -200,10 +200,10 @@
         },
         body: JSON.stringify(objToSend)
       }).then(res => {
-          fetchInternal("/device_measurements")
+        fetchInternal("/device_measurements")
           .then((measurements) => {
             addStaticValuesForNetwork(measurements)
-            console.log("measurements: ",measurements)
+            console.log("measurements: ", measurements)
             populateTable(measurements)
 
             updateFieldsWithMappingFromConfiguration()
@@ -216,7 +216,7 @@
             showElement('loader', false)
             console.log("error fetching measurements: ", err)
           });
-        })
+      })
         .catch(err => {
           console.log("error saving config: ", err)
         })
@@ -230,7 +230,7 @@
       Object.keys(measurements).sort().forEach((measurement_name) => {
         var measurement = measurements[measurement_name]
         var row = document.createElement("tr")
-        if(index % 2 === 0)
+        if (index % 2 === 0)
           row.classList.add('active')
 
         var colName = document.createElement("td")
@@ -238,13 +238,13 @@
         colNameText.id = 'input-key-name-' + index
         colNameText.value = measurement_name
         colNameText.readOnly = true
-        colNameText.style="border-width:0px;border:none; box-shadow: none; input:focus, textarea:focus, select:focus{outline: none;}"
+        colNameText.style = "border-width:0px;border:none; box-shadow: none; input:focus, textarea:focus, select:focus{outline: none;}"
         colName.appendChild(colNameText);
 
         var colAlias = document.createElement("td")
         var colAliasInput = document.createElement("input")
         colAliasInput.id = 'input-key-value-' + index
-        if(measurement.alias)
+        if (measurement.alias)
           colAliasInput.value = measurement.alias
         colAlias.appendChild(colAliasInput);
 
@@ -266,21 +266,21 @@
       })
     }
 
-    function updateFieldsWithMappingFromConfiguration(){
-        var i = 0
-        while(1) {
-          var elemKey = document.getElementById("input-key-name-" + i);
-          var elemValue = document.getElementById("input-key-value-" + i);
+    function updateFieldsWithMappingFromConfiguration() {
+      var i = 0
+      while (1) {
+        var elemKey = document.getElementById("input-key-name-" + i);
+        var elemValue = document.getElementById("input-key-value-" + i);
 
-          if(!elemKey)
-            break
+        if (!elemKey)
+          break
 
-          if (elemKey && elemKey.value !== '' && storedMapping[elemKey.value]) {
-            elemValue.value = storedMapping[elemKey.value]
-          }
-
-          i++
+        if (elemKey && elemKey.value !== '' && storedMapping[elemKey.value]) {
+          elemValue.value = storedMapping[elemKey.value]
         }
+
+        i++
+      }
     }
 
     initializeValues()
