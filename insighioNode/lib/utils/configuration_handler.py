@@ -48,7 +48,7 @@ configDict = {
 "_MEAS_I2C_1": "meas_i2c_1",
 "_MEAS_I2C_2": "meas_i2c_2",
 "_MEAS_KEYVALUE": "meas_keyvalue",
-"_MEAS_NAME_MAPPING": "meas-name-mapping",
+"_MEAS_NAME_MAPPING": "meas_name_mapping",
 "_MEAS_NETWORK_STAT_ENABLE": "meas_network_stat",
 "_MEAS_SCALE_ENABLED": "meas_scale_enabled",
 "_MEAS_TEMP_UNIT_IS_CELSIUS": "meas_temp_unit",

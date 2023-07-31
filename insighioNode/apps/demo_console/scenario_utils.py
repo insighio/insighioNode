@@ -30,34 +30,6 @@ _pulse_counter = 0
 _pulse_mutex = _thread.allocate_lock()
 _pulse_last_read_timestamp = None
 
-# def load_temp_config():
-#     import sys
-#     try:
-#         del sys.modules['apps.demo_console.demo_config']
-#     except:
-#         pass
-#
-#     try:
-#         del sys.modules['apps.demo_temp_config']
-#     except:
-#         pass
-#
-#     try:
-#         from apps import demo_temp_config as cfg
-#     except Exception as e:
-#         logging.error("Unable to load temp config")
-#
-# def revert_config_to_normal():
-#     import sys
-#     try:
-#         del sys.modules['apps.demo_temp_config']
-#     except:
-#         pass
-#     try:
-#         from apps.demo_console import demo_config as cfg
-#     except Exception as e:
-#         logging.error("Unable to load normal config")
-
 def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
 
