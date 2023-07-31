@@ -48,6 +48,7 @@ configDict = {
 "_MEAS_I2C_1": "meas_i2c_1",
 "_MEAS_I2C_2": "meas_i2c_2",
 "_MEAS_KEYVALUE": "meas_keyvalue",
+"_MEAS_NAME_MAPPING": "meas_name_mapping",
 "_MEAS_NETWORK_STAT_ENABLE": "meas_network_stat",
 "_MEAS_SCALE_ENABLED": "meas_scale_enabled",
 "_MEAS_TEMP_UNIT_IS_CELSIUS": "meas_temp_unit",
@@ -269,10 +270,10 @@ def stringParamsToDict(configurationParameters):
             logging.error("key value error |{}|".format(keyValue))
     return keyValueDict
 
-def apply_configuration(keyValuePairDictionary):
+def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file):
     gc.collect()
 
-    utils.copyFile(config_file, config_file + ".prev")
+    utils.copyFile(config_file_explicit, config_file_explicit + ".prev")
 
     # fix naming of keys to use '-' instead of '_'
     # unfortunatelly it is technical burden from old implementations, to be fixed in future release
@@ -336,7 +337,7 @@ def apply_configuration(keyValuePairDictionary):
         contents += '\n' + get_file_config('/apps/demo_console/templ/satellite_config_templ.py', keyValuePairDictionary)
 
     # create new
-    utils.writeToFile(config_file, contents)
+    utils.writeToFile(config_file_explicit, contents)
 
     utils.clearCachedStates()
 

@@ -56,6 +56,22 @@ function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = 
       : defaultValue
 }
 
+function setElemText(elementId, newValue, defaultValue = "", intZeroAccepted=false) {
+  var elem = document.getElementById(elementId)
+  if (!elem) {
+    console.log("setElemValue: Element not found: ", elementId)
+    return
+  }
+
+  elem.textContent =
+    newValue !== "" &&
+    newValue !== "undefined" &&
+    newValue !== undefined &&
+    (intZeroAccepted || (!intZeroAccepted && newValue !== 0))
+      ? newValue
+      : defaultValue
+}
+
 function setElemValueBool(elementId, newValue, defaultValue = "", boolField = "checked") {
   var elem = document.getElementById(elementId)
   if (!elem) {
@@ -195,7 +211,7 @@ function addInput(parentId, inputId, inputLabel, inputType = "number") {
   var labelDiv = document.createElement("div")
   labelDiv.classList.add("col-4")
   labelDiv.classList.add("col-lg-6")
-  labelDiv.classList.add("col-sm-10")
+  labelDiv.classList.add("col-sm-12")
 
   var label = document.createElement("label")
   label.classList.add("form-label")
@@ -209,7 +225,7 @@ function addInput(parentId, inputId, inputLabel, inputType = "number") {
   var selectDiv = document.createElement("div")
   selectDiv.classList.add("col-8")
   selectDiv.classList.add("col-lg-6")
-  selectDiv.classList.add("col-sm-2")
+  selectDiv.classList.add("col-sm-12")
 
   var switchInput = document.createElement("input")
   switchInput.classList.add("form-input")
@@ -224,6 +240,11 @@ function addInput(parentId, inputId, inputLabel, inputType = "number") {
 }
 
 function strToJSValue(strVal) {
+  try {
+    strVal = strVal ? strVal.toLowerCase() : strVal
+  }
+  catch(e) {
+  }
   if (strVal === "undefined" || strVal === "") return undefined
   else if (strVal === "true") return true
   else if (strVal === "false") return false
@@ -251,13 +272,32 @@ function disableNavigationButtons() {
   document.getElementById("back-button").disabled = true
 }
 
-function detectBoardChange(settings_mac, cookies_mac) {
-  console.log("Board mac: ", settings_mac, ", Cookie mac: ", cookies_mac)
-  if (settings_mac !== undefined && settings_mac !== cookies_mac) {
-    alert("board change detected...restarting configuration")
-    location.href = "step-2-select.html"
-    return
-  }
+function detectBoardChange(callback) {
+  fetch("/devid").then((response) => {
+    return response.json();
+  }).then(function (data) {
+    var settings_mac = data.id
+    var cookies_mac = Cookies.get('board-mac')
+    console.log("Board mac: ", settings_mac, ", Cookie mac: ", cookies_mac)
+    if (settings_mac !== undefined && settings_mac !== cookies_mac) {
+      alert("board change detected...restarting configuration")
+      redirectTo("index.html")
+      return
+    }
+    showElement('loader', false)
+
+    if(callback)
+      callback()
+  }).catch((err) => {
+    console.log("error completing request", err);
+    showElement('loader', false)
+    if(callback)
+      callback()
+  });
+}
+
+function redirectTo(relUrl) {
+  location.href = relUrl + "?n=" + Math.floor(Math.random()*100000000)
 }
 
 function fromMultiWordToOne(initialString, delimeter = " ") {
@@ -268,4 +308,83 @@ function fromMultiWordToOne(initialString, delimeter = " ") {
   } catch {
     return initialString
   }
+}
+
+function fetchInternal(url) {
+  return new Promise((resolve, reject) => {
+    fetch(url).then((response) => {
+      return response.json();
+    }).then(function (data) {
+      resolve(data)
+    }).catch((err) => {
+      console.log("error fetching: ", url, ", e: ", err)
+      reject()
+    });
+  })
+}
+
+var progressTimer=undefined
+var activeProgressElementId=undefined
+function startProgressAnimation(elementId="currentWeightProgressMain") {
+  //<progress id="currentWeightProgressMain" class="progress" value="0" max="30" style="display: none"></progress>
+  showElement(elementId, true)
+  var elem = document.getElementById(elementId)
+  elem.value = 0
+  activeProgressElementId = elementId
+  progressTimer = window.setInterval(increaseProgress, 500);
+}
+
+function stopProgressAnimation() {
+  if(progressTimer) {
+    increaseProgress(30)
+    clearInterval(progressTimer)
+  }
+  showElement(activeProgressElementId, false)
+}
+
+function increaseProgress(increment = 1) {
+  var elem = document.getElementById(activeProgressElementId)
+  elem.value = elem.value + increment
+}
+
+// key-value pair functions
+
+function getKeyValuePairs() {
+  let returnObj = {}
+
+  var i = 0
+  while(1) {
+    var elemKey = document.getElementById("input-key-name-" + i);
+    var elemValue = document.getElementById("input-key-value-" + i);
+
+    if(!elemKey)
+      break
+
+    if (elemKey && elemValue && elemKey.value !== '' && elemValue.value !== '')
+      returnObj[elemKey.value.trim()] = elemValue.value.trim()
+    i++
+  }
+
+  return returnObj
+}
+
+function fillKeyValuePairsFromDictionary(dictionaryString, keyElemPrefix='input-key-name-', valueElemPrefix='input-key-value-') {
+  try {
+    if (dictionaryString && dictionaryString !== 'undefined') {
+      var i = 0
+      keyValueDict = JSON.parse(dictionaryString)
+      console.log("keyValueDict: ", keyValueDict)
+      for (keyName in keyValueDict) {
+        var keyElem = document.getElementById(keyElemPrefix + i)
+        var valueElem = document.getElementById(valueElemPrefix + i)
+
+        if(!keyElem || !valueElem)
+          break
+
+        keyElem.value = keyName
+        valueElem.value = keyValueDict[keyName]
+        i += 1
+      }
+    }
+  } catch (e) { console.log("error in fillKeyValuePairsFromDictionary: ", e) }
 }

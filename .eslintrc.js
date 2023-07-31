@@ -5,6 +5,7 @@ module.exports = {
     node: true
   },
   extends: [
+    "plugin:vue/recommended",
     //"plugin:prettier-vue/recommended",
     // Do not add `'prettier/vue'` if you don't want to use prettier for `<template>` blocks
     //"prettier/vue",
@@ -79,13 +80,15 @@ module.exports = {
       {
         // Override all options of `prettier` here
         // @see https://prettier.io/docs/en/options.html
-        printWidth: 120,
-        singleQuote: false,
         semi: false,
-        trailingComma: "none",
-        tabWidth: 2
+        singleQuote: true,
+        tabWidth: 2,
+        useTabs: false,
+        trailingComma: "es5",
+        arrowParens: "always"
       }
-    ]
+    ],
+    "vue/multi-word-component-names": 0
   }
   // globals: {
   //   $nuxt: true

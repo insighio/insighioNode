@@ -111,26 +111,13 @@
   <script src="js/utils.js"></script>
   <script>
     function initializeValues() {
-      fetch("/settings").then((response) => {
-        return response.json();
-      }).then(function (data) {
-        if (data.board_mac !== undefined && data.board_mac !== Cookies.get('board-mac')) {
-          alert("board change detected...restarting configuration")
-          location.href = "step-2-select.html"
-          return
-        }
+      disableNavigationButtons()
+      setElemValue("input-id", Cookies.get("insighio-id"))
+      setElemValue("input-key", Cookies.get("insighio-key"))
+      setElemValue("input-channel", Cookies.get("insighio-channel"))
+      setElemValue("input-control-channel", Cookies.get("insighio-control-channel"))
 
-        setElemValue("input-id", data.insighio_id)
-        setElemValue("input-key", data.insighio_key)
-        setElemValue("input-channel", data.insighio_channel)
-        setElemValue("input-control-channel", data.insighio_control_channel)
-
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
-      });
+      detectBoardChange(enableNavigationButtons)
     }
 
     function fillClipboardData(field) {
@@ -176,7 +163,7 @@
       Cookies.set('insighio-channel', document.getElementById('input-channel').value.trim())
       Cookies.set('insighio-control-channel', document.getElementById('input-control-channel').value.trim())
 
-      location.href = "step-5-measurements.html"
+      redirectTo("step-5-measurements.html")
       enableNavigationButtons()
     }
 

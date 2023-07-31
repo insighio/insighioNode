@@ -1,16 +1,4 @@
 {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "eslint.probe": [
-        "javascript",
-        "javascriptreact",
-        "vue"
-    ],
-    "editor.codeActionsOnSave": {
-        "source.formatDocument": true,
-        "source.fixAll": true,
-        "source.fixAll.eslint": true,
-    },
-    "vetur.validation.template": false,
-    "editor.formatOnSave": true,
-    "javascript.format.enable": false,
-  }
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
+}

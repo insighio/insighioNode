@@ -23,6 +23,9 @@ _ALWAYS_ON_PERIOD = <always-on-period>
 """ Explicit Key-Value Pairs """
 _MEAS_KEYVALUE=<meas-keyvalue>
 
+""" Explicit Key-Value Pairs """
+_MEAS_NAME_MAPPING=<meas-name-mapping>
+
 ''' measurements that are controlled by boolean values '''
 _MEAS_BATTERY_STAT_ENABLE = <meas-battery-stat>
 _MEAS_BOARD_SENSE_ENABLE = <meas-board-sense>

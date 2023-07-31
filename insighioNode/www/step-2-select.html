@@ -76,16 +76,18 @@
           }
 
           function initializeValues() {
-            fetch("/devid").then((response) => {
-              return response.json();
-            }).then(function (data) {
-              clearCookies()
-              mac = data.id
-              hw_module = data.hw_module
+            clearCookies();
+            disableButtonsLocal()
+            fetchInternal("/settings")
+            .then((data) => {
+              Object.keys(data).forEach(function (key) {
+                Cookies.set(key.replaceAll("_", "-"), data[key])
+              })
               enableButtonsLocal()
               showElement('loader', false)
             }).catch((err) => {
               console.log("error completing request", err);
+              enableButtonsLocal()
               showElement('loader', false)
             });
           }
@@ -93,18 +95,14 @@
           function operationSelected(operationName) {
             disableButtonsLocal()
 
-            clearCookies();
-            Cookies.set('board-mac', mac)
-            Cookies.set('hw-module', hw_module)
-
             if (operationName == "WiFi")
-              location.href = "step-3-net-wifi.html";
+              redirectTo("step-3-net-wifi.html")
             else if (operationName == "Cellular")
-              location.href = "step-3-net-cellular.html";
+              redirectTo("step-3-net-cellular.html")
             else if (operationName == "LoRa")
-              location.href = "step-3-net-lora.html";
+              redirectTo("step-3-net-lora.html")
             else if (operationName == "Satellite") {
-              location.href = "step-3-net-sat-astro.html"
+              redirectTo("step-3-net-sat-astro.html")
             }
 
             enableButtonsLocal()

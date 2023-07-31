@@ -11,11 +11,11 @@
 </head>
 
 <body class="body-custom">
-  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center" >
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center">
 
   <div class="panel panel-custom">
     <div class="columns">
-      <div class="panel-nav col-12 hide-sm"><br/>
+      <div class="panel-nav col-12 hide-sm"><br />
         <ul class="step">
           <li class="step-item"><a>Login</a></li>
           <li class="step-item"><a>Select Network</a></li>
@@ -125,26 +125,19 @@
   <script src="js/utils.js"></script>
   <script>
     function initializeValues() {
-      fetch("/settings").then((response) => {
-        return response.json();
-      }).then(function (data) {
-        var protocol = data.protocol
-        var ipv = data.ipversion
+      disableNavigationButtons()
 
-        //input-band" value={{ cell_band }}
-        setElemValue('input-cell-tech', data.cell_tech, "GSM")
-        setElemValue('input-apn', data.cell_apn, "internet")
-        setElemValue('input-band', data.cell_band, 20)
+      var protocol = Cookies.get("protocol")
+      var ipv = Cookies.get("ipversion")
 
-        setRadioGroupValue('protocol', protocol !== undefined && protocol !== "" ? protocol : "mqtt")
-        setRadioGroupValue('ipversion', ipv !== undefined && ipv !== "" ? ipv : "IP")
+      setElemValue('input-cell-tech', Cookies.get("cell-tech"), "GSM")
+      setElemValue('input-apn', Cookies.get("cell-apn"), "internet")
+      setElemValue('input-band', Cookies.get("cell-band"), 20)
 
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
-      });
+      setRadioGroupValue('protocol', protocol !== undefined && protocol !== "" ? protocol : "mqtt")
+      setRadioGroupValue('ipversion', ipv !== undefined && ipv !== "" ? ipv : "IP")
+
+      detectBoardChange(enableNavigationButtons)
     }
 
     function clearCookies() {
@@ -160,10 +153,7 @@
       disableNavigationButtons()
       clearCookies();
       Cookies.set('network', "cellular")
-
-
       Cookies.set('cell-tech', document.getElementById('input-cell-tech').value)
-
       Cookies.set('cell-apn', document.getElementById('input-apn').value.trim())
       var band_elem = document.getElementById('input-band')
       if (band_elem) Cookies.set('cell-band', band_elem.value)
@@ -171,7 +161,7 @@
       readRadioGroupValue('protocol', 'protocol')
       readRadioGroupValue('ipversion', 'ipversion')
 
-      location.href = "step-4-keys-console.html";
+      redirectTo("step-4-keys-console.html")
 
       enableNavigationButtons()
     }

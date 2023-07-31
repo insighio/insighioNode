@@ -128,7 +128,116 @@ class Config:
             logging.exception(e, "Error applying configuration")
             return {}, 500
 
-async def server_loop(timeoutMs):
+class ConfigTemp:
+    def post(self, data):
+        print("[temp] received config data: {}".format(data))
+        logging.debug("[temp] about to save queryString: " + data["queryString"])
+
+        import utils
+
+        try:
+            from utils import configuration_handler
+            configuration_handler.apply_configuration(data["queryParams"], "/apps/demo_temp_config.py")
+            return {}, 200
+        except Exception as e:
+            logging.exception(e, "Error applying configuration")
+            return {}, 500
+
+class DeviceMeasurements:
+    def get(self, data):
+        try:
+            from sensors import hx711
+            hx711.deinit_instance()
+
+            import sys
+
+            try:
+                del sys.modules["apps.demo_console.demo_config"]
+            except:
+                pass
+
+            try:
+                del sys.modules["apps.demo_temp_config"]
+            except:
+                pass
+
+            try:
+                del sys.modules["apps.demo_console.scenario_utils"]
+            except:
+                pass
+
+            try:
+                del sys.modules["apps.demo_console.scenario_sdi12_utils"]
+            except:
+                pass
+
+            try:
+                del sys.modules["apps.demo_console.message_buffer"]
+            except:
+                pass
+
+            try:
+                del sys.modules["apps.demo_console.dictionary_utils"]
+            except:
+                pass
+
+            try:
+                del sys.modules["apps.demo_console"]
+            except:
+                pass
+
+            try:
+                del sys.modules["apps"]
+            except:
+                pass
+
+
+            logging.debug("modules: {}".format(sys.modules))
+            logging.debug("globals: {}".format(globals()))
+
+            from apps.demo_console import scenario_utils
+            res = scenario_utils.get_measurements()
+
+            # in case a temp config has been generated and webserver timesout before
+            # deleting it
+            try:
+                import uos
+                uos.remove("/apps/demo_temp_config.py")
+            except:
+                pass
+
+            return res, 200
+        except Exception as e:
+            logging.exception(e, "Error applying configuration")
+            return {}, 500
+
+class WiFiList:
+    def get(self, data):
+        result = {}
+        result["wifiAvailableNets"] = populateAvailableNets()
+        import ujson
+
+        res = None
+        try:
+            res = ujson.dumps(result, separators=(",", ":"))
+        except:
+            pass
+
+        if res is None:
+            try:
+                res = ujson.dumps(result)
+            except:
+                pass
+
+        if res is not None:
+            res_bytes = res.encode("utf-8")
+            logging.debug("wifi list: " + res)
+        return res_bytes, 200
+
+async def server_loop(server_instance, timeoutMs):
+    server_instance.run(host='192.168.4.1', port=80, loop_forever=False)
+    logging.info("Web UI started")
+
     purple = 0x4c004c
     device_info.set_led_color(purple)
 
@@ -174,7 +283,7 @@ async def server_loop(timeoutMs):
                     device_info.set_led_color('black')
 
             cnt += 1
-            yield from  uasyncio.sleep_ms(100)
+            await  uasyncio.sleep_ms(100)
     except KeyboardInterrupt:
         pass
 
@@ -243,33 +352,26 @@ def start(timeoutMs=120000):
         await resp.send("")
 
         import machine
-        import utime
-
-        start_time = utime.ticks_ms()
-        WAIT_UNTIL_REBOOT_MSEC = 3000
-        while (utime.ticks_ms()-start_time < WAIT_UNTIL_REBOOT_MSEC):
-            await uasyncio.sleep_ms(1000)
         machine.reset()
 
     app.add_resource(Settings, '/settings')
     app.add_resource(RawWeightIdle, '/raw-weight-idle')
     #app.add_resource(RawWeight, '/raw-weight')
     app.add_resource(Config, '/save-config')
+    app.add_resource(ConfigTemp, '/save-config-temp')
     app.add_resource(DevID, '/devid')
+    app.add_resource(WiFiList, "/update_wifi_list")
+    app.add_resource(DeviceMeasurements, "/device_measurements")
 
     ##################################################################import network
 
-    logging.info("Web UI started")
-    app.run(host='192.168.4.1', port=80, loop_forever=False)
 
     try:
-        app.loop.run_until_complete(server_loop(timeoutMs))
-    except KeyboardInterrupt:
-        pass
+        uasyncio.run(server_loop(app, timeoutMs))
     except Exception as e:
         logging.exception(e, "web server exception")
     finally:
-        app.loop.close()
+        uasyncio.get_running_loop().close()
 
     from sensors import hx711
     hx711.deinit_instance()

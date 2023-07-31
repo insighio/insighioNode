@@ -336,6 +336,8 @@
     let settings = undefined
 
     function initializeValues() {
+      disableNavigationButtons()
+
       addSwitch("board-default-options", "input-led-enabled", "LED notifications")
       addSwitch("board-default-options", "input-battery", "Battery statistics")
       addSwitch("board-default-options", "input-board-sense", "Board humidity/temperature")
@@ -377,82 +379,72 @@
 
       generateSdi12Options()
 
-      fetch("/settings").then((response) => {
-        return response.json()
-      }).then(function (data) {
-        settings = data
+      var gps = strToJSValue(Cookies.get("meas-gps-enabled"))
 
-        var gps = strToJSValue(data.meas_gps_enabled)
+      setElemValueBool('input-led-enabled', strToJSValue(Cookies.get("meas-led-enabled")), true)
+      setElemValueBool('input-battery', strToJSValue(Cookies.get("meas-battery-stat")), true)
+      setElemValueBool('input-board-sense', strToJSValue(Cookies.get("meas-board-sense")), true)
+      setElemValueBool('input-board-stat', strToJSValue(Cookies.get("meas-board-stat")), false)
+      setElemValueBool('input-network', strToJSValue(Cookies.get("meas-network-stat")), true)
+      setElemValueBool('input-ota', strToJSValue(Cookies.get("system-enable-ota")), true)
+      setElemValueBool('input-scale-enabled', strToJSValue(Cookies.get("meas-scale-enabled")), false)
+      setElemValueBool('input-scale-monitoring', strToJSValue(Cookies.get("meas-scale-monitoring-enabled")), false)
 
-        setElemValueBool('input-led-enabled', strToJSValue(data.meas_led_enabled), true)
-        setElemValueBool('input-battery', strToJSValue(data.meas_battery_stat), true)
-        setElemValueBool('input-board-sense', strToJSValue(data.meas_board_sense), true)
-        setElemValueBool('input-board-stat', strToJSValue(data.meas_board_stat), false)
-        setElemValueBool('input-network', strToJSValue(data.meas_network_stat), true)
-        setElemValueBool('input-ota', strToJSValue(data.system_enable_ota), true)
-        setElemValueBool('input-scale-enabled', strToJSValue(data.meas_scale_enabled), false)
-        setElemValueBool('input-scale-monitoring', strToJSValue(data.meas_scale_monitoring_enabled), false)
+      setElemValueBool('input-gps-enable', gps, true)
+      setElemValueBool('input-temp-unit', strToJSValue(Cookies.get("meas-temp-unit")), true, "value")
 
-        setElemValueBool('input-gps-enable', gps, true)
-        setElemValueBool('input-temp-unit', strToJSValue(data.meas_temp_unit), true, "value")
+      var selectedShield = Cookies.get("selected-shield") ? Cookies.get("selected-shield") : Cookies.get("selected-board")
 
-        var selectedShield = data.selected_shield ? data.selected_shield : data.selected_board
+      console.log("selected shield/board: ", Cookies.get("selected-shield"), Cookies.get("selected-board"), tabNamePerShield[selectedShield])
+      if (selectedShield && tabNamePerShield[selectedShield])
+        boardChanged(undefined, tabNamePerShield[selectedShield])
 
-        console.log("selected shield/board: ", data.selected_shield, data.selected_board, tabNamePerShield[selectedShield])
-        if (selectedShield && tabNamePerShield[selectedShield])
-          boardChanged(undefined, tabNamePerShield[selectedShield])
+      setElemValue('input-gps-timeout', Cookies.get("meas-gps-timeout"), 120, false)
+      setElemValue('input-gps-sat-num', Cookies.get("meas-gps-sat-num"), 4, false)
+      //setElemValueBool('input-gps-no-fix-no-upload', Cookies.get(meas-gps-no-fix-no-upload,  false)
 
-        setElemValue('input-gps-timeout', data.meas_gps_timeout, 120, false)
-        setElemValue('input-gps-sat-num', data.meas_gps_sat_num, 4, false)
-        //setElemValueBool('input-gps-no-fix-no-upload', data.meas_gps_no_fix_no_upload,  false)
+      for (let i = 1; i <= 10; ++i) {
+        var sdi12Enabled = strToJSValue(Cookies.get("meas-sdi-" + i + "-enabled"))
 
-        for (let i = 1; i <= 10; ++i) {
-          var sdi12Enabled = strToJSValue(data["meas_sdi_" + i + "_enabled"])
+        setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', Cookies.get("meas-sdi-" + i + "-address"), i - 1)
+        setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
+        setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', Cookies.get("meas-sdi-" + i + "-loc"), 1)
+      }
 
-          setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', data["meas_sdi_" + i + "_address"], i - 1)
-          setElemValueBool('option-ins-esp-gen-sdi12-' + i + '-enabled', sdi12Enabled, false)
-          setElemValue('option-ins-esp-gen-sdi12-' + i + '-loc', data["meas_sdi_" + i + "_loc"], 1)
-        }
+      setElemValue('input-gen-sdi12-warmup-time', Cookies.get("meas-sdi-warmup-time"), 1000)
 
-        setElemValue('input-gen-sdi12-warmup-time', data.meas_sdi_warmup_time, 1000)
+      var adp1 = fromMultiWordToOne(Cookies.get("meas-sensor-a-d-p1"))
+      var adp2 = fromMultiWordToOne(Cookies.get("meas-sensor-a-d-p2"))
+      var adp3 = fromMultiWordToOne(Cookies.get("meas-sensor-a-d-p3"))
 
-        var adp1 = fromMultiWordToOne(data.meas_sensor_a_d_p1)
-        var adp2 = fromMultiWordToOne(data.meas_sensor_a_d_p2)
-        var adp3 = fromMultiWordToOne(data.meas_sensor_a_d_p3)
+      setElemValue('input-i2c-1', Cookies.get("meas-i2c-1"), "disabled")
+      setElemValue('input-s1-i2c', Cookies.get("meas-i2c-1"), "disabled")
+      setElemValue('input-i2c-2', Cookies.get("meas-i2c-2"), "disabled")
+      setElemValue('input-sensor-a-d-p1', adp1, "disabled")
+      setElemValue('input-s1-sensor-a-d-p1', adp1, "disabled")
+      setElemValue('input-s1-sensor-a-d-p2', adp2, "disabled")
+      setElemValue('input-s1-sensor-a-d-p3', adp3, "disabled")
 
-        setElemValue('input-i2c-1', data.meas_i2c_1, "disabled")
-        setElemValue('input-s1-i2c', data.meas_i2c_1, "disabled")
-        setElemValue('input-i2c-2', data.meas_i2c_2, "disabled")
-        setElemValue('input-sensor-a-d-p1', adp1, "disabled")
-        setElemValue('input-s1-sensor-a-d-p1', adp1, "disabled")
-        setElemValue('input-s1-sensor-a-d-p2', adp2, "disabled")
-        setElemValue('input-s1-sensor-a-d-p3', adp3, "disabled")
+      setElemValue("input-s1-sensor-a-d-p1-t", Cookies.get("meas-sensor-a-d-p1-t"), "v")
+      setElemValue("input-s1-sensor-a-d-p2-t", Cookies.get("meas-sensor-a-d-p2-t"), "v")
+      setElemValue("input-s1-sensor-a-d-p3-t", Cookies.get("meas-sensor-a-d-p3-t"), "v")
 
-        setElemValue("input-s1-sensor-a-d-p1-t", data.meas_sensor_a_d_p1_t, "v")
-        setElemValue("input-s1-sensor-a-d-p2-t", data.meas_sensor_a_d_p2_t, "v")
-        setElemValue("input-s1-sensor-a-d-p3-t", data.meas_sensor_a_d_p3_t, "v")
-
-        showElement('input-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
-        showElement('input-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
-        showElement('input-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
+      showElement('input-s1-sensor-a-d-p1-trans-div', adp1 === "analog")
+      showElement('input-s1-sensor-a-d-p2-trans-div', adp2 === "analog")
+      showElement('input-s1-sensor-a-d-p3-trans-div', adp3 === "analog")
 
 
-        setElemValueBool('ins-esp-gen-4-20-snsr-1-enable', strToJSValue(data.meas_4_20_snsr_1_enable), false)
-        setElemValueBool('ins-esp-gen-4-20-snsr-2-enable', strToJSValue(data.meas_4_20_snsr_2_enable), false)
-        setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(data.meas_pcnt_1_enable), false)
-        setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(data.meas_pcnt_1_cnt_on_rising) ? "rising" : "falling", "rising")
-        setElemValue('ins-esp-gen-pcnt-1-multiplier', data.meas_pcnt_1_multiplier, 1)
+      setElemValueBool('ins-esp-gen-4-20-snsr-1-enable', strToJSValue(Cookies.get("meas-4-20-snsr-1-enable")), false)
+      setElemValueBool('ins-esp-gen-4-20-snsr-2-enable', strToJSValue(Cookies.get("meas-4-20-snsr-2-enable")), false)
+      setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(Cookies.get("meas-pcnt-1-enable")), false)
+      setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(Cookies.get("meas-pcnt-1-cnt-on-rising")) ? "rising" : "falling", "rising")
+      setElemValue('ins-esp-gen-pcnt-1-multiplier', Cookies.get("meas-pcnt-1-multiplier"), 1)
 
-        setElemValueBool('input-store-meas-if-failed-conn', strToJSValue(data.store_meas_if_failed_conn), false)
+      setElemValueBool('input-store-meas-if-failed-conn', strToJSValue(Cookies.get("store-meas-if-failed-conn")), false)
 
-        fillKeyValuePairsFromDictionary(data.meas_keyvalue)
+      fillKeyValuePairsFromDictionary(Cookies.get("meas-keyvalue"))
 
-        detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-        showElement('loader', false)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
-      });
+      detectBoardChange(enableNavigationButtons)
     }
 
     function clearCookies() {
@@ -545,7 +537,7 @@
         Cookies.set('meas-pcnt-1-multiplier', document.getElementById('ins-esp-gen-pcnt-1-multiplier').value)
 
         Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-        location.href = "step-6-timing.html"
+        redirectTo("step-5-4-measurement-naming.html")
       }
       else if (elementIsVisible("shield-scale-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-scale-options"])
@@ -558,11 +550,11 @@
         if (!isChecked('input-scale-enabled')) {
           Cookies.set('meas-scale-offset', 0)
           Cookies.set('meas-scale-scale', 1)
-          location.href = "step-6-timing.html"
+          redirectTo("step-5-4-measurement-naming.html")
         }
         else {
-          var scale = settings.meas_scale_scale
-          var offset = settings.meas_scale_offset
+          var scale = Cookies.get("meas-scale-scale")
+          var offset = Cookies.get("meas-scale-offset")
 
           console.log("offset: ", offset, ", scale:", scale)
 
@@ -570,11 +562,11 @@
             Cookies.set('meas-scale-offset', offset)
             Cookies.set('meas-scale-scale', scale)
             Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-            location.href = "step-5-3-scale-calibr-res.html"
+            redirectTo("step-5-3-scale-calibr-res.html")
           }
           else {
             Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-            location.href = "step-5-1-scale-idle.html"
+            redirectTo("step-5-1-scale-idle.html")
           }
         }
       }
@@ -595,7 +587,7 @@
           Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-s1-sensor-a-d-p3-t').value)
 
         Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-        location.href = "step-6-timing.html"
+        redirectTo("step-5-4-measurement-naming.html")
       }
 
       enableNavigationButtons()
@@ -626,36 +618,6 @@
 
     function selectionChanged(selectObj) {
       showElement(selectObj.id + "-trans-div", selectObj.value === "analog")
-    }
-
-    function getKeyValuePairs() {
-      let returnObj = {}
-      for (var i = 0; i < 5; i++) {
-        var elemKey = document.getElementById("input-key-name-" + i);
-        var elemValue = document.getElementById("input-key-value-" + i);
-
-        if (elemKey && elemValue && elemKey.value !== '' && elemValue.value !== '')
-          returnObj[elemKey.value] = elemValue.value
-      }
-
-      return returnObj
-    }
-
-    function fillKeyValuePairsFromDictionary(dictionaryString) {
-      try {
-        if (dictionaryString !== 'undefined') {
-          var i = 0
-          keyValueDict = JSON.parse(dictionaryString)
-          console.log("keyValueDict: ", keyValueDict)
-          for (keyName in keyValueDict) {
-            if (i >= 5)
-              break
-            document.getElementById('input-key-name-' + i).value = keyName
-            document.getElementById('input-key-value-' + i).value = keyValueDict[keyName]
-            i += 1
-          }
-        }
-      } catch (e) { console.log("error in fillKeyValuePairsFromDictionary: ", e) }
     }
 
     function generateSdi12Options() {

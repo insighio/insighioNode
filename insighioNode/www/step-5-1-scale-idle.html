@@ -50,24 +50,13 @@
   <script src="js/utils.js"></script>
   <script>
   function initializeValues() {
-        disableNavigationButtons()
+    disableNavigationButtons()
+    detectBoardChange(enableNavigationButtons)
+  }
 
-        fetch("/settings").then((response) => {
-          return response.json();
-        }).then(function(data) {
-          detectBoardChange(data.board_mac, Cookies.get('board-mac'))
-          enableNavigationButtons()
-          showElement('loader', false)
-        }).catch((err) => {
-          console.log("error completing request", err);
-          enableNavigationButtons()
-          showElement('loader', false)
-        });
-      }
-
-    function saveIdleWeight() {
-      location.href = "step-5-2-scale-reference.html"
-    }
+  function saveIdleWeight() {
+    redirectTo("step-5-2-scale-reference.html")
+  }
 
     initializeValues()
   </script>

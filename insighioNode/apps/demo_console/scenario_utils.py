@@ -4,10 +4,18 @@ import gpio_handler
 import device_info
 import sensors
 import gc
+
 try:
-    from apps.demo_console import demo_config as cfg
+    from apps import demo_temp_config as cfg
+    logging.info("loaded config: [temp]")
 except Exception as e:
-    cfg = type('', (), {})()
+    try:
+        from apps.demo_console import demo_config as cfg
+        logging.info("loaded config: [normal]")
+    except Exception as e:
+        cfg = type('', (), {})()
+        logging.info("loaded config: [fallback]")
+
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from apps.demo_console.dictionary_utils import set_value, set_value_int, set_value_float
@@ -21,7 +29,6 @@ _pulse_pin = None
 _pulse_counter = 0
 _pulse_mutex = _thread.allocate_lock()
 _pulse_last_read_timestamp = None
-
 
 def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
