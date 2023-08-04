@@ -4,9 +4,11 @@ import machine
 
 #the ulp source code is ULP pulse counter working on pin 0, improved copy of code from here https://esp32.com/viewtopic.php?t=13638
 
+# /* ESP32S3 powers down RTC periph when entering deep sleep and thus by association SENS_SAR_PERI_CLK_GATE_CONF_REG */
+# WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1);
+
 sourceESPIDF = """\
 
-#define DR_REG_RTCCNTL_BASE          0x60008000
 #define DR_REG_RTCIO_BASE            0x60008400
 #define DR_REG_SENS_BASE             0x60008800
 
@@ -15,8 +17,6 @@ sourceESPIDF = """\
 
 #define SENS_IOMUX_CLK_EN                   (BIT(31))
 #define SENS_SAR_PERI_CLK_GATE_CONF_REG     (DR_REG_SENS_BASE + 0x104)
-#define RTC_CNTL_LOW_POWER_ST_REG           (DR_REG_RTCCNTL_BASE + 0xD0)
-#define RTC_CNTL_RDY_FOR_WAKEUP             (BIT(19))
 
   /* Define variables, which go into .bss section (zero-initialized data) */
 
@@ -34,26 +34,10 @@ entry:
 	move r3, io_number
 	ld r3, r3, 0
 
-    /* ESP32S3 powers down RTC periph when entering deep sleep and thus by association SENS_SAR_PERI_CLK_GATE_CONF_REG */
-    WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1);
-
-	/* Lower 16 IOs and higher need to be handled separately,
-	 * because r0-r3 registers are 16 bit wide.
-	 * Check which IO this is.
-	 */
-	move r0, r3
-	jumpr read_io_high, 16, ge
-
 	/* Read the value of lower 16 RTC IOs into R0 */
 	READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
 	rsh r0, r0, r3
 	jump read_done
-
-	/* Read the value of RTC IOs 16-17, into R0 */
-read_io_high:
-	READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + 16, 2)
-	sub r3, r3, 16
-	rsh r0, r0, r3
 
 read_done:
 	and r0, r0, 1
@@ -119,32 +103,37 @@ entry:      move r3, data    # load address of data into r3
             halt             # halt ULP co-prozessor (until it gets waked up again)
 """
 
-#load_addr, entry_addr = 0, 5*4
+load_addr, entry_addr = 0, 5*4
 ULP_MEM_BASE = 0x50000000
 ULP_DATA_MASK = 0xffff  # ULP data is only in lower 16 bits
-load_addr, entry_addr = 0, 4
+#load_addr, entry_addr = 0, 4
 
 def init_ulp():
     from esp32 import ULP
     from external.esp32_ulp import src_to_binary
 
-    binary = src_to_binary(sourceCnt, cpu="esp32s2")
+    binary = src_to_binary(sourceESPIDF, cpu="esp32s2")
     ulp = ULP()
 
     ulp.load_binary(load_addr, binary)
 
-    ulp.init_gpio(4)
+    init_gpio(4, ulp)
     ulp.set_wakeup_period(0, 20000)  # use timer0, wakeup after 50.000 cycles
 
     ulp.run(entry_addr)
     logging.info("ULP Started")
+
+def init_gpio(gpio_num, ulp=None):
+    if ulp is None:
+        from esp32 import ULP
+        ulp = ULP()
+    ulp.init_gpio(gpio_num)
 
 def value(start=0):
     """
     Function to read variable from ULP memory
     """
     val = (int(hex(machine.mem32[ULP_MEM_BASE + start*4] & ULP_DATA_MASK),16))
-    #val = (int(hex(mem32[ULP_MEM_BASE + load_addr] & ULP_DATA_MASK),16))
     logging.info("Reading value[{}]: {}".format(start, val))
     return val
 
@@ -156,29 +145,14 @@ def setval(start=0, value=0x0):
     machine.mem32[ULP_MEM_BASE + start*4] = value
 
 def read_ulp_values():
-    #pulses = value(1)
-
-    value(0)
-    # import utime
-    # while True:
-    #     value(1)
-    #     utime.sleep_ms(500)
-
-    #logging.info("pulses: {}".format(floor(pulses//2)))
-    #message[setting.channel] = pulses/2*setting.multiplier
-    #setval(0,0x0)
-
-    # except Exception as e:
-    #     log("Exception:\n")
-    #     sys.print_exception(e, logfile)
-    #     logfile.flush()
-    #     setval(1, pulses + value(1))
-    #     machine.deepsleep(15*60*1000)
+    logging.info("pulses: {}".format(floor(value(1)//2)))
 
 
 def start():
     if machine.reset_cause()==machine.PWRON_RESET or machine.reset_cause()==machine.HARD_RESET or machine.reset_cause()==machine.SOFT_RESET:
         init_ulp()
+    else:
+        init_gpio(4)
     read_ulp_values()
     logging.info("about to sleep for 1 minute")
     machine.deepsleep(10000)
