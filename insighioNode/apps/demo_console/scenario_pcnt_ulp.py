@@ -22,14 +22,20 @@ sourceESPIDF = """\
 
 next_edge: .long 0
 edge_count: .long 0
-debounce_counter: .long 2
-debounce_max_count: .long 2
+debounce_counter: .long 1
+debounce_max_count: .long 1
 io_number: .long 4
+data:      .long 0
 
 	/* Code goes into .text section */
 	.text
 	.global entry
 entry:
+    move r3, data    # load address of data into r3
+    ld r2, r3, 0     # load data contents ([r3+0]) into r2
+    add r2, r2, 1    # increment r2
+    st r2, r3, 0     # store r2 contents into data ([r3+0])
+
 	/* Load io_number */
 	move r3, io_number
 	ld r3, r3, 0
@@ -46,7 +52,7 @@ read_done:
 	ld r3, r3, 0
 	add r3, r0, r3
 	and r3, r3, 1
-	jump changed, eq
+	jump edge_detected, eq
 	/* Not changed */
 	/* Reset debounce_counter to debounce_max_count */
 	move r3, debounce_max_count
@@ -103,7 +109,7 @@ entry:      move r3, data    # load address of data into r3
             halt             # halt ULP co-prozessor (until it gets waked up again)
 """
 
-load_addr, entry_addr = 0, 5*4
+load_addr, entry_addr = 0, 6*4
 ULP_MEM_BASE = 0x50000000
 ULP_DATA_MASK = 0xffff  # ULP data is only in lower 16 bits
 #load_addr, entry_addr = 0, 4
@@ -118,7 +124,7 @@ def init_ulp():
     ulp.load_binary(load_addr, binary)
 
     init_gpio(4, ulp)
-    ulp.set_wakeup_period(0, 20000)  # use timer0, wakeup after 50.000 cycles
+    ulp.set_wakeup_period(0, 1)  # use timer0, wakeup after 50.000 cycles
 
     ulp.run(entry_addr)
     logging.info("ULP Started")
@@ -145,7 +151,9 @@ def setval(start=0, value=0x0):
     machine.mem32[ULP_MEM_BASE + start*4] = value
 
 def read_ulp_values():
-    logging.info("pulses: {}".format(floor(value(1)//2)))
+    logging.info("loops: {}, pulses: {}".format(value(5), floor(value(1)//2)))
+    setval(1, 0x0)
+    setval(5, 0x0)
 
 
 def start():
