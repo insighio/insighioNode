@@ -1,13 +1,6 @@
-import machine, time
-import esp32
-import uio, ure, utime
-import sys
-from esp32 import ULP
-from machine import Pin, mem32, ADC
-from external.esp32_ulp import src_to_binary
 import logging
-
 from math import floor
+import machine
 
 #the ulp source code is ULP pulse counter working on pin 0, improved copy of code from here https://esp32.com/viewtopic.php?t=13638
 
@@ -27,30 +20,11 @@ sourceESPIDF = """\
 
   /* Define variables, which go into .bss section (zero-initialized data) */
 
-    .global next_edge
-next_edge:
-    .long 0
-
-    .global edge_count
-edge_count:
-    .long 0
-
-    .global debounce_counter
-debounce_counter:
-    .long 3
-
-    .global debounce_max_count
-debounce_max_count:
-    .long 3
-
-    .global io_number
-io_number:
-    .long 4
-
-	.global edge_count_to_wake_up
-edge_count_to_wake_up:
-	.long 2
-
+next_edge: .long 0
+edge_count: .long 0
+debounce_counter: .long 2
+debounce_max_count: .long 2
+io_number: .long 4
 
 	/* Code goes into .text section */
 	.text
@@ -130,11 +104,6 @@ edge_detected:
 	ld r2, r3, 0
 	add r2, r2, 1
 	st r2, r3, 0
-	/* Compare edge_count to edge_count_to_wake_up */
-	move r3, edge_count_to_wake_up
-	ld r3, r3, 0
-	sub r3, r3, r2
-	/* Not yet. End program */
 	halt
 
 """
@@ -150,13 +119,16 @@ entry:      move r3, data    # load address of data into r3
             halt             # halt ULP co-prozessor (until it gets waked up again)
 """
 
-load_addr, entry_addr = 0, 6*4
+#load_addr, entry_addr = 0, 5*4
 ULP_MEM_BASE = 0x50000000
 ULP_DATA_MASK = 0xffff  # ULP data is only in lower 16 bits
-#load_addr, entry_addr = 0, 4
+load_addr, entry_addr = 0, 4
 
 def init_ulp():
-    binary = src_to_binary(sourceESPIDF, cpu="esp32s2")
+    from esp32 import ULP
+    from external.esp32_ulp import src_to_binary
+
+    binary = src_to_binary(sourceCnt, cpu="esp32s2")
     ulp = ULP()
 
     ulp.load_binary(load_addr, binary)
@@ -171,7 +143,7 @@ def value(start=0):
     """
     Function to read variable from ULP memory
     """
-    val = (int(hex(mem32[ULP_MEM_BASE + start*4] & ULP_DATA_MASK),16))
+    val = (int(hex(machine.mem32[ULP_MEM_BASE + start*4] & ULP_DATA_MASK),16))
     #val = (int(hex(mem32[ULP_MEM_BASE + load_addr] & ULP_DATA_MASK),16))
     logging.info("Reading value[{}]: {}".format(start, val))
     return val
@@ -181,12 +153,12 @@ def setval(start=0, value=0x0):
     Function to set variable in ULP memory
     """
     #mem32[ULP_MEM_BASE + load_addr] = value
-    mem32[ULP_MEM_BASE + start*4] = value
+    machine.mem32[ULP_MEM_BASE + start*4] = value
 
 def read_ulp_values():
     #pulses = value(1)
 
-    value(1)
+    value(0)
     # import utime
     # while True:
     #     value(1)
