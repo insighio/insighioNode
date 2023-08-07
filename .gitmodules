@@ -19,9 +19,6 @@
 [submodule "lib-external/astronode-micropython"]
 	path = lib-external/astronode-micropython
 	url = https://github.com/insighio/astronode-micropython.git
-[submodule "lib-external/micropython-umodbus"]
-	path = lib-external/micropython-umodbus
-	url = https://github.com/brainelectronics/micropython-modbus.git
 [submodule "lib-external/micropython-esp32-ulp"]
 	path = lib-external/micropython-esp32-ulp
 	url = https://github.com/micropython/micropython-esp32-ulp.git
