@@ -63,7 +63,7 @@
         for (let key in config) {
           if (config.hasOwnProperty(key)) {
             configString += (key + "=" + config[key] + "&")
-            if(key == 'wifi-ssid' || key == 'wifi-pass' || key == 'meas-name-mapping') {
+            if(key === 'wifi-ssid' || key === 'wifi-pass' || key === 'meas-name-mapping' || key === 'meas-keyvalue') {
               config[key] = decodeURIComponent(config[key]).replaceAll("\\", "\\\\").replaceAll("'", "\\'")
             }
           }

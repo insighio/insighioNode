@@ -518,6 +518,8 @@
 
       Cookies.set('store-meas-if-failed-conn', boolElemToPyStr('input-store-meas-if-failed-conn'))
 
+      Cookies.set('meas-keyvalue', encodeURIComponent(JSON.stringify(getKeyValuePairs())))
+
       if (elementIsVisible("shield-advind-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-advind-options"])
 
@@ -536,7 +538,6 @@
         Cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
         Cookies.set('meas-pcnt-1-multiplier', document.getElementById('ins-esp-gen-pcnt-1-multiplier').value)
 
-        Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
         redirectTo("step-5-4-measurement-naming.html")
       }
       else if (elementIsVisible("shield-scale-options")) {
@@ -561,11 +562,9 @@
           if (scale && offset) {
             Cookies.set('meas-scale-offset', offset)
             Cookies.set('meas-scale-scale', scale)
-            Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
             redirectTo("step-5-3-scale-calibr-res.html")
           }
           else {
-            Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
             redirectTo("step-5-1-scale-idle.html")
           }
         }
@@ -586,7 +585,6 @@
         if (elementIsVisible('input-s1-sensor-a-d-p3-trans-div'))
           Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-s1-sensor-a-d-p3-t').value)
 
-        Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
         redirectTo("step-5-4-measurement-naming.html")
       }
 
