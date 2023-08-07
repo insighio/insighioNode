@@ -19,3 +19,6 @@
 [submodule "lib-external/astronode-micropython"]
 	path = lib-external/astronode-micropython
 	url = https://github.com/insighio/astronode-micropython.git
+[submodule "lib-external/micropython-esp32-ulp-ins"]
+	path = lib-external/micropython-esp32-ulp-ins
+	url = https://github.com/insighio/micropython-esp32-ulp.git
