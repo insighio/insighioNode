@@ -2,11 +2,6 @@ import logging
 from math import floor
 import machine
 
-#the ulp source code is ULP pulse counter working on pin 0, improved copy of code from here https://esp32.com/viewtopic.php?t=13638
-
-# /* ESP32S3 powers down RTC periph when entering deep sleep and thus by association SENS_SAR_PERI_CLK_GATE_CONF_REG */
-# WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1);
-
 sourceESPIDF = """\
 
 #define DR_REG_RTCIO_BASE            0x60008400
@@ -112,13 +107,12 @@ entry:      move r3, data    # load address of data into r3
 load_addr, entry_addr = 0, 6*4
 ULP_MEM_BASE = 0x50000000
 ULP_DATA_MASK = 0xffff  # ULP data is only in lower 16 bits
-#load_addr, entry_addr = 0, 4
 
 def init_ulp():
     from esp32 import ULP
     from external.esp32_ulp import src_to_binary
 
-    binary = src_to_binary(sourceESPIDF, cpu="esp32s2")
+    binary = src_to_binary(sourceESPIDF, cpu="esp32s3")
     ulp = ULP()
 
     ulp.load_binary(load_addr, binary)
@@ -147,13 +141,11 @@ def setval(start=0, value=0x0):
     """
     Function to set variable in ULP memory
     """
-    #mem32[ULP_MEM_BASE + load_addr] = value
     machine.mem32[ULP_MEM_BASE + start*4] = value
 
 def read_ulp_values():
     logging.info("loops: {}, pulses: {}".format(value(5), floor(value(1)//2)))
     setval(1, 0x0)
-    setval(5, 0x0)
 
 
 def start():
