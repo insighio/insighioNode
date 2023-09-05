@@ -31,7 +31,7 @@ try:
     import utils
     _C='/apps/demo_console/demo_config.py'
     configContent=utils.readFromFile(_C)
-    fixIdLabel='FIXID=a4483c61-323a-4bff-82ec-275796db114c'
+    fixIdLabel='FIXID="a4483c61-323a-4bff-82ec-275796db114c"'
     if fixIdLabel not in configContent:
         configContent=configContent.replace('protocol_config.server_ip = "51.75.72.81"', 'protocol_config.server_ip = "console.insigh.io"')
         configContent+='\n' + fixIdLabel + '\n'
