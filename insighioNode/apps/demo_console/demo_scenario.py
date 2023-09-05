@@ -263,19 +263,24 @@ def executeDeviceStatisticsUpload(cfg, network):
 
     try:
         import srcInfo
-        stats["src_branch"] = srcInfo.branch
-        stats["src_commit"] = srcInfo.commit
+        stats["sw_branch"] = srcInfo.branch
+        stats["sw_commit"] = srcInfo.commit
     except:
         logging.error("no srcInfo file found")
 
     stats["hw_version"] = device_info.get_hw_module_verison()
     (major, minor, patch, commit)  = device_info.get_firmware_version()
-    stats["sw_v_major"] = major
-    stats["sw_v_minor"] = minor
-    stats["sw_v_patch"] = patch
-    stats["sw_v_commit"] = commit
+    stats["fw_v_major"] = major
+    stats["fw_v_minor"] = minor
+    stats["fw_v_patch"] = patch
+    stats["fw_v_commit"] = commit
     stats["free_flash"] = device_info.get_free_flash()
     stats["serial"] = device_info.get_device_id()[0]
+    try:
+        import platform
+        stats["platform"]=platform.platform()
+    except:
+        logging.info("Skipping platform info.")
     logging.info("Uploading device statistics.")
     network.send_control_message(cfg, network.create_message(None, stats), "/stat")
 
@@ -287,8 +292,9 @@ def executeDeviceConfigurationUpload(cfg, network):
         network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
         utils.deleteFile("/configLog")
 
-        # whenever a new config log is uplaoded, upload also statistics for the device
+    if configUploadFileContent or utils.existsFile('/ota_applied_flag'):
         executeDeviceStatisticsUpload(cfg, network)
+        utils.deleteFile('/ota_applied_flag')
 
 def executeDeviceDeinitialization():
     demo_utils.device_deinit()
