@@ -3,6 +3,12 @@ import esp32
 
 key_value_storage = esp32.NVS("insighio")
 
+def existsFile(source):
+    try:
+        uos.stat(source)
+        return True
+    except Exception as e:
+        return False
 
 def copyFile(source, destination):
     try:
