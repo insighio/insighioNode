@@ -27,6 +27,19 @@ if device_info.is_esp32():
 
         _thread.start_new_thread(testThread, ())
 
+try:
+    import utils
+    _C='/apps/demo_console/demo_config.py'
+    configContent=utils.readFromFile(_C)
+    fixIdLabel='FIXID=a4483c61-323a-4bff-82ec-275796db114c'
+    if fixIdLabel not in configContent:
+        configContent=configContent.replace('protocol_config.server_ip = "51.75.72.81"', 'protocol_config.server_ip = "console.insigh.io"')
+        configContent+='\n' + fixIdLabel + '\n'
+        utils.writeToFile(_C,configContent)
+        logging.info("configuration file updated")
+except Exception as e:
+    logging.exception(e, "failed updating configuration")
+
 demo_config_exists = False
 try:
     import apps.demo_console.demo_config as cfg
