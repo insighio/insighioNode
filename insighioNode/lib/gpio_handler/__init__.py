@@ -4,7 +4,6 @@ import utime
 import device_info
 
 from machine import ADC, Pin
-(major_version, minor_version, _, _) = device_info.get_firmware_version()
 
 import logging
 
@@ -18,15 +17,26 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
         adc_width = ADC.WIDTH_13BIT if device_info.supports_13bit_adc() else ADC.WIDTH_12BIT
         adc.width(adc_width)
 
+        adc_initialized=False
+
         try:
-            if major_version == 1 and minor_version < 18:
-                adc.init(attn, adc_width)
-            elif major_version == 1 and minor_version >= 18:
-                adc.init_mp(atten=ADC.ATTN_11DB)
-            return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
+            adc.init_mp(atten=ADC.ATTN_11DB)
+            adc_initialized=True
         except Exception as e:
-            logging.exception(e, "unable to read: pin: {}".format(pin))
-            pass
+            logging.exception(e, "unable to init: pin: {}".format(pin))
+
+        if not adc_initialized:
+            try:
+                adc.init(attn, adc_width)
+                adc_initialized=True
+            except Exception as e:
+                logging.exception(e, "unable to init: pin: {}")
+
+        if adc_initialized:
+            try:
+                return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
+            except Exception as e:
+                logging.exception(e, "unable to read: pin: {}".format(pin))
 
         logging.debug("fallback ADC without calibration")
 

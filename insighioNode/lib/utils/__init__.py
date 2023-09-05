@@ -1,5 +1,6 @@
 import logging
 import esp32
+import uos
 
 key_value_storage = esp32.NVS("insighio")
 

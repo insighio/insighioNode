@@ -26,8 +26,8 @@ color_map['black'] = 0x000000
 
 uos_version_data = uos.uname()
 machine_data = uos_version_data.machine
-firmware_data = uos_version_data.version.split(" ")[0].split("-")
-firmware_data[0] = firmware_data[0][1:] # "from 'v1.18' to '1.18'"
+firmware_data = uos_version_data.release.split(".")
+firmware_commit_data = uos_version_data.version.split(" ")[0]
 
 def is_esp32():
     return sys.platform == 'esp32' or 'esp8266'
@@ -69,18 +69,14 @@ def get_firmware_version():
     major = None
     minor = None
     patch = None
-    commit = None
-
-    major_minor = firmware_data[0].split(".")
+    commit = firmware_commit_data
 
     try:
-        major = int(major_minor[0])
-        if len(major_minor) > 1:
-            minor = int(major_minor[1])
+        major = int(firmware_data[0])
         if len(firmware_data) > 1:
-            patch = int(firmware_data[1])
+            minor = int(firmware_data[1])
         if len(firmware_data) > 2:
-            commit = int(firmware_data[2])
+            patch = int(firmware_data[2])
     except:
         pass
 
