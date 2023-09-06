@@ -102,9 +102,13 @@ def get_measurements(cfg):
             else:
                 set_value_float(measurements, "cpu_temp", device_info.get_cpu_temp(False), SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
     except Exception as e:
+        set_value(measurements, "error_battery_stat", str(e))
         logging.exception(e, "unable to measure board sensors")
 
-    sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_SWITCH_ON)
+    try:
+        sensors.set_sensor_power_on(cfg._UC_IO_SENSOR_SWITCH_ON)
+    except Exception as e:
+        set_value(measurements, "error_sensor_switch_off", str(e))
 
     if get_config("_UC_IO_ONB_SNSR_ON") is not None:
         sensors.set_sensor_power_on(cfg._UC_IO_ONB_SNSR_ON)
@@ -127,12 +131,16 @@ def get_measurements(cfg):
         else:
             default_board_measurements(measurements)
     except Exception as e:
+        set_value(measurements, "error_meas_sensors", str(e))
         logging.exception(e, "unable to complete sensor measurements")
 
     if get_config("_UC_IO_ONB_SNSR_ON") is not None:
         sensors.set_sensor_power_off(cfg._UC_IO_ONB_SNSR_ON)
 
-    sensors.set_sensor_power_off(cfg._UC_IO_SENSOR_SWITCH_ON)
+    try:
+        sensors.set_sensor_power_off(cfg._UC_IO_SENSOR_SWITCH_ON)
+    except Exception as e:
+        set_value(measurements, "error_sensor_switch_off", str(e))
 
     if get_config("_UC_IO_ONB_SNSR_ON") is not None:
         sensors.set_sensor_power_off(cfg._UC_IO_ONB_SNSR_ON)

@@ -17,6 +17,10 @@ from . import demo_config as cfg
 timeDiffAfterNTP = None
 measurement_run_start_timestamp = None
 
+from apps.demo_console.dictionary_utils import set_value
+
+sleep_period = demo_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")*1000
+
 def getUptime(timeOffset=None):
     uptime = utime.ticks_ms()
     if timeOffset is not None:
@@ -99,7 +103,11 @@ def executeMeasureAndUploadLoop():
 
         # get measurements
         logging.debug("Starting getting measurements...")
-        measurements = demo_utils.get_measurements(cfg)
+        try:
+            measurements = demo_utils.get_measurements(cfg)
+        except Exception as e:
+            set_value(measurements, "error_demo_utils_meas", str(e))
+
         if is_first_run:
             measurements["reset_cause"] = {"value": device_info.get_reset_cause()}
 
