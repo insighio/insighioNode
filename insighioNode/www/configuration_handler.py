@@ -8,15 +8,27 @@ def apply_configuration(keyValuePairDictionary):
 
     operation = ""
     board = ""
+    shield = ""
     for param in keyValuePairDictionary:
         if param == "network":
             operation = keyValuePairDictionary[param]
         elif param == "selected-board":
             board = keyValuePairDictionary[param]
+        elif param == "selected-shield":
+            shield = keyValuePairDictionary[param]
 
     rootFolder = device_info.get_device_root_folder()
 
     contents = utils.readFromFile(rootFolder + 'apps/demo_console/templ/common_templ.py')
+
+    if shield:
+        if shield == "scale" or shield == "dig_analog":
+            board = "ins_esp_gen_1"
+        # elif shield == "dig_analog":
+        #     board = "ins_esp_gen_s1"
+        elif shield == "advind":
+            board = "ins_esp_gen_sdi12"
+        keyValuePairDictionary["selected-board"] = board
 
     # set project configuration content
     if device_info.is_esp32():
@@ -31,13 +43,13 @@ def apply_configuration(keyValuePairDictionary):
                 contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s1_config_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_i2c_dig_analog_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_i2c_analog_config_templ.py')
-        elif board == "ins_esp_gen_sdi12":
+        elif board == "ins_esp_gen_sdi12" or shield == "advind":
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_esp_gen_s1_config_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/shield_sdi12_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_sdi12_config_templ.py')
     else:
         contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_ins_py_gen_1_config_templ.py')
-        if board == "sdi12":
+        if board == "sdi12" or shield == "advind":
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/device_sdi12_config_templ.py')
             contents += utils.readFromFile(rootFolder + 'apps/demo_console/templ/py_sdi12_config_templ.py')
         else:
