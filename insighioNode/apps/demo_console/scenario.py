@@ -154,7 +154,14 @@ def executeGetGPSPosition(cfg, measurements, always_on):
         if scenario_utils.get_config("_MEAS_GPS_ENABLE"):
             from apps.demo_console import cellular as network_gps
             network_gps.init(cfg)
-            return network_gps.get_gps_position(cfg, measurements, always_on)
+
+            gps_status = network_gps.get_gps_position(cfg, measurements, always_on)
+
+            #close modem after operation if it is not going to be used for connection
+            if cfg.network != "cellular":
+                network_gps.disconnect()
+
+            return gps_status
     except Exception as e:
         logging.exception(e, "GPS Exception:")
         return False
