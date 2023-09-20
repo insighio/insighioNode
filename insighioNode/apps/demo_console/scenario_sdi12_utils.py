@@ -92,12 +92,15 @@ def sdi12_board_measurements(measurements):
 
         for i in range(1,11):
             executeSDI12Measurement(sdi12, measurements, i)
-
-        current_sense_4_20mA(measurements)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
     if sdi12:
         sdi12.close()
+
+    try:
+        current_sense_4_20mA(measurements)
+    except Exception as e:
+        logging.exception(e, "Exception while reading 4_20mA data")
 
     # power off SDI12 regulator
     if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
@@ -212,35 +215,35 @@ def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit
         logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(responseArray))
 
 def current_sense_4_20mA(measurements):
+    import utime
+
+    for i in range(1,3):
+        measure_4_20_mA_on_port(measurements, i)
+
+    utime.sleep_ms(200)
+
+def measure_4_20_mA_on_port(measurements, port_id):
     from machine import Pin
     import gpio_handler
     from sensors import analog_generic
-    import utime
 
-    # sensor 1
-    if cfg._4_20_SNSR_1_ENABLE:
-        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
-        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 1)
+    port_enabled = get_config("_4_20_SNSR_{}_ENABLE".format(port_id))
 
-        raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_1)
-        current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
-        logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_1, raw_mV, current_mA))
-        set_value_float(measurements, "curr_port_1", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+    if port_enabled:
+        sensor_on_pin = get_config("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
+        sensor_out_pin = get_config("_CUR_SNSR_OUT_{}".format(port_id))
 
-        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 0)
-        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+        try:
+            gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
+            gpio_handler.set_pin_value(sensor_on_pin, 1)
 
-    # sensor 2
-    if cfg._4_20_SNSR_2_ENABLE:
-        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
-        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 1)
+            raw_mV = analog_generic.get_reading(sensor_out_pin)
+            current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
+            current_mA = round(current_mA)
+            logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(sensor_out_pin, raw_mV, current_mA))
+            set_value_float(measurements, "4-20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
-        raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_2)
-        current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
-        logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_2, raw_mV, current_mA))
-        set_value_float(measurements, "curr_port_2", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
-
-        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 0)
-        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
-
-    utime.sleep_ms(2000)
+            gpio_handler.set_pin_value(sensor_on_pin, 0)
+            gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+        except Exception as e:
+            logging.exception(e, "Error getting current sensor output: ID: {}".format(port_id))
