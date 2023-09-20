@@ -58,6 +58,18 @@ class ModemRak4270(modem_base.Modem):
         (status, lines) = self.send_at_cmd('at+set_config=lora:dr:{}'.format(dr))
         return status
 
+    def set_confirm(self, confirm):
+        (status, lines) = self.send_at_cmd('at+set_config=lora:confirm:{}'.format(1 if confirm else 0))
+        return status
+
+    def set_adr(self, adr):
+        (status, lines) = self.send_at_cmd('at+set_config=lora:adr:{}'.format(1 if adr else 0))
+        return status
+
+    def set_retries(self, retries):
+        (status, lines) = self.send_at_cmd('at+set_config=lora:send_repeat_cnt:{}'.format(retries if retries else 0))
+        return status
+
     def join(self):
         self.send_at_cmd('at+set_config=lora:ch_mask:8:0')
         self.send_at_cmd('at+set_config=lora:ch_mask:9:0')

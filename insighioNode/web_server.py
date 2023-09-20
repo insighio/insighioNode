@@ -167,7 +167,7 @@ class DeviceMeasurements:
                 pass
 
             try:
-                del sys.modules["apps.demo_console.scenario_sdi12_utils"]
+                del sys.modules["apps.demo_console.scenario_advind_utils"]
             except:
                 pass
 

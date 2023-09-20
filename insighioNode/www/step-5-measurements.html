@@ -538,7 +538,7 @@
         Cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
         Cookies.set('meas-pcnt-1-multiplier', document.getElementById('ins-esp-gen-pcnt-1-multiplier').value)
 
-        redirectTo("step-5-4-measurement-naming.html")
+        redirectoToMeasurementNaming()
       }
       else if (elementIsVisible("shield-scale-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-scale-options"])
@@ -551,7 +551,7 @@
         if (!isChecked('input-scale-enabled')) {
           Cookies.set('meas-scale-offset', 0)
           Cookies.set('meas-scale-scale', 1)
-          redirectTo("step-5-4-measurement-naming.html")
+          redirectoToMeasurementNaming()
         }
         else {
           var scale = Cookies.get("meas-scale-scale")
@@ -585,10 +585,17 @@
         if (elementIsVisible('input-s1-sensor-a-d-p3-trans-div'))
           Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-s1-sensor-a-d-p3-t').value)
 
-        redirectTo("step-5-4-measurement-naming.html")
+        redirectoToMeasurementNaming()
       }
 
       enableNavigationButtons()
+    }
+
+    function redirectoToMeasurementNaming(){
+      if(Cookies.get('network') !== "lora")
+        redirectTo("step-5-4-measurement-naming.html")
+      else
+        redirectTo("step-6-timing.html")
     }
 
     function boardChanged(evt, boardDivId) {

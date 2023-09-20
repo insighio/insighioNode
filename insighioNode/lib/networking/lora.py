@@ -59,6 +59,9 @@ def join(cfg, lora_keys):
 
     modem.set_region(cfg._LORA_REGION if cfg._LORA_REGION is not None else "EU868")
     modem.set_dr(cfg._LORA_DR if cfg._LORA_DR is not None else 5)
+    modem.set_confirm(cfg._LORA_CONFIRMED if cfg._LORA_CONFIRMED is not None else 0)
+    modem.set_adr(cfg._LORA_ADR if cfg._LORA_ADR is not None else 0)
+    modem.set_retries(cfg._LORA_TX_RETRIES if cfg._LORA_TX_RETRIES is not None else 0)
 
     modem.set_dev_eui(lora_keys[0])
     modem.set_app_eui(lora_keys[1])
