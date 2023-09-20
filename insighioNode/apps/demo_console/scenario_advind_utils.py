@@ -70,10 +70,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
     read_sdi12_sensor(sdi12, address, measurements)
     powerOffAllSwitchExcept()
 
-def sdi12_board_measurements(measurements):
-    if not cfg._SDI12_SENSOR_1_ENABLED and not cfg._SDI12_SENSOR_2_ENABLED:
-        return
-
+def shield_measurements(measurements):
     # power on SDI12 regulator
     if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
         sensors.set_sensor_power_on(cfg._UC_IO_SNSR_REG_ON)

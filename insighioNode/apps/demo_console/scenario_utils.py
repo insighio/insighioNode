@@ -132,8 +132,8 @@ def get_measurements(cfg_dummy=None):
         shield_name = get_config("_SELECTED_SHIELD")
         if (shield_name and shield_name == get_config("_CONST_SHIELD_ADVIND")) or (shield_name and shield_name == get_config("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")):
             read_pulse_counter(measurements)
-            from . import scenario_sdi12_utils
-            scenario_sdi12_utils.sdi12_board_measurements(measurements)
+            from . import scenario_advind_utils
+            scenario_advind_utils.shield_measurements(measurements)
         else: #if shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
 
