@@ -61,7 +61,7 @@ def create_message(device_id, measurements):
 
 def send_message(cfg, message, explicit_channel_name=None):
     logging.info("Sending byte packet of {} bytes length".format(len(message)))
-    lora.send(cfg, message)
+    return lora.send(cfg, message)
 
 def send_control_message(cfg, message, subtopic):
     logging.error("Config message not yet supported for LoRA")
