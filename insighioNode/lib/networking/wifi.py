@@ -64,7 +64,10 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
 
             # obtain some extra KPIs from joined AP
             channel = -1
-            rssi = -1
+            try:
+                rssi = wl.status('rssi')
+            except:
+                rssi = -1
         else:
             logging.debug("Not connected to {}".format(net_to_use))
     except Exception as e:
@@ -76,9 +79,6 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
         """
 
     return (connection_status, conn_attempt_duration, scan_attempt_duration, channel, rssi)
-
-def getSignalQuality():
-    pass
 
 def is_connected():
     return network.WLAN(network.STA_IF).isconnected()
