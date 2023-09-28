@@ -3,14 +3,53 @@ import utils
 import ure
 import logging
 
-try:
-    import apps.demo_console.demo_config as cfg
-except:
-    cfg = {}
+_config_is_valid = False
 
-app_name = "demo_console"
-rootFolder = "/"
-config_file = '{}apps/{}/demo_config.py'.format(rootFolder, app_name)
+app_name = None
+app_path = None
+rootFolder = None
+config_file = None
+
+def getModulePathFromFile(file_path):
+    if file_path is None:
+        return None
+    module_path = file_path.replace(".py", "")
+    module_path = module_path.replace("/", ".")
+    if module_path.startswith("."):
+        module_path = module_path[1:]
+    return module_path
+
+def setApplicationName(newName="demo_console"):
+    global app_name
+    global app_path
+    global rootFolder
+    global config_file
+    global _config_is_valid
+    app_name = newName
+    rootFolder = "/"
+
+    prev_config_file = config_file
+    app_path = '{}apps/{}'.format(rootFolder, newName)
+    config_file = '{}apps/{}/demo_config.py'.format(rootFolder, app_name)
+
+    if prev_config_file != config_file:
+        logging.info("Reloading configuration modules")
+        import sys
+        try:
+            prev_module_path = getModulePathFromFile(prev_config_file)
+            if prev_module_path:
+                logging.info("removing old module: {}".format(prev_module_path))
+                del sys.modules[prev_module_path]
+
+            new_module_path = getModulePathFromFile(config_file)
+            logging.info("loading module: {}".format(new_module_path))
+            exec('import {} as cfg'.format(new_module_path))
+            _config_is_valid=True
+        except Exception as e:
+            logging.exception(e, "error reloading configuration module")
+            _config_is_valid=False
+
+setApplicationName("demo_console")
 
 configDict = {
 "_APN": "cell_apn",
@@ -105,10 +144,16 @@ configDict = {
 "_MEAS_SCALE_MONITORING_ENABLED": "meas_scale_monitoring_enabled",
 '_PCNT_1_ENABLE': "meas_pcnt_1_enable",
 '_PCNT_1_COUNT_ON_RISING': "meas_pcnt_1_cnt_on_rising",
-'_PCNT_1_MULTIPLIER': "meas_pcnt_1_multiplier"
+'_PCNT_1_MULTIPLIER': "meas_pcnt_1_multiplier",
+'_WIFI_SSID': 'wifi_ssid',
+'_WIFI_PASS': 'wifi-pass',
+'_SELECTED_SHIELD': 'selected-shield'
 }
 
 NoneType = type(None)
+
+def isConfigValid():
+    return _config_is_valid
 
 def fixValue(val):
     if val == "true":
@@ -299,42 +344,42 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         elif param == "selected-shield":
             shield = keyValuePairDictionary[param]
 
-    contents = get_file_config('/apps/demo_console/templ/common_templ.py', keyValuePairDictionary)
+    contents = get_file_config(app_path + '/templ/common_templ.py', keyValuePairDictionary)
 
     # set project configuration content
     if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
-        contents += get_file_config('/apps/demo_console/templ/device_ins_esp32_templ.py', keyValuePairDictionary)
+        contents += get_file_config(app_path + '/templ/device_ins_esp32_templ.py', keyValuePairDictionary)
     elif board == device_info._CONST_ESP32S3:
-        contents += get_file_config('/apps/demo_console/templ/device_ins_esp32s3_templ.py', keyValuePairDictionary)
+        contents += get_file_config(app_path + '/templ/device_ins_esp32s3_templ.py', keyValuePairDictionary)
     else:
         print("[ERROR]: device not supported: {}".format(board))
 
-    contents += get_file_config('/apps/demo_console/templ/device_i2c_analog_config_templ.py', keyValuePairDictionary)
+    contents += get_file_config(app_path + '/templ/device_i2c_analog_config_templ.py', keyValuePairDictionary)
     if shield == "advind":
-        contents += get_file_config('/apps/demo_console/templ/shield_advind_templ.py', keyValuePairDictionary)
-        contents += get_file_config('/apps/demo_console/templ/device_sdi12_config_templ.py', keyValuePairDictionary)
+        contents += get_file_config(app_path + '/templ/shield_advind_templ.py', keyValuePairDictionary)
+        contents += get_file_config(app_path + '/templ/device_sdi12_config_templ.py', keyValuePairDictionary)
     elif shield == "dig_analog":
-        contents += get_file_config('/apps/demo_console/templ/shield_i2c_dig_analog_templ.py', keyValuePairDictionary)
+        contents += get_file_config(app_path + '/templ/shield_i2c_dig_analog_templ.py', keyValuePairDictionary)
     elif shield == "scale":
         if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
-            contents += get_file_config('/apps/demo_console/templ/shield_esp32_scale.py', keyValuePairDictionary)
+            contents += get_file_config(app_path + '/templ/shield_esp32_scale.py', keyValuePairDictionary)
         elif board == device_info._CONST_ESP32S3:
-            contents += get_file_config('/apps/demo_console/templ/shield_esp32s3_scale.py', keyValuePairDictionary)
-        contents += get_file_config('/apps/demo_console/templ/device_scale_config.py', keyValuePairDictionary)
+            contents += get_file_config(app_path + '/templ/shield_esp32s3_scale.py', keyValuePairDictionary)
+        contents += get_file_config(app_path + '/templ/device_scale_config.py', keyValuePairDictionary)
 
     contents += '\n'
 
     if operation == 'wifi':
-        contents += '\n' + get_file_config('/apps/demo_console/templ/wifi_config_templ.py', keyValuePairDictionary)
-        contents += '\n' + get_file_config('/apps/demo_console/templ/protocol_config_templ.py', keyValuePairDictionary)
+        contents += '\n' + get_file_config(app_path + '/templ/wifi_config_templ.py', keyValuePairDictionary)
+        contents += '\n' + get_file_config(app_path + '/templ/protocol_config_templ.py', keyValuePairDictionary)
     elif operation == 'cellular':
-        contents += '\n' + get_file_config('/apps/demo_console/templ/cellular_config_templ.py', keyValuePairDictionary)
-        contents += '\n' + get_file_config('/apps/demo_console/templ/protocol_config_templ.py', keyValuePairDictionary)
+        contents += '\n' + get_file_config(app_path + '/templ/cellular_config_templ.py', keyValuePairDictionary)
+        contents += '\n' + get_file_config(app_path + '/templ/protocol_config_templ.py', keyValuePairDictionary)
     elif operation == 'lora':
-        contents += '\n' + get_file_config('/apps/demo_console/templ/shield_lora_templ.py', keyValuePairDictionary)
-        contents += '\n' + get_file_config('/apps/demo_console/templ/lora_config_templ.py', keyValuePairDictionary)
+        contents += '\n' + get_file_config(app_path + '/templ/shield_lora_templ.py', keyValuePairDictionary)
+        contents += '\n' + get_file_config(app_path + '/templ/lora_config_templ.py', keyValuePairDictionary)
     elif operation == 'satellite':
-        contents += '\n' + get_file_config('/apps/demo_console/templ/satellite_config_templ.py', keyValuePairDictionary)
+        contents += '\n' + get_file_config(app_path + '/templ/satellite_config_templ.py', keyValuePairDictionary)
 
     # create new
     utils.writeToFile(config_file_explicit, contents)
