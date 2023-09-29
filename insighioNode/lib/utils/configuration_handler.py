@@ -281,7 +281,10 @@ def updateConfigValue(key, new_value):
         logging.info("configuration value already set, ignoring request")
         return
 
-    setattr(cfg, key, new_value)
+    try:
+        setattr(cfg, key, new_value)
+    except Exception as e:
+        logging.exception(e, "Error setting value to loaded configuration. It could be that you have no configuration yet...")
 
     utils.writeToFile(config_file, '\n'.join(configContent))
     notifyServerWithNewConfig()
@@ -293,6 +296,7 @@ def notifyServerWithNewConfig():
 
 def get_file_config(fileName, keyValuePairs):
     gc.collect()
+    logging.debug("Getting file config: {}".format(fileName))
     contents = utils.readFromFile(fileName)
     for param in keyValuePairs:
         contents = contents.replace('<' + param + '>', keyValuePairs[param])
