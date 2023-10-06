@@ -151,7 +151,7 @@ def executeMeasureAndUploadLoop():
 
 def executeGetGPSPosition(cfg, measurements, always_on):
     try:
-        if scenario_utils.get_config("_MEAS_GPS_ENABLE"):
+        if scenario_utils.get_config("_MEAS_GPS_ENABLE") and (not scenario_utils.get_config("_MEAS_GPS_ONLY_ON_BOOT") or (device_info.get_reset_cause() == 0 or device_info.get_reset_cause() == 1)):
             from apps.demo_console import cellular as network_gps
             network_gps.init(cfg)
 

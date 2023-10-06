@@ -350,6 +350,7 @@
 
       addSwitch("board-default-option-gps", "input-gps-enable", "GPS")
       addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
+      addSwitch("address-gps", "input-gps-only-on-boot", "Get position only on boot")
 
       addSelect("shield-scale-options-content", "input-i2c-1", "I²C #1")
       addSelect("shield-scale-options-content", "input-i2c-2", "I²C #2")
@@ -401,7 +402,8 @@
 
       setElemValue('input-gps-timeout', Cookies.get("meas-gps-timeout"), 120, false)
       setElemValue('input-gps-sat-num', Cookies.get("meas-gps-sat-num"), 4, false)
-      //setElemValueBool('input-gps-no-fix-no-upload', Cookies.get(meas-gps-no-fix-no-upload,  false)
+      setElemValueBool('input-gps-no-fix-no-upload', Cookies.get("meas-gps-no-fix-no-upload",  false)
+      setElemValueBool('input-gps-only-on-boot', Cookies.get("meas-gps-only-on-boot",  false)
 
       for (let i = 1; i <= 10; ++i) {
         var sdi12Enabled = strToJSValue(Cookies.get("meas-sdi-" + i + "-enabled"))
@@ -454,6 +456,7 @@
       Cookies.remove('meas-board-stat')
       Cookies.remove('meas-gps-enabled')
       Cookies.remove('meas-gps-no-fix-no-upload')
+      Cookies.remove('meas-gps-only-on-boot')
       Cookies.remove('meas-gps-sat-num')
       Cookies.remove('meas-gps-timeout')
       Cookies.remove('meas-i2c-1')
@@ -515,6 +518,7 @@
       Cookies.set('meas-gps-timeout', document.getElementById('input-gps-timeout').value)
       Cookies.set('meas-gps-sat-num', document.getElementById('input-gps-sat-num').value)
       Cookies.set('meas-gps-no-fix-no-upload', boolElemToPyStr('input-gps-no-fix-no-upload'))
+      Cookies.set('meas-gps-only-on-boot', boolElemToPyStr('input-gps-only-on-boot'))
 
       Cookies.set('store-meas-if-failed-conn', boolElemToPyStr('input-store-meas-if-failed-conn'))
 

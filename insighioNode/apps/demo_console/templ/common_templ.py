@@ -37,6 +37,7 @@ _MEAS_GPS_ENABLE = <meas-gps-enabled>
 _MEAS_GPS_TIMEOUT = <meas-gps-timeout>
 _MEAS_GPS_SATELLITE_FIX_NUM = <meas-gps-sat-num>
 _MEAS_GPS_NO_FIX_NO_UPLOAD = <meas-gps-no-fix-no-upload>
+_MEAS_GPS_ONLY_ON_BOOT = <meas-gps-only-on-boot>
 
 _CHECK_FOR_OTA = <system-enable-ota>
 

@@ -146,8 +146,9 @@ configDict = {
 '_PCNT_1_COUNT_ON_RISING': "meas_pcnt_1_cnt_on_rising",
 '_PCNT_1_MULTIPLIER': "meas_pcnt_1_multiplier",
 '_WIFI_SSID': 'wifi_ssid',
-'_WIFI_PASS': 'wifi-pass',
-'_SELECTED_SHIELD': 'selected-shield'
+'_WIFI_PASS': 'wifi_pass',
+'_SELECTED_SHIELD': 'selected_shield',
+'_MEAS_GPS_ONLY_ON_BOOT': 'meas_gps_only_on_boot'
 }
 
 NoneType = type(None)
