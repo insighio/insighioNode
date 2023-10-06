@@ -360,7 +360,9 @@
 
       addInput('options-sdi12', 'input-gen-sdi12-warmup-time', 'Warm Up time (ms)')
       addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-1-enable", "4-20mA sensor n.1")
+      addInput("options-sdi12", "ins-esp-gen-4-20-snsr-1-formula", "  sensor n.1 formula")
       addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-2-enable", "4-20mA sensor n.2")
+      addInput("options-sdi12", "ins-esp-gen-4-20-snsr-2-formula", "  sensor n.2 formula")
       addSwitch("options-sdi12", "ins-esp-gen-pcnt-1-enable", "Pulse Counter Enable")
       addSelect("options-sdi12", "ins-esp-gen-pcnt-1-cnt-on", "Pulse Counter Trigger")
       addInput('options-sdi12', 'ins-esp-gen-pcnt-1-multiplier', 'Pulse Counter Multiplier')
@@ -438,6 +440,8 @@
 
       setElemValueBool('ins-esp-gen-4-20-snsr-1-enable', strToJSValue(Cookies.get("meas-4-20-snsr-1-enable")), false)
       setElemValueBool('ins-esp-gen-4-20-snsr-2-enable', strToJSValue(Cookies.get("meas-4-20-snsr-2-enable")), false)
+      setElemValue("ins-esp-gen-4-20-snsr-1-formula", Cookies.get("meas-4-20-snsr-1-formula"), "v")
+      setElemValue("ins-esp-gen-4-20-snsr-2-formula", Cookies.get("meas-4-20-snsr-2-formula"), "v")
       setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(Cookies.get("meas-pcnt-1-enable")), false)
       setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(Cookies.get("meas-pcnt-1-cnt-on-rising")) ? "rising" : "falling", "rising")
       setElemValue('ins-esp-gen-pcnt-1-multiplier', Cookies.get("meas-pcnt-1-multiplier"), 1)
@@ -479,6 +483,8 @@
       Cookies.remove('store-meas-if-failed-conn')
       Cookies.remove('meas-4-20-snsr-1-enable')
       Cookies.remove('meas-4-20-snsr-2-enable')
+      Cookies.remove('meas-4-20-snsr-1-formula')
+      Cookies.remove('meas-4-20-snsr-2-formula')
       Cookies.remove('meas-scale-monitoring-enabled')
       Cookies.remove('meas-pcnt-1-enable')
       Cookies.remove('meas-pcnt-1-cnt-on-rising')
@@ -533,8 +539,8 @@
 
         Cookies.set('meas-4-20-snsr-1-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-1-enable'))
         Cookies.set('meas-4-20-snsr-2-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-2-enable'))
-
-        Cookies.set('meas-sdi-warmup-time', document.getElementById('input-gen-sdi12-warmup-time').value)
+        Cookies.set('meas-4-20-snsr-1-formula', document.getElementById('ins-esp-gen-4-20-snsr-1-formula').value)
+        Cookies.set('meas-4-20-snsr-2-formula', document.getElementById('ins-esp-gen-4-20-snsr-2-formula').value)
 
         Cookies.set('meas-sdi-warmup-time', document.getElementById('input-gen-sdi12-warmup-time').value)
 

@@ -225,6 +225,7 @@ def measure_4_20_mA_on_port(measurements, port_id):
     from sensors import analog_generic
 
     port_enabled = get_config("_4_20_SNSR_{}_ENABLE".format(port_id))
+    port_formula = get_config("_4_20_SNSR_{}_FORMULA".format(port_id))
 
     if port_enabled:
         sensor_on_pin = get_config("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
@@ -240,7 +241,21 @@ def measure_4_20_mA_on_port(measurements, port_id):
             logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(sensor_out_pin, raw_mV, current_mA))
             set_value_float(measurements, "4-20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
+            execute_transformation(measuremnts, "4-20_{}_current".format(port_id), current_mA, port_formula)
+
             gpio_handler.set_pin_value(sensor_on_pin, 0)
             gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
         except Exception as e:
             logging.exception(e, "Error getting current sensor output: ID: {}".format(port_id))
+
+def execute_transformation(measurements, name, raw_value, transformator):
+    try:
+        transformator = transformator.replace('v', str(raw_value))
+        to_execute = "v_transformed=({})".format(transformator)
+        namespace = {}
+        exec(to_execute, namespace)
+        print("namespace: " + str(namespace))
+        set_value(measurements, name + "_formula", namespace['v_transformed'])
+    except Exception as e:
+        logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
+        pass
