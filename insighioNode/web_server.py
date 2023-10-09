@@ -192,8 +192,8 @@ class DeviceMeasurements:
                 pass
 
 
-            logging.debug("modules: {}".format(sys.modules))
-            logging.debug("globals: {}".format(globals()))
+            # logging.debug("modules: {}".format(sys.modules))
+            # logging.debug("globals: {}".format(globals()))
 
             from apps.demo_console import scenario_utils
             res = scenario_utils.get_measurements()
@@ -202,7 +202,7 @@ class DeviceMeasurements:
             # deleting it
             try:
                 import uos
-                uos.remove("/apps/demo_temp_config.py")
+                uos.rename("/apps/demo_temp_config.py", "/apps/demo_temp_config_web_config.py")
             except:
                 pass
 
