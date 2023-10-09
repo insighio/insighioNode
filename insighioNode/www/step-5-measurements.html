@@ -349,8 +349,8 @@
       addSelect("board-default-options", "input-temp-unit", "Temperature Unit")
 
       addSwitch("board-default-option-gps", "input-gps-enable", "GPS")
-      addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
-      addSwitch("address-gps", "input-gps-only-on-boot", "Get position only on boot")
+      addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix", undefined, true)
+      addSwitch("address-gps", "input-gps-only-on-boot", "Get position only on boot", undefined, true)
 
       addSelect("shield-scale-options-content", "input-i2c-1", "I²C #1")
       addSelect("shield-scale-options-content", "input-i2c-2", "I²C #2")
@@ -359,10 +359,13 @@
       addSwitch("shield-scale-options-content", "input-scale-monitoring", "[Debug] Enable Scale Sensor Monitoring")
 
       addInput('options-sdi12', 'input-gen-sdi12-warmup-time', 'Warm Up time (ms)')
-      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-1-enable", "4-20mA sensor n.1")
-      addInput("options-sdi12", "ins-esp-gen-4-20-snsr-1-formula", "  sensor n.1 formula")
-      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-2-enable", "4-20mA sensor n.2")
-      addInput("options-sdi12", "ins-esp-gen-4-20-snsr-2-formula", "  sensor n.2 formula")
+
+      addDivider("options-sdi12", "4-20mA sensing")
+      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-1-enable", "sensor n.1")
+      addInput("options-sdi12", "ins-esp-gen-4-20-snsr-1-formula", "sensor n.1 formula", "text", true)
+      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-2-enable", "sensor n.2")
+      addInput("options-sdi12", "ins-esp-gen-4-20-snsr-2-formula", "sensor n.2 formula", "text", true)
+      addDivider("options-sdi12", "Pulse Counter")
       addSwitch("options-sdi12", "ins-esp-gen-pcnt-1-enable", "Pulse Counter Enable")
       addSelect("options-sdi12", "ins-esp-gen-pcnt-1-cnt-on", "Pulse Counter Trigger")
       addInput('options-sdi12', 'ins-esp-gen-pcnt-1-multiplier', 'Pulse Counter Multiplier')
@@ -404,8 +407,8 @@
 
       setElemValue('input-gps-timeout', Cookies.get("meas-gps-timeout"), 120, false)
       setElemValue('input-gps-sat-num', Cookies.get("meas-gps-sat-num"), 4, false)
-      setElemValueBool('input-gps-no-fix-no-upload', Cookies.get("meas-gps-no-fix-no-upload",  false)
-      setElemValueBool('input-gps-only-on-boot', Cookies.get("meas-gps-only-on-boot",  false)
+      setElemValueBool('input-gps-no-fix-no-upload', strToJSValue(Cookies.get("meas-gps-no-fix-no-upload")),  false)
+      setElemValueBool('input-gps-only-on-boot', strToJSValue(Cookies.get("meas-gps-only-on-boot")),  false)
 
       for (let i = 1; i <= 10; ++i) {
         var sdi12Enabled = strToJSValue(Cookies.get("meas-sdi-" + i + "-enabled"))
