@@ -113,12 +113,26 @@ class RawWeightIdle():
         return {"raw": raw_val}, 200
 
 class Config:
+    def convert_params_to_string(self, data):
+        queryString = ""
+        try:
+            for key in data["queryParams"].keys():
+                if key in data["encodedParams"]:
+                    queryString += "{}={}&".format(key, data["encodedParams"][key])
+                else:
+                    queryString += "{}={}&".format(key, data["queryParams"][key])
+            if queryString != "":
+                queryString = queryString[0: -1]
+        except Exception as e:
+            logging.exception(e, "convert_params_to_string")
+        return queryString
+
     def post(self, data):
         print("received config data: {}".format(data))
-        logging.debug("about to save queryString: " + data["queryString"])
 
         import utils
-        utils.writeToFile("/configLog", data["queryString"])
+        logging.debug("about to save queryParams: {}".format(data["queryParams"]))
+        utils.writeToFile("/configLog", self.convert_params_to_string(data))
 
         try:
             from utils import configuration_handler
