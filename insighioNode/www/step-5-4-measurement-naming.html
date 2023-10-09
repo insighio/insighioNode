@@ -91,6 +91,13 @@
       disableNavigationButtons()
 
       storedMapping = Cookies.get("meas-name-mapping")
+      try{
+        storedMapping = decodeURIComponent(storedMapping)
+      }
+      catch(e){
+        console.log("failed decoding URI: ", storedMapping)
+      }
+
       try {
         storedMapping = JSON.parse(storedMapping)
         console.log("successfully parsed name mappings")
