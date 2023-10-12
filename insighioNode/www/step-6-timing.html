@@ -180,9 +180,9 @@
       setElemValue('input-message-buffer-size', batchBufferSize, 1)
       document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
 
-      setElemValueBool('input-ins-always-on', strToJSValue(Cookies.get("always_on_connection")), false)
-      setElemValueBool('input-ins-force-always-on', strToJSValue(Cookies.get("force_always_on_connection")), false)
-      setElemValue('input-always-on-period', Cookies.get("always_on_period"), 60)
+      setElemValueBool('input-ins-always-on', strToJSValue(Cookies.get("always-on-connection")), false)
+      setElemValueBool('input-ins-force-always-on', strToJSValue(Cookies.get("force-always-on-connection")), false)
+      setElemValue('input-always-on-period', Cookies.get("always-on-period"), 60)
 
       checkboxStatusChanged('ins-batch-upload')
       updateEstimatedTime()
