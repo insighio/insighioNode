@@ -71,6 +71,9 @@ class ModemAstronode:
         else:
             logging.info("modem configuration ok")
 
+    def get_network_date_time(self):
+        return self.modem_instance.rtc_read()
+
     def send_payload(self, payload):
         (status, message_id) = self.modem_instance.enqueue_payload(payload)
         if status == astronode.ANS_STATUS_BUFFER_FULL:
