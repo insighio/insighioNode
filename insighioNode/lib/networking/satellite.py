@@ -55,9 +55,19 @@ def update_rtc_from_network_time(modem):
             # 1514764800 -> 2018/01/01 00:00:00 # astronode base time
             #  946684800 -> 2000/01/01 00:00:00 # esp32 base time
             time_tuple = utime.gmtime(timeEpoch2018 - 946684800)
+            time_tuple = (
+                time_tuple[0],
+                time_tuple[1],
+                time_tuple[2],
+                0,
+                time_tuple[3],
+                time_tuple[4],
+                time_tuple[5],
+                0
+            )
 
         if time_tuple is not None:
-            logging.debug("Setting cellular RTC with: " + str(time_tuple))
+            logging.debug("Setting satellite RTC with: " + str(time_tuple))
 
             rtc.datetime(time_tuple)
             logging.debug("New RTC: " + str(rtc.datetime()))
