@@ -235,8 +235,8 @@ class ModemBG600(modem_base.Modem):
                 utime.sleep_ms(500)
 
             if mqtt_send_ready:
-                for i in range(0, num_of_retries):
-                    (mqtt_send_ok, lines) = self.send_at_cmd(message + '\x1a', 30000, r"\+QMTPUB:\s*\d+,\d+,[012]")
+                for i in range(0, 2):
+                    (mqtt_send_ok, lines) = self.send_at_cmd(message + '\x1a', 15000, r"\+QMTPUB:\s*\d+,\d+,[012]")
 
                     for line in lines:
                         if "1,{},0".format(message_id) in line or "1,{},1".format(message_id) in line:
