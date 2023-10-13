@@ -128,7 +128,8 @@ def executeMeasureAndUploadLoop():
             else:
                 connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, always_on)
 
-        if not connectAndUploadCompletedWithoutErrors or not always_on or not always_on_period:
+        #if not connectAndUploadCompletedWithoutErrors or not always_on or not always_on_period:
+        if not always_on or not always_on_period:
             # abort measurement while loop
             break
         else:
@@ -318,6 +319,18 @@ def notifyDisconnected(network):
 
 def executeDeviceDeinitialization():
     scenario_utils.device_deinit()
+
+    # connect to network
+    if cfg.network == "lora":
+        from apps.demo_console import lora as network
+    elif cfg.network == "wifi":
+        from apps.demo_console import wifi as network
+    elif cfg.network == "cellular":
+        from apps.demo_console import cellular as network
+    elif cfg.network == "satellite":
+        from apps.demo_console import satellite as network
+
+    network.deinit()
 
 def executeTimingConfiguration():
     if(scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") is not None):

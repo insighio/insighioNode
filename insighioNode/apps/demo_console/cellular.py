@@ -21,6 +21,9 @@ def add_value_if_valid(results, key, value, unit=None):
 def init(cfg):
     cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
+def deinit():
+    logging.info("Deactivate cellular: {}".format(cellular.deactivate()))
+
 def prepareForConnectAndUpload():
     modem_instance = cellular.get_modem_instance()
     if modem_instance is None:
@@ -187,8 +190,6 @@ def disconnect():
     if transfer_client is not None:
         transfer_client.disconnect()
         transfer_client = None
-    logging.info("Deactivate cellular: {}".format(cellular.deactivate()))
-
 
 def check_and_apply_ota(cfg):
     if transfer_client is not None:

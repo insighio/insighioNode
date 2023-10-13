@@ -13,6 +13,9 @@ mutex = _thread.allocate_lock()
 def init(cfg):
     pass
 
+def deinit():
+    logging.info("Deactivating WiFi: {}".format(wifi.deactivate()))
+
 def updateSignalQuality(cfg, measurements):
     if not cfg._MEAS_NETWORK_STAT_ENABLE:
         return
@@ -71,8 +74,6 @@ def disconnect():
         if transfer_client is not None:
             transfer_client.disconnect()
             transfer_client = None
-
-    logging.info("Deactivating WiFi: {}".format(wifi.deactivate()))
 
 
 def create_message(device_id, measurements):

@@ -90,6 +90,9 @@ class Modem:
         p0.off()
         logging.debug("Output Pin {} {}".format(self.modem_power_on, p0.value()))
 
+    def wait_for_modem_power_off(self):
+        pass
+
     def set_operator_selection(self, technology):
         (status, lines) = self.send_at_cmd("AT+COPS?")
         lines = "\n".join(lines)

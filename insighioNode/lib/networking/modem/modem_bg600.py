@@ -52,6 +52,9 @@ class ModemBG600(modem_base.Modem):
             self.send_at_cmd('ATE0')
             utime.sleep_ms(1000)
 
+    def wait_for_modem_power_off(self):
+        self.send_at_cmd('', 5000, "NORMAL POWER DOWN")
+
     def prioritizeWWAN(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == True:
             self.send_at_cmd('AT+QGPSCFG="priority",1,0')

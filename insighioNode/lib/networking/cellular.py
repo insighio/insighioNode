@@ -229,6 +229,7 @@ def deactivate():
             modemInst.disconnect()
             logging.debug('Modem deinitializing...')
             modemInst.power_off()
+            modemInst.wait_for_modem_power_off()
         # LTE().send_at_cmd('AT+CFUN=0')
         deactivation_status = True
     except Exception as e:

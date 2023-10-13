@@ -23,6 +23,9 @@ def init(cfg):
         logging.info("WiFi configuration setup result: {}".format(res))
         #satellite.get_modem_instance().modem_instance.configuration_save()
 
+def deinit():
+    pass
+
 def updateSignalQuality(cfg, measurements):
     pass
 

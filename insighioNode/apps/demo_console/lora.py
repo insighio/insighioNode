@@ -11,6 +11,9 @@ def init(cfg):
     is_connected = lora.is_connected()
     logging.info("Lora is connected: {}".format(is_connected))
 
+def deinit():
+    pass
+
 def updateSignalQuality(cfg, measurements):
     if not cfg._MEAS_NETWORK_STAT_ENABLE:
         return
