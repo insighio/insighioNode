@@ -10,7 +10,7 @@ try:
     logging.info("loaded config: [temp]")
 except Exception as e:
     try:
-        from apps.demo_console import demo_config as cfg
+        from . import demo_config as cfg
         logging.info("loaded config: [normal]")
     except Exception as e:
         cfg = type('', (), {})()
@@ -18,9 +18,9 @@ except Exception as e:
 
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
-from apps.demo_console.dictionary_utils import set_value, set_value_int, set_value_float
+from .dictionary_utils import set_value, set_value_int, set_value_float
 import ubinascii
-from apps.demo_console import message_buffer
+from . import message_buffer
 
 from machine import Pin
 import _thread
@@ -405,9 +405,9 @@ def read_accelerometer():
         logging.debug("loading network modules...")
         # connect to network
         if cfg.network == "wifi":
-            from apps.demo_console import wifi as network
+            from . import wifi as network
         elif cfg.network == "cellular":
-            from apps.demo_console import cellular as network
+            from . import cellular as network
     else:
         network = None
 

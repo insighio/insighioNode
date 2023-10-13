@@ -10,9 +10,9 @@ from . import scenario_utils
 import gc
 import utils
 from math import floor
-from apps.demo_console import message_buffer
+from . import message_buffer
 try:
-    from apps.demo_console import demo_config as cfg
+    from . import demo_config as cfg
 except Exception as e:
     cfg = type('', (), {})()
 import _thread
@@ -153,7 +153,7 @@ def executeMeasureAndUploadLoop():
 def executeGetGPSPosition(cfg, measurements, always_on):
     try:
         if scenario_utils.get_config("_MEAS_GPS_ENABLE") and (not scenario_utils.get_config("_MEAS_GPS_ONLY_ON_BOOT") or (device_info.get_reset_cause() == 0 or device_info.get_reset_cause() == 1)):
-            from apps.demo_console import cellular as network_gps
+            from . import cellular as network_gps
             network_gps.init(cfg)
 
             gps_status = network_gps.get_gps_position(cfg, measurements, always_on)
@@ -174,13 +174,13 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
     logging.debug("loading network modules...")
     # connect to network
     if cfg.network == "lora":
-        from apps.demo_console import lora as network
+        from . import lora as network
     elif cfg.network == "wifi":
-        from apps.demo_console import wifi as network
+        from . import wifi as network
     elif cfg.network == "cellular":
-        from apps.demo_console import cellular as network
+        from . import cellular as network
     elif cfg.network == "satellite":
-        from apps.demo_console import satellite as network
+        from . import satellite as network
 
     network.init(cfg)
     logging.debug("Network modules loaded")
@@ -322,13 +322,13 @@ def executeDeviceDeinitialization():
 
     # connect to network
     if cfg.network == "lora":
-        from apps.demo_console import lora as network
+        from . import lora as network
     elif cfg.network == "wifi":
-        from apps.demo_console import wifi as network
+        from . import wifi as network
     elif cfg.network == "cellular":
-        from apps.demo_console import cellular as network
+        from . import cellular as network
     elif cfg.network == "satellite":
-        from apps.demo_console import satellite as network
+        from . import satellite as network
 
     network.deinit()
 

@@ -6,7 +6,7 @@ try:
     from apps import demo_temp_config as cfg
 except Exception as e:
     try:
-        from apps.demo_console import demo_config as cfg
+        from . import demo_config as cfg
         if hasattr(cfg, '_MEAS_NAME_MAPPING'):
             _name_mapping = getattr(cfg, '_MEAS_NAME_MAPPING')
             logging.info("loaded name mapping")

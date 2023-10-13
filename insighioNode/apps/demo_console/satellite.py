@@ -2,7 +2,7 @@ import struct
 import utime
 import device_info
 import logging
-from apps.demo_console import lora_custom_encoding
+from . import lora_custom_encoding
 from networking import satellite
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 

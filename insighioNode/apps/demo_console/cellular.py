@@ -68,7 +68,7 @@ def connect(cfg):
 
     modem_instance = cellular.get_modem_instance()
 
-    logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
+    logging.debug("cellular connect modem instance is None: " + str(modem_instance is None))
     if modem_instance is None or not modem_instance.has_sim():
         return results
 
@@ -85,7 +85,7 @@ def connect(cfg):
 
     if status == cellular.MODEM_CONNECTED:
         global transfer_client
-        from apps.demo_console import transfer_protocol
+        from . import transfer_protocol
 
         # AT command based implementation of communication of Quectel BG600L
         modem_model = modem_instance.get_model()
@@ -193,5 +193,5 @@ def disconnect():
 
 def check_and_apply_ota(cfg):
     if transfer_client is not None:
-        from apps.demo_console import ota
+        from . import ota
         ota.checkAndApply(transfer_client)

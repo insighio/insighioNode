@@ -51,7 +51,7 @@ def connect(cfg):
                 cnt += 1
             logging.info("time after sync: " + str(RTC().datetime()))
 
-            from apps.demo_console import transfer_protocol
+            from . import transfer_protocol
             global transfer_client
             if cfg.protocol == 'mqtt':
                 transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
@@ -110,5 +110,5 @@ def send_control_message(cfg, message, subtopic):
 def check_and_apply_ota(cfg):
     with mutex:
         if transfer_client is not None:
-            from apps.demo_console import ota
+            from . import ota
             ota.checkAndApply(transfer_client)
