@@ -41,6 +41,7 @@ TYPE_PORE_WATER_CONDUCT = const(0x20)
 TYPE_SAP_FLOW = const(0x21)
 TYPE_HEAT_VELOCITY = const(0x22)
 TYPE_LOG_RATIO = const(0x23)
+TYPE_FORMULA = const(0x30)
 TYPE_LORA_JOIN_DUR = const(0xC1)
 TYPE_GPS_HDOP = const(0xD0)
 TYPE_GPS_LAT = const(0xD1)
@@ -177,6 +178,8 @@ def create_message(device_id, measurements):
                 binary_data += struct.pack('>BBI', TYPE_LOG_RATIO, get_location_by_key(key), round(value * 100000))
             elif key.endswith("_current"):
                 binary_data += struct.pack('>BBH', TYPE_CURRENT, get_location_by_key(key), round(value))
+            elif key.endswith("_formula"):
+                binary_data += struct.pack('>BBI', TYPE_FORMULA, get_location_by_key(key), round(value * 100000))
             elif "gen_" in key:
                 keyParts = key.split("_")
                 index = 0
