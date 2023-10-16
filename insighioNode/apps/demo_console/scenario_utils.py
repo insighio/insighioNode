@@ -128,9 +128,8 @@ def get_measurements(cfg_dummy=None):
             set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
-        shield_name = get_config("_SHIELD_NAME")
         shield_name = get_config("_SELECTED_SHIELD")
-        if (shield_name and shield_name == get_config("_CONST_SHIELD_ADVIND")) or (shield_name and shield_name == get_config("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")):
+        if shield_name is not None and (shield_name == get_config("_CONST_SHIELD_ADVIND") or shield_name == get_config("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")):
             read_pulse_counter(measurements)
             from . import scenario_advind_utils
             scenario_advind_utils.shield_measurements(measurements)
