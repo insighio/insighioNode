@@ -239,9 +239,9 @@ def measure_4_20_mA_on_port(measurements, port_id):
             current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
             current_mA = round(current_mA)
             logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(sensor_out_pin, raw_mV, current_mA))
-            set_value_float(measurements, "4-20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+            set_value_float(measurements, "4_20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
-            execute_transformation(measurements, "4-20_{}_current".format(port_id), current_mA, port_formula)
+            execute_transformation(measurements, "4_20_{}_current".format(port_id), current_mA, port_formula)
 
             gpio_handler.set_pin_value(sensor_on_pin, 0)
             gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
