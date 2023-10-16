@@ -54,7 +54,7 @@ def update_rtc_from_network_time(modem):
 
             # 1514764800 -> 2018/01/01 00:00:00 # astronode base time
             #  946684800 -> 2000/01/01 00:00:00 # esp32 base time
-            time_tuple = utime.gmtime(timeEpoch2018 - 946684800)
+            time_tuple = utime.gmtime(timeEpoch2018)# - 946684800)
             time_tuple = (
                 time_tuple[0],
                 time_tuple[1],

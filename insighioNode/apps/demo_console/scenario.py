@@ -216,7 +216,8 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
         logging.exception(e, "Exception during connection:")
 
     # update radio info
-    network.updateSignalQuality(cfg, measurements)
+    if scenario_utils.get_config("_MEAS_NETWORK_STAT_ENABLE"):
+        network.updateSignalQuality(cfg, measurements)
 
     try:
         if is_first_run:
