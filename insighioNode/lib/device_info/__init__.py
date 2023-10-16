@@ -19,8 +19,8 @@ _led_neopixel = None
 color_map = {}
 color_map['blue'] = 0x0000F0
 color_map['red'] = 0xF00000
-color_map['yellow'] = 0xFFFF00
-color_map['green'] = 0xF0F000
+color_map['yellow'] = 0xF0F000
+color_map['green'] = 0x00F000
 color_map['white'] = 0xFFFFFF
 color_map['black'] = 0x000000
 
