@@ -31,7 +31,10 @@ def set_value(measurements, key, value, unit=None):
 
 def set_value_int(measurements, key, value, unit=None):
     if value is not None:
-        set_value(measurements, get_meas_name(key), round(value), unit)
+        try:
+            set_value(measurements, get_meas_name(key), round(float(value)), unit)
+        except Exception as e:
+            logging.exception(e, "set_value_int error: [{}]".format(value))
 
 
 def set_value_float(measurements, key, value, unit=None, precision=2, multiplier=1):

@@ -1,5 +1,5 @@
 import utime
-from .dictionary_utils import set_value_float, set_value
+from .dictionary_utils import set_value_float, set_value_int, set_value
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
@@ -132,7 +132,8 @@ def read_sdi12_sensor(sdi12, address, measurements):
         parse_generic_sdi12(address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
         parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_ec", "uS/cm")  # dS/m
 
-        if cfg._MEAS_TEMP_UNIT_IS_CELSIUS:
+        cfg_is_celsius = get_config("_MEAS_TEMP_UNIT_IS_CELSIUS")
+        if cfg_is_celsius:
             responseArrayTemperature = sdi12.get_measurement(address, "C2")
             parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
         else:
@@ -211,11 +212,13 @@ def parse_sensor_licor(address, responseArray, measurements):
         set_value_float(measurements, variable_prefix + "_h", responseArray[2], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
         set_value_float(measurements, variable_prefix + "_vpd", responseArray[3], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
         set_value_float(measurements, variable_prefix + "_pa", responseArray[4], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
-        if  cfg._MEAS_TEMP_UNIT_IS_CELSIUS:
+        cfg_is_celsius = get_config("_MEAS_TEMP_UNIT_IS_CELSIUS")
+        if cfg_is_celsius:
             set_value_float(measurements, variable_prefix + "_ta", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, 2)
         else:
-            set_value_float(measurements, variable_prefix + "_ta", responseArray[5], None, 2, 9/5)
-            set_value_float(measurements, variable_prefix + "_ta", measurements[variable_prefix + "_ta"] + 32, SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, 2)
+            set_value_float(measurements, variable_prefix + "_taf", responseArray[5], None, 2, 9/5)
+            calculated_value = measurements[variable_prefix + "_taf"]["value"] + 32
+            set_value_float(measurements, variable_prefix + "_taf", calculated_value, SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, 2)
         set_value_float(measurements, variable_prefix + "_rh", responseArray[6], SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY, 2)
         set_value_int(measurements, variable_prefix + "_seq", responseArray[7], None)
         set_value_int(measurements, variable_prefix + "_diag", responseArray[8], None)
