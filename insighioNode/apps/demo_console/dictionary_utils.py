@@ -34,10 +34,10 @@ def set_value_int(measurements, key, value, unit=None):
         set_value(measurements, get_meas_name(key), round(value), unit)
 
 
-def set_value_float(measurements, key, value, unit=None, precision=2):
+def set_value_float(measurements, key, value, unit=None, precision=2, multiplier=1):
     if value is not None:
         if isinstance(value, str):
-            value = float(value)
+            value = float(value) * multiplier
         try:
             set_value(measurements, get_meas_name(key), float("%0.*f" % (precision, value)), unit)
         except Exception as e:

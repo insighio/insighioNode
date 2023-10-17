@@ -138,6 +138,10 @@ def read_sdi12_sensor(sdi12, address, measurements):
         else:
             responseArrayTemperature = sdi12.get_measurement(address, "C5")
             parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+    elif "li-cor" in manufacturer:
+        responseArray = sdi12.get_measurement(address, "M0")
+        parse_sensor_licor(address, responseArray, measurements)
+        responseArray = sdi12._send(address + 'XT!') # trigger next round of measurements
     else:
         set_value(measurements, "gen_{}_i".format(address), manufacturer, None)
         responseArrayC = sdi12.get_measurement(address, "C")
@@ -191,6 +195,30 @@ def parse_sensor_implexx(address, responseArray, measurements):
         set_value_float(measurements, variable_prefix + "_hv_inner", responseArray[2], SenmlSecondaryUnits.SENML_SEC_UNIT_CENTIMETRE_PER_HOUR)
         set_value_float(measurements, variable_prefix + "_log_rt_a_outer", responseArray[3], None, 5)
         set_value_float(measurements, variable_prefix + "_log_rt_a_inner", responseArray[4], None, 5)
+    except Exception as e:
+        logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
+
+def parse_sensor_licor(address, responseArray, measurements):
+    try:
+        if not responseArray or len(responseArray) < 5:
+            logging.error("parse_sensor_licor: unrecognized responseArray: {}".format(responseArray))
+            return
+
+        variable_prefix = "licor_" + address
+
+        set_value_float(measurements, variable_prefix + "_et", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIMETER, 3)
+        set_value_float(measurements, variable_prefix + "_le", responseArray[1], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
+        set_value_float(measurements, variable_prefix + "_h", responseArray[2], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
+        set_value_float(measurements, variable_prefix + "_vpd", responseArray[3], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
+        set_value_float(measurements, variable_prefix + "_pa", responseArray[4], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
+        if  cfg._MEAS_TEMP_UNIT_IS_CELSIUS:
+            set_value_float(measurements, variable_prefix + "_ta", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, 2)
+        else:
+            set_value_float(measurements, variable_prefix + "_ta", responseArray[5], None, 2, 9/5)
+            set_value_float(measurements, variable_prefix + "_ta", measurements[variable_prefix + "_ta"] + 32, SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, 2)
+        set_value_float(measurements, variable_prefix + "_rh", responseArray[6], SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY, 2)
+        set_value_int(measurements, variable_prefix + "_seq", responseArray[7], None)
+        set_value_int(measurements, variable_prefix + "_diag", responseArray[8], None)
     except Exception as e:
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
