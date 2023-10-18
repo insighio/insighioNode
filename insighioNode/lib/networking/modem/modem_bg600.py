@@ -57,15 +57,17 @@ class ModemBG600(modem_base.Modem):
 
     def prioritizeWWAN(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == True:
+            self.reset_uart()
             self.send_at_cmd('AT+QGPSCFG="priority",1,0')
             self._last_prioritization_is_gnss = False
-            utime.sleep_ms(500)
+            utime.sleep_ms(1000)
 
     def prioritizeGNSS(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == False:
+            self.reset_uart()
             self.send_at_cmd('AT+QGPSCFG="priority",0,0')
             self._last_prioritization_is_gnss = True
-            utime.sleep_ms(500)
+            utime.sleep_ms(1000)
 
     def connect(self, timeoutms=30000):
         for i in range(0, 5):
@@ -487,3 +489,101 @@ class ModemBG600(modem_base.Modem):
         #     response = lines[1]
         (file_downloaded, _) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
         return file_downloaded
+
+    def coap_connect(self, server_ip, server_port):
+        (context_activated, _) = self.send_at_cmd('AT+QCOAPCFG="pdpcid",1,1')
+        if not context_activated:
+            return False
+
+        #Configure retransmission settings for CoAP client 0. (The ACK
+        #timeout is 4 seconds and the maximum retransmission count is 5.)
+        self.send_at_cmd('AT+QCOAPCFG="trans",1,4,5')
+
+        max_retries = 3
+        retry = 0
+        while retry < max_retries:
+            retry += 1
+            (coap_is_opening, lines) = self.send_at_cmd('AT+QCOAPOPEN=1,"' + server_ip + '",' + str(server_port), 15000, r"\+QCOAPOPEN:\s+1.*,1")
+            if coap_is_opening:
+                break
+            utime.sleep_ms(1000)
+
+        while retry < max_retries:
+            retry += 1
+            coap_opened = self.coap_is_connected()
+            if coap_opened:
+                return True
+            utime.sleep_ms(1000)
+
+
+        return False
+
+    def coap_is_connected(self):
+         (coap_ready, lines) = self.send_at_cmd('AT+QCOAPOPEN?')
+
+         if not coap_ready:
+             return False
+
+         regex = r"\+QCOAPOPEN:\s+1.*,3"
+         for line in lines:
+             match_res = ure.search(regex, line)
+             if match_res is not None:
+                 return True
+
+         return False
+
+    def coap_setup_options(self, host, data_uri, token):
+        modem.send_at_cmd('AT+QCOAPOPTION=1,1,0')
+        modem.send_at_cmd('AT+QCOAPOPTION=1,0,0,3,"{}"'.format(host)) # set Uri-Host
+        modem.send_at_cmd('AT+QCOAPOPTION=1,1,1')
+        modem.send_at_cmd('AT+QCOAPOPTION=1,0,1,11,"{}"'.format(data_uri)) # set Uri-Host
+        modem.send_at_cmd('AT+QCOAPOPTION=1,1,2')
+        modem.send_at_cmd('AT+QCOAPOPTION=1,0,2,12,50') # set JSON
+        modem.send_at_cmd('AT+QCOAPOPTION=1,1,3')
+        modem.send_at_cmd('AT+QCOAPOPTION=1,0,3,15,"authorization={}"'.format(token)) # set authorization token
+
+    def coap_publish(self, uri, payload, num_of_retries=3, confirmable=False):
+        coap_send_ready = False
+        coap_send_ok = False
+
+        message_sent = False
+        general_retry_num = 0
+        import random
+        logging.debug("mqtt_publish: qos: {}".format(qos))
+#        message_id = (int(random.random() * 65530) + 1) if qos else 0
+        confirmable_id = "0" if confirmable else "1"
+
+        self.send_at_cmd('AT+QCOAPHEADER=1,{},1'.format(message_id), 15000)
+
+        send_success_regex = r"\+QCOAPACK:\s*1,\d+,\d+,0"
+
+        while not message_sent and general_retry_num < num_of_retries:
+            for i in range(0, num_of_retries):
+                (coap_send_ready, _) = self.send_at_cmd('AT+QCOAPSEND=1,{},2,15'.format(confirmable_id), 15000, '>.*')
+                if coap_send_ready:
+                    break
+                logging.error("CoAP not ready to send")
+                utime.sleep_ms(500)
+
+            if coap_send_ready:
+                for i in range(0, 2):
+                    (coap_send_ok, lines) = self.send_at_cmd(message + '\x1a', 15000, r"\+QCOAPACK:\s*\d+,\d+,\d+,\d+")
+
+                    for line in lines:
+                        if ure.search(send_success_regex, line) is not None:
+                            message_sent = True
+                            break
+
+                    if coap_send_ok :
+                        break
+                    logging.error("CoAP publish failed")
+                    utime.sleep_ms(500)
+            if message_sent:
+                break
+
+            general_retry_num += 1
+        return coap_send_ready and coap_send_ok and message_sent
+
+    def coap_disconnect(self):
+        (status, _) = self.send_at_cmd("AT+QCOAPCLOSE=1", 20000, r"\+QCOAPCLOSE:.*")
+        return status
