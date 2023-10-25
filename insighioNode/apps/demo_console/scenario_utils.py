@@ -121,7 +121,7 @@ def get_measurements(cfg_dummy=None):
         if get_config("_MEAS_BOARD_SENSE_ENABLE"):
             if cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._CONST_SENSOR_SI7021:
                 from sensors import si7021 as sens
-            elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._UC_INTERNAL_TEMP_HUM_SENSOR:
+            elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._CONST_SENSOR_SHT40:
                 from sensors import sht40 as sens
 
             (board_temp, board_humidity) = sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)

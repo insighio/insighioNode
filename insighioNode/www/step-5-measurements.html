@@ -522,7 +522,8 @@
       Cookies.set('system-enable-ota', boolElemToPyStr('input-ota'))
       Cookies.set('meas-gps-enabled', boolElemToPyStr('input-gps-enable'))
 
-      Cookies.set('meas-temp-unit', boolElemToPyStr('input-temp-unit', 'value'))
+      console.log("document.getElementById('input-gps-timeout').value: ", document.getElementById('input-temp-unit').value)
+      Cookies.set('meas-temp-unit', document.getElementById('input-temp-unit').value === "false" ? "False" : "True")
 
       Cookies.set('meas-gps-timeout', document.getElementById('input-gps-timeout').value)
       Cookies.set('meas-gps-sat-num', document.getElementById('input-gps-sat-num').value)

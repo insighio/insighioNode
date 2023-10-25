@@ -295,20 +295,22 @@ def executeDeviceStatisticsUpload(cfg, network):
         logging.info("Skipping platform info.")
 
     logging.info("Uploading device statistics.")
-    network.send_control_message(cfg, network.create_message(None, stats), "/stat")
+    return network.send_control_message(cfg, network.create_message(None, stats), "/stat")
 
 def executeDeviceConfigurationUpload(cfg, network):
     # check for configuration pending for upload
     configUploadFileContent = utils.readFromFile("/configLog")
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
-        network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
-        utils.deleteFile("/configLog")
+        message_sent = network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
+        if message_sent:
+            utils.deleteFile("/configLog")
 
         # whenever a new config log is uplaoded, upload also statistics for the device
     if configUploadFileContent or utils.existsFile('/ota_applied_flag'):
-        executeDeviceStatisticsUpload(cfg, network)
-        utils.deleteFile('/ota_applied_flag')
+        message_sent = executeDeviceStatisticsUpload(cfg, network)
+        if message_sent:
+            utils.deleteFile('/ota_applied_flag')
 
 def notifyConnected(network):
     #network.send_control_message(cfg, '{"mac":"' + cfg.device_id + '","connected":true}', "/connStat")
