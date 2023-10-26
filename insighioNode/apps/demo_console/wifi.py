@@ -21,7 +21,7 @@ def updateSignalQuality(cfg, measurements):
         return
     pass
 
-def connect(cfg):
+def connect(cfg, explicit_protocol=None):
     with mutex:
         (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True)
         results = {}
@@ -51,10 +51,17 @@ def connect(cfg):
                 cnt += 1
             logging.info("time after sync: " + str(RTC().datetime()))
 
+            requested_protocol = explicit_protocol if explicit_protocol is not None else cfg.protocol
+            logging.debug("Protocol: config: {}, explicit: {}, selected: {}".format(cfg.protocol, explicit_protocol, requested_protocol))
+
             from . import transfer_protocol
             global transfer_client
-            if cfg.protocol == 'mqtt':
+            if requested_protocol == 'mqtt':
                 transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
+                transferClientStatus = transfer_client.connect()
+                results["status"]["value"] = results["status"]["value"] and transferClientStatus
+            elif requested_protocol == 'coap':
+                transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
             else:
