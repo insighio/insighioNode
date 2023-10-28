@@ -25,3 +25,6 @@
 [submodule "lib-external/micropython-esp32-ulp-ins"]
 	path = lib-external/micropython-esp32-ulp-ins
 	url = https://github.com/insighio/micropython-esp32-ulp.git
+[submodule "lib-external/micropython-esp32-ulp"]
+	path = lib-external/micropython-esp32-ulp
+	url = https://github.com/micropython/micropython-esp32-ulp.git
