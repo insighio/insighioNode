@@ -1,10 +1,9 @@
 from math import floor
 import machine
-
+#
 source_pcnt_high_freq = """\
 
 #define DR_REG_RTCIO_BASE            0x60008400
-#define DR_REG_SENS_BASE             0x60008800
 #define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
 #define RTC_GPIO_IN_NEXT_S           10
 
@@ -36,6 +35,7 @@ entry:
 	and r3, r3, 1
 	jump edge_detected, eq
 	/* End program */
+    SLEEP 100
 	jump entry
 
 	.global edge_detected
@@ -51,8 +51,11 @@ edge_detected:
 	ld r2, r3, 0
 	add r2, r2, 1
 	st r2, r3, 0
+    /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
     ld r0, r3, 0
     jumpr loop_detected, 0, EQ
+
+    SLEEP 100
 	jump entry
 
     .global loop_detected
@@ -61,13 +64,14 @@ loop_detected:
     ld r2, r3, 0
     add r2, r2, 1
 	st r2, r3, 0
+
+    SLEEP 100
     jump entry
 """
 #
 # source_pcnt_low_freq = """\
 #
 # #define DR_REG_RTCIO_BASE            0x60008400
-# #define DR_REG_SENS_BASE             0x60008800
 # #define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
 # #define RTC_GPIO_IN_NEXT_S           10
 #
@@ -75,6 +79,7 @@ loop_detected:
 #
 # next_edge: .long 0
 # edge_count: .long 0
+# edge_count_loops: .long 0
 # debounce_counter: .long 1
 # debounce_max_count: .long 1
 # io_number: .long 4
@@ -121,7 +126,7 @@ load_addr, entry_addr = 0, 6*4
 ULP_MEM_BASE = 0x50000000
 ULP_DATA_MASK = 0xffff  # ULP data is only in lower 16 bits
 _SLEEP_TIME = 10000
-_PER_SEC = 2 * _SLEEP_TIME // 1000
+_PER_SEC = 2 * (_SLEEP_TIME + 800 ) // 1000
 
 def init_ulp():
     from esp32 import ULP
@@ -134,7 +139,7 @@ def init_ulp():
 
     init_gpio(4, ulp)
     ulp.set_wakeup_period(0, 0)  # use timer0, wakeup after 50.000 cycles
-    #ulp.set_wakeup_period(0, 1000) # for low frequency pulses ?? 
+    #ulp.set_wakeup_period(0, 1000) # for low frequency pulses ??
 
     ulp.run(entry_addr)
 #    logging.info("ULP Started")
