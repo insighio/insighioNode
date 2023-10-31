@@ -163,8 +163,8 @@ def connect(cfg):
                         modemInst.connect()
 
                     if modemInst.is_connected():
-                        modemInst.force_time_update()
-                        update_rtc_from_network_time(modemInst)
+                        # modemInst.force_time_update()
+                        # update_rtc_from_network_time(modemInst)
                         status = MODEM_CONNECTED
                         connection_duration = utime.ticks_ms() - start_connection_duration
                         logging.debug('Modem connected')
