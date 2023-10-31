@@ -2,6 +2,7 @@ import sys
 import device_info
 import utime
 import logging
+import utils
 
 import gc
 
@@ -210,7 +211,11 @@ def update_rtc_from_network_time(modem):
         if time_tuple is not None:
             logging.debug("Setting cellular RTC with: " + str(time_tuple))
 
+            epoch_before = utime.time()
             rtc.datetime(time_tuple)
+            epoch_diff = utime.time() - epoch_before
+            utils.writeToFile("/epoch_diff", "{}".format(epoch_diff))
+
             logging.debug("New RTC: " + str(rtc.datetime()))
     except Exception as e:
         logging.exception(e, "RTC init failed")
