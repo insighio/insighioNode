@@ -449,7 +449,7 @@
       setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(Cookies.get("meas-pcnt-1-enable")), false)
       //setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(Cookies.get("meas-pcnt-1-cnt-on-rising")) ? "rising" : "falling", "rising")
       setElemValue('ins-esp-gen-pcnt-1-formula', Cookies.get("meas-pcnt-1-formula"), "v")
-      setElemValue('ins-esp-gen-pcnt-1-high-freq', Cookies.get("meas-pcnt-1-high-freq"), true)
+      setElemValueBool('ins-esp-gen-pcnt-1-high-freq', strToJSValue(Cookies.get("meas-pcnt-1-high-freq")), true)
 
       setElemValueBool('input-store-meas-if-failed-conn', strToJSValue(Cookies.get("store-meas-if-failed-conn")), false)
 
