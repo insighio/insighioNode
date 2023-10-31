@@ -1,142 +1,246 @@
-import machine, time
-import esp32
-import uio, ure, utime
-import sys
-from esp32 import ULP
-from machine import Pin, mem32, ADC
-from esp32_ulp import src_to_binary
+from math import floor
+import machine
+import utils
+import utime
 import logging
+from external.kpn_senml.senml_unit import SenmlUnits
+from .dictionary_utils import set_value, set_value_int
+#
 
-#the ulp source code is ULP pulse counter working on pin 0, improved copy of code from here https://esp32.com/viewtopic.php?t=13638
-voltage1 = ""
-source = """\
-#define DR_REG_RTCIO_BASE            0x3ff48400
-#define RTC_IO_TOUCH_PAD0_REG        (DR_REG_RTCIO_BASE + 0x94)
-#define RTC_IO_TOUCH_PAD0_MUX_SEL_M  (BIT(19))
-#define RTC_IO_TOUCH_PAD0_FUN_IE_M   (BIT(13))
+def get_high_freq_pcnt_assembly(port_number):
+    return """\
+
+#define DR_REG_RTCIO_BASE            0x60008400
 #define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
-#define RTC_GPIO_IN_NEXT_S           14
+#define RTC_GPIO_IN_NEXT_S           10
 
-  /* Define variables, which go into .bss section (zero-initialized data)
-  .bss*/
+  /* Define variables, which go into .bss section (zero-initialized data) */
 
-  /* Next input signal edge expected: 0 (negative) or 1 (positive) */
-  .global next_edge
-next_edge:
-  .long 0
+next_edge: .long 0
+edge_count: .long 0
+edge_count_loops: .long 0
+debounce_counter: .long 1
+debounce_max_count: .long 1
+io_number: .long {}
 
-  /* Total number of signal edges acquired */
-  .global edge_count
-edge_count:
-  .long 0
-
-  /* RTC IO number used to sample the input signal. Set by main program. */
-  .global io_number
-io_number:
-  .long 10
-
-  /* Code goes into .text section */
-  .text
-  .global entry
+	/* Code goes into .text section */
+	.text
+	.global entry
 entry:
-  # connect GPIO to the RTC subsystem so the ULP can read it
-  WRITE_RTC_REG(RTC_IO_TOUCH_PAD0_REG, RTC_IO_TOUCH_PAD0_MUX_SEL_M, 1, 1)
+	/* Load io_number */
+	move r3, io_number
+	ld r3, r3, 0
 
-  # switch the GPIO into input mode
-  WRITE_RTC_REG(RTC_IO_TOUCH_PAD0_REG, RTC_IO_TOUCH_PAD0_FUN_IE_M, 1, 1)
-  /* Load io_number */
-  move r3, io_number
-  ld r3, r3, 0
+	/* Read the value of lower 16 RTC IOs into R0 */
+	READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
+	rsh r0, r0, r3
+	and r0, r0, 1
+	/* State of input changed? */
+	move r3, next_edge
+	ld r3, r3, 0
+	add r3, r0, r3
+	and r3, r3, 1
+	jump edge_detected, eq
+	/* End program */
+    SLEEP 100
+	jump entry
 
-  /* Lower 16 IOs and higher need to be handled separately,
-   * because r0-r3 registers are 16 bit wide.
-   * Check which IO this is.
-   */
-  move r0, r3
-  jumpr read_io_high, 16, ge
-
-  /* Read the value of lower 16 RTC IOs into R0 */
-  READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
-  rsh r0, r0, r3
-  jump read_done
-
-  /* Read the value of RTC IOs 16-17, into R0 */
-read_io_high:
-  READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + 16, 2)
-  sub r3, r3, 16
-  rsh r0, r0, r3
-
-read_done:
-  and r0, r0, 1
-  /* State of input changed? */
-  move r3, next_edge
-  ld r3, r3, 0
-  add r3, r0, r3
-  and r3, r3, 1
-  jump edge_detected, eq
-  /* Not changed */
-  jump entry
-
-  .global edge_detected
+	.global edge_detected
 edge_detected:
-  /* Flip next_edge */
-  move r3, next_edge
-  ld r2, r3, 0
-  add r2, r2, 1
-  and r2, r2, 1
-  st r2, r3, 0
-  /* Increment edge_count */
-  move r3, edge_count
-  ld r2, r3, 0
-  add r2, r2, 1
-  st r2, r3, 0
-  halt
-"""
+	/* Flip next_edge */
+	move r3, next_edge
+	ld r2, r3, 0
+	add r2, r2, 1
+	and r2, r2, 1
+	st r2, r3, 0
+	/* Increment edge_count */
+	move r3, edge_count
+	ld r2, r3, 0
+	add r2, r2, 1
+	st r2, r3, 0
+    /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
+    ld r0, r3, 0
+    jumpr loop_detected, 0, EQ
 
-load_addr, entry_addr = 0, 3*4
+    SLEEP 100
+	jump entry
+
+    .global loop_detected
+loop_detected:
+    move r3, edge_count_loops
+    ld r2, r3, 0
+    add r2, r2, 1
+	st r2, r3, 0
+
+    SLEEP 100
+    jump entry
+""".format(port_number)
+
+def get_low_freq_pcnt_assembly(port_number):
+    return """\
+
+#define DR_REG_RTCIO_BASE            0x60008400
+#define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
+#define RTC_GPIO_IN_NEXT_S           10
+
+  /* Define variables, which go into .bss section (zero-initialized data) */
+
+next_edge: .long 0
+edge_count: .long 0
+edge_count_loops: .long 0
+debounce_counter: .long 1
+debounce_max_count: .long 1
+io_number: .long {}
+
+	/* Code goes into .text section */
+	.text
+	.global entry
+entry:
+	/* Load io_number */
+	move r3, io_number
+	ld r3, r3, 0
+
+	/* Read the value of lower 16 RTC IOs into R0 */
+	READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
+	rsh r0, r0, r3
+	and r0, r0, 1
+	/* State of input changed? */
+	move r3, next_edge
+	ld r3, r3, 0
+	add r3, r0, r3
+	and r3, r3, 1
+	jump edge_detected, eq
+	/* End program */
+	halt
+
+	.global edge_detected
+edge_detected:
+	/* Flip next_edge */
+	move r3, next_edge
+	ld r2, r3, 0
+	add r2, r2, 1
+	and r2, r2, 1
+	st r2, r3, 0
+	/* Increment edge_count */
+	move r3, edge_count
+	ld r2, r3, 0
+	add r2, r2, 1
+	st r2, r3, 0
+	halt
+""".format(port_number)
+
 ULP_MEM_BASE = 0x50000000
 ULP_DATA_MASK = 0xffff  # ULP data is only in lower 16 bits
+TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
+
+def init_ulp(port_number, is_high_freq):
+    from esp32 import ULP
+    from external.esp32_ulp import src_to_binary
+
+    logging.info("Starting ULP for pulse counting...")
+
+    load_addr, entry_addr = 0, 6*4
+
+    script_to_run = get_high_freq_pcnt_assembly(port_number) if is_high_freq else get_low_freq_pcnt_assembly(port_number)
+    binary = src_to_binary(script_to_run, cpu="esp32s3")
+    ulp = ULP()
+
+    ulp.load_binary(load_addr, binary)
+
+    init_gpio(port_number, ulp)
+    ulp.set_wakeup_period(0, 0 if is_high_freq else 1000)
+
+    ulp.run(entry_addr)
+    logging.info("Pulse counting read")
+
+def init_gpio(gpio_num, ulp=None):
+    logging.info("Setting up ULP GPIO")
+    from esp32 import ULP
+    ulp = ULP()
+    ulp.init_gpio(gpio_num)
 
 def value(start=0):
     """
     Function to read variable from ULP memory
     """
-    val = (int(hex(mem32[ULP_MEM_BASE + start*4] & ULP_DATA_MASK),16))
-    logging.info("Reading value: " + str(val))
+    val = (int(hex(machine.mem32[ULP_MEM_BASE + start*4] & ULP_DATA_MASK),16))
     return val
 
-def init_ulp():
-    binary = src_to_binary(source)
-    ulp = ULP()
-    ulp.set_wakeup_period(0, 50000)  # use timer0, wakeup after 50.000 cycles
-    ulp.load_binary(load_addr, binary)
-    ulp.run(entry_addr)
-    logging.info("ULP Started")
-
-def setval(start=1, value=0x0):
+def setval(start=0, value=0x0):
     """
     Function to set variable in ULP memory
     """
-    mem32[ULP_MEM_BASE + start*4] = value
+    machine.mem32[ULP_MEM_BASE + start*4] = value
 
-def read_ulp_values():
-    pulses = value(1)
-    logging.info("pulses: {}".format(pulses))
-    #message[setting.channel] = pulses/2*setting.multiplier
-    setval(1,0x0)
+def read_ulp_values(measurements, formula):
+    logging.info("Reading pulse couters from ULP...")
 
-    # except Exception as e:
-    #     log("Exception:\n")
-    #     sys.print_exception(e, logfile)
-    #     logfile.flush()
-    #     setval(1, pulses + value(1))
-    #     machine.deepsleep(15*60*1000)
+    last_state = value(0)
+    #read registers
+    edge_cnt_16bit = value(1)
+    loops = value(2)
+
+    #read last pcnt saved timestamp
+    last_timestamp = utils.readFromFile(TIMESTAMP_FLAG_FILE)
+    now_timestamp = utime.time()
+
+    logging.debug("last_timestamp: {}, now_timestamp: {}".format(last_timestamp, now_timestamp))
+
+    #reset registers
+    setval(1, 0x0)
+    setval(2, 0x0)
+
+    utils.writeToFile(TIMESTAMP_FLAG_FILE, "{}".format(now_timestamp))
+
+    #execute calculcations
+
+    time_diff_from_prev = -1
+    try:
+        logging.debug("ULP timing: now_timestamp: {}, last_timestamp: {}".format(now_timestamp, last_timestamp))
+        time_diff_from_prev = now_timestamp - int(last_timestamp)
+        if time_diff_from_prev < 0:
+            time_diff_from_prev = -1
+        elif time_diff_from_prev > 86400: #if bigger than one day
+            # check if epoch_diff is stored
+            epoch_diff = utils.readFromFile("/epoch_diff")
+            logging.debug("reading epoch diff: {}".format(epoch_diff))
+            if epoch_diff:
+                epoch_diff = int(epoch_diff)
+                time_diff_from_prev -= epoch_diff
+                logging.debug("new time diff: {}".format(time_diff_from_prev))
+
+                if time_diff_from_prev > 86400: #if STILL bigger than one day
+                    time_diff_from_prev = -1
+            else:
+                time_diff_from_prev = -1
+    except:
+        pass
+
+    if time_diff_from_prev == -1:
+        logging.info("Pulse counting: no period detected, waiting for next measurmeent period")
+        return
+
+    edge_cnt = (65536*loops + edge_cnt_16bit)
+
+    set_value_int(measurements, "pcnt_count", edge_cnt // 2, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_int(measurements, "pcnt_edge_count", edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_int(measurements, "pcnt_period_s", time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
+
+    if formula and formula != "v":
+        try:
+            raw_value = edge_cnt // 2
+            formula = formula.replace('v', str(raw_value))
+            to_execute = "v_transformed=({})".format(formula)
+            namespace = {}
+            exec(to_execute, namespace)
+            set_value(measurements, "pcnt_count_formula", namespace['v_transformed'])
+        except Exception as e:
+            logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
 
 
-def start():
+def execute(measurements, port_number, is_high_freq, formula):
     if machine.reset_cause()==machine.PWRON_RESET or machine.reset_cause()==machine.HARD_RESET or machine.reset_cause()==machine.SOFT_RESET:
-        init_ulp()
-        setval(1,0x0)
-    read_ulp_values()
-    logging.info("about to sleep for 1 minute")
-    machine.deepsleep(60000)
+        init_ulp(port_number, is_high_freq)
+    else:
+        init_gpio(port_number)
+    read_ulp_values(measurements, formula)

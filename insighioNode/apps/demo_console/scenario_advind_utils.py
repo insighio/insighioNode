@@ -75,6 +75,10 @@ def shield_measurements(measurements):
     if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
         sensors.set_sensor_power_on(cfg._UC_IO_SNSR_REG_ON)
 
+    # get pulse counter measurements
+    read_pulse_counter(measurements)
+
+    # get SDI12 measurements
     utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
 
     from external.microsdi12.microsdi12 import SDI12
@@ -94,6 +98,7 @@ def shield_measurements(measurements):
     if sdi12:
         sdi12.close()
 
+    # get 4-20mA measurements
     try:
         current_sense_4_20mA(measurements)
     except Exception as e:
@@ -290,3 +295,12 @@ def execute_transformation(measurements, name, raw_value, transformator):
     except Exception as e:
         logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass
+
+def read_pulse_counter(measurements):
+    if get_config("_PCNT_1_ENABLE"):
+        from . import scenario_pcnt_ulp
+        scenario_pcnt_ulp.execute(measurements, get_config("UC_IO_DGTL_SNSR_READ"), get_config("_PCNT_1_HIGH_FREQ"), get_config("_PCNT_1_FORMULA"))
+    else:
+        import utils
+        TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
+        utils.deleteFile(TIMESTAMP_FLAG_FILE)

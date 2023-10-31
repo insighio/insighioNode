@@ -34,23 +34,6 @@ def connect(cfg, explicit_protocol=None):
             results["wifi_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": wifiRssi}
 
         if connOk:
-            import ntptime
-            from machine import RTC
-            logging.info("time before sync: " + str(RTC().datetime()))
-            ntptime.host = "pool.ntp.org"
-            cnt = 0
-            max_tries = 5
-            while cnt < max_tries:
-                try:
-                    ntptime.settime()
-                    logging.info("time set")
-                    break
-                except:
-                    logging.info("time failed")
-                    pass
-                cnt += 1
-            logging.info("time after sync: " + str(RTC().datetime()))
-
             requested_protocol = explicit_protocol if explicit_protocol is not None else cfg.protocol
             logging.debug("Protocol: config: {}, explicit: {}, selected: {}".format(cfg.protocol, explicit_protocol, requested_protocol))
 

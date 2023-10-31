@@ -42,5 +42,5 @@ _4_20_SNSR_1_FORMULA = "<meas-4-20-snsr-1-formula>"
 _4_20_SNSR_2_FORMULA = "<meas-4-20-snsr-2-formula>"
 
 _PCNT_1_ENABLE = <meas-pcnt-1-enable>
-_PCNT_1_COUNT_ON_RISING = <meas-pcnt-1-cnt-on-rising>
-_PCNT_1_MULTIPLIER = <meas-pcnt-1-multiplier>
+_PCNT_1_FORMULA = "<meas-pcnt-1-formula>"
+_PCNT_1_HIGH_FREQ = <meas-pcnt-1-high-freq>

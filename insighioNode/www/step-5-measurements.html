@@ -315,10 +315,10 @@
       "analog": "generic analog"
     }
 
-    const pcnt_trigger = {
-      "rising": "Count on Rising",
-      "falling": "Count on Falling"
-    }
+    // const pcnt_trigger = {
+    //   "rising": "Count on Rising",
+    //   "falling": "Count on Falling"
+    // }
 
     const temperature_unit = {
       "true": "Celsius (°C)",
@@ -367,8 +367,9 @@
       addInput("options-sdi12", "ins-esp-gen-4-20-snsr-2-formula", "sensor n.2 formula", "text", true)
       addDivider("options-sdi12", "Pulse Counter")
       addSwitch("options-sdi12", "ins-esp-gen-pcnt-1-enable", "Pulse Counter Enable")
-      addSelect("options-sdi12", "ins-esp-gen-pcnt-1-cnt-on", "Pulse Counter Trigger")
-      addInput('options-sdi12', 'ins-esp-gen-pcnt-1-multiplier', 'Pulse Counter Multiplier')
+      //addSelect("options-sdi12", "ins-esp-gen-pcnt-1-cnt-on", "Pulse Counter Trigger")
+      addSwitch("options-sdi12", "ins-esp-gen-pcnt-1-high-freq", "High Frequency", undefined, true)
+      addInput('options-sdi12', 'ins-esp-gen-pcnt-1-formula', 'Pulse Counter Formula', "text", true)
       //addIn
 
       generateOptions("input-i2c-1", i2cOptions)
@@ -380,7 +381,7 @@
       generateOptions("input-s1-sensor-a-d-p2", adcOptions)
       generateOptions("input-s1-sensor-a-d-p3", adcOptions)
 
-      generateOptions("ins-esp-gen-pcnt-1-cnt-on", pcnt_trigger)
+      // generateOptions("ins-esp-gen-pcnt-1-cnt-on", pcnt_trigger)
       generateOptions("input-temp-unit", temperature_unit)
 
       generateSdi12Options()
@@ -446,8 +447,9 @@
       setElemValue("ins-esp-gen-4-20-snsr-1-formula", Cookies.get("meas-4-20-snsr-1-formula"), "v")
       setElemValue("ins-esp-gen-4-20-snsr-2-formula", Cookies.get("meas-4-20-snsr-2-formula"), "v")
       setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(Cookies.get("meas-pcnt-1-enable")), false)
-      setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(Cookies.get("meas-pcnt-1-cnt-on-rising")) ? "rising" : "falling", "rising")
-      setElemValue('ins-esp-gen-pcnt-1-multiplier', Cookies.get("meas-pcnt-1-multiplier"), 1)
+      //setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(Cookies.get("meas-pcnt-1-cnt-on-rising")) ? "rising" : "falling", "rising")
+      setElemValue('ins-esp-gen-pcnt-1-formula', Cookies.get("meas-pcnt-1-formula"), "v")
+      setElemValueBool('ins-esp-gen-pcnt-1-high-freq', strToJSValue(Cookies.get("meas-pcnt-1-high-freq")), true)
 
       setElemValueBool('input-store-meas-if-failed-conn', strToJSValue(Cookies.get("store-meas-if-failed-conn")), false)
 
@@ -491,7 +493,8 @@
       Cookies.remove('meas-scale-monitoring-enabled')
       Cookies.remove('meas-pcnt-1-enable')
       Cookies.remove('meas-pcnt-1-cnt-on-rising')
-      Cookies.remove('meas-pcnt-1-multiplier')
+      Cookies.remove('meas-pcnt-1-formula')
+      Cookies.remove('meas-pcnt-1-high-freq')
 
       for (let i = 1; i < 11; ++i) {
         Cookies.remove('meas-sdi-' + i + '-enabled')
@@ -549,8 +552,9 @@
         Cookies.set('meas-sdi-warmup-time', document.getElementById('input-gen-sdi12-warmup-time').value)
 
         Cookies.set('meas-pcnt-1-enable', boolElemToPyStr('ins-esp-gen-pcnt-1-enable'))
-        Cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
-        Cookies.set('meas-pcnt-1-multiplier', document.getElementById('ins-esp-gen-pcnt-1-multiplier').value)
+        ///Cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
+        Cookies.set('meas-pcnt-1-formula', document.getElementById('ins-esp-gen-pcnt-1-formula').value)
+        Cookies.set('meas-pcnt-1-high-freq', boolElemToPyStr('ins-esp-gen-pcnt-1-high-freq'))
 
         redirectoToMeasurementNaming()
       }

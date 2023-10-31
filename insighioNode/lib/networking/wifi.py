@@ -1,7 +1,7 @@
 #from network import WLAN
 import network
+from machine import RTC
 import utime
-import machine
 import logging
 import device_info
 
@@ -108,14 +108,26 @@ def deactivate():
 
 
 def update_time_ntp():
-    # adjust time
-    try:
-        rtc = machine.RTC()
-        rtc.ntp_sync("pool.ntp.org")
-        utime.sleep_ms(3000)
-        logging.debug('\nRTC Set from NTP to UTC:', rtc.now())
-    except Exception as e:
-        logging.exception(e, 'Error calling ntp_sync')
+    import ntptime
+    import utils
+    rtc = RTC()
+
+    logging.info("time before sync: " + str(rtc.datetime()))
+    ntptime.host = "pool.ntp.org"
+    cnt = 0
+    max_tries = 5
+    while cnt < max_tries:
+        try:
+            epoch_before = utime.time()
+            ntptime.settime()
+            logging.info("time set")
+            break
+        except:
+            logging.info("time failed")
+        cnt += 1
+    epoch_diff = utime.time() - epoch_before
+    utils.writeToFile("/epoch_diff", "{}".format(epoch_diff))
+    logging.info("time after sync: " + str(rtc.datetime()))
 
 def getSignalQuality():
     return network.WLAN(network.STA_IF).status('rssi')
