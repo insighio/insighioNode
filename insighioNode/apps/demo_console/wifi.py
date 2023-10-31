@@ -36,7 +36,9 @@ def connect(cfg, explicit_protocol=None):
         if connOk:
             import ntptime
             from machine import RTC
-            logging.info("time before sync: " + str(RTC().datetime()))
+            rtc = RTC()
+            epoch_now = utime.time()
+            logging.info("time before sync: " + str(rtc.datetime()))
             ntptime.host = "pool.ntp.org"
             cnt = 0
             max_tries = 5
@@ -49,7 +51,10 @@ def connect(cfg, explicit_protocol=None):
                     logging.info("time failed")
                     pass
                 cnt += 1
-            logging.info("time after sync: " + str(RTC().datetime()))
+            epoch_diff = utime.time() - epoch_now
+            results["epoch_diff"] = epoch_diff
+
+            logging.info("time after sync: " + str(rtc.datetime()))
 
             requested_protocol = explicit_protocol if explicit_protocol is not None else cfg.protocol
             logging.debug("Protocol: config: {}, explicit: {}, selected: {}".format(cfg.protocol, explicit_protocol, requested_protocol))

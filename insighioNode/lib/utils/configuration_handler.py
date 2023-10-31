@@ -146,7 +146,8 @@ configDict = {
 "_MEAS_SCALE_MONITORING_ENABLED": "meas_scale_monitoring_enabled",
 '_PCNT_1_ENABLE': "meas_pcnt_1_enable",
 '_PCNT_1_COUNT_ON_RISING': "meas_pcnt_1_cnt_on_rising",
-'_PCNT_1_MULTIPLIER': "meas_pcnt_1_multiplier",
+'_PCNT_1_HIGH_FREQ': "meas_pcnt_1_high_freq",
+'_PCNT_1_FORMULA': "meas_pcnt_1_formula",
 '_WIFI_SSID': 'wifi_ssid',
 '_WIFI_PASS': 'wifi_pass',
 '_SELECTED_SHIELD': 'selected_shield',
@@ -364,7 +365,7 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
     contents += get_file_config(app_path + '/templ/device_i2c_analog_config_templ.py', keyValuePairDictionary)
     if shield == "advind":
         contents += get_file_config(app_path + '/templ/shield_advind_templ.py', keyValuePairDictionary)
-        contents += get_file_config(app_path + '/templ/device_sdi12_config_templ.py', keyValuePairDictionary)
+        contents += get_file_config(app_path + '/templ/device_advind_config_templ.py', keyValuePairDictionary)
     elif shield == "dig_analog":
         contents += get_file_config(app_path + '/templ/shield_i2c_dig_analog_templ.py', keyValuePairDictionary)
     elif shield == "scale":

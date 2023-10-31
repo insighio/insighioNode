@@ -21,7 +21,6 @@ _SHUNT_OHMS = 0.47
 
 """ Pulse counter """
 UC_IO_DGTL_SNSR_READ = 2
-UC_IO_SNSR_GND_DGTL_SNSR_ΟΝ = 6
 
 """ Chip ID """
 _I2C_CHIP_ID_ADDRESS = 0x54
