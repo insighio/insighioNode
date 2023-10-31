@@ -196,9 +196,23 @@ def read_ulp_values(measurements, formula):
 
     time_diff_from_prev = -1
     try:
+        logging.debug("ULP timing: now_timestamp: {}, last_timestamp: {}".format(now_timestamp, last_timestamp))
         time_diff_from_prev = now_timestamp - int(last_timestamp)
-        if time_diff_from_prev < 0 or time_diff_from_prev > 86400: #if bigger than one day
+        if time_diff_from_prev < 0:
             time_diff_from_prev = -1
+        elif time_diff_from_prev > 86400: #if bigger than one day
+            # check if epoch_diff is stored
+            epoch_diff = utils.readFromFile("/epoch_diff")
+            logging.debug("reading epoch diff: {}".format(epoch_diff))
+            if epoch_diff:
+                epoch_diff = int(epoch_diff)
+                time_diff_from_prev -= epoch_diff
+                logging.debug("new time diff: {}".format(time_diff_from_prev))
+
+                if time_diff_from_prev > 86400: #if STILL bigger than one day
+                    time_diff_from_prev = -1
+            else:
+                time_diff_from_prev = -1
     except:
         pass
 

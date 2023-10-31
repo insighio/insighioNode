@@ -300,3 +300,7 @@ def read_pulse_counter(measurements):
     if get_config("_PCNT_1_ENABLE"):
         from . import scenario_pcnt_ulp
         scenario_pcnt_ulp.execute(measurements, get_config("UC_IO_DGTL_SNSR_READ"), get_config("_PCNT_1_HIGH_FREQ"), get_config("_PCNT_1_FORMULA"))
+    else:
+        import utils
+        TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
+        utils.deleteFile(TIMESTAMP_FLAG_FILE)
