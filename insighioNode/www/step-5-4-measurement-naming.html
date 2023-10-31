@@ -91,12 +91,20 @@
       disableNavigationButtons()
 
       storedMapping = Cookies.get("meas-name-mapping")
+      try{
+        storedMapping = decodeURIComponent(storedMapping)
+      }
+      catch(e){
+        console.log("failed decoding URI: ", storedMapping)
+      }
+
       try {
         storedMapping = JSON.parse(storedMapping)
         console.log("successfully parsed name mappings")
       }
       catch (e) {
         console.log("failed parsing: ", storedMapping)
+        storedMapping =  {}
       }
 
       if (storedMapping) {
@@ -129,10 +137,6 @@
     function validateMyForm() {
       storeData()
       return true
-    }
-
-    function skipOperation() {
-      redirectTo("step-6-timing.html")
     }
 
     function addStaticValuesForNetwork(obj) {
@@ -175,7 +179,7 @@
       for (let key in config) {
         if (config.hasOwnProperty(key)) {
           configString += (key + "=" + config[key] + "&")
-          if (key == 'wifi-ssid' || key == 'wifi-pass') {
+          if (key == 'wifi-ssid' || key == 'wifi-pass' || key == 'meas-keyvalue') {
             config[key] = decodeURIComponent(config[key]).replaceAll("\\", "\\\\").replaceAll("'", "\\'")
           }
         }

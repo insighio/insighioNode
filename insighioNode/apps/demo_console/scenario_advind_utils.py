@@ -1,5 +1,5 @@
 import utime
-from apps.demo_console.dictionary_utils import set_value_float, set_value
+from .dictionary_utils import set_value_float, set_value_int, set_value
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
@@ -8,7 +8,7 @@ try:
     logging.info("loaded config: [temp]")
 except Exception as e:
     try:
-        from apps.demo_console import demo_config as cfg
+        from . import demo_config as cfg
         logging.info("loaded config: [normal]")
     except Exception as e:
         cfg = type('', (), {})()
@@ -70,10 +70,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
     read_sdi12_sensor(sdi12, address, measurements)
     powerOffAllSwitchExcept()
 
-def sdi12_board_measurements(measurements):
-    if not cfg._SDI12_SENSOR_1_ENABLED and not cfg._SDI12_SENSOR_2_ENABLED:
-        return
-
+def shield_measurements(measurements):
     # power on SDI12 regulator
     if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
         sensors.set_sensor_power_on(cfg._UC_IO_SNSR_REG_ON)
@@ -92,12 +89,15 @@ def sdi12_board_measurements(measurements):
 
         for i in range(1,11):
             executeSDI12Measurement(sdi12, measurements, i)
-
-        current_sense_4_20mA(measurements)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
     if sdi12:
         sdi12.close()
+
+    try:
+        current_sense_4_20mA(measurements)
+    except Exception as e:
+        logging.exception(e, "Exception while reading 4_20mA data")
 
     # power off SDI12 regulator
     if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
@@ -132,12 +132,17 @@ def read_sdi12_sensor(sdi12, address, measurements):
         parse_generic_sdi12(address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
         parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_ec", "uS/cm")  # dS/m
 
-        if cfg._MEAS_TEMP_UNIT_IS_CELSIUS:
+        cfg_is_celsius = get_config("_MEAS_TEMP_UNIT_IS_CELSIUS")
+        if cfg_is_celsius:
             responseArrayTemperature = sdi12.get_measurement(address, "C2")
             parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
         else:
             responseArrayTemperature = sdi12.get_measurement(address, "C5")
             parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+    elif "li-cor" in manufacturer:
+        responseArray = sdi12.get_measurement(address, "M0")
+        parse_sensor_licor(address, responseArray, measurements)
+        responseArray = sdi12._send(address + 'XT!') # trigger next round of measurements
     else:
         set_value(measurements, "gen_{}_i".format(address), manufacturer, None)
         responseArrayC = sdi12.get_measurement(address, "C")
@@ -194,6 +199,32 @@ def parse_sensor_implexx(address, responseArray, measurements):
     except Exception as e:
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
+def parse_sensor_licor(address, responseArray, measurements):
+    try:
+        if not responseArray or len(responseArray) < 5:
+            logging.error("parse_sensor_licor: unrecognized responseArray: {}".format(responseArray))
+            return
+
+        variable_prefix = "licor_" + address
+
+        set_value_float(measurements, variable_prefix + "_et", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIMETER, 3)
+        set_value_float(measurements, variable_prefix + "_le", responseArray[1], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
+        set_value_float(measurements, variable_prefix + "_h", responseArray[2], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
+        set_value_float(measurements, variable_prefix + "_vpd", responseArray[3], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
+        set_value_float(measurements, variable_prefix + "_pa", responseArray[4], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
+        cfg_is_celsius = get_config("_MEAS_TEMP_UNIT_IS_CELSIUS")
+        if cfg_is_celsius:
+            set_value_float(measurements, variable_prefix + "_ta", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, 2)
+        else:
+            set_value_float(measurements, variable_prefix + "_taf", responseArray[5], None, 2, 9/5)
+            calculated_value = measurements[variable_prefix + "_taf"]["value"] + 32
+            set_value_float(measurements, variable_prefix + "_taf", calculated_value, SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, 2)
+        set_value_float(measurements, variable_prefix + "_rh", responseArray[6], SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY, 2)
+        set_value_int(measurements, variable_prefix + "_seq", responseArray[7], None)
+        set_value_int(measurements, variable_prefix + "_diag", responseArray[8], None)
+    except Exception as e:
+        logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
+
 
 def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit=None, postfix=""):
     try:
@@ -212,35 +243,50 @@ def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit
         logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(responseArray))
 
 def current_sense_4_20mA(measurements):
+    import utime
+
+    for i in range(1,3):
+        measure_4_20_mA_on_port(measurements, i)
+
+    utime.sleep_ms(200)
+
+def measure_4_20_mA_on_port(measurements, port_id):
     from machine import Pin
     import gpio_handler
     from sensors import analog_generic
-    import utime
 
-    # sensor 1
-    if cfg._4_20_SNSR_1_ENABLE:
-        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
-        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 1)
+    port_enabled = get_config("_4_20_SNSR_{}_ENABLE".format(port_id))
+    port_formula = get_config("_4_20_SNSR_{}_FORMULA".format(port_id))
 
-        raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_1)
-        current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
-        logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_1, raw_mV, current_mA))
-        set_value_float(measurements, "curr_port_1", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+    if port_enabled:
+        sensor_on_pin = get_config("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
+        sensor_out_pin = get_config("_CUR_SNSR_OUT_{}".format(port_id))
 
-        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_1_ΟΝ, 0)
-        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+        try:
+            gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
+            gpio_handler.set_pin_value(sensor_on_pin, 1)
 
-    # sensor 2
-    if cfg._4_20_SNSR_2_ENABLE:
-        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
-        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 1)
+            raw_mV = analog_generic.get_reading(sensor_out_pin)
+            current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
+            current_mA = round(current_mA)
+            logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(sensor_out_pin, raw_mV, current_mA))
+            set_value_float(measurements, "4_20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
-        raw_mV = analog_generic.get_reading(cfg._CUR_SNSR_OUT_2)
-        current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
-        logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(cfg._CUR_SNSR_OUT_2, raw_mV, current_mA))
-        set_value_float(measurements, "curr_port_2", current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
+            execute_transformation(measurements, "4_20_{}_current".format(port_id), current_mA, port_formula)
 
-        gpio_handler.set_pin_value(cfg._UC_IO_SNSR_GND_4_20_SNSR_2_ΟΝ, 0)
-        gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+            gpio_handler.set_pin_value(sensor_on_pin, 0)
+            gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+        except Exception as e:
+            logging.exception(e, "Error getting current sensor output: ID: {}".format(port_id))
 
-    utime.sleep_ms(2000)
+def execute_transformation(measurements, name, raw_value, transformator):
+    try:
+        transformator = transformator.replace('v', str(raw_value))
+        to_execute = "v_transformed=({})".format(transformator)
+        namespace = {}
+        exec(to_execute, namespace)
+        print("namespace: " + str(namespace))
+        set_value(measurements, name + "_formula", namespace['v_transformed'])
+    except Exception as e:
+        logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
+        pass

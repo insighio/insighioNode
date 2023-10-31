@@ -21,6 +21,9 @@ def add_value_if_valid(results, key, value, unit=None):
 def init(cfg):
     cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
+def deinit():
+    logging.info("Deactivate cellular: {}".format(cellular.deactivate()))
+
 def prepareForConnectAndUpload():
     modem_instance = cellular.get_modem_instance()
     if modem_instance is None:
@@ -65,7 +68,7 @@ def connect(cfg):
 
     modem_instance = cellular.get_modem_instance()
 
-    logging.debug("demo_console: cellular connect modem instance is None: " + str(modem_instance is None))
+    logging.debug("cellular connect modem instance is None: " + str(modem_instance is None))
     if modem_instance is None or not modem_instance.has_sim():
         return results
 
@@ -82,7 +85,7 @@ def connect(cfg):
 
     if status == cellular.MODEM_CONNECTED:
         global transfer_client
-        from apps.demo_console import transfer_protocol
+        from . import transfer_protocol
 
         # AT command based implementation of communication of Quectel BG600L
         modem_model = modem_instance.get_model()
@@ -187,10 +190,8 @@ def disconnect():
     if transfer_client is not None:
         transfer_client.disconnect()
         transfer_client = None
-    logging.info("Deactivate cellular: {}".format(cellular.deactivate()))
-
 
 def check_and_apply_ota(cfg):
     if transfer_client is not None:
-        from apps.demo_console import ota
+        from . import ota
         ota.checkAndApply(transfer_client)

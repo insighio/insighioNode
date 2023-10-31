@@ -112,3 +112,16 @@ def eraseKeyValue(key):
 
 def clearCachedStates():
     eraseKeyValue("tz_sec_offset")
+
+
+def deleteModule(module_name):
+    try:
+        import gc
+        print(gc.mem_free())
+        import sys
+        del sys.modules[module_name]
+        del module_name
+        print(gc.mem_free())
+        gc.collect()
+    except Exception as e:
+        logging.exception(e, "===")

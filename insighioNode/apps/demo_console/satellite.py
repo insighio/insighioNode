@@ -2,7 +2,7 @@ import struct
 import utime
 import device_info
 import logging
-from apps.demo_console import lora_custom_encoding
+from . import lora_custom_encoding
 from networking import satellite
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
@@ -22,6 +22,9 @@ def init(cfg):
         res = satellite.get_modem_instance().modem_instance.wifi_configuration_write(ssid, password, token)
         logging.info("WiFi configuration setup result: {}".format(res))
         #satellite.get_modem_instance().modem_instance.configuration_save()
+
+def deinit():
+    pass
 
 def updateSignalQuality(cfg, measurements):
     pass

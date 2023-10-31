@@ -41,6 +41,39 @@ def get_modem_instance():
 
     return modem_instance
 
+def update_rtc_from_network_time(modem):
+    try:
+        from machine import RTC
+        (status, timeEpoch2018) = modem.get_network_date_time()
+
+        logging.info("satellite RTC: status {}, epoch{}".format(status, timeEpoch2018))
+
+        time_tuple = None
+        if status:
+            rtc = RTC()
+
+            # 1514764800 -> 2018/01/01 00:00:00 # astronode base time
+            #  946684800 -> 2000/01/01 00:00:00 # esp32 base time
+            time_tuple = utime.gmtime(timeEpoch2018)# - 946684800)
+            time_tuple = (
+                time_tuple[0],
+                time_tuple[1],
+                time_tuple[2],
+                0,
+                time_tuple[3],
+                time_tuple[4],
+                time_tuple[5],
+                0
+            )
+
+        if time_tuple is not None:
+            logging.debug("Setting satellite RTC with: " + str(time_tuple))
+
+            rtc.datetime(time_tuple)
+            logging.debug("New RTC: " + str(rtc.datetime()))
+    except Exception as e:
+        logging.exception(e, "RTC init failed")
+
 def _initialize(modem):
     if modem is None:
         logging.info("No modem detected")
@@ -58,6 +91,9 @@ def _initialize(modem):
 
     modem.print_status()
     modem.set_default_configuration()
+
+    update_rtc_from_network_time(modem)
+
     return True
 
 def is_alive():

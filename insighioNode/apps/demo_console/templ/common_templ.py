@@ -5,7 +5,7 @@ _CONST_RADIO_SHIELD_LORA = "hoperf"
 _CONST_RADIO_SHIELD_ASTROCAST = "astrocast"
 
 _CONST_SENSOR_SI7021 = 'si7021'
-_CONST_SENSOR_SHT40 = 'SHT40'
+_CONST_SENSOR_SHT40 = 'sht40'
 
 _CONST_MEAS_DISABLED = "disabled"
 
@@ -37,6 +37,7 @@ _MEAS_GPS_ENABLE = <meas-gps-enabled>
 _MEAS_GPS_TIMEOUT = <meas-gps-timeout>
 _MEAS_GPS_SATELLITE_FIX_NUM = <meas-gps-sat-num>
 _MEAS_GPS_NO_FIX_NO_UPLOAD = <meas-gps-no-fix-no-upload>
+_MEAS_GPS_ONLY_ON_BOOT = <meas-gps-only-on-boot>
 
 _CHECK_FOR_OTA = <system-enable-ota>
 

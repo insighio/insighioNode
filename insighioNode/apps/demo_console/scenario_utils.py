@@ -10,7 +10,7 @@ try:
     logging.info("loaded config: [temp]")
 except Exception as e:
     try:
-        from apps.demo_console import demo_config as cfg
+        from . import demo_config as cfg
         logging.info("loaded config: [normal]")
     except Exception as e:
         cfg = type('', (), {})()
@@ -18,9 +18,9 @@ except Exception as e:
 
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
-from apps.demo_console.dictionary_utils import set_value, set_value_int, set_value_float
+from .dictionary_utils import set_value, set_value_int, set_value_float
 import ubinascii
-from apps.demo_console import message_buffer
+from . import message_buffer
 
 from machine import Pin
 import _thread
@@ -121,19 +121,18 @@ def get_measurements(cfg_dummy=None):
         if get_config("_MEAS_BOARD_SENSE_ENABLE"):
             if cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._CONST_SENSOR_SI7021:
                 from sensors import si7021 as sens
-            elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._UC_INTERNAL_TEMP_HUM_SENSOR:
+            elif cfg._UC_INTERNAL_TEMP_HUM_SENSOR == cfg._CONST_SENSOR_SHT40:
                 from sensors import sht40 as sens
 
             (board_temp, board_humidity) = sens.get_reading(cfg._UC_IO_I2C_SDA, cfg._UC_IO_I2C_SCL)
             set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY)
 
-        shield_name = get_config("_SHIELD_NAME")
         shield_name = get_config("_SELECTED_SHIELD")
-        if (shield_name and shield_name == get_config("_CONST_SHIELD_ADVIND")) or (shield_name and shield_name == get_config("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")):
+        if shield_name is not None and (shield_name == get_config("_CONST_SHIELD_ADVIND") or shield_name == get_config("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")):
             read_pulse_counter(measurements)
-            from . import scenario_sdi12_utils
-            scenario_sdi12_utils.sdi12_board_measurements(measurements)
+            from . import scenario_advind_utils
+            scenario_advind_utils.shield_measurements(measurements)
         else: #if shield_name == get_config("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
 
@@ -405,9 +404,9 @@ def read_accelerometer():
         logging.debug("loading network modules...")
         # connect to network
         if cfg.network == "wifi":
-            from apps.demo_console import wifi as network
+            from . import wifi as network
         elif cfg.network == "cellular":
-            from apps.demo_console import cellular as network
+            from . import cellular as network
     else:
         network = None
 

@@ -6,7 +6,7 @@ try:
     from apps import demo_temp_config as cfg
 except Exception as e:
     try:
-        from apps.demo_console import demo_config as cfg
+        from . import demo_config as cfg
         if hasattr(cfg, '_MEAS_NAME_MAPPING'):
             _name_mapping = getattr(cfg, '_MEAS_NAME_MAPPING')
             logging.info("loaded name mapping")
@@ -31,13 +31,16 @@ def set_value(measurements, key, value, unit=None):
 
 def set_value_int(measurements, key, value, unit=None):
     if value is not None:
-        set_value(measurements, get_meas_name(key), round(value), unit)
+        try:
+            set_value(measurements, get_meas_name(key), round(float(value)), unit)
+        except Exception as e:
+            logging.exception(e, "set_value_int error: [{}]".format(value))
 
 
-def set_value_float(measurements, key, value, unit=None, precision=2):
+def set_value_float(measurements, key, value, unit=None, precision=2, multiplier=1):
     if value is not None:
         if isinstance(value, str):
-            value = float(value)
+            value = float(value) * multiplier
         try:
             set_value(measurements, get_meas_name(key), float("%0.*f" % (precision, value)), unit)
         except Exception as e:

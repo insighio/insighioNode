@@ -10,9 +10,9 @@ from . import scenario_utils
 import gc
 import utils
 from math import floor
-from apps.demo_console import message_buffer
+from . import message_buffer
 try:
-    from apps.demo_console import demo_config as cfg
+    from . import demo_config as cfg
 except Exception as e:
     cfg = type('', (), {})()
 import _thread
@@ -128,7 +128,8 @@ def executeMeasureAndUploadLoop():
             else:
                 connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, always_on)
 
-        if not connectAndUploadCompletedWithoutErrors or not always_on or not always_on_period:
+        #if not connectAndUploadCompletedWithoutErrors or not always_on or not always_on_period:
+        if not always_on or not always_on_period:
             # abort measurement while loop
             break
         else:
@@ -151,10 +152,17 @@ def executeMeasureAndUploadLoop():
 
 def executeGetGPSPosition(cfg, measurements, always_on):
     try:
-        if scenario_utils.get_config("_MEAS_GPS_ENABLE"):
-            from apps.demo_console import cellular as network_gps
+        if scenario_utils.get_config("_MEAS_GPS_ENABLE") and (not scenario_utils.get_config("_MEAS_GPS_ONLY_ON_BOOT") or (device_info.get_reset_cause() == 0 or device_info.get_reset_cause() == 1)):
+            from . import cellular as network_gps
             network_gps.init(cfg)
-            return network_gps.get_gps_position(cfg, measurements, always_on)
+
+            gps_status = network_gps.get_gps_position(cfg, measurements, always_on)
+
+            #close modem after operation if it is not going to be used for connection
+            if cfg.network != "cellular":
+                network_gps.disconnect()
+
+            return gps_status
     except Exception as e:
         logging.exception(e, "GPS Exception:")
         return False
@@ -166,13 +174,13 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
     logging.debug("loading network modules...")
     # connect to network
     if cfg.network == "lora":
-        from apps.demo_console import lora as network
+        from . import lora as network
     elif cfg.network == "wifi":
-        from apps.demo_console import wifi as network
+        from . import wifi as network
     elif cfg.network == "cellular":
-        from apps.demo_console import cellular as network
+        from . import cellular as network
     elif cfg.network == "satellite":
-        from apps.demo_console import satellite as network
+        from . import satellite as network
 
     network.init(cfg)
     logging.debug("Network modules loaded")
@@ -208,7 +216,8 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
         logging.exception(e, "Exception during connection:")
 
     # update radio info
-    network.updateSignalQuality(cfg, measurements)
+    if scenario_utils.get_config("_MEAS_NETWORK_STAT_ENABLE"):
+        network.updateSignalQuality(cfg, measurements)
 
     try:
         if is_first_run:
@@ -286,20 +295,22 @@ def executeDeviceStatisticsUpload(cfg, network):
         logging.info("Skipping platform info.")
 
     logging.info("Uploading device statistics.")
-    network.send_control_message(cfg, network.create_message(None, stats), "/stat")
+    return network.send_control_message(cfg, network.create_message(None, stats), "/stat")
 
 def executeDeviceConfigurationUpload(cfg, network):
     # check for configuration pending for upload
     configUploadFileContent = utils.readFromFile("/configLog")
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
-        network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
-        utils.deleteFile("/configLog")
+        message_sent = network.send_control_message(cfg, '[{"n":"config","vs":"' + configUploadFileContent +'"}]', "/configResponse")
+        if message_sent:
+            utils.deleteFile("/configLog")
 
         # whenever a new config log is uplaoded, upload also statistics for the device
     if configUploadFileContent or utils.existsFile('/ota_applied_flag'):
-        executeDeviceStatisticsUpload(cfg, network)
-        utils.deleteFile('/ota_applied_flag')
+        message_sent = executeDeviceStatisticsUpload(cfg, network)
+        if message_sent:
+            utils.deleteFile('/ota_applied_flag')
 
 def notifyConnected(network):
     #network.send_control_message(cfg, '{"mac":"' + cfg.device_id + '","connected":true}', "/connStat")
@@ -311,6 +322,18 @@ def notifyDisconnected(network):
 
 def executeDeviceDeinitialization():
     scenario_utils.device_deinit()
+
+    # connect to network
+    if cfg.network == "lora":
+        from . import lora as network
+    elif cfg.network == "wifi":
+        from . import wifi as network
+    elif cfg.network == "cellular":
+        from . import cellular as network
+    elif cfg.network == "satellite":
+        from . import satellite as network
+
+    network.deinit()
 
 def executeTimingConfiguration():
     if(scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") is not None):

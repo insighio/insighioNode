@@ -100,16 +100,15 @@
     function initializeValues() {
       disableNavigationButtons()
 
-      var dev_enable = Cookies.get('sat-astro-devkit-en')
       var dev_ssid = Cookies.get('sat-astro-devkit-ssid')
       var dev_pass = Cookies.get('sat-astro-devkit-pass')
       var dev_token = Cookies.get('sat-astro-devkit-token')
 
-      setElemValue('input-satAstroSSID', dev_ssid, "")
-      setElemValue('input-satAstroPass', dev_pass, "")
-      setElemValue('input-satAstroToken', dev_token, "")
+      setElemValue('input-satAstroSSID', strToJSValue(dev_ssid), "")
+      setElemValue('input-satAstroPass', strToJSValue(dev_pass), "")
+      setElemValue('input-satAstroToken', strToJSValue(dev_token), "")
 
-      document.getElementById('input-satAstroDevkitEnable').checked = dev_enable !== undefined ? dev_enable : false
+      setElemValueBool('input-satAstroDevkitEnable', strToJSValue(Cookies.get("sat-astro-devkit-en")), false)
 
       detectBoardChange(enableNavigationButtons)
     }

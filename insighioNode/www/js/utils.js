@@ -123,21 +123,35 @@ function addElemChild(parentElem, txt, val) {
   parentElem.appendChild(elem)
 }
 
-function addSwitch(parentId, switchId, switchLabel, onClickCallback = undefined) {
+
+function wrapDiv(parentId, labelText, populateInputFunc, intented){
   var parent = document.getElementById(parentId)
 
-  // var mainDiv = document.createElement("div")
-  // mainDiv.classList.add('form-group')
+  if(intented) {
+    var preSpace = document.createElement("div")
+    preSpace.classList.add("column")
+    preSpace.classList.add("col-1")
+    preSpace.classList.add("col-mr-auto")
+    parent.appendChild(preSpace)
+  }
 
   ///////////////////////////////////////////////////////
   var labelDiv = document.createElement("div")
-  labelDiv.classList.add("col-4")
-  labelDiv.classList.add("col-lg-6")
-  labelDiv.classList.add("col-sm-10")
+  if(intented)
+  {
+    labelDiv.classList.add("col-3")
+    labelDiv.classList.add("col-sm-12")
+  }
+  else
+  {
+    labelDiv.classList.add("col-4")
+    labelDiv.classList.add("col-lg-6")
+    labelDiv.classList.add("col-sm-10")
+  }
 
   var label = document.createElement("label")
   label.classList.add("form-label")
-  label.appendChild(document.createTextNode(switchLabel))
+  label.appendChild(document.createTextNode(labelText))
 
   labelDiv.appendChild(label)
   parent.appendChild(labelDiv)
@@ -145,98 +159,87 @@ function addSwitch(parentId, switchId, switchLabel, onClickCallback = undefined)
   ///////////////////////////////////////////
 
   var switchDiv = document.createElement("div")
-  switchDiv.classList.add("col-8")
-  switchDiv.classList.add("col-lg-6")
-  switchDiv.classList.add("col-sm-2")
+  if(intented)
+  {
+    switchDiv.classList.add("col-3")
+    switchDiv.classList.add("col-sm-12")
+  }
+  else {
+    switchDiv.classList.add("col-8")
+    switchDiv.classList.add("col-lg-6")
+    switchDiv.classList.add("col-sm-2")
+  }
 
-  // var switchDivGroup = document.createElement("div") // not sure if needed
-  // switchDivGroup.classList.add('form-group')
-
-  var switchLabel = document.createElement("label")
-  switchLabel.classList.add("form-switch")
-
-  var switchInput = document.createElement("input")
-  switchInput.type = "checkbox"
-  switchInput.id = switchId
-  if (onClickCallback) switchInput.onclick = onClickCallback
-
-  var switchIcon = document.createElement("i")
-  switchIcon.classList.add("form-icon")
-
-  switchLabel.appendChild(switchInput)
-  switchLabel.appendChild(switchIcon)
-  switchDiv.appendChild(switchLabel)
+  populateInputFunc(switchDiv)
   parent.appendChild(switchDiv)
+
+  if(intented) {
+    var postSpace = document.createElement("div")
+    postSpace.classList.add("column")
+    postSpace.classList.add("col-5")
+    postSpace.classList.add("col-mr-auto")
+    parent.appendChild(postSpace)
+  }
+
   parent.appendChild(document.createElement("br"))
   parent.appendChild(document.createElement("br"))
 }
 
-function addSelect(parentId, selectId, selectLabel) {
-  var parent = document.getElementById(parentId)
+function addSwitch(parentId, switchId, labelText, onClickCallback = undefined, intented=false) {
+  wrapDiv(parentId, labelText, (switchDiv) => {
+    var switchLabel = document.createElement("label")
+    switchLabel.classList.add("form-switch")
 
-  ///////////////////////////////////////////////////////
-  var labelDiv = document.createElement("div")
-  labelDiv.classList.add("col-4")
-  labelDiv.classList.add("col-lg-6")
-  labelDiv.classList.add("col-sm-10")
+    var switchInput = document.createElement("input")
+    switchInput.type = "checkbox"
+    switchInput.id = switchId
+    if (onClickCallback) switchInput.onclick = onClickCallback
 
-  var label = document.createElement("label")
-  label.classList.add("form-label")
-  label.appendChild(document.createTextNode(selectLabel))
+    var switchIcon = document.createElement("i")
+    switchIcon.classList.add("form-icon")
 
-  labelDiv.appendChild(label)
-  parent.appendChild(labelDiv)
-
-  ///////////////////////////////////////////
-
-  var selectDiv = document.createElement("div")
-  selectDiv.classList.add("col-8")
-  selectDiv.classList.add("col-lg-6")
-  selectDiv.classList.add("col-sm-2")
-
-  var switchInput = document.createElement("select")
-  switchInput.id = selectId
-  switchInput.classList.add("form-select")
-
-  selectDiv.appendChild(switchInput)
-  parent.appendChild(selectDiv)
-  parent.appendChild(document.createElement("br"))
-  parent.appendChild(document.createElement("br"))
+    switchLabel.appendChild(switchInput)
+    switchLabel.appendChild(switchIcon)
+    switchDiv.appendChild(switchLabel)
+  }, intented)
 }
 
-function addInput(parentId, inputId, inputLabel, inputType = "number") {
+function addSelect(parentId, selectId, labelText, intented=false) {
+  wrapDiv(parentId, labelText, (selectDiv) => {
+    var switchInput = document.createElement("select")
+    switchInput.id = selectId
+    switchInput.classList.add("form-select")
+
+    selectDiv.appendChild(switchInput)
+  }, intented)
+}
+
+function addInput(parentId, inputId, labelText, inputType = "number", intented=false) {
+  wrapDiv(parentId, labelText, (selectDiv) => {
+    var switchInput = document.createElement("input")
+    switchInput.classList.add("form-input")
+    switchInput.id = inputId
+    switchInput.type = inputType
+    if (inputType === "number") switchInput.step = "any"
+
+    selectDiv.appendChild(switchInput)
+  }, intented)
+}
+
+function addDivider(parentId, labelText) {
   var parent = document.getElementById(parentId)
 
-  ///////////////////////////////////////////////////////
-  var labelDiv = document.createElement("div")
-  labelDiv.classList.add("col-4")
-  labelDiv.classList.add("col-lg-6")
-  labelDiv.classList.add("col-sm-12")
+  var mainDiv = document.createElement("div")
+  mainDiv.classList.add("col-12")
 
-  var label = document.createElement("label")
-  label.classList.add("form-label")
-  label.appendChild(document.createTextNode(inputLabel))
+  var dividerDiv = document.createElement("div")
+  dividerDiv.classList.add("divider")
+  dividerDiv.classList.add("text-center")
 
-  labelDiv.appendChild(label)
-  parent.appendChild(labelDiv)
+  dividerDiv.setAttribute('data-content',labelText);
 
-  ///////////////////////////////////////////
-
-  var selectDiv = document.createElement("div")
-  selectDiv.classList.add("col-8")
-  selectDiv.classList.add("col-lg-6")
-  selectDiv.classList.add("col-sm-12")
-
-  var switchInput = document.createElement("input")
-  switchInput.classList.add("form-input")
-  switchInput.id = inputId
-  switchInput.type = inputType
-  if (inputType === "number") switchInput.step = "any"
-
-  selectDiv.appendChild(switchInput)
-  parent.appendChild(selectDiv)
-  parent.appendChild(document.createElement("br"))
-  parent.appendChild(document.createElement("br"))
+  mainDiv.appendChild(dividerDiv)
+  parent.appendChild(mainDiv)
 }
 
 function strToJSValue(strVal) {
@@ -245,7 +248,7 @@ function strToJSValue(strVal) {
   }
   catch(e) {
   }
-  if (strVal === "undefined" || strVal === "") return undefined
+  if (strVal === "undefined" || strVal === "" || strVal === "none") return undefined
   else if (strVal === "true") return true
   else if (strVal === "false") return false
   return strVal

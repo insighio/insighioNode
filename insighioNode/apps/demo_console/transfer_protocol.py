@@ -1,6 +1,6 @@
 import logging
 import device_info
-from apps.demo_console import locks
+from . import locks
 
 def get_config(cfg, key):
     return getattr(cfg, key) if hasattr(cfg, key) else None

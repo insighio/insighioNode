@@ -18,6 +18,9 @@ device_info.bq_charger_exec(device_info.bq_charger_setup)
 device_info.initialize_led()
 device_info.blink_led(0x252525)
 
+# from apps.demo_console import scenario_pcnt_ulp
+# scenario_pcnt_ulp.start()
+
 demo_config_exists = False
 try:
     import apps.demo_console.demo_config as cfg

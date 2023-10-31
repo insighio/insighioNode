@@ -1,5 +1,5 @@
 import logging
-from apps.demo_console import transfer_protocol
+from . import transfer_protocol
 import device_info
 import utils
 
@@ -9,7 +9,7 @@ try:
     logging.info("loaded config: [temp]")
 except Exception as e:
     try:
-        from apps.demo_console import demo_config as cfg
+        from . import demo_config as cfg
         logging.info("loaded config: [normal]")
     except Exception as e:
         cfg = type('', (), {})()
@@ -126,7 +126,7 @@ def checkAndApply(client):
         if str(eventId) == "0" and fileId and fileType and fileSize:
             downloaded_file = downloadOTA(client, fileId, fileType, fileSize)
             if downloaded_file:
-                from apps.demo_console import apply_ota
+                from . import apply_ota
                 applied = apply_ota.do_apply(downloaded_file)
                 if applied:
                     print("about to reset...")
@@ -158,7 +158,7 @@ def hasEnoughFreeSpace(fileSize):
 # 2: Failed
 # 3: Canceled
 def sendOtaStatusMessage(client, fileId, success, reason_measage=None):
-    from apps.demo_console import transfer_protocol
+    from . import transfer_protocol
     from external.kpn_senml.senml_pack_json import SenmlPackJson
     from external.kpn_senml.senml_record import SenmlRecord
 

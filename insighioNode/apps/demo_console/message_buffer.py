@@ -4,7 +4,7 @@ try:
     logging.info("loaded config: [temp]")
 except Exception as e:
     try:
-        from apps.demo_console import demo_config as cfg
+        from . import demo_config as cfg
         logging.info("loaded config: [normal]")
     except Exception as e:
         cfg = type('', (), {})()

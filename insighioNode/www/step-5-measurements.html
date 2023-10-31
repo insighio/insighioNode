@@ -349,7 +349,8 @@
       addSelect("board-default-options", "input-temp-unit", "Temperature Unit")
 
       addSwitch("board-default-option-gps", "input-gps-enable", "GPS")
-      addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix")
+      addSwitch("address-gps", "input-gps-no-fix-no-upload", "Discard measurements if no GPS fix", undefined, true)
+      addSwitch("address-gps", "input-gps-only-on-boot", "Get position only on boot", undefined, true)
 
       addSelect("shield-scale-options-content", "input-i2c-1", "I²C #1")
       addSelect("shield-scale-options-content", "input-i2c-2", "I²C #2")
@@ -358,8 +359,13 @@
       addSwitch("shield-scale-options-content", "input-scale-monitoring", "[Debug] Enable Scale Sensor Monitoring")
 
       addInput('options-sdi12', 'input-gen-sdi12-warmup-time', 'Warm Up time (ms)')
-      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-1-enable", "4-20mA sensor n.1")
-      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-2-enable", "4-20mA sensor n.2")
+
+      addDivider("options-sdi12", "4-20mA sensing")
+      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-1-enable", "sensor n.1")
+      addInput("options-sdi12", "ins-esp-gen-4-20-snsr-1-formula", "sensor n.1 formula", "text", true)
+      addSwitch("options-sdi12", "ins-esp-gen-4-20-snsr-2-enable", "sensor n.2")
+      addInput("options-sdi12", "ins-esp-gen-4-20-snsr-2-formula", "sensor n.2 formula", "text", true)
+      addDivider("options-sdi12", "Pulse Counter")
       addSwitch("options-sdi12", "ins-esp-gen-pcnt-1-enable", "Pulse Counter Enable")
       addSelect("options-sdi12", "ins-esp-gen-pcnt-1-cnt-on", "Pulse Counter Trigger")
       addInput('options-sdi12', 'ins-esp-gen-pcnt-1-multiplier', 'Pulse Counter Multiplier')
@@ -401,7 +407,8 @@
 
       setElemValue('input-gps-timeout', Cookies.get("meas-gps-timeout"), 120, false)
       setElemValue('input-gps-sat-num', Cookies.get("meas-gps-sat-num"), 4, false)
-      //setElemValueBool('input-gps-no-fix-no-upload', Cookies.get(meas-gps-no-fix-no-upload,  false)
+      setElemValueBool('input-gps-no-fix-no-upload', strToJSValue(Cookies.get("meas-gps-no-fix-no-upload")),  false)
+      setElemValueBool('input-gps-only-on-boot', strToJSValue(Cookies.get("meas-gps-only-on-boot")),  false)
 
       for (let i = 1; i <= 10; ++i) {
         var sdi12Enabled = strToJSValue(Cookies.get("meas-sdi-" + i + "-enabled"))
@@ -436,6 +443,8 @@
 
       setElemValueBool('ins-esp-gen-4-20-snsr-1-enable', strToJSValue(Cookies.get("meas-4-20-snsr-1-enable")), false)
       setElemValueBool('ins-esp-gen-4-20-snsr-2-enable', strToJSValue(Cookies.get("meas-4-20-snsr-2-enable")), false)
+      setElemValue("ins-esp-gen-4-20-snsr-1-formula", Cookies.get("meas-4-20-snsr-1-formula"), "v")
+      setElemValue("ins-esp-gen-4-20-snsr-2-formula", Cookies.get("meas-4-20-snsr-2-formula"), "v")
       setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(Cookies.get("meas-pcnt-1-enable")), false)
       setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(Cookies.get("meas-pcnt-1-cnt-on-rising")) ? "rising" : "falling", "rising")
       setElemValue('ins-esp-gen-pcnt-1-multiplier', Cookies.get("meas-pcnt-1-multiplier"), 1)
@@ -454,6 +463,7 @@
       Cookies.remove('meas-board-stat')
       Cookies.remove('meas-gps-enabled')
       Cookies.remove('meas-gps-no-fix-no-upload')
+      Cookies.remove('meas-gps-only-on-boot')
       Cookies.remove('meas-gps-sat-num')
       Cookies.remove('meas-gps-timeout')
       Cookies.remove('meas-i2c-1')
@@ -476,6 +486,8 @@
       Cookies.remove('store-meas-if-failed-conn')
       Cookies.remove('meas-4-20-snsr-1-enable')
       Cookies.remove('meas-4-20-snsr-2-enable')
+      Cookies.remove('meas-4-20-snsr-1-formula')
+      Cookies.remove('meas-4-20-snsr-2-formula')
       Cookies.remove('meas-scale-monitoring-enabled')
       Cookies.remove('meas-pcnt-1-enable')
       Cookies.remove('meas-pcnt-1-cnt-on-rising')
@@ -510,13 +522,17 @@
       Cookies.set('system-enable-ota', boolElemToPyStr('input-ota'))
       Cookies.set('meas-gps-enabled', boolElemToPyStr('input-gps-enable'))
 
-      Cookies.set('meas-temp-unit', boolElemToPyStr('input-temp-unit', 'value'))
+      console.log("document.getElementById('input-gps-timeout').value: ", document.getElementById('input-temp-unit').value)
+      Cookies.set('meas-temp-unit', document.getElementById('input-temp-unit').value === "false" ? "False" : "True")
 
       Cookies.set('meas-gps-timeout', document.getElementById('input-gps-timeout').value)
       Cookies.set('meas-gps-sat-num', document.getElementById('input-gps-sat-num').value)
       Cookies.set('meas-gps-no-fix-no-upload', boolElemToPyStr('input-gps-no-fix-no-upload'))
+      Cookies.set('meas-gps-only-on-boot', boolElemToPyStr('input-gps-only-on-boot'))
 
       Cookies.set('store-meas-if-failed-conn', boolElemToPyStr('input-store-meas-if-failed-conn'))
+
+      Cookies.set('meas-keyvalue', encodeURIComponent(JSON.stringify(getKeyValuePairs())))
 
       if (elementIsVisible("shield-advind-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-advind-options"])
@@ -527,8 +543,8 @@
 
         Cookies.set('meas-4-20-snsr-1-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-1-enable'))
         Cookies.set('meas-4-20-snsr-2-enable', boolElemToPyStr('ins-esp-gen-4-20-snsr-2-enable'))
-
-        Cookies.set('meas-sdi-warmup-time', document.getElementById('input-gen-sdi12-warmup-time').value)
+        Cookies.set('meas-4-20-snsr-1-formula', document.getElementById('ins-esp-gen-4-20-snsr-1-formula').value)
+        Cookies.set('meas-4-20-snsr-2-formula', document.getElementById('ins-esp-gen-4-20-snsr-2-formula').value)
 
         Cookies.set('meas-sdi-warmup-time', document.getElementById('input-gen-sdi12-warmup-time').value)
 
@@ -536,8 +552,7 @@
         Cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
         Cookies.set('meas-pcnt-1-multiplier', document.getElementById('ins-esp-gen-pcnt-1-multiplier').value)
 
-        Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-        redirectTo("step-5-4-measurement-naming.html")
+        redirectoToMeasurementNaming()
       }
       else if (elementIsVisible("shield-scale-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-scale-options"])
@@ -550,7 +565,7 @@
         if (!isChecked('input-scale-enabled')) {
           Cookies.set('meas-scale-offset', 0)
           Cookies.set('meas-scale-scale', 1)
-          redirectTo("step-5-4-measurement-naming.html")
+          redirectoToMeasurementNaming()
         }
         else {
           var scale = Cookies.get("meas-scale-scale")
@@ -561,11 +576,9 @@
           if (scale && offset) {
             Cookies.set('meas-scale-offset', offset)
             Cookies.set('meas-scale-scale', scale)
-            Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
             redirectTo("step-5-3-scale-calibr-res.html")
           }
           else {
-            Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
             redirectTo("step-5-1-scale-idle.html")
           }
         }
@@ -586,11 +599,17 @@
         if (elementIsVisible('input-s1-sensor-a-d-p3-trans-div'))
           Cookies.set('meas-sensor-a-d-p3-t', document.getElementById('input-s1-sensor-a-d-p3-t').value)
 
-        Cookies.set('meas-keyvalue', JSON.stringify(getKeyValuePairs()))
-        redirectTo("step-5-4-measurement-naming.html")
+        redirectoToMeasurementNaming()
       }
 
       enableNavigationButtons()
+    }
+
+    function redirectoToMeasurementNaming(){
+      if(Cookies.get('network') !== "lora")
+        redirectTo("step-5-4-measurement-naming.html")
+      else
+        redirectTo("step-6-timing.html")
     }
 
     function boardChanged(evt, boardDivId) {
