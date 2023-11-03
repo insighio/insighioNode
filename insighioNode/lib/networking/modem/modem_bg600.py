@@ -538,10 +538,10 @@ class ModemBG600(modem_base.Modem):
         # self.send_at_cmd('AT+QCOAPOPTION=2,1,2')
         # self.send_at_cmd('AT+QCOAPOPTION=2,1,3')
 
-        self.send_at_cmd('AT+QCOAPOPTION=2,0,0,3,"{}"'.format(host)) # set Uri-Host
-        self.send_at_cmd('AT+QCOAPOPTION=2,0,1,11,"{}"'.format(data_uri)) # set Uri-Host
-        self.send_at_cmd('AT+QCOAPOPTION=2,0,2,12,50') # set JSON
-        self.send_at_cmd('AT+QCOAPOPTION=2,0,3,15,"authorization={}"'.format(token)) # set authorization token
+        #self.send_at_cmd('AT+QCOAPOPTION=2,0,0,3,"{}"'.format(host)) # set Uri-Host
+        self.send_at_cmd('AT+QCOAPOPTION=2,0,0,11,"{}"'.format(data_uri)) # set Uri-Host
+        self.send_at_cmd('AT+QCOAPOPTION=2,0,1,12,50') # set JSON
+        self.send_at_cmd('AT+QCOAPOPTION=2,0,2,15,"authorization={}"'.format(token)) # set authorization token
 
     def coap_publish(self, uri, payload, num_of_retries=3, confirmable=False):
         coap_send_ready = False
@@ -552,13 +552,15 @@ class ModemBG600(modem_base.Modem):
         import random
         confirmable_id = "0" if confirmable else "1"
 
-        #self.send_at_cmd('AT+QCOAPHEADER=2,{},1'.format(message_id), 15000)
+        message_id = (int(random.random() * 65530) + 1)
+
+        self.send_at_cmd('AT+QCOAPHEADER=2,{},0,6,"{}"'.format(message_id, device_info.get_device_id()[0]), 15000)
 
         send_success_regex = r"\+QCOAPACK:\s*2,\d+,\d+,0"
 
         while not message_sent and general_retry_num < num_of_retries:
             for i in range(0, num_of_retries):
-                (coap_send_ready, _) = self.send_at_cmd('AT+QCOAPSEND=2,{},2,15'.format(confirmable_id), 15000, '>.*')
+                (coap_send_ready, _) = self.send_at_cmd('AT+QCOAPSEND=2,{},2,7'.format(confirmable_id), 15000, '>.*')
                 if coap_send_ready:
                     break
                 logging.error("CoAP not ready to send")
