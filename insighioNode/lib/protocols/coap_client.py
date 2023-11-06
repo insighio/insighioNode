@@ -9,17 +9,16 @@ def sub_cb(topic, msg):
 
 class CoAPClient:
     def prepareChannelNames(self, coap_config):
-        controlChannel = "channels/" + coap_config.control_channel_id + "/messages"
-        self.statusChannel = controlChannel + "/status/" + coap_config.thing_id
-        self.requestChannel = controlChannel + "/request/" + coap_config.thing_id
-        self.messageChannel = "channels/" + coap_config.message_channel_id + "/messages/" + coap_config.thing_id
-
-        self.uriQueryAuthentication = "authorization=" + coap_config.thing_token
+        controlChannel = "channels/" + coap_config.control_channel_id + "/messages" if coap_config.control_channel_id else ""
+        self.controlChannelGeneric = controlChannel + "/" + coap_config.thing_id if coap_config.control_channel_id and coap_config.thing_id else ""
+        self.otaChannel = controlChannel + "/" + coap_config.thing_id + "/ota" if coap_config.control_channel_id and coap_config.thing_id else ""
+        self.messageChannel = "channels/" + coap_config.message_channel_id + "/messages/" + coap_config.thing_id  if coap_config.message_channel_id and coap_config.thing_id else ""
 
         logging.debug("Selected channels:")
-        logging.debug(" status channel: " + self.statusChannel)
-        logging.debug(" requestChannel: " + self.requestChannel)
+        logging.debug(" ota channel: " + self.otaChannel)
         logging.debug(" messageChannel: " + self.messageChannel)
+
+        self.uriQueryAuthentication = "authorization=" + coap_config.thing_token
 
     def receivedMessageCallback(self, packet, sender):
         logging.debug('Message received:', packet.toString(), ', from: ', sender)
@@ -47,14 +46,15 @@ class CoAPClient:
             # todo: if status is true, send  status message
             # self.__sendMessageEx(self.statusChannel, '1', 1, True)
             # self.__check_msg(1000)
-            self.connected = status
+            #self.connected = status ############# workaround
+            self.connected = True
             return status
         except Exception as e:
             logging.exception(e, 'Exception during CoAP start: ')
             self.connected = False
             return False
 
-    def is_connected():
+    def is_connected(self):
         return self.connected
 
     def postMessage(self, message):
