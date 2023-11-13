@@ -272,8 +272,7 @@ def measure_4_20_mA_on_port(measurements, port_id):
             gpio_handler.set_pin_value(sensor_on_pin, 1)
 
             raw_mV = analog_generic.get_reading(sensor_out_pin)
-            current_mA = (raw_mV - 0) / (cfg._SHUNT_OHMS * cfg._INA_GAIN)
-            current_mA = round(current_mA)
+            current_mA = round((raw_mV / (cfg._SHUNT_OHMS * cfg._INA_GAIN) ) * 100) / 100
             logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(sensor_out_pin, raw_mV, current_mA))
             set_value_float(measurements, "4_20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
