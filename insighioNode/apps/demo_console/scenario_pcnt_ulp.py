@@ -222,7 +222,7 @@ def read_ulp_values(measurements, formula):
 
     edge_cnt = (65536*loops + edge_cnt_16bit)
 
-    set_value_int(measurements, "pcnt_count", edge_cnt // 2, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_int(measurements, "pcnt_count", edge_cnt / 2, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_int(measurements, "pcnt_edge_count", edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_int(measurements, "pcnt_period_s", time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
 
@@ -230,6 +230,7 @@ def read_ulp_values(measurements, formula):
         try:
             raw_value = edge_cnt // 2
             formula = formula.replace('v', str(raw_value))
+            formula = formula.replace('t', str(time_diff_from_prev))
             to_execute = "v_transformed=({})".format(formula)
             namespace = {}
             exec(to_execute, namespace)
