@@ -181,6 +181,27 @@
     }
 
     function validateMyForm() {
+      const validAliasRe = new RegExp("^[a-zA-Z\-_\/\.]+$");
+      var i = 0
+      var hasIssue = false
+      while (1) {
+        var elemValue = document.getElementById("input-key-value-" + i);
+
+        if (!elemValue)
+          break
+
+        if (elemValue.value !== "" && !validAliasRe.exec(elemValue.value.trim())) {
+          elemValue.style.borderColor = "red";
+          elemValue.focus()
+          hasIssue = true
+        }
+        i++
+      }
+      if (hasIssue) {
+        window.alert("Please use only accepted characters for alias: a-z, A-z, -, _, /, .")
+        return false
+      }
+
       storeData()
       return true
     }
