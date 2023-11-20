@@ -535,7 +535,7 @@
 
       Cookies.set('store-meas-if-failed-conn', boolElemToPyStr('input-store-meas-if-failed-conn'))
 
-      Cookies.set('meas-keyvalue', encodeURIComponent(JSON.stringify(getKeyValuePairs())))
+      Cookies.set('meas-keyvalue', getKeyValuePairs())
 
       if (elementIsVisible("shield-advind-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-advind-options"])

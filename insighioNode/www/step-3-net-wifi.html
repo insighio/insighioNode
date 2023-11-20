@@ -12,11 +12,11 @@
 </head>
 
 <body class="body-custom">
-  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center" >
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center">
 
   <div class="panel panel-custom">
     <div class="columns">
-      <div class="panel-nav col-12 hide-sm"><br/>
+      <div class="panel-nav col-12 hide-sm"><br />
         <ul class="step">
           <li class="step-item"><a>Login</a></li>
           <li class="step-item"><a>Select Network</a></li>
@@ -135,7 +135,7 @@
 
         var rssiValText = document.createElement("td")
         rssiValText.classList.add('pointer')
-        rssiValText.id = "rssiValText-"+Math.floor(Math.random()*1000)
+        rssiValText.id = "rssiValText-" + Math.floor(Math.random() * 1000)
 
         var colorName = network.rssi >= -67 ? "green" : network.rssi < -67 && network.rssi >= -89 ? "#E2B200" : "#A2021A"
         var rssidText = network.rssi >= -50 ? "very good" : network.rssi < -50 && network.rssi >= -67 ? "good" : network.rssi < -67 && network.rssi >= -89 ? "fair" : "bad"
@@ -161,13 +161,13 @@
       setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
 
       fetchInternal("/update_wifi_list")
-      .then(function (data) {
-        populateAvailableNets(data.wifiAvailableNets)
-        detectBoardChange(enableNavigationButtons)
-      }).catch((err) => {
-        console.log("error completing request", err);
-        showElement('loader', false)
-      });
+        .then(function (data) {
+          populateAvailableNets(data.wifiAvailableNets)
+          detectBoardChange(enableNavigationButtons)
+        }).catch((err) => {
+          console.log("error completing request", err);
+          showElement('loader', false)
+        });
     }
 
     function clearCookies() {
@@ -180,7 +180,7 @@
     function setProtocolCookie() {
       var protocols = document.getElementsByName('protocol')
 
-      for (var i = 0, length = protocols.length; i < length; i++) {
+      for (var i = 0, length = protocols.length;i < length;i++) {
         if (protocols[i].checked) {
           Cookies.set('protocol', protocols[i].value)
           break;
@@ -193,8 +193,8 @@
       clearCookies();
       //wifi
       Cookies.set('network', "wifi")
-      Cookies.set('wifi-ssid', encodeURIComponent(document.getElementById('input-ssid').value.trim()))
-      Cookies.set('wifi-pass', encodeURIComponent(document.getElementById('input-ssid-pass').value.trim()))
+      Cookies.set('wifi-ssid', document.getElementById('input-ssid').value.trim())
+      Cookies.set('wifi-pass', document.getElementById('input-ssid-pass').value.trim())
 
       setProtocolCookie();
 
@@ -209,7 +209,7 @@
       console.log("event: ", event)
       console.log("parent: ", event.srcElement.parentElement)
       let selectedParentElement = event.srcElement.parentElement
-      if(event.srcElement.parentElement && event.srcElement.parentElement.id && event.srcElement.parentElement.id.startsWith("rssiValText"))
+      if (event.srcElement.parentElement && event.srcElement.parentElement.id && event.srcElement.parentElement.id.startsWith("rssiValText"))
         selectedParentElement = selectedParentElement.parentElement
 
       document.getElementById('input-ssid').value = selectedParentElement.children[0].textContent

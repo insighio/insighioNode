@@ -113,10 +113,9 @@
       return returnObj
     }
 
-    function loadCookie(name, isEncoded) {
+    function loadCookie(name) {
       try {
-        var cookie = Cookies.get(name)
-        storedMapping = JSON.parse(isEncoded ? decodeURIComponent(cookie) : cookie)
+        storedMapping = JSON.parse(Cookies.get(name))
         console.log("successfully parsed name", name)
         return storedMapping
       }
@@ -129,8 +128,7 @@
     function initializeValues() {
       disableNavigationButtons()
 
-      if (!loadCookie("meas-name-ext-mapping", false) && !loadCookie("meas-name-ext-mapping", true) &&
-        !loadCookie("meas-name-mapping", false) && !loadCookie("meas-name-mapping", true)) {
+      if (!loadCookie("meas-name-ext-mapping") && !loadCookie("meas-name-mapping")) {
         storedMapping = {}
       }
       else {
@@ -175,7 +173,7 @@
     function storeData() {
       disableNavigationButtons()
       clearCookies();
-      Cookies.set('meas-name-ext-mapping', encodeURIComponent(JSON.stringify(getAliasUnitPairs())))
+      Cookies.set('meas-name-ext-mapping', getAliasUnitPairs())
       redirectTo("step-7-verify.html")
       enableNavigationButtons()
     }
@@ -251,7 +249,7 @@
         if (config.hasOwnProperty(key)) {
           configString += (key + "=" + config[key] + "&")
           if (key == 'wifi-ssid' || key == 'wifi-pass' || key == 'meas-keyvalue') {
-            config[key] = decodeURIComponent(config[key]).replaceAll("\\", "\\\\").replaceAll("'", "\\'")
+            config[key] = config[key].replaceAll("\\", "\\\\").replaceAll("'", "\\'")
           }
         }
       }
