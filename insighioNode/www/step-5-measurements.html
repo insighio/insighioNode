@@ -408,10 +408,10 @@
 
       setElemValue('input-gps-timeout', Cookies.get("meas-gps-timeout"), 120, false)
       setElemValue('input-gps-sat-num', Cookies.get("meas-gps-sat-num"), 4, false)
-      setElemValueBool('input-gps-no-fix-no-upload', strToJSValue(Cookies.get("meas-gps-no-fix-no-upload")),  false)
-      setElemValueBool('input-gps-only-on-boot', strToJSValue(Cookies.get("meas-gps-only-on-boot")),  false)
+      setElemValueBool('input-gps-no-fix-no-upload', strToJSValue(Cookies.get("meas-gps-no-fix-no-upload")), false)
+      setElemValueBool('input-gps-only-on-boot', strToJSValue(Cookies.get("meas-gps-only-on-boot")), false)
 
-      for (let i = 1; i <= 10; ++i) {
+      for (let i = 1;i <= 10;++i) {
         var sdi12Enabled = strToJSValue(Cookies.get("meas-sdi-" + i + "-enabled"))
 
         setElemValue('option-ins-esp-gen-sdi12-' + i + '-address', Cookies.get("meas-sdi-" + i + "-address"), i - 1)
@@ -496,7 +496,7 @@
       Cookies.remove('meas-pcnt-1-formula')
       Cookies.remove('meas-pcnt-1-high-freq')
 
-      for (let i = 1; i < 11; ++i) {
+      for (let i = 1;i < 11;++i) {
         Cookies.remove('meas-sdi-' + i + '-enabled')
         Cookies.remove('meas-sdi-' + i + '-address')
         Cookies.remove('meas-sdi-' + i + '-loc')
@@ -540,7 +540,7 @@
       if (elementIsVisible("shield-advind-options")) {
         Cookies.set('selected-shield', shieldNamePerTab["shield-advind-options"])
 
-        for (let i = 1; i < 11; ++i) {
+        for (let i = 1;i < 11;++i) {
           setSDI12Cookie(i)
         }
 
@@ -609,8 +609,8 @@
       enableNavigationButtons()
     }
 
-    function redirectoToMeasurementNaming(){
-      if(Cookies.get('network') !== "lora")
+    function redirectoToMeasurementNaming() {
+      if (Cookies.get('network') !== "lora")
         redirectTo("step-5-4-measurement-naming.html")
       else
         redirectTo("step-6-timing.html")
@@ -621,12 +621,12 @@
       var i, tabcontent, tablinks;
 
       tabcontent = document.getElementsByClassName("tabcontent");
-      for (i = 0; i < tabcontent.length; i++) {
+      for (i = 0;i < tabcontent.length;i++) {
         tabcontent[i].style.display = "none";
       }
 
       tablinks = document.getElementsByClassName("tab-item");
-      for (i = 0; i < tablinks.length; i++) {
+      for (i = 0;i < tablinks.length;i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
       }
 
@@ -646,11 +646,11 @@
     function generateSdi12Options() {
       var parent = document.getElementById("option-sdi12-table-rows");
 
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0;i < 10;i++) {
         sdi12Options[i.toString()] = i
       }
 
-      for (let i = 1; i <= 10; i++) {
+      for (let i = 1;i <= 10;i++) {
         var row = document.createElement("tr")
         if (i % 1)
           row.classList.add('active')

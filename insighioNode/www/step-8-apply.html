@@ -13,11 +13,11 @@
 
 <body class="body-custom">
 
-  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center" >
+  <img src="img/logo.png" class="img-responsive px-2 py-2 img-center">
 
   <div class="panel panel-custom">
     <div class="columns">
-      <div class="panel-nav col-12 hide-sm"><br/>
+      <div class="panel-nav col-12 hide-sm"><br />
         <ul class="step">
           <li class="step-item"><a>Login</a></li>
           <li class="step-item"><a>Select Network</a></li>
@@ -37,7 +37,7 @@
       <div id="loader" class="loading loading-lg"></div>
       <div class="empty">
         <div id="finished_icon_1" class="empty-icon" style="display: none">
-          <i class="icon icon-2x icon-check" ></i>
+          <i class="icon icon-2x icon-check"></i>
         </div>
         <p id="loading_label_1" class="empty-title h5">Applying Configuration...</p>
         <p id="finished_label_1" class="empty-title h5" style="display: none">Configuration Applied</p>
@@ -64,7 +64,7 @@
         for (let key in config) {
           if (config.hasOwnProperty(key)) {
             isConfigValid = true
-            if(key === 'wifi-ssid' || key === 'wifi-pass' || key === 'meas-name-mapping' || key === 'meas-keyvalue') {
+            if (key === 'wifi-ssid' || key === 'wifi-pass' || key === 'meas-name-mapping' || key === 'meas-name-ext-mapping' || key === 'meas-keyvalue') {
               encodedParams[key] = config[key]
               config[key] = decodeURIComponent(config[key]).replaceAll("\\", "\\\\").replaceAll("'", "\\'")
             }
@@ -87,11 +87,11 @@
           },
           body: JSON.stringify(objToSend)
         }).then(res => {
-            for (let key in config) {
-              Cookies.remove(key)
-            }
-            requestReboot()
-          })
+          for (let key in config) {
+            Cookies.remove(key)
+          }
+          requestReboot()
+        })
           .catch(err => {
             console.log("error saving config: ", err)
           })

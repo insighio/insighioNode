@@ -10,6 +10,7 @@ app_path = None
 rootFolder = None
 config_file = None
 
+
 def getModulePathFromFile(file_path):
     if file_path is None:
         return None
@@ -18,6 +19,7 @@ def getModulePathFromFile(file_path):
     if module_path.startswith("."):
         module_path = module_path[1:]
     return module_path
+
 
 def setApplicationName(newName="demo_console"):
     global app_name
@@ -29,12 +31,13 @@ def setApplicationName(newName="demo_console"):
     rootFolder = "/"
 
     prev_config_file = config_file
-    app_path = '{}apps/{}'.format(rootFolder, newName)
-    config_file = '{}apps/{}/demo_config.py'.format(rootFolder, app_name)
+    app_path = "{}apps/{}".format(rootFolder, newName)
+    config_file = "{}apps/{}/demo_config.py".format(rootFolder, app_name)
 
     if prev_config_file != config_file:
         logging.info("Reloading configuration modules")
         import sys
+
         try:
             prev_module_path = getModulePathFromFile(prev_config_file)
             if prev_module_path:
@@ -43,121 +46,125 @@ def setApplicationName(newName="demo_console"):
 
             new_module_path = getModulePathFromFile(config_file)
             logging.info("loading module: {}".format(new_module_path))
-            exec('import {} as cfg'.format(new_module_path))
-            _config_is_valid=True
+            exec("import {} as cfg".format(new_module_path))
+            _config_is_valid = True
         except Exception as e:
             logging.exception(e, "error reloading configuration module")
-            _config_is_valid=False
+            _config_is_valid = False
+
 
 setApplicationName("demo_console")
 
 configDict = {
-"_APN": "cell_apn",
-"_APP_EUI": "lora_app_eui",
-"_APP_KEY": "lora_app_key",
-"_BAND": "cell_band",
-"_BATCH_UPLOAD_MESSAGE_BUFFER": "batch_upload_buffer_size",
-"_BOARD_TYPE": "selected_board",
-"_CELLULAR_TECHNOLOGY": "cell_tech",
-"_CHECK_FOR_OTA": "system_enable_ota",
-"_DEEP_SLEEP_PERIOD_SEC": "period",
-"_DEV_EUI": "lora_dev_eui",
-"_IP_VERSION": "ipversion",
-"_LORA_ADR": "lora_adr",
-"_LORA_CONFIRMED": "lora_confirmed",
-"_LORA_DR": "lora_dr",
-"_LORA_REGION": "lora_region",
-"_LORA_TX_RETRIES": "lora_retries",
-"_MEAS_ANALOG_DIGITAL_P1": "meas_sensor_a_d_p1",
-"_MEAS_ANALOG_DIGITAL_P1_TRANSFORMATION": "meas_sensor_a_d_p1_t",
-"_MEAS_ANALOG_DIGITAL_P2": "meas_sensor_a_d_p2",
-"_MEAS_ANALOG_DIGITAL_P2_TRANSFORMATION": "meas_sensor_a_d_p2_t",
-"_MEAS_ANALOG_DIGITAL_P3": "meas_sensor_a_d_p3",
-"_MEAS_ANALOG_DIGITAL_P3_TRANSFORMATION": "meas_sensor_a_d_p3_t",
-"_MEAS_ANALOG_P1": "meas_sensor_a_p1",
-"_MEAS_ANALOG_P1_TRANSFORMATION": "meas_sensor_a_p1_t",
-"_MEAS_ANALOG_P2": "meas_sensor_a_p2",
-"_MEAS_ANALOG_P2_TRANSFORMATION": "meas_sensor_a_p2_t",
-"_MEAS_BATTERY_STAT_ENABLE": "meas_battery_stat",
-"_MEAS_BOARD_SENSE_ENABLE": "meas_board_sense",
-"_MEAS_BOARD_STAT_ENABLE": "meas_board_stat",
-"_MEAS_GPS_ENABLE": "meas_gps_enabled",
-"_MEAS_GPS_SATELLITE_FIX_NUM": "meas_gps_sat_num",
-"_MEAS_GPS_TIMEOUT": "meas_gps_timeout",
-"_MEAS_I2C_1": "meas_i2c_1",
-"_MEAS_I2C_2": "meas_i2c_2",
-"_MEAS_KEYVALUE": "meas_keyvalue",
-"_MEAS_NAME_MAPPING": "meas_name_mapping",
-"_MEAS_NETWORK_STAT_ENABLE": "meas_network_stat",
-"_MEAS_SCALE_ENABLED": "meas_scale_enabled",
-"_MEAS_TEMP_UNIT_IS_CELSIUS": "meas_temp_unit",
-"_NOTIFICATION_LED_ENABLED": "meas_led_enabled",
-"_SELECTED_SHIELD": "selected_shield",
-"_SCHEDULED_TIMESTAMP_A_SECOND": "scheduled_time_a",
-"_SCHEDULED_TIMESTAMP_B_SECOND": "scheduled_time_b",
-"_SDI12_SENSOR_1_ADDRESS": "meas_sdi_1_address",
-"_SDI12_SENSOR_1_ENABLED": "meas_sdi_1_enabled",
-"_SDI12_SENSOR_1_LOCATION": "meas_sdi_1_loc",
-"_SDI12_SENSOR_2_ADDRESS": "meas_sdi_2_address",
-"_SDI12_SENSOR_2_ENABLED": "meas_sdi_2_enabled",
-"_SDI12_SENSOR_2_LOCATION": "meas_sdi_2_loc",
-"_SDI12_SENSOR_3_ADDRESS": "meas_sdi_3_address",
-"_SDI12_SENSOR_3_ENABLED": "meas_sdi_3_enabled",
-"_SDI12_SENSOR_3_LOCATION": "meas_sdi_3_loc",
-"_SDI12_SENSOR_4_ADDRESS": "meas_sdi_4_address",
-"_SDI12_SENSOR_4_ENABLED": "meas_sdi_4_enabled",
-"_SDI12_SENSOR_4_LOCATION": "meas_sdi_4_loc",
-"_SDI12_SENSOR_5_ADDRESS": "meas_sdi_5_address",
-"_SDI12_SENSOR_5_ENABLED": "meas_sdi_5_enabled",
-"_SDI12_SENSOR_5_LOCATION": "meas_sdi_5_loc",
-"_SDI12_SENSOR_6_ADDRESS": "meas_sdi_6_address",
-"_SDI12_SENSOR_6_ENABLED": "meas_sdi_6_enabled",
-"_SDI12_SENSOR_6_LOCATION": "meas_sdi_6_loc",
-"_SDI12_SENSOR_7_ADDRESS": "meas_sdi_7_address",
-"_SDI12_SENSOR_7_ENABLED": "meas_sdi_7_enabled",
-"_SDI12_SENSOR_7_LOCATION": "meas_sdi_7_loc",
-"_SDI12_SENSOR_8_ADDRESS": "meas_sdi_8_address",
-"_SDI12_SENSOR_8_ENABLED": "meas_sdi_8_enabled",
-"_SDI12_SENSOR_8_LOCATION": "meas_sdi_8_loc",
-"_SDI12_SENSOR_9_ADDRESS": "meas_sdi_9_address",
-"_SDI12_SENSOR_9_ENABLED": "meas_sdi_9_enabled",
-"_SDI12_SENSOR_9_LOCATION": "meas_sdi_9_loc",
-"_SDI12_SENSOR_10_ADDRESS": "meas_sdi_10_address",
-"_SDI12_SENSOR_10_ENABLED": "meas_sdi_10_enabled",
-"_SDI12_SENSOR_10_LOCATION": "meas_sdi_10_loc",
-"_SDI12_WARM_UP_TIME_MSEC": "meas_sdi_warmup_time",
-"_UC_IO_SCALE_OFFSET": "meas_scale_offset",
-"_UC_IO_SCALE_SCALE": "meas_scale_scale",
-"protocol": "protocol",
-"network": "network",
-"_ALWAYS_ON_CONNECTION": "always_on_connection",
-"_FORCE_ALWAYS_ON_CONNECTION": "force_always_on_connection",
-"_ALWAYS_ON_PERIOD": "always_on_period",
-"_MEAS_GPS_NO_FIX_NO_UPLOAD": "meas_gps_no_fix_no_upload",
-"_STORE_MEASUREMENT_IF_FAILED_CONNECTION": "store_meas_if_failed_conn",
-"_4_20_SNSR_1_ENABLE": "meas_4_20_snsr_1_enable",
-"_4_20_SNSR_1_FORMULA": "meas_4_20_snsr_1_formula",
-"_4_20_SNSR_2_ENABLE": "meas_4_20_snsr_2_enable",
-"_4_20_SNSR_2_FORMULA": "meas_4_20_snsr_2_formula",
-"_SATELLITE_ASTROCAST_DEVKIT_EN": "sat_astro_devkit_en",
-"_SATELLITE_ASTROCAST_DEVKIT_SSID": "sat_astro_devkit_ssid",
-"_SATELLITE_ASTROCAST_DEVKIT_PASS": "sat_astro_devkit_pass",
-"_SATELLITE_ASTROCAST_DEVKIT_TOKEN": "sat_astro_devkit_token",
-"_MEAS_SCALE_MONITORING_ENABLED": "meas_scale_monitoring_enabled",
-'_PCNT_1_ENABLE': "meas_pcnt_1_enable",
-'_PCNT_1_COUNT_ON_RISING': "meas_pcnt_1_cnt_on_rising",
-'_PCNT_1_HIGH_FREQ': "meas_pcnt_1_high_freq",
-'_PCNT_1_FORMULA': "meas_pcnt_1_formula",
-'_WIFI_SSID': 'wifi_ssid',
-'_WIFI_PASS': 'wifi_pass',
-'_SELECTED_SHIELD': 'selected_shield',
-'_MEAS_GPS_ONLY_ON_BOOT': 'meas_gps_only_on_boot'
+    "_APN": "cell_apn",
+    "_APP_EUI": "lora_app_eui",
+    "_APP_KEY": "lora_app_key",
+    "_BAND": "cell_band",
+    "_BATCH_UPLOAD_MESSAGE_BUFFER": "batch_upload_buffer_size",
+    "_BOARD_TYPE": "selected_board",
+    "_CELLULAR_TECHNOLOGY": "cell_tech",
+    "_CHECK_FOR_OTA": "system_enable_ota",
+    "_DEEP_SLEEP_PERIOD_SEC": "period",
+    "_DEV_EUI": "lora_dev_eui",
+    "_IP_VERSION": "ipversion",
+    "_LORA_ADR": "lora_adr",
+    "_LORA_CONFIRMED": "lora_confirmed",
+    "_LORA_DR": "lora_dr",
+    "_LORA_REGION": "lora_region",
+    "_LORA_TX_RETRIES": "lora_retries",
+    "_MEAS_ANALOG_DIGITAL_P1": "meas_sensor_a_d_p1",
+    "_MEAS_ANALOG_DIGITAL_P1_TRANSFORMATION": "meas_sensor_a_d_p1_t",
+    "_MEAS_ANALOG_DIGITAL_P2": "meas_sensor_a_d_p2",
+    "_MEAS_ANALOG_DIGITAL_P2_TRANSFORMATION": "meas_sensor_a_d_p2_t",
+    "_MEAS_ANALOG_DIGITAL_P3": "meas_sensor_a_d_p3",
+    "_MEAS_ANALOG_DIGITAL_P3_TRANSFORMATION": "meas_sensor_a_d_p3_t",
+    "_MEAS_ANALOG_P1": "meas_sensor_a_p1",
+    "_MEAS_ANALOG_P1_TRANSFORMATION": "meas_sensor_a_p1_t",
+    "_MEAS_ANALOG_P2": "meas_sensor_a_p2",
+    "_MEAS_ANALOG_P2_TRANSFORMATION": "meas_sensor_a_p2_t",
+    "_MEAS_BATTERY_STAT_ENABLE": "meas_battery_stat",
+    "_MEAS_BOARD_SENSE_ENABLE": "meas_board_sense",
+    "_MEAS_BOARD_STAT_ENABLE": "meas_board_stat",
+    "_MEAS_GPS_ENABLE": "meas_gps_enabled",
+    "_MEAS_GPS_SATELLITE_FIX_NUM": "meas_gps_sat_num",
+    "_MEAS_GPS_TIMEOUT": "meas_gps_timeout",
+    "_MEAS_I2C_1": "meas_i2c_1",
+    "_MEAS_I2C_2": "meas_i2c_2",
+    "_MEAS_KEYVALUE": "meas_keyvalue",
+    "_MEAS_NAME_MAPPING": "meas_name_mapping",
+    "_MEAS_NAME_EXT_MAPPING": "meas_name_ext_mapping",
+    "_MEAS_NETWORK_STAT_ENABLE": "meas_network_stat",
+    "_MEAS_SCALE_ENABLED": "meas_scale_enabled",
+    "_MEAS_TEMP_UNIT_IS_CELSIUS": "meas_temp_unit",
+    "_NOTIFICATION_LED_ENABLED": "meas_led_enabled",
+    "_SELECTED_SHIELD": "selected_shield",
+    "_SCHEDULED_TIMESTAMP_A_SECOND": "scheduled_time_a",
+    "_SCHEDULED_TIMESTAMP_B_SECOND": "scheduled_time_b",
+    "_SDI12_SENSOR_1_ADDRESS": "meas_sdi_1_address",
+    "_SDI12_SENSOR_1_ENABLED": "meas_sdi_1_enabled",
+    "_SDI12_SENSOR_1_LOCATION": "meas_sdi_1_loc",
+    "_SDI12_SENSOR_2_ADDRESS": "meas_sdi_2_address",
+    "_SDI12_SENSOR_2_ENABLED": "meas_sdi_2_enabled",
+    "_SDI12_SENSOR_2_LOCATION": "meas_sdi_2_loc",
+    "_SDI12_SENSOR_3_ADDRESS": "meas_sdi_3_address",
+    "_SDI12_SENSOR_3_ENABLED": "meas_sdi_3_enabled",
+    "_SDI12_SENSOR_3_LOCATION": "meas_sdi_3_loc",
+    "_SDI12_SENSOR_4_ADDRESS": "meas_sdi_4_address",
+    "_SDI12_SENSOR_4_ENABLED": "meas_sdi_4_enabled",
+    "_SDI12_SENSOR_4_LOCATION": "meas_sdi_4_loc",
+    "_SDI12_SENSOR_5_ADDRESS": "meas_sdi_5_address",
+    "_SDI12_SENSOR_5_ENABLED": "meas_sdi_5_enabled",
+    "_SDI12_SENSOR_5_LOCATION": "meas_sdi_5_loc",
+    "_SDI12_SENSOR_6_ADDRESS": "meas_sdi_6_address",
+    "_SDI12_SENSOR_6_ENABLED": "meas_sdi_6_enabled",
+    "_SDI12_SENSOR_6_LOCATION": "meas_sdi_6_loc",
+    "_SDI12_SENSOR_7_ADDRESS": "meas_sdi_7_address",
+    "_SDI12_SENSOR_7_ENABLED": "meas_sdi_7_enabled",
+    "_SDI12_SENSOR_7_LOCATION": "meas_sdi_7_loc",
+    "_SDI12_SENSOR_8_ADDRESS": "meas_sdi_8_address",
+    "_SDI12_SENSOR_8_ENABLED": "meas_sdi_8_enabled",
+    "_SDI12_SENSOR_8_LOCATION": "meas_sdi_8_loc",
+    "_SDI12_SENSOR_9_ADDRESS": "meas_sdi_9_address",
+    "_SDI12_SENSOR_9_ENABLED": "meas_sdi_9_enabled",
+    "_SDI12_SENSOR_9_LOCATION": "meas_sdi_9_loc",
+    "_SDI12_SENSOR_10_ADDRESS": "meas_sdi_10_address",
+    "_SDI12_SENSOR_10_ENABLED": "meas_sdi_10_enabled",
+    "_SDI12_SENSOR_10_LOCATION": "meas_sdi_10_loc",
+    "_SDI12_WARM_UP_TIME_MSEC": "meas_sdi_warmup_time",
+    "_UC_IO_SCALE_OFFSET": "meas_scale_offset",
+    "_UC_IO_SCALE_SCALE": "meas_scale_scale",
+    "protocol": "protocol",
+    "network": "network",
+    "_ALWAYS_ON_CONNECTION": "always_on_connection",
+    "_FORCE_ALWAYS_ON_CONNECTION": "force_always_on_connection",
+    "_ALWAYS_ON_PERIOD": "always_on_period",
+    "_MEAS_GPS_NO_FIX_NO_UPLOAD": "meas_gps_no_fix_no_upload",
+    "_STORE_MEASUREMENT_IF_FAILED_CONNECTION": "store_meas_if_failed_conn",
+    "_4_20_SNSR_1_ENABLE": "meas_4_20_snsr_1_enable",
+    "_4_20_SNSR_1_FORMULA": "meas_4_20_snsr_1_formula",
+    "_4_20_SNSR_2_ENABLE": "meas_4_20_snsr_2_enable",
+    "_4_20_SNSR_2_FORMULA": "meas_4_20_snsr_2_formula",
+    "_SATELLITE_ASTROCAST_DEVKIT_EN": "sat_astro_devkit_en",
+    "_SATELLITE_ASTROCAST_DEVKIT_SSID": "sat_astro_devkit_ssid",
+    "_SATELLITE_ASTROCAST_DEVKIT_PASS": "sat_astro_devkit_pass",
+    "_SATELLITE_ASTROCAST_DEVKIT_TOKEN": "sat_astro_devkit_token",
+    "_MEAS_SCALE_MONITORING_ENABLED": "meas_scale_monitoring_enabled",
+    "_PCNT_1_ENABLE": "meas_pcnt_1_enable",
+    "_PCNT_1_COUNT_ON_RISING": "meas_pcnt_1_cnt_on_rising",
+    "_PCNT_1_HIGH_FREQ": "meas_pcnt_1_high_freq",
+    "_PCNT_1_FORMULA": "meas_pcnt_1_formula",
+    "_WIFI_SSID": "wifi_ssid",
+    "_WIFI_PASS": "wifi_pass",
+    "_SELECTED_SHIELD": "selected_shield",
+    "_MEAS_GPS_ONLY_ON_BOOT": "meas_gps_only_on_boot",
 }
 
 NoneType = type(None)
 
+
 def isConfigValid():
     return _config_is_valid
+
 
 def fixValue(val):
     if val == "true":
@@ -168,6 +175,7 @@ def fixValue(val):
         return "None"
     else:
         return val
+
 
 def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=False):
     configKeyValues = dict()
@@ -190,6 +198,7 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
                 configKeyValues[webUIKey] = ""
             elif isinstance(value, dict):
                 import ujson
+
                 configKeyValues[webUIKey] = ujson.dumps(value)
     except:
         pass
@@ -211,7 +220,7 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
     try:
         ssid = list(cfg._CONF_NETS.keys())[0]
         configKeyValues["wifi_ssid"] = ssid
-        configKeyValues["wifi_pass"] = cfg._CONF_NETS[ssid]['pwd']
+        configKeyValues["wifi_pass"] = cfg._CONF_NETS[ssid]["pwd"]
     except:
         configKeyValues["wifi_ssid"] = ""
         configKeyValues["wifi_pass"] = ""
@@ -236,9 +245,10 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
             newKey = key.replace("_", "-")
             newValue = fixValue(configKeyValues[key])
             tmpDict[newKey] = newValue
-        return  tmpDict
+        return tmpDict
     else:
         return configKeyValues
+
 
 def get_config_URI_param():
     configDict = get_config_values(False)
@@ -246,7 +256,7 @@ def get_config_URI_param():
     uri_str = ""
     try:
         for key in configDict.keys():
-            if uri_str != "" :
+            if uri_str != "":
                 uri_str += "&"
             uri_str += "{}={}".format(key.replace("_", "-"), configDict[key])
 
@@ -254,9 +264,10 @@ def get_config_URI_param():
     except Exception as e:
         logging.exception(e, "get_config_URI_param:")
 
+
 def updateConfigValue(key, new_value):
     logging.debug("about to update config key: {} to value: {}".format(key, new_value))
-    configContent = utils.readFromFile(config_file).split('\n')
+    configContent = utils.readFromFile(config_file).split("\n")
 
     if isinstance(new_value, str):
         regex = '{}\s*=\s*"(.*)"'.format(key)
@@ -273,11 +284,11 @@ def updateConfigValue(key, new_value):
     for i in range(0, len(configContent)):
         match = ure.search(regex, configContent[i])
         if match:
-            has_changes = (match.group(1) != str(new_value))
+            has_changes = match.group(1) != str(new_value)
             if has_changes:
                 configContent[i] = ure.sub(regex, new_key_value_str, configContent[i])
             config_found = True
-            #break
+            # break
 
     if not config_found:
         configContent.append(new_key_value_str)
@@ -288,23 +299,29 @@ def updateConfigValue(key, new_value):
     try:
         setattr(cfg, key, new_value)
     except Exception as e:
-        logging.exception(e, "Error setting value to loaded configuration. It could be that you have no configuration yet...")
+        logging.exception(
+            e,
+            "Error setting value to loaded configuration. It could be that you have no configuration yet...",
+        )
 
-    utils.writeToFile(config_file, '\n'.join(configContent))
+    utils.writeToFile(config_file, "\n".join(configContent))
     notifyServerWithNewConfig()
     logging.info("finished updating config ")
+
 
 def notifyServerWithNewConfig():
     newConfig = get_config_URI_param()
     utils.writeToFile("/configLog", newConfig)
+
 
 def get_file_config(fileName, keyValuePairs):
     gc.collect()
     logging.debug("Getting file config: {}".format(fileName))
     contents = utils.readFromFile(fileName)
     for param in keyValuePairs:
-        contents = contents.replace('<' + param + '>', keyValuePairs[param])
-    return ure.sub(r'\"?<[a-z\-0-9]+>\"?', 'None', contents)
+        contents = contents.replace("<" + param + ">", keyValuePairs[param])
+    return ure.sub(r"\"?<[a-z\-0-9]+>\"?", "None", contents)
+
 
 def stringParamsToDict(configurationParameters):
     # remove '?' if the string starts with it
@@ -323,6 +340,7 @@ def stringParamsToDict(configurationParameters):
             logging.error("key value error |{}|".format(keyValue))
     return keyValueDict
 
+
 def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file):
     gc.collect()
 
@@ -333,8 +351,8 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
     for param in keyValuePairDictionary:
         val = keyValuePairDictionary[param]
         key = param
-        if '_' in param:
-            key = param.replace("_", '-')
+        if "_" in param:
+            key = param.replace("_", "-")
             print("changing key [{}] to [{}]".format(param, key))
             del keyValuePairDictionary[param]
 
@@ -344,7 +362,8 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
 
     operation = ""
     import device_info
-    board = device_info.get_hw_module_verison()
+
+    board = device_info.get_hw_module_version()
     shield = ""
     for param in keyValuePairDictionary:
         if param == "network":
@@ -352,42 +371,76 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         elif param == "selected-shield":
             shield = keyValuePairDictionary[param]
 
-    contents = get_file_config(app_path + '/templ/common_templ.py', keyValuePairDictionary)
+    contents = get_file_config(
+        app_path + "/templ/common_templ.py", keyValuePairDictionary
+    )
 
     # set project configuration content
     if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
-        contents += get_file_config(app_path + '/templ/device_ins_esp32_templ.py', keyValuePairDictionary)
+        contents += get_file_config(
+            app_path + "/templ/device_ins_esp32_templ.py", keyValuePairDictionary
+        )
     elif board == device_info._CONST_ESP32S3:
-        contents += get_file_config(app_path + '/templ/device_ins_esp32s3_templ.py', keyValuePairDictionary)
+        contents += get_file_config(
+            app_path + "/templ/device_ins_esp32s3_templ.py", keyValuePairDictionary
+        )
     else:
         print("[ERROR]: device not supported: {}".format(board))
 
-    contents += get_file_config(app_path + '/templ/device_i2c_analog_config_templ.py', keyValuePairDictionary)
+    contents += get_file_config(
+        app_path + "/templ/device_i2c_analog_config_templ.py", keyValuePairDictionary
+    )
     if shield == "advind":
-        contents += get_file_config(app_path + '/templ/shield_advind_templ.py', keyValuePairDictionary)
-        contents += get_file_config(app_path + '/templ/device_advind_config_templ.py', keyValuePairDictionary)
+        contents += get_file_config(
+            app_path + "/templ/shield_advind_templ.py", keyValuePairDictionary
+        )
+        contents += get_file_config(
+            app_path + "/templ/device_advind_config_templ.py", keyValuePairDictionary
+        )
     elif shield == "dig_analog":
-        contents += get_file_config(app_path + '/templ/shield_i2c_dig_analog_templ.py', keyValuePairDictionary)
+        contents += get_file_config(
+            app_path + "/templ/shield_i2c_dig_analog_templ.py", keyValuePairDictionary
+        )
     elif shield == "scale":
         if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
-            contents += get_file_config(app_path + '/templ/shield_esp32_scale.py', keyValuePairDictionary)
+            contents += get_file_config(
+                app_path + "/templ/shield_esp32_scale.py", keyValuePairDictionary
+            )
         elif board == device_info._CONST_ESP32S3:
-            contents += get_file_config(app_path + '/templ/shield_esp32s3_scale.py', keyValuePairDictionary)
-        contents += get_file_config(app_path + '/templ/device_scale_config.py', keyValuePairDictionary)
+            contents += get_file_config(
+                app_path + "/templ/shield_esp32s3_scale.py", keyValuePairDictionary
+            )
+        contents += get_file_config(
+            app_path + "/templ/device_scale_config.py", keyValuePairDictionary
+        )
 
-    contents += '\n'
+    contents += "\n"
 
-    if operation == 'wifi':
-        contents += '\n' + get_file_config(app_path + '/templ/wifi_config_templ.py', keyValuePairDictionary)
-        contents += '\n' + get_file_config(app_path + '/templ/protocol_config_templ.py', keyValuePairDictionary)
-    elif operation == 'cellular':
-        contents += '\n' + get_file_config(app_path + '/templ/cellular_config_templ.py', keyValuePairDictionary)
-        contents += '\n' + get_file_config(app_path + '/templ/protocol_config_templ.py', keyValuePairDictionary)
-    elif operation == 'lora':
-        contents += '\n' + get_file_config(app_path + '/templ/shield_lora_templ.py', keyValuePairDictionary)
-        contents += '\n' + get_file_config(app_path + '/templ/lora_config_templ.py', keyValuePairDictionary)
-    elif operation == 'satellite':
-        contents += '\n' + get_file_config(app_path + '/templ/satellite_config_templ.py', keyValuePairDictionary)
+    if operation == "wifi":
+        contents += "\n" + get_file_config(
+            app_path + "/templ/wifi_config_templ.py", keyValuePairDictionary
+        )
+        contents += "\n" + get_file_config(
+            app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary
+        )
+    elif operation == "cellular":
+        contents += "\n" + get_file_config(
+            app_path + "/templ/cellular_config_templ.py", keyValuePairDictionary
+        )
+        contents += "\n" + get_file_config(
+            app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary
+        )
+    elif operation == "lora":
+        contents += "\n" + get_file_config(
+            app_path + "/templ/shield_lora_templ.py", keyValuePairDictionary
+        )
+        contents += "\n" + get_file_config(
+            app_path + "/templ/lora_config_templ.py", keyValuePairDictionary
+        )
+    elif operation == "satellite":
+        contents += "\n" + get_file_config(
+            app_path + "/templ/satellite_config_templ.py", keyValuePairDictionary
+        )
 
     # create new
     utils.writeToFile(config_file_explicit, contents)

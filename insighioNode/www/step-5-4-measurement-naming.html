@@ -36,103 +36,149 @@
       <div id="loader" class="loading loading-lg"></div>
       <div class="container grid-lg">
         <div class="columns flex-centered">
-          <div class="column col-xl-7 col-md-10 col-sm-12">
-            <div class="form-group">
-              <div class="columns">
-                <div class="col-12">
-                  <div class="divider text-center" data-content="Custom measurement naming"></div>
-                </div>
-                <br />
-                <div id="board-default-options" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>name</th>
-                        <th>alias</th>
-                        <th>unit</th>
-                        <th>value</th>
-                      </tr>
-                    </thead>
-                    <tbody id="measurementList">
-                    </tbody>
-                  </table>
-                </div>
-                <br />
-                <br />
-              </div>
-              <br />
-              <div class="column col-12">
-                <button class="btn btn-primary" type="button" id="update-measurements-button" onclick="executeMeasurements()">Update</button>
-                <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Skip</button>
-                <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
-              </div>
-              <br />
-              <br />
+          <div class="columns">
+            <div class="col-12">
+              <div class="divider text-center" data-content="Custom measurement naming"></div>
             </div>
+            <br />
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>name</th>
+                  <th>alias</th>
+                  <th>unit</th>
+                  <th>value</th>
+                </tr>
+              </thead>
+              <tbody id="measurementList">
+              </tbody>
+              <br />
+            </table>
+
+            <br />
+            <br />
           </div>
+          <br />
+          <div class="column col-12">
+            <button class="btn btn-primary" type="button" id="update-measurements-button" onclick="executeMeasurements()">Update</button>
+            <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Skip</button>
+            <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+          </div>
+          <br />
+          <br />
+        </div>
+        <div class="toast">
+          Accepted Characters: a-z, A-z, -, _, /, .
         </div>
       </div>
     </div>
+
   </div>
 
 
   <script src="js/js.cookie.min.js"></script>
   <script src="js/utils.js"></script>
+  <script src="js/unitHelper.js"></script>
   <script>
-    var shieldNamePerTab = {
-      "shield-advind-options": "advind",
-      "shield-scale-options": "scale",
-      "shield-dig-analog-options": "dig_analog"
-    }
 
     var storedMapping = undefined
+    var defaultUnits = {}
+
+    function getAliasUnitPairs() {
+      let returnObj = {}
+
+      var i = 0
+      while (1) {
+        var elemKey = document.getElementById("input-key-name-" + i);
+        var elemValue = document.getElementById("input-key-value-" + i);
+        var elemUnit = document.getElementById("input-key-unit-" + i);
+
+        if (!elemKey || elemKey.value === '')
+          break
+
+        var new_obj = {}
+
+        if (elemValue && elemValue.value !== '')
+          new_obj.alias = elemValue.value.trim()
+
+        if (elemUnit && (elemUnit.value !== defaultUnits[elemKey.value] || storedMapping[elemKey.value].unitUpdated))
+          new_obj.unit = elemUnit.value.trim()
+
+        if (new_obj.alias || new_obj.unit)
+          returnObj[elemKey.value] = { ...new_obj }
+
+        i++
+      }
+
+      return returnObj
+    }
+
+    function loadCookie(name, isEncoded) {
+      try {
+        var cookie = Cookies.get(name)
+        storedMapping = JSON.parse(isEncoded ? decodeURIComponent(cookie) : cookie)
+        console.log("successfully parsed name", name)
+        return storedMapping
+      }
+      catch (e) {
+        console.log("failed parsing: ", name, ", error:", e)
+      }
+      return undefined
+    }
 
     function initializeValues() {
       disableNavigationButtons()
 
-      storedMapping = Cookies.get("meas-name-mapping")
-      try{
-        storedMapping = decodeURIComponent(storedMapping)
+      if (!loadCookie("meas-name-ext-mapping", false) && !loadCookie("meas-name-ext-mapping", true) &&
+        !loadCookie("meas-name-mapping", false) && !loadCookie("meas-name-mapping", true)) {
+        storedMapping = {}
       }
-      catch(e){
-        console.log("failed decoding URI: ", storedMapping)
-      }
-
-      try {
-        storedMapping = JSON.parse(storedMapping)
-        console.log("successfully parsed name mappings")
-      }
-      catch (e) {
-        console.log("failed parsing: ", storedMapping)
-        storedMapping =  {}
-      }
-
-      if (storedMapping) {
-        var editiedMapping = {}
+      else {
+        var editedMapping = {}
 
         Object.keys(storedMapping).sort().forEach((measurement_name) => {
-          editiedMapping[measurement_name] = {
-            alias: storedMapping[measurement_name]
+          var new_obj = {
+            alias: "",
+            unit: ""
           }
+
+          if (storedMapping[measurement_name]) {
+            if (typeof storedMapping[measurement_name] === 'string')
+              new_obj.alias = storedMapping[measurement_name]
+            else
+              new_obj.alias = storedMapping[measurement_name].alias
+          }
+
+          if (storedMapping[measurement_name] && typeof storedMapping[measurement_name] !== 'string') {
+            new_obj.unit = storedMapping[measurement_name].unit
+            new_obj.unitUpdated = true
+          }
+
+          editedMapping[measurement_name] = { ...new_obj }
         })
-        populateTable(editiedMapping)
+
+        storedMapping = editedMapping
+
+        document.getElementById("save-button").innerText = "Save"
+
+        populateTable(editedMapping)
       }
 
       detectBoardChange(enableNavigationButtons)
     }
 
     function clearCookies() {
-
+      Cookies.remove('meas-name-mapping')
+      Cookies.remove('meas-name-ext-mapping')
     }
 
     function storeData() {
       disableNavigationButtons()
       clearCookies();
-      Cookies.set('meas-name-mapping', encodeURIComponent(JSON.stringify(getKeyValuePairs())))
-      redirectTo("step-6-timing.html")
+      Cookies.set('meas-name-ext-mapping', encodeURIComponent(JSON.stringify(getAliasUnitPairs())))
+      redirectTo("step-7-verify.html")
       enableNavigationButtons()
     }
-
 
     function validateMyForm() {
       storeData()
@@ -168,11 +214,15 @@
         obj["gps_num_of_sat"] = {}
         obj["gps_hdop"] = {}
       }
+
+      obj["reset_cause"] = {}
+      obj["uptime"] = {}
     }
 
     function executeMeasurements() {
       showElement('loader', true)
 
+      let measurements = {}
       var config = Cookies.get()
       var configString = ""
 
@@ -189,12 +239,9 @@
         configString = configString.slice(0, -1)
 
       console.log("configString: ", configString)
-      const objToSend = { queryParams: config, queryString: configString }
+      const objToSend = { queryParams: config }
 
-      if (configString == "") {
-        startOver()
-        return
-      }
+      if (!configString) return
 
       fetch('/save-config-temp', {
         method: 'POST',
@@ -203,24 +250,25 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(objToSend)
-      }).then(res => {
-        fetchInternal("/device_measurements")
-          .then((measurements) => {
-            addStaticValuesForNetwork(measurements)
-            console.log("measurements: ", measurements)
-            populateTable(measurements)
-
-            updateFieldsWithMappingFromConfiguration()
-
-            document.getElementById("save-button").innerText = "Save"
-
-            showElement('loader', false)
-
-          }).catch((err) => {
-            showElement('loader', false)
-            console.log("error fetching measurements: ", err)
-          });
       })
+        .then(res => {
+          fetchInternal("/device_measurements")
+            .then((measurements) => {
+              addStaticValuesForNetwork(measurements)
+              console.log("measurements: ", measurements)
+              populateTable(measurements)
+
+              updateFieldsWithMappingFromConfiguration()
+
+              document.getElementById("save-button").innerText = "Save"
+
+              showElement('loader', false)
+
+            }).catch((err) => {
+              showElement('loader', false)
+              console.log("error fetching measurements: ", err)
+            });
+        })
         .catch(err => {
           console.log("error saving config: ", err)
         })
@@ -229,6 +277,11 @@
     function populateTable(measurements) {
       var parent = document.getElementById("measurementList");
       parent.replaceChildren();
+
+      const unitListObject = getMapObject()
+
+      //keep it to later exclude from stored config the values that are unchanged
+      defaultUnits = {}
 
       var index = 0
       Object.keys(measurements).sort().forEach((measurement_name) => {
@@ -254,7 +307,12 @@
 
         var colUnit = document.createElement("td")
 
-        colUnit.appendChild(document.createTextNode(measurement.unit ? measurement.unit : ""));
+        defaultUnits[measurement_name] = measurement.unit
+
+        var selectName = 'input-key-unit-' + index
+        var selectElem = addSelectAux(colUnit, selectName)
+        generateOptionsAux(selectElem, unitListObject, true)
+        setElemValueAux(selectElem, measurement.unit, "")
 
         var colValue = document.createElement("td")
         colValue.appendChild(document.createTextNode(measurement.value !== undefined ? measurement.value : ""));
@@ -275,12 +333,30 @@
       while (1) {
         var elemKey = document.getElementById("input-key-name-" + i);
         var elemValue = document.getElementById("input-key-value-" + i);
+        var elemUnit = document.getElementById("input-key-unit-" + i);
 
-        if (!elemKey)
+        if (!elemKey || elemKey.value.trim() === '')
           break
 
-        if (elemKey && elemKey.value !== '' && storedMapping[elemKey.value]) {
-          elemValue.value = storedMapping[elemKey.value]
+        var storedMapForKey = storedMapping[elemKey.value]
+        var isObject = typeof storedMapForKey === "object"
+
+        if (elemValue && storedMapForKey) {
+          if (isObject && storedMapForKey.alias) {  // new version with unit storing
+            elemValue.value = storedMapForKey.alias
+          }
+          else if (!isObject && storedMapForKey) { // legacy version with alias-only storing
+            elemValue.value = storedMapForKey
+          }
+        }
+
+        if (elemUnit && storedMapForKey) {
+          if (isObject && storedMapForKey.unit) {  // new version with unit storing
+            elemUnit.value = storedMapForKey.unit
+          }
+          else if (!isObject) { // legacy version with alias-only storing
+            elemUnit.value = ""
+          }
         }
 
         i++

@@ -40,12 +40,9 @@ function showElement(elementId, status) {
   if (elem) elem.style.display = status ? "block" : "none"
 }
 
-function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = true) {
-  var elem = document.getElementById(elementId)
-  if (!elem) {
-    console.log("setElemValue: Element not found: ", elementId)
-    return
-  }
+function setElemValueAux(elementObj, newValue, defaultValue = "", intZeroAccepted = true) {
+  var elem = elementObj
+  if (!elem) return
 
   elem.value =
     newValue !== "" &&
@@ -54,6 +51,15 @@ function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = 
     (intZeroAccepted || (!intZeroAccepted && newValue !== 0))
       ? newValue
       : defaultValue
+}
+
+function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = true) {
+  var elem = document.getElementById(elementId)
+  if (!elem) {
+    console.log("setElemValue: Element not found: ", elementId)
+    return
+  }
+  setElemValueAux(elem, newValue, defaultValue, intZeroAccepted)
 }
 
 function setElemText(elementId, newValue, defaultValue = "", intZeroAccepted=false) {
@@ -105,7 +111,7 @@ function boolElemToPyStr(elemId, boolField = "checked") {
   var fieldObj = document.getElementById(elemId)
   if (!fieldObj) {
     console.log("boolElemToPyStr: Element not found: ", elemId)
-    return undefined
+    return "False"
   }
 
   return fieldObj[boolField] ? "True" : "False"
@@ -204,13 +210,18 @@ function addSwitch(parentId, switchId, labelText, onClickCallback = undefined, i
   }, intented)
 }
 
+function addSelectAux(parentElem, selectId) {
+  var switchInput = document.createElement("select")
+  switchInput.id = selectId
+  switchInput.classList.add("form-select")
+
+  parentElem.appendChild(switchInput)
+  return switchInput
+}
+
 function addSelect(parentId, selectId, labelText, intented=false) {
   wrapDiv(parentId, labelText, (selectDiv) => {
-    var switchInput = document.createElement("select")
-    switchInput.id = selectId
-    switchInput.classList.add("form-select")
-
-    selectDiv.appendChild(switchInput)
+    addSelectAux(selectDiv, selectId)
   }, intented)
 }
 
@@ -243,6 +254,9 @@ function addDivider(parentId, labelText) {
 }
 
 function strToJSValue(strVal) {
+  if(strVal === undefined)
+    return undefined
+
   try {
     strVal = strVal ? strVal.toLowerCase() : strVal
   }
@@ -254,15 +268,23 @@ function strToJSValue(strVal) {
   return strVal
 }
 
-function generateOptions(parentId, optionsData) {
-  var parent = document.getElementById(parentId)
-
+function generateOptionsAux(parentObj, optionsData, addSelectionValueInDescription=false) {
   for (const [key, value] of Object.entries(optionsData)) {
     var label = document.createElement("option")
     label.value = key
-    label.appendChild(document.createTextNode(value))
-    parent.appendChild(label)
+    var extraDescription = addSelectionValueInDescription ? ` (${key})` : ""
+    label.appendChild(document.createTextNode(value + extraDescription))
+    parentObj.appendChild(label)
   }
+}
+
+function generateOptions(parentId, optionsData) {
+  var parent = document.getElementById(parentId)
+  if (!parent) {
+    console.log("generateOptions: Element not found: ", parent)
+    return
+  }
+  generateOptionsAux(parent, optionsData)
 }
 
 function enableNavigationButtons() {
