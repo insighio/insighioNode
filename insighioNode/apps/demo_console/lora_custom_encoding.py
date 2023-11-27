@@ -186,7 +186,7 @@ def create_message(device_id, measurements):
             elif key.endswith("_log_rt_a_outer") or key.endswith("_log_rt_a_inner"):
                 binary_data += struct.pack('>BBI', TYPE_LOG_RATIO, get_location_by_key(key), round(value * 100000))
             elif key.endswith("_current"):
-                binary_data += struct.pack('>BBH', TYPE_CURRENT, get_location_by_key(key), round(value))
+                binary_data += struct.pack('>BBH', TYPE_CURRENT, get_location_by_key(key), round(value * 100))
             elif key.endswith("_formula"):
                 binary_data += struct.pack('>BBI', TYPE_FORMULA, get_location_by_key(key), round(value * 100000))
 
