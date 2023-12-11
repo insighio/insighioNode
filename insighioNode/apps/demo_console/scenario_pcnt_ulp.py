@@ -135,14 +135,14 @@ TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
 
 def init_ulp(port_number, is_high_freq):
     from esp32 import ULP
-    from external.esp32_ulp import src_to_binary
+    from external.esp32_ulp_or import src_to_binary
 
     logging.info("Starting ULP for pulse counting...")
 
     load_addr, entry_addr = 0, 6*4
 
     script_to_run = get_high_freq_pcnt_assembly(port_number) if is_high_freq else get_low_freq_pcnt_assembly(port_number)
-    binary = src_to_binary(script_to_run, cpu="esp32s3")
+    binary = src_to_binary(script_to_run, cpu="esp32s2")
     ulp = ULP()
 
     ulp.load_binary(load_addr, binary)
@@ -155,8 +155,9 @@ def init_ulp(port_number, is_high_freq):
 
 def init_gpio(gpio_num, ulp=None):
     logging.info("Setting up ULP GPIO")
-    from esp32 import ULP
-    ulp = ULP()
+    if ulp is None:
+        from esp32 import ULP
+        ulp = ULP()
     ulp.init_gpio(gpio_num)
 
 def value(start=0):
@@ -175,7 +176,6 @@ def setval(start=0, value=0x0):
 def read_ulp_values(measurements, formula):
     logging.info("Reading pulse couters from ULP...")
 
-    last_state = value(0)
     #read registers
     edge_cnt_16bit = value(1)
     loops = value(2)
@@ -228,7 +228,7 @@ def read_ulp_values(measurements, formula):
 
     if formula and formula != "v":
         try:
-            raw_value = edge_cnt // 2
+            raw_value = edge_cnt / 2
             formula = formula.replace('v', str(raw_value))
             formula = formula.replace('t', str(time_diff_from_prev))
             to_execute = "v_transformed=({})".format(formula)
