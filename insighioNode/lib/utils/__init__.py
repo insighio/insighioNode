@@ -4,12 +4,14 @@ import uos
 
 key_value_storage = esp32.NVS("insighio")
 
+
 def existsFile(source):
     try:
         uos.stat(source)
         return True
     except Exception as e:
         return False
+
 
 def copyFile(source, destination):
     try:
@@ -23,6 +25,7 @@ def copyFile(source, destination):
     except Exception as e:
         logging.exception(e, "Error copying file [{}] to [{}]".format(source, destination))
         return False
+
 
 def renameFile(source, destination):
     try:
@@ -62,6 +65,7 @@ def writeToFile(destination, content, do_append=False):
 def deleteFile(destination):
     try:
         import uos
+
         uos.remove(destination)
     except Exception as e:
         logging.exception(e, "Error writing to file [{}]".format(destination))
@@ -117,8 +121,10 @@ def clearCachedStates():
 def deleteModule(module_name):
     try:
         import gc
+
         print(gc.mem_free())
         import sys
+
         del sys.modules[module_name]
         del module_name
         print(gc.mem_free())

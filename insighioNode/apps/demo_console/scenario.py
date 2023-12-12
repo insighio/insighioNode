@@ -18,7 +18,6 @@ try:
     from . import demo_config as cfg
 except Exception as e:
     cfg = type("", (), {})()
-import _thread
 
 # Globals
 timeDiffAfterNTP = None
@@ -40,8 +39,7 @@ def now():
 
 def isAlwaysOnScenario():
     return (
-        scenario_utils.get_config("_ALWAYS_ON_CONNECTION")
-        and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)
+        scenario_utils.get_config("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)
     ) or scenario_utils.get_config("_FORCE_ALWAYS_ON_CONNECTION")
 
 
@@ -80,9 +78,7 @@ def executeDeviceInitialization():
 
 
 def determine_message_buffering_and_network_connection_necessity():
-    buffered_upload_enabled = (
-        scenario_utils.get_config("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
-    )
+    buffered_upload_enabled = scenario_utils.get_config("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
     execute_connection_procedure = not buffered_upload_enabled
 
     # if RTC is invalid, force network connection
@@ -105,14 +101,10 @@ def executeMeasureAndUploadLoop():
         try:
             # set keepalive timing used for heartbeats in open connections
             proto_cfg_instance = cfg.get_protocol_config()
-            proto_cfg_instance.keepalive = (
-                int(always_on_period * 1.5) if always_on else 0
-            )
+            proto_cfg_instance.keepalive = int(always_on_period * 1.5) if always_on else 0
 
             if scenario_utils.get_config("_MEAS_GPS_ENABLE"):
-                proto_cfg_instance.keepalive += scenario_utils.get_config(
-                    "_MEAS_GPS_TIMEOUT"
-                )
+                proto_cfg_instance.keepalive += scenario_utils.get_config("_MEAS_GPS_TIMEOUT")
             logging.debug("keepalive period: " + str(proto_cfg_instance.keepalive))
         except:
             logging.debug("no protocol info, ignoring keepalive configuration")
@@ -121,14 +113,8 @@ def executeMeasureAndUploadLoop():
     if not always_on:  # or not RTCisValid():
         #     time_to_sleep = 5000 # check connection and upload messages every 5 seconds
         # else:
-        time_to_sleep = (
-            scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
-            if scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
-            else 60
-        )
-        time_to_sleep = time_to_sleep * 1000 - (
-            utime.ticks_ms() - always_on_start_timestamp
-        )
+        time_to_sleep = scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") if scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") else 60
+        time_to_sleep = time_to_sleep * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
         time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
 
     while True:
@@ -158,14 +144,10 @@ def executeMeasureAndUploadLoop():
         if execute_connection_procedure:
             hasGPSFix = executeGetGPSPosition(cfg, measurements, always_on)
 
-            if not hasGPSFix and scenario_utils.get_config(
-                "_MEAS_GPS_NO_FIX_NO_UPLOAD"
-            ):
+            if not hasGPSFix and scenario_utils.get_config("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
                 connectAndUploadCompletedWithoutErrors = False
             else:
-                connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(
-                    cfg, measurements, is_first_run, always_on
-                )
+                connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, always_on)
 
         # if not connectAndUploadCompletedWithoutErrors or not always_on or not always_on_period:
         if not always_on or not always_on_period:
@@ -177,9 +159,7 @@ def executeMeasureAndUploadLoop():
                 # to allow them to immediatelly upload events
                 pass
             is_first_run = False
-            time_to_sleep = always_on_period * 1000 - (
-                utime.ticks_ms() - always_on_start_timestamp
-            )
+            time_to_sleep = always_on_period * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
             time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
             logging.info("light sleeping for: " + str(time_to_sleep) + " milliseconds")
             gc.collect()
@@ -196,9 +176,7 @@ def executeGetGPSPosition(cfg, measurements, always_on):
     try:
         if scenario_utils.get_config("_MEAS_GPS_ENABLE") and (
             not scenario_utils.get_config("_MEAS_GPS_ONLY_ON_BOOT")
-            or (
-                device_info.get_reset_cause() == 0 or device_info.get_reset_cause() == 1
-            )
+            or (device_info.get_reset_cause() == 0 or device_info.get_reset_cause() == 1)
         ):
             from . import cellular as network_gps
 
@@ -250,10 +228,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             logging.info("Connecting to network over: " + cfg.network)
             connection_results = network.connect(cfg)
 
-            is_connected = (
-                "status" in connection_results
-                and connection_results["status"]["value"] is True
-            )
+            is_connected = "status" in connection_results and connection_results["status"]["value"] is True
             if "status" in connection_results:
                 del connection_results["status"]
 
@@ -272,9 +247,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
 
     try:
         if is_first_run:
-            logging.debug(
-                "Network [" + cfg.network + "] connected: " + str(is_connected)
-            )
+            logging.debug("Network [" + cfg.network + "] connected: " + str(is_connected))
 
         if is_connected:
             device_info.set_led_color("green")
@@ -292,9 +265,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
                 SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
             )
 
-            message_sent = network.send_message(
-                cfg, network.create_message(cfg.device_id, measurements)
-            )
+            message_sent = network.send_message(cfg, network.create_message(cfg.device_id, measurements))
             logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
 
@@ -361,9 +332,7 @@ def executeDeviceStatisticsUpload(cfg, network):
         logging.info("Skipping platform info.")
 
     logging.info("Uploading device statistics.")
-    return network.send_control_message(
-        cfg, network.create_message(None, stats), "/stat"
-    )
+    return network.send_control_message(cfg, network.create_message(None, stats), "/stat")
 
 
 def executeDeviceConfigurationUpload(cfg, network):
@@ -422,9 +391,7 @@ def executeTimingConfiguration():
         if sleep_period % 60 == 0:
             now_timestamp = utime.time()
             next_tick = now_timestamp + sleep_period
-            remaining = (
-                sleep_period - next_tick % sleep_period
-            ) * 1000 - measurement_run_start_timestamp
+            remaining = (sleep_period - next_tick % sleep_period) * 1000 - measurement_run_start_timestamp
             logging.debug(
                 "now_timestamp: {}, next_tick: {}, uptime: {}, measurement_time: {}, remaining: {}".format(
                     now_timestamp,
@@ -486,33 +453,19 @@ def executeTimingConfiguration():
             hour_offset = timezone_offset // 3600
             minute_offset = (timezone_offset % 3600) // 60
 
-        seconds_of_day = (
-            (time_tuple[4] + hour_offset) * 3600
-            + (time_tuple[5] + minute_offset) * 60
-            + time_tuple[6]
-        )
+        seconds_of_day = (time_tuple[4] + hour_offset) * 3600 + (time_tuple[5] + minute_offset) * 60 + time_tuple[6]
 
         seconds_to_wait = get_seconds_till_next_slot(seconds_of_day)
         MIN_WAIT_THRESHOLD = 900  # 15 minutes
         if seconds_to_wait <= MIN_WAIT_THRESHOLD:
-            seconds_to_wait = get_seconds_till_next_slot(
-                seconds_of_day + seconds_to_wait + 1
-            )  # go to next slot
+            seconds_to_wait = get_seconds_till_next_slot(seconds_of_day + seconds_to_wait + 1)  # go to next slot
 
         RTC_DRIFT_CORRECTION = 1.011
-        logging.info(
-            "will wake up again in {} hours ({} seconds) <before correction>".format(
-                seconds_to_wait / 3600, seconds_to_wait
-            )
-        )
+        logging.info("will wake up again in {} hours ({} seconds) <before correction>".format(seconds_to_wait / 3600, seconds_to_wait))
 
         seconds_to_wait = int(seconds_to_wait * RTC_DRIFT_CORRECTION)
 
-        logging.info(
-            "will wake up again in {} hours ({} seconds) <after correction>".format(
-                seconds_to_wait / 3600, seconds_to_wait
-            )
-        )
+        logging.info("will wake up again in {} hours ({} seconds) <after correction>".format(seconds_to_wait / 3600, seconds_to_wait))
 
         machine.deepsleep(seconds_to_wait * 1000)  # +0.01% is RTC correction
     else:

@@ -22,7 +22,6 @@ def roundup(val, align):
 
 
 class FileSection:
-
     def __init__(self, f, content_len, aligned_len):
         self.f = f
         self.content_len = content_len
@@ -42,7 +41,7 @@ class FileSection:
         if self.content_len == 0:
             return 0
         if len(buf) > self.content_len:
-            buf = memoryview(buf)[:self.content_len]
+            buf = memoryview(buf)[: self.content_len]
         sz = self.f.readinto(buf)
         self.content_len -= sz
         return sz
@@ -58,13 +57,11 @@ class FileSection:
 
 
 class TarInfo:
-
     def __str__(self):
         return "TarInfo(%r, %s, %d)" % (self.name, self.type, self.size)
 
 
 class TarFile:
-
     def __init__(self, name=None, byteData=None):
         self.b = byteData
         self.i = 0
@@ -82,7 +79,7 @@ class TarFile:
         if self.f:
             buf = self.f.read(512)
         elif self.b:
-            buf = self.b[self.i:512]
+            buf = self.b[self.i : 512]
             self.i += 512
 
         if not buf:
@@ -146,6 +143,7 @@ def copyfileobj(src, dest, length=512):
             dest.write(buf)
     dest.close()
 
+
 ###############################
 
 
@@ -185,11 +183,12 @@ def decompress_file_streamed(compressed_file_name):
 
     try:
         success_flag = True
-        fr = open(compressed_file_name, 'rb')
-        fw = open(output_package_file, 'wb')
+        fr = open(compressed_file_name, "rb")
+        fw = open(output_package_file, "wb")
 
         try:
             import uzlib
+
             f = open("/package-s.tar.gz", "rb")
             obj = uzlib.DecompIO(f, 24)
             BUFFER = [0] * CHUNKSIZE
@@ -249,6 +248,7 @@ def do_apply(package_file=None):
             else:
                 data = readFromFile(package_file)
                 import uzlib
+
                 byteData = uzlib.decompress(data[8:])
                 compressed_file_name = package_file
                 package_file = "{}.tar".format(package_file.split(".")[0])

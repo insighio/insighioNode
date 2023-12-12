@@ -22,24 +22,24 @@ _INTERRUPT_NONE = const(0x00)
 _INTERRUPT_LEVEL = const(0x10)
 
 _INTEGRATION_TIME = {
-#  time     hex     wait    clip    min     max     scale
-    13:     (0x00,  15,     4900,   100,    4850,   0x7517),
-    101:    (0x01,  120,    37000,  200,    36000,  0x0FE7),
-    402:    (0x02,  450,    65000,  500,    63000,  1 << 10),
-    0:      (0x03,  0,      0,      0,      0,      0),
+    #  time     hex     wait    clip    min     max     scale
+    13: (0x00, 15, 4900, 100, 4850, 0x7517),
+    101: (0x01, 120, 37000, 200, 36000, 0x0FE7),
+    402: (0x02, 450, 65000, 500, 63000, 1 << 10),
+    0: (0x03, 0, 0, 0, 0, 0),
 }
 
 
 class TSL2561:
     _LUX_SCALE = (
-    #       K       B       M
-        (0x0040, 0x01f2, 0x01be),
-        (0x0080, 0x0214, 0x02d1),
-        (0x00c0, 0x023f, 0x037b),
-        (0x0100, 0x0270, 0x03fe),
-        (0x0138, 0x016f, 0x01fc),
-        (0x019a, 0x00d2, 0x00fb),
-        (0x029a, 0x0018, 0x0012),
+        #       K       B       M
+        (0x0040, 0x01F2, 0x01BE),
+        (0x0080, 0x0214, 0x02D1),
+        (0x00C0, 0x023F, 0x037B),
+        (0x0100, 0x0270, 0x03FE),
+        (0x0138, 0x016F, 0x01FC),
+        (0x019A, 0x00D2, 0x00FB),
+        (0x029A, 0x0018, 0x0012),
     )
 
     def __init__(self, i2c, address=0x39):
@@ -57,15 +57,15 @@ class TSL2561:
         register |= _COMMAND_BIT | _WORD_BIT
         if value is None:
             data = self.i2c.readfrom_mem(self.address, register, 2)
-            return ustruct.unpack('<H', data)[0]
-        data = ustruct.pack('<H', value)
+            return ustruct.unpack("<H", data)[0]
+        data = ustruct.pack("<H", value)
         self.i2c.writeto_mem(self.address, register, data)
 
     def _register8(self, register, value=None):
         register |= _COMMAND_BIT
         if value is None:
             return self.i2c.readfrom_mem(self.address, register, 1)[0]
-        data = ustruct.pack('<B', value)
+        data = ustruct.pack("<B", value)
         self.i2c.writeto_mem(self.address, register, data)
 
     def active(self, value=None):
@@ -74,8 +74,7 @@ class TSL2561:
         value = bool(value)
         if value != self._active:
             self._active = value
-            self._register8(_REGISTER_CONTROL,
-                _CONTROL_POWERON if value else _CONTROL_POWEROFF)
+            self._register8(_REGISTER_CONTROL, _CONTROL_POWERON if value else _CONTROL_POWEROFF)
 
     def gain(self, value=None):
         if value is None:
@@ -96,9 +95,7 @@ class TSL2561:
     def _update_gain_and_time(self):
         was_active = self.active()
         self.active(True)
-        self._register8(_REGISTER_TIMING,
-            _INTEGRATION_TIME[self._integration_time][0] |
-            {1: 0x00, 16: 0x10}[self._gain]);
+        self._register8(_REGISTER_TIMING, _INTEGRATION_TIME[self._integration_time][0] | {1: 0x00, 16: 0x10}[self._gain])
         self.active(was_active)
 
     def sensor_id(self):
@@ -117,8 +114,7 @@ class TSL2561:
 
     def _lux(self, channels):
         if self._integration_time == 0:
-            raise ValueError(
-                "can't calculate lux with manual integration time")
+            raise ValueError("can't calculate lux with manual integration time")
         broadband, ir = channels
         clip = _INTEGRATION_TIME[self._integration_time][2]
         if broadband > clip or ir > clip:
@@ -139,8 +135,7 @@ class TSL2561:
         broadband, ir = self._read()
         if autogain:
             if self._integration_time == 0:
-                raise ValueError(
-                    "can't do autogain with manual integration time")
+                raise ValueError("can't do autogain with manual integration time")
             new_gain = self._gain
             if broadband < _INTEGRATION_TIME[self._integration_time][3]:
                 new_gain = 16
@@ -161,7 +156,7 @@ class TSL2561:
             if not cycles & _INTERRUPT_LEVEL:
                 cycles = -1
             else:
-                cycles &= 0x0f
+                cycles &= 0x0F
             return cycles, min_value, max_value
         was_active = self.active()
         self.active(True)
@@ -173,14 +168,14 @@ class TSL2561:
             if cycles == -1:
                 self._register8(_REGISTER_INTERRUPT, _INTERRUPT_NONE)
             else:
-                self._register8(_REGISTER_INTERRUPT,
-                    min(15, max(0, int(cycles))) | _INTERRUPT_LEVEL)
+                self._register8(_REGISTER_INTERRUPT, min(15, max(0, int(cycles))) | _INTERRUPT_LEVEL)
         self.active(was_active)
 
     def interrupt(self, value):
         if value or value is None:
             raise ValueError("can only clear the interrupt")
-        self.i2c.writeto(self.address, b'\x40')
+        self.i2c.writeto(self.address, b"\x40")
+
 
 # Those packages are identical.
 TSL2561T = TSL2561
@@ -191,20 +186,22 @@ TSL2561CL = TSL2561
 class TSL2561CS(TSL2561):
     # This package has different lux scale.
     _LUX_SCALE = (
-    #       K       B       M
-        (0x0043, 0x0204, 0x01ad),
-        (0x0085, 0x0228, 0x02c1),
-        (0x00c8, 0x0253, 0x0363),
-        (0x010a, 0x0282, 0x03df),
-        (0x014d, 0x0177, 0x01dd),
-        (0x019a, 0x0101, 0x0127),
-        (0x029a, 0x0037, 0x002b),
+        #       K       B       M
+        (0x0043, 0x0204, 0x01AD),
+        (0x0085, 0x0228, 0x02C1),
+        (0x00C8, 0x0253, 0x0363),
+        (0x010A, 0x0282, 0x03DF),
+        (0x014D, 0x0177, 0x01DD),
+        (0x019A, 0x0101, 0x0127),
+        (0x029A, 0x0037, 0x002B),
     )
+
 
 def get_reading(sda_pin, scl_pin, vcc_pin=None):
     sensors.set_sensor_power_on(vcc_pin)
 
     from machine import I2C
+
     i2c = I2C(0, pins=(sda_pin, scl_pin))
     light = None
     try:

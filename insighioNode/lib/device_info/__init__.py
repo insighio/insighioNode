@@ -267,9 +267,7 @@ def get_cpu_temp(unit_in_celsius=True):
 def get_free_flash():
     import uos
 
-    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(
-        get_device_root_folder()
-    )
+    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(get_device_root_folder())
     freesize = f_bsize * f_bfree
     return freesize
 
@@ -281,9 +279,7 @@ def bq_charger_exec(bq_func):
     try:
         p_snsr = Pin(12, Pin.OUT)  # cfg._UC_IO_SENSOR_GND_ON
         p_snsr.on()
-        i2c = SoftI2C(
-            scl=Pin(38), sda=Pin(39)
-        )  # cfg._UC_IO_I2C_SCL, cfg._UC_IO_I2C_SDA
+        i2c = SoftI2C(scl=Pin(38), sda=Pin(39))  # cfg._UC_IO_I2C_SCL, cfg._UC_IO_I2C_SDA
         status = bq_func(i2c, 0x6B)  # cfg._I2C_BQ_ADDRESS
     except Exception as e:
         logging.error("No BQ charger detected")

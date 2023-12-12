@@ -7,8 +7,14 @@ import _thread
 
 class MQTTClientCustom:
     def __init__(self, mqtt_config):
-        self.client = uMQTTClient(mqtt_config.client_name, mqtt_config.server_ip, mqtt_config.server_port,
-                                  mqtt_config.thing_id, mqtt_config.thing_token, mqtt_config.keepalive)
+        self.client = uMQTTClient(
+            mqtt_config.client_name,
+            mqtt_config.server_ip,
+            mqtt_config.server_port,
+            mqtt_config.thing_id,
+            mqtt_config.thing_token,
+            mqtt_config.keepalive,
+        )
         self.config = mqtt_config
         self.prepareChannelNames(mqtt_config)
         self.lastReceivedMessage = None
@@ -24,9 +30,17 @@ class MQTTClientCustom:
 
     def prepareChannelNames(self, mqtt_config):
         controlChannel = "channels/" + mqtt_config.control_channel_id + "/messages" if mqtt_config.control_channel_id else ""
-        self.controlChannelGeneric = controlChannel + "/" + mqtt_config.thing_id if mqtt_config.control_channel_id and mqtt_config.thing_id else ""
-        self.otaChannel = controlChannel + "/" + mqtt_config.thing_id + "/ota" if mqtt_config.control_channel_id and mqtt_config.thing_id else ""
-        self.messageChannel = "channels/" + mqtt_config.message_channel_id + "/messages/" + mqtt_config.thing_id  if mqtt_config.message_channel_id and mqtt_config.thing_id else ""
+        self.controlChannelGeneric = (
+            controlChannel + "/" + mqtt_config.thing_id if mqtt_config.control_channel_id and mqtt_config.thing_id else ""
+        )
+        self.otaChannel = (
+            controlChannel + "/" + mqtt_config.thing_id + "/ota" if mqtt_config.control_channel_id and mqtt_config.thing_id else ""
+        )
+        self.messageChannel = (
+            "channels/" + mqtt_config.message_channel_id + "/messages/" + mqtt_config.thing_id
+            if mqtt_config.message_channel_id and mqtt_config.thing_id
+            else ""
+        )
 
         logging.debug("Selected channels:")
         logging.debug(" ota channel: " + self.otaChannel)
@@ -43,7 +57,7 @@ class MQTTClientCustom:
     def __check_msg(self, timeout_ms):
         start_time = utime.ticks_ms()
         end_time = start_time + timeout_ms
-        while (utime.ticks_ms() < end_time):
+        while utime.ticks_ms() < end_time:
             try:
                 self.client.check_msg()
                 with self.mutex:
@@ -63,14 +77,14 @@ class MQTTClientCustom:
             # if publish fails, exception is thrown, else return True
             return True
         except Exception as e:
-            logging.exception(e, 'Exception during MQTT message sending:')
+            logging.exception(e, "Exception during MQTT message sending:")
             return False
 
     def set_last_will(self, subtopic, msg, retain=False, qos=0):
         try:
             self.client.set_last_will(self.controlChannelGeneric + subtopic, msg, retain, qos)
         except Exception as e:
-            logging.exception(e, 'Exception while setting last will')
+            logging.exception(e, "Exception while setting last will")
 
     def connect(self):
         self.client.set_callback(self.subscribe_callback)
@@ -78,9 +92,9 @@ class MQTTClientCustom:
             logging.debug("Connecting to MQTT...")
             if self._has_connected and not self.clean_session:
                 # Power up. Clear previous session data but subsequently save it.
-                self.client.connect(True) # Connect with clean session
+                self.client.connect(True)  # Connect with clean session
                 try:
-                    disconnect=b"\xe0\0"
+                    disconnect = b"\xe0\0"
                     with self.client.lock:
                         self.client._write(disconnect, len(disconnect))  # Force disconnect but keep socket open
                 except:
@@ -95,7 +109,7 @@ class MQTTClientCustom:
                 _thread.start_new_thread(self.keep_alive_thread, ())
             return True
         except Exception as e:
-            logging.exception(e, 'Exception during MQTT connect with:')
+            logging.exception(e, "Exception during MQTT connect with:")
             self._is_connected = False
             return False
 
@@ -117,7 +131,7 @@ class MQTTClientCustom:
             self.client.subscribe(channel)
             return self.__check_msg(5000)
         except Exception as e:
-            logging.exception(e, 'Exception during MQTT subscribe with:')
+            logging.exception(e, "Exception during MQTT subscribe with:")
             return None
         return None
 
@@ -128,21 +142,21 @@ class MQTTClientCustom:
             self._is_connected = False
             return True
         except Exception as e:
-            logging.exception(e, 'Exception during MQTT disconnect:')
+            logging.exception(e, "Exception during MQTT disconnect:")
             return False
 
     def keep_alive_thread(self):
         while self._has_connected:
             pings_due = utime.ticks_diff(utime.ticks_ms(), self.client.last_rx) // self._ping_interval
             if pings_due >= 4:
-                logging.debug('Reconnect: broker fail.')
+                logging.debug("Reconnect: broker fail.")
                 self._is_connected = False
                 break
             utime.sleep_ms(self._ping_interval)
             try:
                 self.client.ping()
-                logging.debug('Mqtt Ping ok')
+                logging.debug("Mqtt Ping ok")
             except OSError:
-                logging.debug('Mqtt Ping failed')
+                logging.debug("Mqtt Ping failed")
                 self._is_connected = False
                 break

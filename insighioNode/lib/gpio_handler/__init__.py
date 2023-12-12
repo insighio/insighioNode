@@ -2,14 +2,16 @@ import utime
 import device_info
 
 from machine import ADC, Pin
+
 (major_version, minor_version, _, _) = device_info.get_firmware_version()
 
 import logging
 
 _NUM_ADC_READINGS = const(500)
 
+
 def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cycles=_NUM_ADC_READINGS):
-    """ Returns input voltage in a specific pin, for a given voltage divider (default is 1) and attenuator level (default 3, i.e. 0-3.3V) """
+    """Returns input voltage in a specific pin, for a given voltage divider (default is 1) and attenuator level (default 3, i.e. 0-3.3V)"""
     adc = ADC(Pin(pin))
     adc.atten(attn)
     adc_width = ADC.WIDTH_13BIT if device_info.supports_13bit_adc() else ADC.WIDTH_12BIT
@@ -45,30 +47,31 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
     # typical voltage_divider levels: 3.054 --> Exp Board 2.0, 2 --> Exp Board 3, 11 --> in-house implementation
 
 
-def get_vin(pin='P16'):
-    """ A simple wrapper to take Vin for modules (relevant only when an expansion board is used) """
+def get_vin(pin="P16"):
+    """A simple wrapper to take Vin for modules (relevant only when an expansion board is used)"""
     # just fix pin to 'P16' and voltage divider to 3.054 for Expansion Board 2 or 2 for Expansion Board 3
     return get_input_voltage(pin, 2)
 
 
 def set_pin_value(pin, value):
-    """ Set pin pernamently to value """
+    """Set pin pernamently to value"""
     try:
         tpin = Pin(pin, Pin.OUT)
         tpin.value(value)
-        logging.debug('Pin {} value set to: {}'.format(pin, value))
+        logging.debug("Pin {} value set to: {}".format(pin, value))
     except Exception as e:
         logging.exception(e, "unable to set Pin {} value set to: {}".format(pin, value))
 
 
 # if voltage is undef 3 Volt and this can be used to terminate the process loop till
 # the battery is adequately charged
-def check_minimum_voltage_threshold(pin_enable_battery_meas='P22', pin_battery_voltage='P13'):
+def check_minimum_voltage_threshold(pin_enable_battery_meas="P22", pin_battery_voltage="P13"):
     set_pin_value(pin_enable_battery_meas, 1)
     voltage = get_input_voltage(pin_battery_voltage, voltage_divider=2, attn=0)
     set_pin_value(pin_enable_battery_meas, 0)
     if voltage < 3000:
         import machine
+
         machine.deepsleep(180000)
 
 

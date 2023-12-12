@@ -1,18 +1,20 @@
 import sys
+
 sys.path.clear()
-sys.path.append('/lib')
-sys.path.append('.frozen')
-sys.path.append('')
+sys.path.append("/lib")
+sys.path.append(".frozen")
+sys.path.append("")
 
 import utime
 import logging
 
-#logging.setLevel(logging.ERROR)
+# logging.setLevel(logging.ERROR)
 logging.setLevel(logging.DEBUG)
 logging.debug("start timestamp: " + str(utime.ticks_ms()))
 
 # main.py -- put your code here!
 import device_info
+
 device_info.bq_charger_exec(device_info.bq_charger_setup)
 
 device_info.initialize_led()
@@ -24,6 +26,7 @@ device_info.blink_led(0x252525)
 demo_config_exists = False
 try:
     import apps.demo_console.demo_config as cfg
+
     demo_config_exists = True
 except Exception as e:
     logging.info("Device never configured.")
@@ -36,6 +39,7 @@ if rstCause == 0 or rstCause == 1 or not demo_config_exists:
     gc.collect()
     try:
         import web_server
+
         web_server.start(120000 if demo_config_exists else -1)
         del sys.modules["web_server"]
     except:
@@ -46,9 +50,12 @@ if rstCause == 0 or rstCause == 1 or not demo_config_exists:
 # deleting it
 try:
     import uos
+
     uos.remove("/apps/demo_temp_config.py")
 except:
     pass
 
+
 import apps.demo_console.scenario as scenario
+
 scenario.execute()

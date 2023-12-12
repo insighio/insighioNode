@@ -16,7 +16,7 @@ from ds18x20 import DS18X20
 
 
 def get_reading(data_pin, vcc_pin=None):
-    """ Returns temperature reading, for given VCC and DATA pins """
+    """Returns temperature reading, for given VCC and DATA pins"""
     sensors.set_sensor_power_on(vcc_pin)
 
     try:
@@ -24,7 +24,7 @@ def get_reading(data_pin, vcc_pin=None):
         ow = OneWire(machine.Pin(data_pin))
         tempObj = DS18X20(ow)
 
-        if sys.platform == 'esp32':
+        if sys.platform == "esp32":
             roms = [rom for rom in ow.scan() if rom[0] == 0x10 or rom[0] == 0x28]
             tempObj.convert_temp()
             utime.sleep_ms(750)
@@ -36,6 +36,7 @@ def get_reading(data_pin, vcc_pin=None):
             temp = tempObj.read_temp_async()
     except Exception as e:
         import logging
+
         logging.exception(e, "unable to read dx18x20 pin: " + str(data_pin))
         temp = None
 

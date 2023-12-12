@@ -1,29 +1,33 @@
-import device_info
 import logging
 from networking import wifi
 from external.kpn_senml.senml_pack_json import SenmlPackJson
 from external.kpn_senml.senml_record import SenmlRecord
-from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import _thread
 
 transfer_client = None
 mutex = _thread.allocate_lock()
 
+
 def init(cfg):
     pass
 
+
 def deinit():
     logging.info("Deactivating WiFi: {}".format(wifi.deactivate()))
+
 
 def updateSignalQuality(cfg, measurements):
     if not cfg._MEAS_NETWORK_STAT_ENABLE:
         return
     pass
 
+
 def connect(cfg, explicit_protocol=None):
     with mutex:
-        (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True)
+        (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(
+            cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True
+        )
         results = {}
         results["status"] = {"value": connOk}
         # if network statistics are enabled
@@ -38,12 +42,13 @@ def connect(cfg, explicit_protocol=None):
             logging.debug("Protocol: config: {}, explicit: {}, selected: {}".format(cfg.protocol, explicit_protocol, requested_protocol))
 
             from . import transfer_protocol
+
             global transfer_client
-            if requested_protocol == 'mqtt':
+            if requested_protocol == "mqtt":
                 transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
-            elif requested_protocol == 'coap':
+            elif requested_protocol == "coap":
                 transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
@@ -67,7 +72,7 @@ def disconnect():
 
 
 def create_message(device_id, measurements):
-    message = SenmlPackJson((device_id + '-') if device_id is not None else None)
+    message = SenmlPackJson((device_id + "-") if device_id is not None else None)
 
     if "dt" in measurements:
         message.base_time = measurements["dt"]["value"]
@@ -97,8 +102,10 @@ def send_control_message(cfg, message, subtopic):
             return transfer_client.send_control_packet(message, subtopic)
     return None
 
+
 def check_and_apply_ota(cfg):
     with mutex:
         if transfer_client is not None:
             from . import ota
+
             ota.checkAndApply(transfer_client)

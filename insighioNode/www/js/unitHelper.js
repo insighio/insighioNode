@@ -88,10 +88,10 @@ function getUnitList() {
   return Array.from(unitMap.keys())
 }
 
-function getUnitDetailList(){
+function getUnitDetailList() {
   return Array.from(unitMap.values())
 }
 
-function getMapObject(){
+function getMapObject() {
   return Object.fromEntries(unitMap.entries())
 }

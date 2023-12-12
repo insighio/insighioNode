@@ -1,6 +1,6 @@
-import utime
 import logging
 from external.astronode import astronode
+
 
 class ModemAstronode:
     def __init__(self, modem_tx=None, modem_rx=None):
@@ -39,7 +39,7 @@ class ModemAstronode:
         return pn
 
     def set_default_configuration(self):
-        (status, config) =  self.modem_instance.configuration_read()
+        (status, config) = self.modem_instance.configuration_read()
         if config is None:
             logging.error("error getting device configuration")
             return
@@ -51,19 +51,23 @@ class ModemAstronode:
         self.prefCfg.with_msg_ack_pin_en = 0
         self.prefCfg.with_msg_reset_pin_en = 0
         self.prefCfg.with_pl_ack = 0
-        if config.with_deep_sleep_en != self.prefCfg.with_deep_sleep_en or\
-            config.with_ephemeris != self.prefCfg.with_ephemeris or\
-            config.with_geoloc != self.prefCfg.with_geoloc or\
-            config.with_msg_ack_pin_en != self.prefCfg.with_msg_ack_pin_en or\
-            config.with_msg_reset_pin_en != self.prefCfg.with_msg_reset_pin_en or\
-            config.with_pl_ack != self.prefCfg.with_pl_ack:
+        if (
+            config.with_deep_sleep_en != self.prefCfg.with_deep_sleep_en
+            or config.with_ephemeris != self.prefCfg.with_ephemeris
+            or config.with_geoloc != self.prefCfg.with_geoloc
+            or config.with_msg_ack_pin_en != self.prefCfg.with_msg_ack_pin_en
+            or config.with_msg_reset_pin_en != self.prefCfg.with_msg_reset_pin_en
+            or config.with_pl_ack != self.prefCfg.with_pl_ack
+        ):
             logging.info("modem requires configuration update")
-            status = self.modem_instance.configuration_write(self.prefCfg.with_pl_ack,
-                                        self.prefCfg.with_geoloc,
-                                        self.prefCfg.with_ephemeris,
-                                        self.prefCfg.with_deep_sleep_en,
-                                        self.prefCfg.with_msg_ack_pin_en,
-                                        self.prefCfg.with_msg_reset_pin_en)
+            status = self.modem_instance.configuration_write(
+                self.prefCfg.with_pl_ack,
+                self.prefCfg.with_geoloc,
+                self.prefCfg.with_ephemeris,
+                self.prefCfg.with_deep_sleep_en,
+                self.prefCfg.with_msg_ack_pin_en,
+                self.prefCfg.with_msg_reset_pin_en,
+            )
             logging.info("configuration update: {}".format("ok" if (status == astronode.ANS_STATUS_SUCCESS) else "failed"))
 
             status = self.modem_instance.configuration_save()
@@ -82,4 +86,4 @@ class ModemAstronode:
             if status == astronode.ANS_STATUS_SUCCESS:
                 logging.info("retrying message queueing")
                 (status, message_id) = self.modem_instance.enqueue_payload(payload)
-        return (status == astronode.ANS_STATUS_SUCCESS)
+        return status == astronode.ANS_STATUS_SUCCESS

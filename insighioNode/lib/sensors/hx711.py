@@ -6,6 +6,7 @@ from machine import Pin
 
 sensor = None
 
+
 class ScaleSensor:
     def __init__(self, data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=None):
         self.data_pin = data_pin
@@ -31,12 +32,14 @@ class ScaleSensor:
             self.spi = None
             try:
                 from machine import SoftSPI
+
                 self.spi = SoftSPI(baudrate=1000000, polarity=0, phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
             except Exception as e:
                 logging.exception(e, "unable to initialize SoftSPI")
 
             if self.spi is None:
                 from machine import SPI
+
                 self.spi = SPI(1, baudrate=1000000, polarity=0, phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
             self.hx = HX711(pin_SCK, pin_OUT, self.spi)
             self.hx.set_gain(128)
@@ -110,7 +113,7 @@ class ScaleSensor:
 
             for _ in range(times):
                 self.raw_data[_] = self.hx.read()
-                #logging.debug("raw: {}".format(self.raw_data[_]))
+                # logging.debug("raw: {}".format(self.raw_data[_]))
             self.raw_data.sort()
             self.is_busy = False
             return self.raw_data[times // 2]
@@ -138,7 +141,7 @@ class ScaleSensor:
 
         value_buffer = []
 
-        while utime.ticks_ms()  < timeout_ms:
+        while utime.ticks_ms() < timeout_ms:
             raw = self.get_reading_raw(10)
             value_buffer.append(raw)
 
@@ -174,7 +177,8 @@ class ScaleSensor:
 
         return raw_idle
 
-def  get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=None, get_raw=False):
+
+def get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=None, get_raw=False):
     global sensor
 
     if sensor is None:
@@ -196,9 +200,11 @@ def  get_reading(data_pin, clock_pin, spi_pin, offset=None, scale=None, vcc_pin=
 
     return weight
 
+
 def set_offset(new_offset):
     if sensor is not None:
         sensor.set_offset(new_offset)
+
 
 def deinit_instance():
     global sensor

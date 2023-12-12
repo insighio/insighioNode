@@ -3,35 +3,42 @@ from .dictionary_utils import set_value_float, set_value_int, set_value
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
+
 try:
     from apps import demo_temp_config as cfg
+
     logging.info("loaded config: [temp]")
 except Exception as e:
     try:
         from . import demo_config as cfg
+
         logging.info("loaded config: [normal]")
     except Exception as e:
-        cfg = type('', (), {})()
+        cfg = type("", (), {})()
         logging.info("loaded config: [fallback]")
-import device_info
 import sensors
+
 
 def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
 
+
 _sdi12_sensor_switch_list = []
+
 
 def populateSDI12SensorSwitchList():
     global _sdi12_sensor_switch_list
-    _sdi12_sensor_switch_list = [None]*11
+    _sdi12_sensor_switch_list = [None] * 11
 
-    for i in range(1,11):
+    for i in range(1, 11):
         pwr_on = get_config("_UC_IO_PWR_SDI_SNSR_" + str(i) + "_ΟΝ")
         if pwr_on is None:
             pwr_on = get_config("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ΟΝ")
         _sdi12_sensor_switch_list[i] = pwr_on
 
+
 populateSDI12SensorSwitchList()
+
 
 def powerOnAllSwitchExcept(excludedIndex=None):
     for i in range(1, 11):
@@ -39,11 +46,13 @@ def powerOnAllSwitchExcept(excludedIndex=None):
             continue
         sensors.set_sensor_power_on(_sdi12_sensor_switch_list[i])
 
+
 def powerOffAllSwitchExcept(excludedIndex=None):
     for i in range(1, 11):
         if excludedIndex == i or _sdi12_sensor_switch_list[i] is None:
             continue
         sensors.set_sensor_power_off(_sdi12_sensor_switch_list[i])
+
 
 def executeSDI12Measurement(sdi12, measurements, index):
     enabled = get_config("_SDI12_SENSOR_" + str(index) + "_ENABLED")
@@ -55,7 +64,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
         return
 
     if location is None:
-        if index == 1 or index == 2: # backward compatibility
+        if index == 1 or index == 2:  # backward compatibility
             location = index
     else:
         try:
@@ -69,6 +78,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
     utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
     read_sdi12_sensor(sdi12, address, measurements)
     powerOffAllSwitchExcept()
+
 
 def shield_measurements(measurements):
     # power on SDI12 regulator
@@ -91,7 +101,7 @@ def shield_measurements(measurements):
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
-        for i in range(1,11):
+        for i in range(1, 11):
             executeSDI12Measurement(sdi12, measurements, i)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
@@ -121,16 +131,16 @@ def read_sdi12_sensor(sdi12, address, measurements):
         logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
         return
 
-    if manufacturer == 'meter':
+    if manufacturer == "meter":
         responseArray = sdi12.get_measurement(address)
         parse_sensor_meter(address, responseArray, measurements)
-    elif manufacturer == 'acclima':
+    elif manufacturer == "acclima":
         responseArray = sdi12.get_measurement(address)
         parse_sensor_acclima(address, responseArray, measurements)
-    elif manufacturer == 'implexx':
+    elif manufacturer == "implexx":
         responseArray = sdi12.get_measurement(address)
         parse_sensor_implexx(address, responseArray, measurements)
-    elif manufacturer == 'ep100g':  # EnviroPro
+    elif manufacturer == "ep100g":  # EnviroPro
         responseArrayMoisture = sdi12.get_measurement(address, "C")  # moisture with salinity
         responseArraySalinity = sdi12.get_measurement(address, "C1")  # salinity
 
@@ -147,7 +157,7 @@ def read_sdi12_sensor(sdi12, address, measurements):
     elif "li-cor" in manufacturer:
         responseArray = sdi12.get_measurement(address, "M0")
         parse_sensor_licor(address, responseArray, measurements)
-        responseArray = sdi12._send(address + 'XT!') # trigger next round of measurements
+        responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
     else:
         set_value(measurements, "gen_{}_i".format(address), manufacturer, None)
         responseArrayC = sdi12.get_measurement(address, "C")
@@ -197,12 +207,17 @@ def parse_sensor_implexx(address, responseArray, measurements):
         variable_prefix = "implexx_" + address
 
         set_value_float(measurements, variable_prefix + "_sap_flow", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_LITER_PER_HOUR)
-        set_value_float(measurements, variable_prefix + "_hv_outer", responseArray[1], SenmlSecondaryUnits.SENML_SEC_UNIT_CENTIMETRE_PER_HOUR)
-        set_value_float(measurements, variable_prefix + "_hv_inner", responseArray[2], SenmlSecondaryUnits.SENML_SEC_UNIT_CENTIMETRE_PER_HOUR)
+        set_value_float(
+            measurements, variable_prefix + "_hv_outer", responseArray[1], SenmlSecondaryUnits.SENML_SEC_UNIT_CENTIMETRE_PER_HOUR
+        )
+        set_value_float(
+            measurements, variable_prefix + "_hv_inner", responseArray[2], SenmlSecondaryUnits.SENML_SEC_UNIT_CENTIMETRE_PER_HOUR
+        )
         set_value_float(measurements, variable_prefix + "_log_rt_a_outer", responseArray[3], None, 5)
         set_value_float(measurements, variable_prefix + "_log_rt_a_inner", responseArray[4], None, 5)
     except Exception as e:
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
+
 
 def parse_sensor_licor(address, responseArray, measurements):
     try:
@@ -221,7 +236,7 @@ def parse_sensor_licor(address, responseArray, measurements):
         if cfg_is_celsius:
             set_value_float(measurements, variable_prefix + "_ta", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, 2)
         else:
-            set_value_float(measurements, variable_prefix + "_taf", responseArray[5], None, 2, 9/5)
+            set_value_float(measurements, variable_prefix + "_taf", responseArray[5], None, 2, 9 / 5)
             calculated_value = measurements[variable_prefix + "_taf"]["value"] + 32
             set_value_float(measurements, variable_prefix + "_taf", calculated_value, SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, 2)
         set_value_float(measurements, variable_prefix + "_rh", responseArray[6], SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY, 2)
@@ -247,13 +262,15 @@ def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit
     except Exception as e:
         logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(responseArray))
 
+
 def current_sense_4_20mA(measurements):
     import utime
 
-    for i in range(1,3):
+    for i in range(1, 3):
         measure_4_20_mA_on_port(measurements, i)
 
     utime.sleep_ms(200)
+
 
 def measure_4_20_mA_on_port(measurements, port_id):
     from machine import Pin
@@ -272,7 +289,7 @@ def measure_4_20_mA_on_port(measurements, port_id):
             gpio_handler.set_pin_value(sensor_on_pin, 1)
 
             raw_mV = analog_generic.get_reading(sensor_out_pin)
-            current_mA = round((raw_mV / (cfg._SHUNT_OHMS * cfg._INA_GAIN) ) * 100) / 100
+            current_mA = round((raw_mV / (cfg._SHUNT_OHMS * cfg._INA_GAIN)) * 100) / 100
             logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(sensor_out_pin, raw_mV, current_mA))
             set_value_float(measurements, "4_20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
@@ -283,14 +300,15 @@ def measure_4_20_mA_on_port(measurements, port_id):
         except Exception as e:
             logging.exception(e, "Error getting current sensor output: ID: {}".format(port_id))
 
+
 def execute_transformation(measurements, name, raw_value, transformator):
     try:
-        transformator = transformator.replace('v', str(raw_value))
+        transformator = transformator.replace("v", str(raw_value))
         to_execute = "v_transformed=({})".format(transformator)
         namespace = {}
         exec(to_execute, namespace)
         print("namespace: " + str(namespace))
-        set_value(measurements, name + "_formula", namespace['v_transformed'])
+        set_value(measurements, name + "_formula", namespace["v_transformed"])
     except Exception as e:
         logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass

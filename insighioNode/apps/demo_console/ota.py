@@ -1,5 +1,4 @@
 import logging
-from . import transfer_protocol
 import device_info
 import utils
 
@@ -33,11 +32,7 @@ def checkAndApply(client):
     logging.info("Waiting for incoming control message (OTA)...")
     messageDict = client.get_control_message()
 
-    if (
-        messageDict is None
-        or messageDict["topic"] is None
-        or messageDict["message"] is None
-    ):
+    if messageDict is None or messageDict["topic"] is None or messageDict["message"] is None:
         logging.info("No control message received")
         return
 
@@ -103,10 +98,7 @@ def checkAndApply(client):
         from sensors import hx711
 
         hw_version = device_info.get_hw_module_version()
-        if (
-            hw_version == device_info._CONST_ESP32
-            or hw_version == device_info._CONST_ESP32_WROOM
-        ):
+        if hw_version == device_info._CONST_ESP32 or hw_version == device_info._CONST_ESP32_WROOM:
             new_offset = hx711.get_reading(4, 33, 12, None, None, 25, True)
         elif hw_version == device_info._CONST_ESP32S3:
             new_offset = hx711.get_reading(5, 4, 8, None, None, 6, True)
@@ -170,9 +162,7 @@ def hasEnoughFreeSpace(fileSize):
     import uos
 
     # for ESP32 uos.statvfs('/')
-    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(
-        device_info.get_device_root_folder()
-    )
+    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(device_info.get_device_root_folder())
     freesize = f_bsize * f_bfree
     return fileSize < freesize
 
@@ -188,9 +178,7 @@ def sendOtaStatusMessage(client, fileId, success, reason_measage=None):
     from external.kpn_senml.senml_record import SenmlRecord
 
     message = SenmlPackJson("")
-    message.add(
-        SenmlRecord("e", value=(1 if success else 2))
-    )  # event id == 2 => failure
+    message.add(SenmlRecord("e", value=(1 if success else 2)))  # event id == 2 => failure
     message.add(SenmlRecord("i", value=fileId))
     if reason_measage is not None:
         message.add(SenmlRecord("m", value=reason_measage))
@@ -210,9 +198,7 @@ def downloadDeviceConfigurationHTTP(client):
     protocol_config = cfg.get_protocol_config()
     URL_base = "console.insigh.io"
     URL_PATH = "/mf-rproxy/device/config"
-    URL_QUERY_PARAMS = "id={}&channel={}".format(
-        protocol_config.thing_id, protocol_config.control_channel_id
-    )
+    URL_QUERY_PARAMS = "id={}&channel={}".format(protocol_config.thing_id, protocol_config.control_channel_id)
     if client.modem_based:
         file = "tmpconfig"
         file_downloaded = client.modem_instance.http_get_with_auth_header(
@@ -243,11 +229,7 @@ def downloadDeviceConfigurationHTTP(client):
         logging.debug("GET file %s" % wCli.URL)
         wCli.OpenRequest()
         resp = wCli.GetResponse()
-        logging.debug(
-            "Get file response status: {}, message: {}".format(
-                resp.GetStatusCode(), resp.GetStatusMessage()
-            )
-        )
+        logging.debug("Get file response status: {}, message: {}".format(resp.GetStatusCode(), resp.GetStatusMessage()))
         if resp.IsSuccess():
             buf = memoryview(bytearray(2048))
             while not resp.IsClosed():
@@ -304,11 +286,7 @@ def downloadOTA(client, fileId, fileType, fileSize):
         logging.debug("GET file %s" % wCli.URL)
         wCli.OpenRequest()
         resp = wCli.GetResponse()
-        logging.debug(
-            "Get file response status: {}, message: {}".format(
-                resp.GetStatusCode(), resp.GetStatusMessage()
-            )
-        )
+        logging.debug("Get file response status: {}, message: {}".format(resp.GetStatusCode(), resp.GetStatusMessage()))
         if resp.IsSuccess():
             contentType = resp.WriteContentToFile(filename, progressCallback)
             logging.debug('File was saved to "%s"' % (filename))

@@ -1,6 +1,3 @@
-import device_info
-import machine
-import socket
 import utime
 import ubinascii
 import logging
@@ -22,6 +19,7 @@ def set_pins(power_on=None, modem_tx=None, modem_rx=None, gps_address=None):
     pin_modem_power_on = power_on
     i2c_gps_address = gps_address
 
+
 def set_keys(cfg):
     try:
         # get app_eui and app_key in right formats
@@ -29,11 +27,11 @@ def set_keys(cfg):
             dev_eui = cfg._DEV_EUI
             app_key = cfg._APP_KEY
             app_eui = cfg._APP_EUI
-            return(dev_eui, app_eui, app_key)
+            return (dev_eui, app_eui, app_key)
     except Exception as e:
         logging.exception(e, "Invalid lora keys: {}, {}, {}".format(cfg._DEV_EUI, cfg._APP_EUI, cfg._APP_KEY))
 
-    return(None, None, None)
+    return (None, None, None)
 
 
 def get_modem_instance():
@@ -41,6 +39,7 @@ def get_modem_instance():
     logging.debug("getting lora modem instance...")
     if modem_instance is None:
         from networking.modem import modem_rak4270
+
         modem_instance = modem_rak4270.ModemRak4270(pin_modem_power_on, pin_modem_tx, pin_modem_rx)
         modem_instance.power_on()
     else:
@@ -50,7 +49,7 @@ def get_modem_instance():
 
 
 def join(cfg, lora_keys):
-    """ Join network using a tuple of (dev_eui,app_eui,app_key) """
+    """Join network using a tuple of (dev_eui,app_eui,app_key)"""
     modem = get_modem_instance()
 
     if modem is None:
@@ -104,6 +103,7 @@ def join(cfg, lora_keys):
     #     logging.debug("Not joined (timeout = {} expired)".format(conn_attempt_duration))
     #     return (False, conn_attempt_duration)
 
+
 def is_connected():
     modem = get_modem_instance()
 
@@ -112,15 +112,17 @@ def is_connected():
         return False
     return modem.is_connected()
 
+
 def send(cfg, byte_msg):
-    """ Send lora packet """
+    """Send lora packet"""
     modem = get_modem_instance()
 
     if modem is None:
         logging.info("No modem detected, ignoring send request")
 
-    status = modem.send(ubinascii.hexlify(byte_msg).lower().decode('utf-8'))
+    status = modem.send(ubinascii.hexlify(byte_msg).lower().decode("utf-8"))
     return status
+
 
 def deinit():
     global modem_instance

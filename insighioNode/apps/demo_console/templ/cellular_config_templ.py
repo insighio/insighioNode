@@ -1,4 +1,4 @@
-network="cellular"
+network = "cellular"
 
 """ Cellular-related configuration options """
 _MAX_ATTACHMENT_ATTEMPT_TIME_SEC = 90

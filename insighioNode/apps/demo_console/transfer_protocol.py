@@ -1,9 +1,10 @@
 import logging
-import device_info
 from . import locks
+
 
 def get_config(cfg, key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
+
 
 class TransferProtocol:
     def __init__(self, cfg, modem_instance=None):
@@ -13,7 +14,7 @@ class TransferProtocol:
         self.protocol = cfg.protocol
         self.modem_based = False
         if self.protocol_config.keepalive is None:
-             self.protocol_config.keepalive = 120
+            self.protocol_config.keepalive = 120
         logging.debug("initializing TransferProtocol for: " + str(self.protocol))
 
     def is_connected(self):
@@ -35,14 +36,15 @@ class TransferProtocol:
     def clear_retained(self, topic):
         return logging.info("Control packet not supported for: " + self.protocol)
 
+
 class TransferProtocolModemAT(TransferProtocol):
     def __init__(self, cfg, modem_instance=None):
         super().__init__(cfg, modem_instance)
         self.modem_instance = modem_instance
-        self.modem_based = (modem_instance is not None)
+        self.modem_based = modem_instance is not None
         self.require_message_delivery_ack = get_config(self.protocol_config, "REQ_MESG_DEL_ACK")
         if self.require_message_delivery_ack is None:
-            self.require_message_delivery_ack = True # enable if configuration is missing
+            self.require_message_delivery_ack = True  # enable if configuration is missing
 
         logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
 
@@ -50,8 +52,14 @@ class TransferProtocolModemAT(TransferProtocol):
         if self.is_connected():
             return True
 
-        #TODO: use the keepalive setting
-        self.connected = self.modem_instance.mqtt_connect(self.protocol_config.server_ip, self.protocol_config.server_port, self.protocol_config.thing_id, self.protocol_config.thing_token, self.protocol_config.keepalive)
+        # TODO: use the keepalive setting
+        self.connected = self.modem_instance.mqtt_connect(
+            self.protocol_config.server_ip,
+            self.protocol_config.server_port,
+            self.protocol_config.thing_id,
+            self.protocol_config.thing_token,
+            self.protocol_config.keepalive,
+        )
         return self.connected
 
     def is_connected(self):
@@ -69,7 +77,7 @@ class TransferProtocolModemAT(TransferProtocol):
             logging.info("TransferProtocol not connected")
             return False
 
-        topic = 'channels/{}/messages/{}'.format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
+        topic = "channels/{}/messages/{}".format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
         return self.modem_instance.mqtt_publish(topic, message, 3, False, 1 if self.require_message_delivery_ack else 0)
 
     def send_control_packet(self, message, subtopic):
@@ -79,7 +87,7 @@ class TransferProtocolModemAT(TransferProtocol):
 
         logging.info("About to send control message")
 
-        topic = 'channels/{}/messages/{}{}'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, subtopic)
+        topic = "channels/{}/messages/{}{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, subtopic)
         return self.modem_instance.mqtt_publish(topic, message)
 
     def get_control_message(self):
@@ -87,7 +95,7 @@ class TransferProtocolModemAT(TransferProtocol):
             logging.info("TransferProtocol not connected")
             return None
 
-        topic = 'channels/{}/messages/{}/#'.format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+        topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
         return self.modem_instance.mqtt_get_message(topic, 10000)
 
     def clear_retained(self, topic):
@@ -99,11 +107,12 @@ class TransferProtocolMQTT(TransferProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         from protocols import mqtt_client
+
         self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
         self.enable_last_will(self.protocol_config)
         self.require_message_delivery_ack = get_config(self.protocol_config, "REQ_MESG_DEL_ACK")
         if self.require_message_delivery_ack is None:
-            self.require_message_delivery_ack = True # enable if configuration is missing
+            self.require_message_delivery_ack = True  # enable if configuration is missing
 
         logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
 
@@ -160,7 +169,6 @@ class TransferProtocolMQTT(TransferProtocol):
         with locks.network_transmit_mutex:
             return self.client.sendControlMessage(message, subtopic)
 
-
     def get_control_message(self):
         if not self.connected:
             logging.info("TransferProtocol not connected")
@@ -174,14 +182,17 @@ class TransferProtocolMQTT(TransferProtocol):
         with locks.network_transmit_mutex:
             return self.client.sendMessage("", topic, True)
 
+
 class TransferProtocolCoAP(TransferProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         from protocols import coap_client
+
         self.client = coap_client.CoAPClient(self.protocol_config)
         if self.protocol_config.use_custom_socket:
             import external.microATsocket.microATsocket as socket
             from network import LTE
+
             self.protocol_config.custom_socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             self.protocol_config.custom_socket.setModemInstance(LTE())
 

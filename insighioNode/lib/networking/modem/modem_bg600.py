@@ -6,6 +6,7 @@ import device_info
 from external.micropyGPS.micropyGPS import MicropyGPS
 import math
 
+
 class ModemBG600(modem_base.Modem):
     def __init__(self, power_on, power_key, modem_tx, modem_rx):
         super().__init__(power_on, power_key, modem_tx, modem_rx)
@@ -29,31 +30,31 @@ class ModemBG600(modem_base.Modem):
         technology = technology.lower()
         nwscanseq_expected = ""
         nwscanmode_expected = ""
-        if technology == 'nbiot':
-            nwscanseq_expected = '030102'
-            nwscanmode_expected = '3'
-        elif technology == 'lte-m':
-            nwscanseq_expected = '020301'
-            nwscanmode_expected = '3'
-        elif technology == 'gsm':
-            nwscanseq_expected = '010203'
-            nwscanmode_expected = '1'
+        if technology == "nbiot":
+            nwscanseq_expected = "030102"
+            nwscanmode_expected = "3"
+        elif technology == "lte-m":
+            nwscanseq_expected = "020301"
+            nwscanmode_expected = "3"
+        elif technology == "gsm":
+            nwscanseq_expected = "010203"
+            nwscanmode_expected = "1"
         else:
-            nwscanseq_expected = '00'
-            nwscanmode_expected = '0'
+            nwscanseq_expected = "00"
+            nwscanmode_expected = "0"
 
         (nwscanseq_status, nwscanseq_lines) = self.send_at_cmd('AT+QCFG="nwscanseq"')
-        nwscanseq_lines = '\n'.join(nwscanseq_lines)
+        nwscanseq_lines = "\n".join(nwscanseq_lines)
 
         if nwscanseq_expected not in nwscanseq_lines:
             self.send_at_cmd('AT+QCFG="nwscanseq",{},0'.format(nwscanseq_expected))
             self.send_at_cmd('AT+QCFG="nwscanmode",{},0'.format(nwscanmode_expected))
-            self.send_at_cmd('AT+CFUN=1,1', 15000, "APP RDY")
-            self.send_at_cmd('ATE0')
+            self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
+            self.send_at_cmd("ATE0")
             utime.sleep_ms(1000)
 
     def wait_for_modem_power_off(self):
-        self.send_at_cmd('', 5000, "NORMAL POWER DOWN")
+        self.send_at_cmd("", 5000, "NORMAL POWER DOWN")
 
     def prioritizeWWAN(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == True:
@@ -71,7 +72,7 @@ class ModemBG600(modem_base.Modem):
 
     def connect(self, timeoutms=30000):
         for i in range(0, 5):
-            (status, lines) = self.send_at_cmd('AT+CGACT=1,1')
+            (status, lines) = self.send_at_cmd("AT+CGACT=1,1")
             if status:
                 break
 
@@ -79,7 +80,7 @@ class ModemBG600(modem_base.Modem):
             return False
 
         (status1, _) = self.send_at_cmd('AT+QICSGP=1,1,"' + self.apn + '","","",0')
-        (status2, _) = self.send_at_cmd('AT+QIACT=1')
+        (status2, _) = self.send_at_cmd("AT+QIACT=1")
 
         return status1 and status2
 
@@ -87,7 +88,7 @@ class ModemBG600(modem_base.Modem):
         self.send_at_cmd('AT+QNTP=1,"pool.ntp.org"', 125000, "\+QNTP")
 
     def is_connected(self):
-        (status, lines) = self.send_at_cmd('AT+CGACT?')
+        (status, lines) = self.send_at_cmd("AT+CGACT?")
         return status and len(lines) > 0 and "1,1" in lines[0]
 
     def disconnect(self):
@@ -99,35 +100,35 @@ class ModemBG600(modem_base.Modem):
         rsrp = None
         rsrq = None
         reg = '\\+QCSQ:\\s+"\\w+",(-?\\d+),(-?\\d+),(-?\\d+),(-?\\d+)'
-        (status, lines) = self.send_at_cmd('AT+QCSQ')
+        (status, lines) = self.send_at_cmd("AT+QCSQ")
         if status and len(lines) > 0:
             res = ure.match(reg, lines[0])
             if res:
                 try:
                     rsrp = int(res.group(2))
                 except:
-                    rsrp = -141 #to be checked for nbiot
+                    rsrp = -141  # to be checked for nbiot
                 try:
                     rsrq = int(res.group(4))
                 except:
-                    rsrq = -20 #to be checked for nbiot
+                    rsrq = -20  # to be checked for nbiot
 
         return (rsrp, rsrq)
 
     def set_gps_state(self, poweron=True):
         command = ""
         if poweron:
-            command = 'AT+QGPS=1'
+            command = "AT+QGPS=1"
             self.send_at_cmd('AT+QGPSCFG="gnssconfig",5')
         else:
-            command = 'AT+QGPSEND'
+            command = "AT+QGPSEND"
 
         (status, _) = self.send_at_cmd(command)
         return status
 
     # to be overriden by children
     def is_gps_on(self):
-        (status, lines) = self.send_at_cmd('AT+QGPS?')
+        (status, lines) = self.send_at_cmd("AT+QGPS?")
         reg = "\\+QGPS:\\s+(\\d)"
         if status and len(lines):
             res = ure.match(reg, lines[0])
@@ -152,12 +153,19 @@ class ModemBG600(modem_base.Modem):
             while utime.ticks_ms() < timeout_timestamp:
                 (status, lines) = self.send_at_cmd('AT+QGPSGNMEA="GGA"')
                 if status and len(lines) > 0:
-                    if lines[0].startswith('+QGPSGNMEA:'):
-                        lines[0] = lines[0].replace('+QGPSGNMEA: ', '')
+                    if lines[0].startswith("+QGPSGNMEA:"):
+                        lines[0] = lines[0].replace("+QGPSGNMEA: ", "")
                     for line in lines:
                         for char in line:
                             my_gps.update(char)
-                        if my_gps.latitude and my_gps.latitude[0] and my_gps.latitude[1] and my_gps.longitude and my_gps.longitude[0] and my_gps.longitude[1]:
+                        if (
+                            my_gps.latitude
+                            and my_gps.latitude[0]
+                            and my_gps.latitude[1]
+                            and my_gps.longitude
+                            and my_gps.longitude[0]
+                            and my_gps.longitude[1]
+                        ):
                             last_valid_gps_lat = my_gps.latitude
                             last_valid_gps_lon = my_gps.longitude
                             max_satellites = my_gps.satellites_in_use
@@ -171,7 +179,11 @@ class ModemBG600(modem_base.Modem):
                             # round seconds
                             self.gps_timestamp[6] = math.floor(self.gps_timestamp[6])
 
-                        logging.debug("{} {} Lat: {}, Lon: {}, NumSats: {}, hdop: {}".format(my_gps.date, my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop))
+                        logging.debug(
+                            "{} {} Lat: {}, Lon: {}, NumSats: {}, hdop: {}".format(
+                                my_gps.date, my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop
+                            )
+                        )
                         if my_gps.satellites_in_use >= satellite_number_threshold or (my_gps.hdop > 0 and my_gps.hdop <= hdop_thresh):
                             gps_fix = True
                             return (self.gps_timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
@@ -186,7 +198,7 @@ class ModemBG600(modem_base.Modem):
         if not context_activated:
             return False
 
-        #setup keepalive
+        # setup keepalive
         self.send_at_cmd('AT+QMTCFG="keepalive",1,' + str(keepalive))
 
         max_retries = 3
@@ -196,7 +208,7 @@ class ModemBG600(modem_base.Modem):
             (mqtt_ready, lines) = self.send_at_cmd('AT+QMTOPEN=1,"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s+1,\d")
             if mqtt_ready:
                 # if MQTT already connected
-                if len(lines) > 0 and lines[-1].endswith ("0,2"):
+                if len(lines) > 0 and lines[-1].endswith("0,2"):
                     return True
                 break
             utime.sleep_ms(1000)
@@ -205,7 +217,9 @@ class ModemBG600(modem_base.Modem):
             retry = 0
             while retry < max_retries:
                 retry += 1
-                (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN=1,"{}","{}","{}"'.format(device_info.get_device_id()[0], username, password), 15000, "\\+QMTCONN:\\s+1,0,0")
+                (mqtt_connected, _) = self.send_at_cmd(
+                    'AT+QMTCONN=1,"{}","{}","{}"'.format(device_info.get_device_id()[0], username, password), 15000, "\\+QMTCONN:\\s+1,0,0"
+                )
                 if mqtt_connected:
                     break
                 utime.sleep_ms(1000)
@@ -215,9 +229,9 @@ class ModemBG600(modem_base.Modem):
         return False
 
     def mqtt_is_connected(self):
-         (mqtt_ready, _) = self.send_at_cmd('AT+QMTOPEN?', 2000, r"\+QMTOPEN:\s+1.*")
-         (mqtt_connected, _) = self.send_at_cmd('AT+QMTCONN?', 2000, r"\+QMTCONN:\s+1.*")
-         return mqtt_ready and mqtt_connected
+        (mqtt_ready, _) = self.send_at_cmd("AT+QMTOPEN?", 2000, r"\+QMTOPEN:\s+1.*")
+        (mqtt_connected, _) = self.send_at_cmd("AT+QMTCONN?", 2000, r"\+QMTCONN:\s+1.*")
+        return mqtt_ready and mqtt_connected
 
     def mqtt_publish(self, topic, message, num_of_retries=3, retain=False, qos=1):
         mqtt_send_ready = False
@@ -226,11 +240,14 @@ class ModemBG600(modem_base.Modem):
         message_sent = False
         general_retry_num = 0
         import random
+
         logging.debug("mqtt_publish: qos: {}".format(qos))
         message_id = (int(random.random() * 65530) + 1) if qos else 0
         while not message_sent and general_retry_num < num_of_retries:
             for i in range(0, num_of_retries):
-                (mqtt_send_ready, _) = self.send_at_cmd('AT+QMTPUB=1,{},{},{},"{}"'.format(message_id , 1 if qos else 0, 1 if retain else 0, topic), 15000, '>.*')
+                (mqtt_send_ready, _) = self.send_at_cmd(
+                    'AT+QMTPUB=1,{},{},{},"{}"'.format(message_id, 1 if qos else 0, 1 if retain else 0, topic), 15000, ">.*"
+                )
                 if mqtt_send_ready:
                     break
                 logging.error("Mqtt not ready to send")
@@ -238,13 +255,13 @@ class ModemBG600(modem_base.Modem):
 
             if mqtt_send_ready:
                 for i in range(0, 2):
-                    (mqtt_send_ok, lines) = self.send_at_cmd(message + '\x1a', 15000, r"\+QMTPUB:\s*\d+,\d+,[012]")
+                    (mqtt_send_ok, lines) = self.send_at_cmd(message + "\x1a", 15000, r"\+QMTPUB:\s*\d+,\d+,[012]")
 
                     for line in lines:
                         if "1,{},0".format(message_id) in line or "1,{},1".format(message_id) in line:
                             message_sent = True
 
-                    if mqtt_send_ok :
+                    if mqtt_send_ok:
                         break
                     logging.error("Mqtt publish failed")
                     utime.sleep_ms(500)
@@ -256,8 +273,9 @@ class ModemBG600(modem_base.Modem):
 
     def mqtt_get_message(self, topic, timeout_ms=5000):
         import random
-        #channels/f1937d78-6745-4b6b-98c3-62e2201c21ab/messages/5de93307-344f-48f2-a66d-1d2f7e359504/#
-        #reg = r"\+QMTRECV:\s*\d+,\d+,\"([a-z\-0-9\/]+)\",\"(.*)\"" -> can not be used as it causes: RuntimeError: maximum recursion depth exceeded
+
+        # channels/f1937d78-6745-4b6b-98c3-62e2201c21ab/messages/5de93307-344f-48f2-a66d-1d2f7e359504/#
+        # reg = r"\+QMTRECV:\s*\d+,\d+,\"([a-z\-0-9\/]+)\",\"(.*)\"" -> can not be used as it causes: RuntimeError: maximum recursion depth exceeded
         reg = r"\+QMTRECV:.*"
         # subscribe and receive message if any
         message_id = int(random.random() * 65530) + 1
@@ -311,7 +329,7 @@ class ModemBG600(modem_base.Modem):
 
         res = dict()
         res["topic"] = topic
-        res["message"] = message[0:(last_quote_index - message_quote_index - 1)]
+        res["message"] = message[0 : (last_quote_index - message_quote_index - 1)]
         return res
 
     def mqtt_disconnect(self):
@@ -336,7 +354,7 @@ class ModemBG600(modem_base.Modem):
 
         # send command
         command = "AT+QFREAD={},{}".format(file_handle, num_of_bytes)
-        write_success = self.uart.write(command + '\r\n')
+        write_success = self.uart.write(command + "\r\n")
         if not write_success:
             return buffer
 
@@ -344,7 +362,7 @@ class ModemBG600(modem_base.Modem):
             device_info.wdt_reset()
 
             remaining_bytes = self.uart.any()
-            if(utime.ticks_ms() >= timeout_timestamp):
+            if utime.ticks_ms() >= timeout_timestamp:
                 if status is None:
                     status = False
                 break
@@ -357,7 +375,7 @@ class ModemBG600(modem_base.Modem):
             line = self.uart.readline()
 
             try:
-                line = line if line is None else line.decode('utf8').strip()
+                line = line if line is None else line.decode("utf8").strip()
             except Exception as e:
                 logging.error("! " + str(line))
                 line = ""
@@ -391,7 +409,7 @@ class ModemBG600(modem_base.Modem):
     def open_file_read_only(self, source):
         # If the file exists, it is opened directly and is read only. If the file does not exist, an error is returned.
         (file_open_status, lines) = self.send_at_cmd('AT+QFOPEN="' + source + '",2')
-        reg = r'\+QFOPEN:\s+(\d+)'
+        reg = r"\+QFOPEN:\s+(\d+)"
         res = ure.match(reg, lines[0])
         return res.group(1) if res else None
 
@@ -407,7 +425,7 @@ class ModemBG600(modem_base.Modem):
         data_read = 0
         CHUNKSIZE = 256
 
-        fw = open(destination, 'wb')
+        fw = open(destination, "wb")
         logging.debug("reading file contents")
         while data_read < file_size:
             data_remaining = file_size - data_read
@@ -422,7 +440,7 @@ class ModemBG600(modem_base.Modem):
             data_read += byte_length_to_request
             utime.sleep_ms(10)
         fw.close()
-        (file_close_status, _) = self.send_at_cmd('AT+QFCLOSE=' + file_handle)
+        (file_close_status, _) = self.send_at_cmd("AT+QFCLOSE=" + file_handle)
         return data_read == file_size
 
     def delete_file(self, destination):
@@ -433,7 +451,7 @@ class ModemBG600(modem_base.Modem):
         (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
         self.send_at_cmd('AT+QHTTPCFG="requestheader",0')
         self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
-        (url_ready, _) = self.send_at_cmd('AT+QHTTPURL=' + str(len(url)) + ',80', 8000, "CONNECT")
+        (url_ready, _) = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
         if not url_ready:
             return False
 
@@ -441,7 +459,7 @@ class ModemBG600(modem_base.Modem):
         if not url_setup:
             return False
 
-        (get_requested, _) = self.send_at_cmd('AT+QHTTPGET=80', 80000, r"\+QHTTPGET:.*")
+        (get_requested, _) = self.send_at_cmd("AT+QHTTPGET=80", 80000, r"\+QHTTPGET:.*")
 
         if not get_requested:
             return False
@@ -457,7 +475,7 @@ class ModemBG600(modem_base.Modem):
         # enable executing http request with custom headers
         self.send_at_cmd('AT+QHTTPCFG="requestheader",1')
         self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
-        url = 'https://' + url_base  #"http://console.insigh.io/mf-rproxy/channels/list"
+        url = "https://" + url_base  # "http://console.insigh.io/mf-rproxy/channels/list"
         requestHeader = (
             "GET " + url_request_route + " HTTP/1.1\r\n"
             "Host: " + url_base + "\r\n"
@@ -465,9 +483,10 @@ class ModemBG600(modem_base.Modem):
             "Accept: */*\r\n"
             "Content-Type: application/json\r\n"
             "Authorization: " + auth_token + "\r\n"
-            "\r\n")
+            "\r\n"
+        )
 
-        (url_ready, _) = self.send_at_cmd('AT+QHTTPURL=' + str(len(url)) + ',80', 8000, "CONNECT")
+        (url_ready, _) = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
         if not url_ready:
             return None
 
@@ -475,7 +494,7 @@ class ModemBG600(modem_base.Modem):
         if not url_setup:
             return None
 
-        (url_req_ready, _) = self.send_at_cmd('AT+QHTTPGET=80,' + str(len(requestHeader)), 90000, "CONNECT")
+        (url_req_ready, _) = self.send_at_cmd("AT+QHTTPGET=80," + str(len(requestHeader)), 90000, "CONNECT")
         if not url_req_ready:
             return None
 
@@ -495,15 +514,17 @@ class ModemBG600(modem_base.Modem):
         if not context_activated:
             return False
 
-        #Configure retransmission settings for CoAP client 0. (The ACK
-        #timeout is 4 seconds and the maximum retransmission count is 5.)
+        # Configure retransmission settings for CoAP client 0. (The ACK
+        # timeout is 4 seconds and the maximum retransmission count is 5.)
         self.send_at_cmd('AT+QCOAPCFG="trans",2,4,5')
 
         max_retries = 3
         retry = 0
         while retry < max_retries:
             retry += 1
-            (coap_is_opening, lines) = self.send_at_cmd('AT+QCOAPOPEN=2,"' + server_ip + '",' + str(server_port), 15000, r"\+QCOAPOPEN:\s+2.*")
+            (coap_is_opening, lines) = self.send_at_cmd(
+                'AT+QCOAPOPEN=2,"' + server_ip + '",' + str(server_port), 15000, r"\+QCOAPOPEN:\s+2.*"
+            )
             if coap_is_opening:
                 break
             utime.sleep_ms(1000)
@@ -515,22 +536,21 @@ class ModemBG600(modem_base.Modem):
                 return True
             utime.sleep_ms(1000)
 
-
         return False
 
     def coap_is_connected(self):
-         (coap_ready, lines) = self.send_at_cmd('AT+QCOAPOPEN?')
+        (coap_ready, lines) = self.send_at_cmd("AT+QCOAPOPEN?")
 
-         if not coap_ready:
-             return False
+        if not coap_ready:
+            return False
 
-         regex = r"\+QCOAPOPEN:\s+2.*,3"
-         for line in lines:
-             match_res = ure.search(regex, line)
-             if match_res is not None:
-                 return True
+        regex = r"\+QCOAPOPEN:\s+2.*,3"
+        for line in lines:
+            match_res = ure.search(regex, line)
+            if match_res is not None:
+                return True
 
-         return False
+        return False
 
     def coap_setup_options(self, host, data_uri, token):
         # self.send_at_cmd('AT+QCOAPOPTION=2,1,0')
@@ -538,10 +558,10 @@ class ModemBG600(modem_base.Modem):
         # self.send_at_cmd('AT+QCOAPOPTION=2,1,2')
         # self.send_at_cmd('AT+QCOAPOPTION=2,1,3')
 
-        #self.send_at_cmd('AT+QCOAPOPTION=2,0,0,3,"{}"'.format(host)) # set Uri-Host
-        self.send_at_cmd('AT+QCOAPOPTION=2,0,0,11,"{}"'.format(data_uri)) # set Uri-Host
-        self.send_at_cmd('AT+QCOAPOPTION=2,0,1,12,50') # set JSON
-        self.send_at_cmd('AT+QCOAPOPTION=2,0,2,15,"authorization={}"'.format(token)) # set authorization token
+        # self.send_at_cmd('AT+QCOAPOPTION=2,0,0,3,"{}"'.format(host)) # set Uri-Host
+        self.send_at_cmd('AT+QCOAPOPTION=2,0,0,11,"{}"'.format(data_uri))  # set Uri-Host
+        self.send_at_cmd("AT+QCOAPOPTION=2,0,1,12,50")  # set JSON
+        self.send_at_cmd('AT+QCOAPOPTION=2,0,2,15,"authorization={}"'.format(token))  # set authorization token
 
     def coap_publish(self, uri, payload, num_of_retries=3, confirmable=False):
         coap_send_ready = False
@@ -550,9 +570,10 @@ class ModemBG600(modem_base.Modem):
         message_sent = False
         general_retry_num = 0
         import random
+
         confirmable_id = "0" if confirmable else "1"
 
-        message_id = (int(random.random() * 65530) + 1)
+        message_id = int(random.random() * 65530) + 1
 
         self.send_at_cmd('AT+QCOAPHEADER=2,{},0,6,"{}"'.format(message_id, device_info.get_device_id()[0]), 15000)
 
@@ -560,7 +581,7 @@ class ModemBG600(modem_base.Modem):
 
         while not message_sent and general_retry_num < num_of_retries:
             for i in range(0, num_of_retries):
-                (coap_send_ready, _) = self.send_at_cmd('AT+QCOAPSEND=2,{},2,7'.format(confirmable_id), 15000, '>.*')
+                (coap_send_ready, _) = self.send_at_cmd("AT+QCOAPSEND=2,{},2,7".format(confirmable_id), 15000, ">.*")
                 if coap_send_ready:
                     break
                 logging.error("CoAP not ready to send")
@@ -568,14 +589,14 @@ class ModemBG600(modem_base.Modem):
 
             if coap_send_ready:
                 for i in range(0, 2):
-                    (coap_send_ok, lines) = self.send_at_cmd(payload + '\x1a', 15000, r"\+QCOAPACK:\s*\d+,\d+,\d+,\d+")
+                    (coap_send_ok, lines) = self.send_at_cmd(payload + "\x1a", 15000, r"\+QCOAPACK:\s*\d+,\d+,\d+,\d+")
 
                     for line in lines:
                         if ure.search(send_success_regex, line) is not None:
                             message_sent = True
                             break
 
-                    if coap_send_ok :
+                    if coap_send_ok:
                         break
                     logging.error("CoAP publish failed")
                     utime.sleep_ms(500)

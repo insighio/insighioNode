@@ -1,4 +1,3 @@
-import sys
 import device_info
 import utime
 import logging
@@ -7,14 +6,14 @@ import utils
 import gc
 
 CELLULAR_NO_INIT = None
-CELLULAR_NO      = 0
+CELLULAR_NO = 0
 CELLULAR_SEQUANS = 1
-CELLULAR_MC60    = 2
-CELLULAR_BG600   = 3
+CELLULAR_MC60 = 2
+CELLULAR_BG600 = 3
 CELLULAR_UNKNOWN = 4
 
-CELLULAR_MC60_STR  = 'mc60'
-CELLULAR_BG600_STR = 'bg600'
+CELLULAR_MC60_STR = "mc60"
+CELLULAR_BG600_STR = "bg600"
 
 # Modem state
 MODEM_DETTACHED = -1  # initial value, nothing happened
@@ -45,6 +44,7 @@ def set_pins(power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx
 def detect_modem():
     global cellular_model
     from networking.modem.modem_base import Modem
+
     modemInst = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
     if not modemInst.is_alive():
         modemInst.power_on()
@@ -81,15 +81,19 @@ def get_modem_instance():
         if modem_id == CELLULAR_MC60 or modem_id == CELLULAR_BG600 or modem_id == CELLULAR_UNKNOWN:
             if modem_id == CELLULAR_MC60:
                 from networking.modem.modem_mc60 import ModemMC60
+
                 modem_instance = ModemMC60(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
             elif modem_id == CELLULAR_BG600:
                 from networking.modem.modem_bg600 import ModemBG600
+
                 modem_instance = ModemBG600(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
             else:
                 from networking.modem.modem_base import Modem
+
                 modem_instance = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)  # generic
         elif modem_id == CELLULAR_SEQUANS:
             from networking.modem.modem_sequans import ModemSequans
+
             modem_instance = ModemSequans()
     else:
         logging.debug("modem_instance is not None")
@@ -98,10 +102,10 @@ def get_modem_instance():
 
 
 def connect(cfg):
-    """ Complete cellular connection procedure (activation, attachment, data connection)
-            Returns:
-                status: "Modem state" see enums NBIOT_*.
-                a list of time duration consumed for (activation,attachment,connection)
+    """Complete cellular connection procedure (activation, attachment, data connection)
+    Returns:
+        status: "Modem state" see enums NBIOT_*.
+        a list of time duration consumed for (activation,attachment,connection)
     """
     status = MODEM_DETTACHED
     activation_duration = -1
@@ -112,7 +116,7 @@ def connect(cfg):
     rsrq = None
 
     try:
-        logging.debug('Initializing modem')
+        logging.debug("Initializing modem")
         modemInst = get_modem_instance()
         modemInst.init(cfg._IP_VERSION, cfg._APN, cfg._CELLULAR_TECHNOLOGY)
 
@@ -134,7 +138,7 @@ def connect(cfg):
             modemInst.get_registered_mcc_mnc()
 
             if not modemInst.is_attached():
-                logging.debug('Attaching...')
+                logging.debug("Attaching...")
                 modemInst.attach()
                 # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
                 while not modemInst.is_attached() and (utime.ticks_ms() < attachment_timeout):
@@ -145,18 +149,18 @@ def connect(cfg):
             if modemInst.is_attached():
                 status = MODEM_ATTACHED
                 attachment_duration = utime.ticks_ms() - start_attachment_duration
-                logging.debug('Modem attached')
+                logging.debug("Modem attached")
 
                 # signal quality
                 rssi = modemInst.get_rssi()
                 (rsrp, rsrq) = modemInst.get_extended_signal_quality()
                 modemInst.get_lac_n_cell_id()
 
-                logging.debug('Signal Quality - RSSI/RSRP/RSRQ: {}, {}, {}'.format(rssi, rsrp, rsrq))
+                logging.debug("Signal Quality - RSSI/RSRP/RSRQ: {}, {}, {}".format(rssi, rsrp, rsrq))
 
                 # ready to connect
                 if modemInst.has_data_over_ppp():
-                    logging.debug('Entering Data State. Modem connecting...')
+                    logging.debug("Entering Data State. Modem connecting...")
                     start_connection_duration = utime.ticks_ms()
                     connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
                     if not modemInst.is_connected():
@@ -167,13 +171,13 @@ def connect(cfg):
                         # update_rtc_from_network_time(modemInst)
                         status = MODEM_CONNECTED
                         connection_duration = utime.ticks_ms() - start_connection_duration
-                        logging.debug('Modem connected')
-                        device_info.set_led_color('yellow')
+                        logging.debug("Modem connected")
+                        device_info.set_led_color("yellow")
                 else:
                     # when using AT commands we don't need to explicitly enter data mode
                     status = MODEM_CONNECTED
             else:
-                logging.debug('Unable to attach in {} sec'.format(cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC))
+                logging.debug("Unable to attach in {} sec".format(cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC))
     except Exception as e:
         logging.exception(e, "Outer Exception: {}".format(e))
 
@@ -183,6 +187,7 @@ def connect(cfg):
 def update_rtc_from_network_time(modem):
     try:
         from machine import RTC
+
         time_tuple = modem.get_network_date_time()
 
         rtc = RTC()
@@ -191,8 +196,16 @@ def update_rtc_from_network_time(modem):
         if time_tuple is None or (time_tuple and time_tuple[0] < 2021 or time_tuple[0] > 2050):
             # wrong time set, try to get time from other source
             now = rtc.datetime()
-            set_gps_date = modem.gps_timestamp is not None and len(modem.gps_timestamp) == 8 and (modem.gps_timestamp[0] != 0 or modem.gps_timestamp[1] != 0 or modem.gps_timestamp[2] != 0)
-            set_gps_time = modem.gps_timestamp is not None and len(modem.gps_timestamp) == 8 and (modem.gps_timestamp[4] != 0 or modem.gps_timestamp[5] != 0 or modem.gps_timestamp[6] != 0)
+            set_gps_date = (
+                modem.gps_timestamp is not None
+                and len(modem.gps_timestamp) == 8
+                and (modem.gps_timestamp[0] != 0 or modem.gps_timestamp[1] != 0 or modem.gps_timestamp[2] != 0)
+            )
+            set_gps_time = (
+                modem.gps_timestamp is not None
+                and len(modem.gps_timestamp) == 8
+                and (modem.gps_timestamp[4] != 0 or modem.gps_timestamp[5] != 0 or modem.gps_timestamp[6] != 0)
+            )
             time_tuple = (
                 modem.gps_timestamp[0] if set_gps_date else now[0],
                 modem.gps_timestamp[1] if set_gps_date else now[1],
@@ -201,7 +214,7 @@ def update_rtc_from_network_time(modem):
                 modem.gps_timestamp[4] if set_gps_time else now[4],
                 modem.gps_timestamp[5] if set_gps_time else now[5],
                 int(modem.gps_timestamp[6]) if set_gps_time else now[6],
-                0
+                0,
             )
 
             if modem.gps_timestamp is None and modem.gps_date is None:
@@ -222,7 +235,7 @@ def update_rtc_from_network_time(modem):
 
 
 def deactivate():
-    """ Actions implemented when turning off lte modem, before deep sleep """
+    """Actions implemented when turning off lte modem, before deep sleep"""
 
     modemInst = get_modem_instance()
     deactivation_status = False
@@ -230,9 +243,9 @@ def deactivate():
 
     try:
         if modemInst:
-            logging.debug('Modem disconnecting...')
+            logging.debug("Modem disconnecting...")
             modemInst.disconnect()
-            logging.debug('Modem deinitializing...')
+            logging.debug("Modem deinitializing...")
             modemInst.power_off()
             modemInst.wait_for_modem_power_off()
         # LTE().send_at_cmd('AT+CFUN=0')

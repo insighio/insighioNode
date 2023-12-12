@@ -4,6 +4,7 @@ import ure
 import logging
 import device_info
 import utils
+
 # TODO: check if some regexes need to be precompiled: ure.compile('\d+mplam,pla')
 
 
@@ -98,13 +99,13 @@ class Modem:
         lines = "\n".join(lines)
 
         if technology.lower() == "nbiot":
-            expected_configuration = "1" # operator locking
+            expected_configuration = "1"  # operator locking
             command = "AT+COPS=1,2,20201,9"
         else:
-            expected_configuration = "0" # operator automatic selection
+            expected_configuration = "0"  # operator automatic selection
             command = "AT+COPS=0"
 
-        operator_regex = r'\+COPS:\s*(\d).*'
+        operator_regex = r"\+COPS:\s*(\d).*"
         match = ure.search(operator_regex, lines)
         if match and match.group(1) == expected_configuration:
             logging.debug("Operator selection already configured")
@@ -117,7 +118,7 @@ class Modem:
             return False
 
         has_sim_check = False
-        for i in range(0,5):
+        for i in range(0, 5):
             has_sim_check = self.has_sim()
             if has_sim_check:
                 break
@@ -135,7 +136,7 @@ class Modem:
         self.set_operator_selection(technology)
 
         # disable command echo
-        self.send_at_cmd('ATE0')
+        self.send_at_cmd("ATE0")
         # set auto-registration
         self.send_at_cmd("AT+COPS=3,2")  # set network name as numeric value
         self.send_at_cmd("AT+CREG=2")  # enable LAC, CI reporting
@@ -155,7 +156,7 @@ class Modem:
     def get_network_date_time(self):
         start_timestamp = utime.ticks_ms()
         timeout_timestamp = start_timestamp + 10000
-        regex = '(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):\\s*(\\d+):(\\d+)([+-]\\d+)'
+        regex = "(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):\\s*(\\d+):(\\d+)([+-]\\d+)"
         while utime.ticks_ms() < timeout_timestamp:
             (status, lines) = self.send_at_cmd("AT+CCLK?")
             if status and len(lines) > 0:
@@ -171,14 +172,16 @@ class Modem:
                             timezone_quarter_minute_offset = float(reg_res.group(7))
                             # keep timezone info for timestamping in UTC and set time in local time zone
                             # for proper timing when executing specific time in day
-                            result = (year,
+                            result = (
+                                year,
                                 int(reg_res.group(2)),
                                 int(reg_res.group(3)),
                                 0,  # day of week
                                 int(reg_res.group(4)),
                                 int(reg_res.group(5)),
                                 int(reg_res.group(6)),
-                                0)  # usec
+                                0,
+                            )  # usec
                             utils.saveKeyValueInteger("tz_sec_offset", int(timezone_quarter_minute_offset * 15 * 60))
                             return result
                     except Exception as e:
@@ -195,7 +198,7 @@ class Modem:
         timeout_timestamp = start_timestamp + timeoutms
         regex_creg = "\\+CREG:\\s+\\d,(\\d)"
         while utime.ticks_ms() < timeout_timestamp:
-            (status, lines) = self.send_at_cmd('AT+CREG?')
+            (status, lines) = self.send_at_cmd("AT+CREG?")
             if status and len(lines) > 0:
                 regex_match = None
                 for line in lines:
@@ -206,7 +209,7 @@ class Modem:
         return False
 
     def attach(self, do_attach=True):
-        (status, _) = self.send_at_cmd('at+cgatt={}'.format("1" if do_attach else "0"), 144000)
+        (status, _) = self.send_at_cmd("at+cgatt={}".format("1" if do_attach else "0"), 144000)
         return status
 
     def detach(self):
@@ -214,7 +217,7 @@ class Modem:
 
     def is_attached(self):
         (status, lines) = self.send_at_cmd("at+cgatt?")
-        return (status and len(lines) > 0 and '+CGATT: 1' in lines[0])
+        return status and len(lines) > 0 and "+CGATT: 1" in lines[0]
 
     def has_sim(self):
         (status, lines) = self.send_at_cmd("at+cimi")
@@ -263,14 +266,14 @@ class Modem:
         if self.ppp is None:
             regex_rssi = r"\+CSQ:\s*(\d+),\d+"
             self.rssi = -141
-            (status, lines) = self.send_at_cmd('AT+CSQ')
+            (status, lines) = self.send_at_cmd("AT+CSQ")
             if status and len(lines) > 0:
                 for line in lines:
                     match_res = ure.search(regex_rssi, line)
                     if match_res is not None:
                         try:
                             rssi_tmp = int(match_res.group(1))
-                            if(rssi_tmp >= 0 and rssi_tmp <= 31):
+                            if rssi_tmp >= 0 and rssi_tmp <= 31:
                                 self.rssi = -113 + rssi_tmp * 2
                         except:
                             pass
@@ -281,14 +284,14 @@ class Modem:
         if self.ppp is None:
             self.rsrp = -141
             self.rsrq = -40
-            (status, lines) = self.send_at_cmd('AT+CESQ')
+            (status, lines) = self.send_at_cmd("AT+CESQ")
             if status and len(lines) > 0:
-                cesq_data = lines[0].split(',')
+                cesq_data = lines[0].split(",")
                 rsrq_tmp = int(cesq_data[-2])
                 rsrp_tmp = int(cesq_data[-1])
-                if(rsrq_tmp >= 0 and rsrq_tmp <= 34):
+                if rsrq_tmp >= 0 and rsrq_tmp <= 34:
                     self.rsrq = -20 + rsrq_tmp * 0.5
-                if(rsrp_tmp >= 0 and rsrp_tmp <= 97):
+                if rsrp_tmp >= 0 and rsrp_tmp <= 97:
                     self.rsrp = -141 + rsrp_tmp
         return (self.rsrp, self.rsrq)
 
@@ -297,13 +300,13 @@ class Modem:
             regex_creg = r"\+CREG:\s+\d,\d,\"(\w+)\",\"(\w+)\""
             self.lac = None
             self.ci = None
-            (status, lines) = self.send_at_cmd('AT+CREG?')
+            (status, lines) = self.send_at_cmd("AT+CREG?")
             if status:
                 for line in lines:
                     match_res = ure.search(regex_creg, line)
                     if match_res is not None:
-                        self.lac = int('0x' + match_res.group(1))
-                        self.ci = int('0x' + match_res.group(2))
+                        self.lac = int("0x" + match_res.group(1))
+                        self.ci = int("0x" + match_res.group(2))
                         break
         return (self.lac, self.ci)
 
@@ -312,7 +315,7 @@ class Modem:
             regex_cops = r"\+COPS:\s+\d,2,\"(\d+)"
             self.mcc = None
             self.mnc = None
-            (status, lines) = self.send_at_cmd('AT+COPS?')
+            (status, lines) = self.send_at_cmd("AT+COPS?")
             if status:
                 for line in lines:
                     match_res = ure.search(regex_cops, line)
@@ -344,11 +347,11 @@ class Modem:
         responseLines = []
 
         if self.connected:
-            responseLines = ['error: ppp connection active']
+            responseLines = ["error: ppp connection active"]
             return (status, responseLines)
 
         if self.uart is None:
-            responseLines = ['error: invalid uart']
+            responseLines = ["error: invalid uart"]
             return (status, responseLines)
 
         # clear incoming message buffer
@@ -356,9 +359,9 @@ class Modem:
             self.uart.readline()
 
         logging.debug("> " + command)
-        write_success = self.uart.write(command + '\r\n')
+        write_success = self.uart.write(command + "\r\n")
         if not write_success:
-            return (status, ['error: can not send command'])
+            return (status, ["error: can not send command"])
 
         start_timestamp = utime.ticks_ms()
         timeout_timestamp = start_timestamp + timeoutms
@@ -372,7 +375,7 @@ class Modem:
             device_info.wdt_reset()
 
             remaining_bytes = self.uart.any()
-            if(utime.ticks_ms() >= timeout_timestamp):
+            if utime.ticks_ms() >= timeout_timestamp:
                 if status is None:
                     status = False
                 break
@@ -384,7 +387,7 @@ class Modem:
 
             line = self.uart.readline()
             try:
-                line = line if line is None else line.decode('utf8', 'ignore').strip()
+                line = line if line is None else line.decode("utf8", "ignore").strip()
             except Exception as e:
                 logging.error("! " + str(line))
                 line = ""

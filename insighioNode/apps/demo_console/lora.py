@@ -1,23 +1,25 @@
-import struct
-import utime
 import device_info
 import logging
 from . import lora_custom_encoding
 from networking import lora
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
+
 def init(cfg):
     lora.set_pins(cfg._UC_IO_RADIO_GPS_ON, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
     is_connected = lora.is_connected()
     logging.info("Lora is connected: {}".format(is_connected))
 
+
 def deinit():
     pass
+
 
 def updateSignalQuality(cfg, measurements):
     if not cfg._MEAS_NETWORK_STAT_ENABLE:
         return
     pass
+
 
 def connect(cfg):
     # network connectivity & transmission
@@ -32,18 +34,22 @@ def connect(cfg):
 
     return results
 
+
 def is_connected():
     return lora.is_connected()
+
 
 def disconnect():
     logging.info("about to power off modem")
     lora.deinit()
+
 
 def create_message_cbor(device_id, measurements):
     from external.kpn_senml.senml_pack_cbor import SenmlPackCbor
     from external.kpn_senml.senml_record import SenmlRecord
     from external.kpn_senml.senml_unit import SenmlUnits
     from external.kpn_senml.senml_unit import SenmlSecondaryUnits
+
     print("Device ID in readable form: {}".format(device_id))
     (_DEVICE_ID, _LORA_MAC) = device_info.get_device_id()
 
@@ -66,8 +72,10 @@ def send_message(cfg, message, explicit_channel_name=None):
     logging.info("Sending byte packet of {} bytes length".format(len(message)))
     return lora.send(cfg, message)
 
+
 def send_control_message(cfg, message, subtopic):
     logging.error("Config message not yet supported for LoRA")
+
 
 def check_and_apply_ota(cfg):
     logging.error("OTA not yet supported for LoRA")

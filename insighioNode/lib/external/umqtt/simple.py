@@ -1,5 +1,5 @@
-#original version: https://github.com/micropython/micropython-lib/tree/master/micropython/umqtt.simple
-#used modules from : https://github.com/peterhinch/micropython-mqtt/blob/65ccbaa8eb486a0454faadffec4cf846c8e259dd/mqtt_as/mqtt_as.py
+# original version: https://github.com/micropython/micropython-lib/tree/master/micropython/umqtt.simple
+# used modules from : https://github.com/peterhinch/micropython-mqtt/blob/65ccbaa8eb486a0454faadffec4cf846c8e259dd/mqtt_as/mqtt_as.py
 
 import usocket as socket
 import ustruct as struct
@@ -13,6 +13,7 @@ from micropython import const
 _DEFAULT_MS = const(20)
 _SOCKET_POLL_DELAY = const(5)  # 100ms added greatly to publish latency
 BUSY_ERRORS = [EINPROGRESS, ETIMEDOUT, 118, 119]
+
 
 class MQTTClient:
     def __init__(
@@ -58,7 +59,7 @@ class MQTTClient:
             bytes_wr = bytes_wr[:length]
         t = utime.ticks_ms()
         while bytes_wr:
-            if self._timeout(t): # or not self.isconnected():
+            if self._timeout(t):  # or not self.isconnected():
                 return False
             try:
                 n = sock.write(bytes_wr)
@@ -83,7 +84,7 @@ class MQTTClient:
         size = 0
         t = utime.ticks_ms()
         while size < n:
-            if self._timeout(t): # or not self.isconnected():
+            if self._timeout(t):  # or not self.isconnected():
                 return None
             try:
                 msg = sock.read(n - size)
@@ -91,11 +92,11 @@ class MQTTClient:
                 msg = None
                 if e.args[0] not in BUSY_ERRORS:
                     raise
-            if msg == b'':  # Connection closed by host
-                raise OSError(-1, 'Connection closed by host')
+            if msg == b"":  # Connection closed by host
+                raise OSError(-1, "Connection closed by host")
             if msg is not None:  # data received
                 msg_size = len(msg)
-                buffer[size:size + msg_size] = msg
+                buffer[size : size + msg_size] = msg
                 size += msg_size
                 t = utime.ticks_ms()
                 self.last_rx = utime.ticks_ms()
@@ -171,7 +172,7 @@ class MQTTClient:
             self._send_str(self.pswd)
         resp = self._read(4)
         if resp[3] != 0 or resp[0] != 0x20 or resp[1] != 0x02:
-            raise OSError(-1, 'Bad CONNACK')  # Bad CONNACK e.g. authentication fail.
+            raise OSError(-1, "Bad CONNACK")  # Bad CONNACK e.g. authentication fail.
 
     def disconnect(self):
         if self.sock is not None:
@@ -221,13 +222,13 @@ class MQTTClient:
                 if op == 0x40:
                     sz = self._read(1)
                     if sz != b"\x02":
-                        raise OSError(-1, 'Invalid PUBACK packet')
+                        raise OSError(-1, "Invalid PUBACK packet")
                     rcv_pid = self._read(2)
                     rcv_pid = rcv_pid[0] << 8 | rcv_pid[1]
                     if pid == rcv_pid:
                         return
         elif qos == 2:
-            raise OSError(-1, 'Invalid qos')
+            raise OSError(-1, "Invalid qos")
 
     def subscribe(self, topic, qos=0):
         assert self.cb is not None, "Subscribe callback is not set"
@@ -245,9 +246,9 @@ class MQTTClient:
                 resp = self._read(4)
                 # print(resp)
                 if resp[1] != pkt[2] or resp[2] != pkt[3]:
-                    raise OSError(-1, 'Invalid pid in SUBACK packet')
+                    raise OSError(-1, "Invalid pid in SUBACK packet")
                 elif resp[3] == 0x80:
-                    raise OSError(-1, 'Invalid SUBACK packet')
+                    raise OSError(-1, "Invalid SUBACK packet")
                 return
 
     # Wait for a single incoming MQTT message and process it.

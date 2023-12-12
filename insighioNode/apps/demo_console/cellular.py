@@ -4,11 +4,11 @@ from external.kpn_senml.senml_record import SenmlRecord
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
-import device_info
 import utime
 
 transfer_client = None
 mqtt_connected = False
+
 
 def add_value_if_valid(results, key, value, unit=None):
     if value is None:
@@ -18,11 +18,14 @@ def add_value_if_valid(results, key, value, unit=None):
     else:
         results[key] = {"value": value}
 
+
 def init(cfg):
     cellular.set_pins(cfg._UC_IO_RADIO_ON, cfg._UC_IO_PWRKEY, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
 
+
 def deinit():
     logging.info("Deactivate cellular: {}".format(cellular.deactivate()))
+
 
 def prepareForConnectAndUpload():
     modem_instance = cellular.get_modem_instance()
@@ -32,11 +35,13 @@ def prepareForConnectAndUpload():
     modem_instance.reset_uart()
     modem_instance.prioritizeWWAN()
 
+
 def prepareForGPS():
     modem_instance = cellular.get_modem_instance()
     if modem_instance is None:
         return
     modem_instance.prioritizeGNSS()
+
 
 def updateSignalQuality(cfg, measurements):
     if not cfg._MEAS_NETWORK_STAT_ENABLE:
@@ -60,6 +65,7 @@ def updateSignalQuality(cfg, measurements):
     add_value_if_valid(measurements, "cell_lac", lac)
     add_value_if_valid(measurements, "cell_ci", ci)
 
+
 # network connection
 def connect(cfg):
     logging.info("Connecting to cellular...")
@@ -77,7 +83,6 @@ def connect(cfg):
 
     # if network statistics are enabled
     if cfg._MEAS_NETWORK_STAT_ENABLE:
-
         add_value_if_valid(results, "cell_act_duration", activation_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         add_value_if_valid(results, "cell_att_duration", attachment_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         if not protocol_config.use_custom_socket:
@@ -89,11 +94,11 @@ def connect(cfg):
 
         # AT command based implementation of communication of Quectel BG600L
         modem_model = modem_instance.get_model()
-        if modem_model and 'bg600' in modem_model:
+        if modem_model and "bg600" in modem_model:
             transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
-        elif cfg.protocol == 'coap':
+        elif cfg.protocol == "coap":
             transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
-        elif cfg.protocol == 'mqtt':
+        elif cfg.protocol == "mqtt":
             transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
         else:
             transfer_client = None
@@ -110,7 +115,7 @@ def is_connected():
 
 def coord_to_double(part1, part2, part3):
     try:
-        direction = {'N': 1, 'S': -1, 'E': 1, 'W': -1}
+        direction = {"N": 1, "S": -1, "E": 1, "W": -1}
         return (int(part1) + float(part2) / 60.0) * direction[part3]
     except Exception as e:
         logging.exception(e, "error converting coord {} {} {}".format(part1, part2, part3))
@@ -158,7 +163,7 @@ def get_gps_position(cfg, measurements, keep_open=False):
 
 
 def create_message(device_id, measurements):
-    message = SenmlPackJson((device_id + '-') if device_id is not None else None)
+    message = SenmlPackJson((device_id + "-") if device_id is not None else None)
 
     if "dt" in measurements:
         message.base_time = measurements["dt"]["value"]
@@ -180,10 +185,12 @@ def send_message(cfg, message, explicit_channel_name=None):
         return transfer_client.send_packet(message, explicit_channel_name)
     return False
 
+
 def send_control_message(cfg, message, configSubtopic):
     if transfer_client is not None:
         return transfer_client.send_control_packet(message, configSubtopic)
     return False
+
 
 def disconnect():
     global transfer_client
@@ -191,7 +198,9 @@ def disconnect():
         transfer_client.disconnect()
         transfer_client = None
 
+
 def check_and_apply_ota(cfg):
     if transfer_client is not None:
         from . import ota
+
         ota.checkAndApply(transfer_client)

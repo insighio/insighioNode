@@ -30,11 +30,7 @@ except Exception as e:
 
 
 def get_meas_name(or_name):
-    if (
-        _name_mapping is None
-        or or_name not in _name_mapping
-        or "alias" not in _name_mapping[or_name]
-    ):
+    if _name_mapping is None or or_name not in _name_mapping or "alias" not in _name_mapping[or_name]:
         return or_name
     try:
         return _name_mapping[or_name]["alias"]
@@ -43,11 +39,7 @@ def get_meas_name(or_name):
 
 
 def get_meas_unit(or_name, or_unit):
-    if (
-        _name_mapping is None
-        or or_name not in _name_mapping
-        or "unit" not in _name_mapping[or_name]
-    ):
+    if _name_mapping is None or or_name not in _name_mapping or "unit" not in _name_mapping[or_name]:
         return or_unit
     try:
         return _name_mapping[or_name]["unit"]

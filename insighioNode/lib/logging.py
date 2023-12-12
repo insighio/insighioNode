@@ -2,11 +2,11 @@ import sys
 import utime
 
 CRITICAL = 50
-ERROR    = 40
-WARNING  = 30
-INFO     = 20
-DEBUG    = 10
-NOTSET   = 0
+ERROR = 40
+WARNING = 30
+INFO = 20
+DEBUG = 10
+NOTSET = 0
 
 _level_dict = {
     CRITICAL: "CRIT",
@@ -18,7 +18,6 @@ _level_dict = {
 
 
 class Logger(object):
-
     def __init__(self, name):
         self.level = NOTSET
         self.name = name or "root"
@@ -63,12 +62,14 @@ class Logger(object):
 
     def exception(self, msg, *args):
         e = None
-        if hasattr(sys, 'exc_info'):
+        if hasattr(sys, "exc_info"):
             e = sys.exc_info()[1]
         self.exc(e, msg, *args)
 
+
 _level = INFO
 _loggers = {}
+
 
 def getLogger(name=""):
     global _loggers
@@ -78,17 +79,22 @@ def getLogger(name=""):
     _loggers[name] = logger
     return logger
 
+
 def info(msg, *args):
     getLogger(None).info(msg, *args)
+
 
 def debug(msg, *args):
     getLogger(None).debug(msg, *args)
 
+
 def error(msg, *args):
     getLogger(None).error(msg, *args)
 
+
 def exception(e, msg, *args):
     getLogger(None).exc(e, msg, *args)
+
 
 def setLevel(level):
     global _level

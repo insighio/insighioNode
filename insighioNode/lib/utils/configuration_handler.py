@@ -371,76 +371,42 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         elif param == "selected-shield":
             shield = keyValuePairDictionary[param]
 
-    contents = get_file_config(
-        app_path + "/templ/common_templ.py", keyValuePairDictionary
-    )
+    contents = get_file_config(app_path + "/templ/common_templ.py", keyValuePairDictionary)
 
     # set project configuration content
     if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
-        contents += get_file_config(
-            app_path + "/templ/device_ins_esp32_templ.py", keyValuePairDictionary
-        )
+        contents += get_file_config(app_path + "/templ/device_ins_esp32_templ.py", keyValuePairDictionary)
     elif board == device_info._CONST_ESP32S3:
-        contents += get_file_config(
-            app_path + "/templ/device_ins_esp32s3_templ.py", keyValuePairDictionary
-        )
+        contents += get_file_config(app_path + "/templ/device_ins_esp32s3_templ.py", keyValuePairDictionary)
     else:
         print("[ERROR]: device not supported: {}".format(board))
 
-    contents += get_file_config(
-        app_path + "/templ/device_i2c_analog_config_templ.py", keyValuePairDictionary
-    )
+    contents += get_file_config(app_path + "/templ/device_i2c_analog_config_templ.py", keyValuePairDictionary)
     if shield == "advind":
-        contents += get_file_config(
-            app_path + "/templ/shield_advind_templ.py", keyValuePairDictionary
-        )
-        contents += get_file_config(
-            app_path + "/templ/device_advind_config_templ.py", keyValuePairDictionary
-        )
+        contents += get_file_config(app_path + "/templ/shield_advind_templ.py", keyValuePairDictionary)
+        contents += get_file_config(app_path + "/templ/device_advind_config_templ.py", keyValuePairDictionary)
     elif shield == "dig_analog":
-        contents += get_file_config(
-            app_path + "/templ/shield_i2c_dig_analog_templ.py", keyValuePairDictionary
-        )
+        contents += get_file_config(app_path + "/templ/shield_i2c_dig_analog_templ.py", keyValuePairDictionary)
     elif shield == "scale":
         if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
-            contents += get_file_config(
-                app_path + "/templ/shield_esp32_scale.py", keyValuePairDictionary
-            )
+            contents += get_file_config(app_path + "/templ/shield_esp32_scale.py", keyValuePairDictionary)
         elif board == device_info._CONST_ESP32S3:
-            contents += get_file_config(
-                app_path + "/templ/shield_esp32s3_scale.py", keyValuePairDictionary
-            )
-        contents += get_file_config(
-            app_path + "/templ/device_scale_config.py", keyValuePairDictionary
-        )
+            contents += get_file_config(app_path + "/templ/shield_esp32s3_scale.py", keyValuePairDictionary)
+        contents += get_file_config(app_path + "/templ/device_scale_config.py", keyValuePairDictionary)
 
     contents += "\n"
 
     if operation == "wifi":
-        contents += "\n" + get_file_config(
-            app_path + "/templ/wifi_config_templ.py", keyValuePairDictionary
-        )
-        contents += "\n" + get_file_config(
-            app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary
-        )
+        contents += "\n" + get_file_config(app_path + "/templ/wifi_config_templ.py", keyValuePairDictionary)
+        contents += "\n" + get_file_config(app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary)
     elif operation == "cellular":
-        contents += "\n" + get_file_config(
-            app_path + "/templ/cellular_config_templ.py", keyValuePairDictionary
-        )
-        contents += "\n" + get_file_config(
-            app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary
-        )
+        contents += "\n" + get_file_config(app_path + "/templ/cellular_config_templ.py", keyValuePairDictionary)
+        contents += "\n" + get_file_config(app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary)
     elif operation == "lora":
-        contents += "\n" + get_file_config(
-            app_path + "/templ/shield_lora_templ.py", keyValuePairDictionary
-        )
-        contents += "\n" + get_file_config(
-            app_path + "/templ/lora_config_templ.py", keyValuePairDictionary
-        )
+        contents += "\n" + get_file_config(app_path + "/templ/shield_lora_templ.py", keyValuePairDictionary)
+        contents += "\n" + get_file_config(app_path + "/templ/lora_config_templ.py", keyValuePairDictionary)
     elif operation == "satellite":
-        contents += "\n" + get_file_config(
-            app_path + "/templ/satellite_config_templ.py", keyValuePairDictionary
-        )
+        contents += "\n" + get_file_config(app_path + "/templ/satellite_config_templ.py", keyValuePairDictionary)
 
     # create new
     utils.writeToFile(config_file_explicit, contents)

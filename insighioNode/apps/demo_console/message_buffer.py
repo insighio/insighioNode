@@ -1,32 +1,38 @@
 import logging
+
 try:
     from apps import demo_temp_config as cfg
+
     logging.info("loaded config: [temp]")
 except Exception as e:
     try:
         from . import demo_config as cfg
+
         logging.info("loaded config: [normal]")
     except Exception as e:
-        cfg = type('', (), {})()
+        cfg = type("", (), {})()
         logging.info("loaded config: [fallback]")
 import json
 import utils
 import utime
-import device_info
 import _thread
 
 storage_file_name = "measurements.log"
-MAX_NUMBER_OF_FORCED_MESSAGES=const(1000)
+MAX_NUMBER_OF_FORCED_MESSAGES = const(1000)
+
 
 def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
+
 
 message_buffer_size = get_config("_BATCH_UPLOAD_MESSAGE_BUFFER")
 
 mutex = _thread.allocate_lock()
 
+
 def buffered_measurements_count():
     return utils.countFileLines(storage_file_name)
+
 
 def timestamp_measurements(measurements):
     offset = 946684800
@@ -35,7 +41,7 @@ def timestamp_measurements(measurements):
 
     # Friday, April 15, 2022
     if epoch > 1650000000:
-        measurements["dt"] = {"value": epoch}   # time offset 1970 -> 2000
+        measurements["dt"] = {"value": epoch}  # time offset 1970 -> 2000
 
 
 def store_measurement(measurements, force_store=False):
@@ -44,7 +50,11 @@ def store_measurement(measurements, force_store=False):
     number_of_measurements = utils.countFileLines(storage_file_name) + 1
     logging.info("Message #" + str(number_of_measurements))
 
-    if message_buffer_size and number_of_measurements < message_buffer_size or (force_store and number_of_measurements < MAX_NUMBER_OF_FORCED_MESSAGES):
+    if (
+        message_buffer_size
+        and number_of_measurements < message_buffer_size
+        or (force_store and number_of_measurements < MAX_NUMBER_OF_FORCED_MESSAGES)
+    ):
         data = json.dumps(measurements) + "\n"
         with mutex:
             utils.appendToFile(storage_file_name, data)
@@ -69,7 +79,7 @@ def parse_stored_measurements_and_upload(network):
         utils.deleteFile(storage_file_name)
         stored_measurements_str += "\n" + interupted_upload_str
     uploaded_measurement_count = 0
-    for line in stored_measurements_str.split('\n'):
+    for line in stored_measurements_str.split("\n"):
         utime.sleep_ms(50)
         try:
             if not line:

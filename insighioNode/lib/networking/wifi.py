@@ -1,16 +1,14 @@
-#from network import WLAN
+# from network import WLAN
 import network
 from machine import RTC
 import utime
 import logging
-import device_info
 
 
 def connect_to_network(wifi_ssid, wifi_pass, max_connection_attempt_time_sec):
     connection_status = False
     conn_attempt_duration = -1
     scan_attempt_duration = -1
-    nrScannedNetworks = 1
     rssi = -121
     channel = -1
 
@@ -35,7 +33,7 @@ def connect_to_network(wifi_ssid, wifi_pass, max_connection_attempt_time_sec):
             # obtain some extra KPIs from joined AP
             channel = -1
             try:
-                rssi = wl.status('rssi')
+                rssi = wl.status("rssi")
             except:
                 rssi = -1
         else:
@@ -44,6 +42,7 @@ def connect_to_network(wifi_ssid, wifi_pass, max_connection_attempt_time_sec):
         logging.exception(e, "Exception during wifi connect:")
 
     return (connection_status, conn_attempt_duration, scan_attempt_duration, channel, rssi)
+
 
 def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
     scan_attempt_duration = -1
@@ -60,21 +59,21 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
             known_nets_names = frozenset([key for key in known_nets])
             net_to_use = list(nets & known_nets_names)
 
-            if(len(net_to_use) == 0):
+            if len(net_to_use) == 0:
                 logging.debug("No known network found in range. Aborting.")
                 return (connection_status, conn_attempt_duration, scan_attempt_duration, channel, rssi)
 
             net_to_use = net_to_use[0]
             net_properties = known_nets[net_to_use]
-            pwd = net_properties['pwd']
+            pwd = net_properties["pwd"]
             sec = [e.sec for e in available_nets if e.ssid == net_to_use][0]
-            if 'wlan_config' in net_properties:
-                wl.ifconfig(config=net_properties['wlan_config'])
+            if "wlan_config" in net_properties:
+                wl.ifconfig(config=net_properties["wlan_config"])
         else:
             # pick one
             net_to_use = list(frozenset([key for key in known_nets]))[0]
             sec = 3
-            pwd = known_nets[net_to_use]['pwd']
+            pwd = known_nets[net_to_use]["pwd"]
             logging.debug(net_to_use, sec, pwd)
 
         (connection_status, conn_attempt_duration, _, channel, rssi) = connect_to_network(net_to_use, pwd, max_connection_attempt_time_sec)
@@ -88,11 +87,13 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
         wl.init(mode=WLAN.AP, ssid=original_ssid, auth=original_auth, channel=6, antenna=WLAN.INT_ANT)
         """
 
+
 def is_connected():
     return network.WLAN(network.STA_IF).isconnected()
 
+
 def deactivate():
-    """ Actions implemented when turning off wifi, before deep sleep """
+    """Actions implemented when turning off wifi, before deep sleep"""
 
     deactivation_status = False
     start_time_deactivation = utime.ticks_ms()
@@ -102,7 +103,7 @@ def deactivate():
         wl.disconnect()
         wl.active(False)
     except:
-        logging.debug('WiFi disconnecting ignored.')
+        logging.debug("WiFi disconnecting ignored.")
 
     return (deactivation_status, utime.ticks_ms() - start_time_deactivation)
 
@@ -110,6 +111,7 @@ def deactivate():
 def update_time_ntp():
     import ntptime
     import utils
+
     rtc = RTC()
 
     logging.info("time before sync: " + str(rtc.datetime()))
@@ -129,5 +131,6 @@ def update_time_ntp():
     utils.writeToFile("/epoch_diff", "{}".format(epoch_diff))
     logging.info("time after sync: " + str(rtc.datetime()))
 
+
 def getSignalQuality():
-    return network.WLAN(network.STA_IF).status('rssi')
+    return network.WLAN(network.STA_IF).status("rssi")

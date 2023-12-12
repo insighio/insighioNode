@@ -108,10 +108,7 @@ class RawWeightIdle:
         except:
             logging.error("txpower not supported")
 
-        if (
-            hw_version == device_info._CONST_ESP32
-            or hw_version == device_info._CONST_ESP32_WROOM
-        ):
+        if hw_version == device_info._CONST_ESP32 or hw_version == device_info._CONST_ESP32_WROOM:
             raw_val = hx711.get_reading(4, 33, 12, None, None, 25, True)
         elif hw_version == device_info._CONST_ESP32S3:
             raw_val = hx711.get_reading(5, 4, 8, None, None, 6, True)
@@ -165,9 +162,7 @@ class ConfigTemp:
         try:
             from utils import configuration_handler
 
-            configuration_handler.apply_configuration(
-                data["queryParams"], "/apps/demo_temp_config.py"
-            )
+            configuration_handler.apply_configuration(data["queryParams"], "/apps/demo_temp_config.py")
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")
@@ -235,9 +230,7 @@ class DeviceMeasurements:
             try:
                 import uos
 
-                uos.rename(
-                    "/apps/demo_temp_config.py", "/apps/demo_temp_config_web_config.py"
-                )
+                uos.rename("/apps/demo_temp_config.py", "/apps/demo_temp_config_web_config.py")
             except:
                 pass
 
@@ -365,9 +358,7 @@ def start(timeoutMs=120000):
     @app.route("/js/<fn>")
     async def files_js(req, resp, fn):
         logging.debug("[web-server]: /js/{}".format(fn))
-        await resp.send_file(
-            "www/js/{}".format(fn), content_type="application/javascript"
-        )
+        await resp.send_file("www/js/{}".format(fn), content_type="application/javascript")
         # await resp.send_file('www/js/{}.gz'.format(fn),
         #                      content_type='application/javascript',
         #                      content_encoding='gzip')
@@ -377,9 +368,7 @@ def start(timeoutMs=120000):
     @app.route("/css/<fn>")
     async def files_css(req, resp, fn):
         logging.debug("[web-server]: /css/{}".format(fn))
-        await resp.send_file(
-            "www/css/{}.gz".format(fn), content_type="text/css", content_encoding="gzip"
-        )
+        await resp.send_file("www/css/{}.gz".format(fn), content_type="text/css", content_encoding="gzip")
 
     # Images
     @app.route("/img/<fn>")

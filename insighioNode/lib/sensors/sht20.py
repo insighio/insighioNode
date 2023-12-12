@@ -5,7 +5,7 @@ from machine import Pin, I2C
 
 
 def get_reading(sda_pin, scl_pin, vcc_pin=None):
-    """ Returns temperature/humidity/serial reading, for given I2C SCL/SDA and VCC pins """
+    """Returns temperature/humidity/serial reading, for given I2C SCL/SDA and VCC pins"""
     sensors.set_sensor_power_on(vcc_pin)
 
     # initialization & measurement
@@ -15,7 +15,7 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
     temp = None
 
     try:
-        i2c.writeto(0x40, b'\xf3')
+        i2c.writeto(0x40, b"\xf3")
         utime.sleep_ms(100)
         rx_bytes = i2c.readfrom(0x40, 2)
         if len(rx_bytes) == 2:
@@ -24,7 +24,7 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
         logging.exception(e, "Exception raised in I2C reading temperature")
 
     try:
-        i2c.writeto(0x40, b'\xf5')
+        i2c.writeto(0x40, b"\xf5")
         utime.sleep_ms(40)
         rx_bytes = i2c.readfrom(0x40, 2)
         if len(rx_bytes) == 2:
@@ -40,4 +40,4 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
 
     sensors.set_sensor_power_off(vcc_pin)
 
-    return(temp, hum)
+    return (temp, hum)

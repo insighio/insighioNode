@@ -10,9 +10,17 @@ def sub_cb(topic, msg):
 class CoAPClient:
     def prepareChannelNames(self, coap_config):
         controlChannel = "channels/" + coap_config.control_channel_id + "/messages" if coap_config.control_channel_id else ""
-        self.controlChannelGeneric = controlChannel + "/" + coap_config.thing_id if coap_config.control_channel_id and coap_config.thing_id else ""
-        self.otaChannel = controlChannel + "/" + coap_config.thing_id + "/ota" if coap_config.control_channel_id and coap_config.thing_id else ""
-        self.messageChannel = "channels/" + coap_config.message_channel_id + "/messages/" + coap_config.thing_id  if coap_config.message_channel_id and coap_config.thing_id else ""
+        self.controlChannelGeneric = (
+            controlChannel + "/" + coap_config.thing_id if coap_config.control_channel_id and coap_config.thing_id else ""
+        )
+        self.otaChannel = (
+            controlChannel + "/" + coap_config.thing_id + "/ota" if coap_config.control_channel_id and coap_config.thing_id else ""
+        )
+        self.messageChannel = (
+            "channels/" + coap_config.message_channel_id + "/messages/" + coap_config.thing_id
+            if coap_config.message_channel_id and coap_config.thing_id
+            else ""
+        )
 
         logging.debug("Selected channels:")
         logging.debug(" ota channel: " + self.otaChannel)
@@ -21,7 +29,7 @@ class CoAPClient:
         self.uriQueryAuthentication = "authorization=" + coap_config.thing_token
 
     def receivedMessageCallback(self, packet, sender):
-        logging.debug('Message received:', packet.toString(), ', from: ', sender)
+        logging.debug("Message received:", packet.toString(), ", from: ", sender)
         self.bufferedIncomingMessages.append(packet)
 
     def __init__(self, coap_config):
@@ -46,11 +54,11 @@ class CoAPClient:
             # todo: if status is true, send  status message
             # self.__sendMessageEx(self.statusChannel, '1', 1, True)
             # self.__check_msg(1000)
-            #self.connected = status ############# workaround
+            # self.connected = status ############# workaround
             self.connected = True
             return status
         except Exception as e:
-            logging.exception(e, 'Exception during CoAP start: ')
+            logging.exception(e, "Exception during CoAP start: ")
             self.connected = False
             return False
 
@@ -60,12 +68,14 @@ class CoAPClient:
     def postMessage(self, message):
         buffer = bytearray()
         buffer.extend(message)
-        return self.client.postNonConf(self.config.server_ip,
-                                       self.config.server_port,
-                                       self.messageChannel,
-                                       buffer,
-                                       self.uriQueryAuthentication,
-                                       microcoapy.COAP_CONTENT_FORMAT.COAP_APPLICATION_JSON)
+        return self.client.postNonConf(
+            self.config.server_ip,
+            self.config.server_port,
+            self.messageChannel,
+            buffer,
+            self.uriQueryAuthentication,
+            microcoapy.COAP_CONTENT_FORMAT.COAP_APPLICATION_JSON,
+        )
 
     def loop(self):
         return self.client.loop()
@@ -74,7 +84,7 @@ class CoAPClient:
         try:
             return self.client.poll(timeoutMs)
         except Exception as e:
-            logging.exception(e, 'Exception during CoAP poll: ')
+            logging.exception(e, "Exception during CoAP poll: ")
             return False
 
     # def postAndWaitForReply(self, message, timeoutMs, max_retransmissions=3):
@@ -101,7 +111,7 @@ class CoAPClient:
             self.connected = False
             status = True
         except Exception as e:
-            logging.exception(e, 'Exception during CoAP stop: ')
+            logging.exception(e, "Exception during CoAP stop: ")
 
         self.connected = False
         return status

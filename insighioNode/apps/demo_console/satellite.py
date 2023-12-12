@@ -1,13 +1,11 @@
-import struct
-import utime
-import device_info
 import logging
 from . import lora_custom_encoding
 from networking import satellite
-from external.kpn_senml.senml_unit import SenmlSecondaryUnits
+
 
 def get_config(cfg, key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
+
 
 def init(cfg):
     satellite.set_pins(cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
@@ -21,24 +19,33 @@ def init(cfg):
         logging.info("Setting DevKit wifi credentials and access token")
         res = satellite.get_modem_instance().modem_instance.wifi_configuration_write(ssid, password, token)
         logging.info("WiFi configuration setup result: {}".format(res))
-        #satellite.get_modem_instance().modem_instance.configuration_save()
+        # satellite.get_modem_instance().modem_instance.configuration_save()
+
 
 def deinit():
     pass
 
+
 def updateSignalQuality(cfg, measurements):
     pass
+
 
 def connect(cfg):
     return True
 
+
 def is_connected():
     return True
+
 
 def disconnect():
     pass
 
+
 # def create_message_cbor(device_id, measurements):
+#     import struct
+#     import utime
+#     import device_info
 #     from external.kpn_senml.senml_pack_cbor import SenmlPackCbor
 #     from external.kpn_senml.senml_record import SenmlRecord
 #     from external.kpn_senml.senml_unit import SenmlUnits
@@ -56,15 +63,19 @@ def disconnect():
 #
 #     return message.to_cbor()
 
+
 def create_message(device_id, measurements):
     return lora_custom_encoding.create_message(device_id, measurements)
+
 
 def send_message(cfg, message, explicit_channel_name=None):
     logging.info("Sending byte packet of {} bytes length".format(len(message)))
     return satellite.send(cfg, message)
 
+
 def send_control_message(cfg, message, subtopic):
     logging.error("Config message not yet supported for satellite")
+
 
 def check_and_apply_ota(cfg):
     logging.error("OTA not yet supported for satellite")

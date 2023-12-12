@@ -18,7 +18,7 @@ class ModemMC60(modem_base.Modem):
         return status_att and status_act
 
     def set_gps_state(self, poweron=True):
-        (status, _) = self.send_at_cmd('AT+QGNSSC=' + ("1" if poweron else "0"))
+        (status, _) = self.send_at_cmd("AT+QGNSSC=" + ("1" if poweron else "0"))
         return status
 
     def get_extended_signal_quality(self):
@@ -26,7 +26,7 @@ class ModemMC60(modem_base.Modem):
 
     # to be overriden by children
     def is_gps_on(self):
-        (status, lines) = self.send_at_cmd('AT+QGNSSC?')
+        (status, lines) = self.send_at_cmd("AT+QGNSSC?")
         reg = "\\+QGNSSC:\\s+(\\d)"
         if status and len(lines):
             res = ure.match(reg, lines[0])
@@ -36,6 +36,7 @@ class ModemMC60(modem_base.Modem):
     def get_gps_position(self, timeoutms=300000, satellite_number_threshold=5):
         from external.micropyGPS.micropyGPS import MicropyGPS
         import math
+
         counter = 0
         gps_fix = False
         print("Starting query gps")
@@ -49,16 +50,22 @@ class ModemMC60(modem_base.Modem):
         timeout_timestamp = start_timestamp + timeoutms
         try:
             while utime.ticks_ms() < timeout_timestamp:
-
                 counter += 1
                 (status, lines) = self.send_at_cmd('AT+QGNSSRD="NMEA/GGA"')
                 if status and len(lines) > 0:
-                    if lines[0].startswith('+QGNSSRD:'):
-                        lines[0] = lines[0].replace('+QGNSSRD:', '')
+                    if lines[0].startswith("+QGNSSRD:"):
+                        lines[0] = lines[0].replace("+QGNSSRD:", "")
                     for line in lines:
                         for char in line:
                             my_gps.update(char)
-                        if my_gps.latitude and my_gps.latitude[0] and my_gps.latitude[1] and my_gps.longitude and my_gps.longitude[0] and my_gps.longitude[1]:
+                        if (
+                            my_gps.latitude
+                            and my_gps.latitude[0]
+                            and my_gps.latitude[1]
+                            and my_gps.longitude
+                            and my_gps.longitude[0]
+                            and my_gps.longitude[1]
+                        ):
                             last_valid_gps_lat = my_gps.latitude
                             last_valid_gps_lon = my_gps.longitude
                             max_satellites = my_gps.satellites_in_use
@@ -72,7 +79,11 @@ class ModemMC60(modem_base.Modem):
                             # round seconds
                             self.gps_timestamp[6] = math.floor(self.gps_timestamp[6])
 
-                        logging.debug("{} {} Lat: {}, Lon: {}, NumSats: {}, hdop: {}".format(my_gps.date, my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop))
+                        logging.debug(
+                            "{} {} Lat: {}, Lon: {}, NumSats: {}, hdop: {}".format(
+                                my_gps.date, my_gps.timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop
+                            )
+                        )
                         if my_gps.satellites_in_use >= satellite_number_threshold:
                             gps_fix = True
                             return (self.gps_timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)

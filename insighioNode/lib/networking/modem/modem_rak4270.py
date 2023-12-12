@@ -1,10 +1,6 @@
 from . import modem_base
-import utime
 import logging
 import ure
-import device_info
-import ure
-from machine import Pin
 import gpio_handler
 
 
@@ -27,59 +23,59 @@ class ModemRak4270(modem_base.Modem):
         logging.debug("modem powered off")
 
     def is_connected(self):
-        status = self.send_at_cmd('at+get_config=lora:channel')
-        (status, lines) = self.send_at_cmd('at+get_config=lora:status')
-        line_regex = r'Joined Network\s*:\s*(\w+)'
+        status = self.send_at_cmd("at+get_config=lora:channel")
+        (status, lines) = self.send_at_cmd("at+get_config=lora:status")
+        line_regex = r"Joined Network\s*:\s*(\w+)"
         for line in lines:
             match = ure.search(line_regex, line)
             if match is None:
                 continue
 
-            return match.group(1) == 'true'
+            return match.group(1) == "true"
         return False
 
     def set_dev_eui(self, dev_eui):
-        (status, lines) = self.send_at_cmd('at+set_config=lora:dev_eui:' + dev_eui)
+        (status, lines) = self.send_at_cmd("at+set_config=lora:dev_eui:" + dev_eui)
         return status
 
     def set_app_eui(self, app_eui):
-        (status, lines) = self.send_at_cmd('at+set_config=lora:app_eui:' + app_eui)
+        (status, lines) = self.send_at_cmd("at+set_config=lora:app_eui:" + app_eui)
         return status
 
     def set_app_key(self, app_key):
-        (status, lines) = self.send_at_cmd('at+set_config=lora:app_key:' + app_key)
+        (status, lines) = self.send_at_cmd("at+set_config=lora:app_key:" + app_key)
         return status
 
     def set_region(self, region):
-        (status, lines) = self.send_at_cmd('at+set_config=lora:region:' + region)
+        (status, lines) = self.send_at_cmd("at+set_config=lora:region:" + region)
         return status
 
     def set_dr(self, dr):
-        (status, lines) = self.send_at_cmd('at+set_config=lora:dr:{}'.format(dr))
+        (status, lines) = self.send_at_cmd("at+set_config=lora:dr:{}".format(dr))
         return status
 
     def set_confirm(self, confirm):
-        (status, lines) = self.send_at_cmd('at+set_config=lora:confirm:{}'.format(1 if confirm else 0))
+        (status, lines) = self.send_at_cmd("at+set_config=lora:confirm:{}".format(1 if confirm else 0))
         return status
 
     def set_adr(self, adr):
-        (status, lines) = self.send_at_cmd('at+set_config=lora:adr:{}'.format(1 if adr else 0))
+        (status, lines) = self.send_at_cmd("at+set_config=lora:adr:{}".format(1 if adr else 0))
         return status
 
     def set_retries(self, retries):
-        (status, lines) = self.send_at_cmd('at+set_config=lora:send_repeat_cnt:{}'.format(retries if retries else 0))
+        (status, lines) = self.send_at_cmd("at+set_config=lora:send_repeat_cnt:{}".format(retries if retries else 0))
         return status
 
     def join(self):
-        self.send_at_cmd('at+set_config=lora:ch_mask:8:0')
-        self.send_at_cmd('at+set_config=lora:ch_mask:9:0')
-        self.send_at_cmd('at+set_config=lora:ch_mask:10:0')
-        self.send_at_cmd('at+set_config=lora:ch_mask:11:0')
-        self.send_at_cmd('at+set_config=lora:ch_mask:12:0')
+        self.send_at_cmd("at+set_config=lora:ch_mask:8:0")
+        self.send_at_cmd("at+set_config=lora:ch_mask:9:0")
+        self.send_at_cmd("at+set_config=lora:ch_mask:10:0")
+        self.send_at_cmd("at+set_config=lora:ch_mask:11:0")
+        self.send_at_cmd("at+set_config=lora:ch_mask:12:0")
 
-        (status, lines) = self.send_at_cmd('at+join')
+        (status, lines) = self.send_at_cmd("at+join")
         return status
 
     def send(self, bytes_hex):
-        (status, lines) = self.send_at_cmd('at+send=lora:5:' + bytes_hex)
+        (status, lines) = self.send_at_cmd("at+send=lora:5:" + bytes_hex)
         return status

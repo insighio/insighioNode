@@ -62,7 +62,7 @@ function setElemValue(elementId, newValue, defaultValue = "", intZeroAccepted = 
   setElemValueAux(elem, newValue, defaultValue, intZeroAccepted)
 }
 
-function setElemText(elementId, newValue, defaultValue = "", intZeroAccepted=false) {
+function setElemText(elementId, newValue, defaultValue = "", intZeroAccepted = false) {
   var elem = document.getElementById(elementId)
   if (!elem) {
     console.log("setElemValue: Element not found: ", elementId)
@@ -129,11 +129,10 @@ function addElemChild(parentElem, txt, val) {
   parentElem.appendChild(elem)
 }
 
-
-function wrapDiv(parentId, labelText, populateInputFunc, intented){
+function wrapDiv(parentId, labelText, populateInputFunc, intented) {
   var parent = document.getElementById(parentId)
 
-  if(intented) {
+  if (intented) {
     var preSpace = document.createElement("div")
     preSpace.classList.add("column")
     preSpace.classList.add("col-1")
@@ -143,13 +142,10 @@ function wrapDiv(parentId, labelText, populateInputFunc, intented){
 
   ///////////////////////////////////////////////////////
   var labelDiv = document.createElement("div")
-  if(intented)
-  {
+  if (intented) {
     labelDiv.classList.add("col-3")
     labelDiv.classList.add("col-sm-12")
-  }
-  else
-  {
+  } else {
     labelDiv.classList.add("col-4")
     labelDiv.classList.add("col-lg-6")
     labelDiv.classList.add("col-sm-10")
@@ -165,12 +161,10 @@ function wrapDiv(parentId, labelText, populateInputFunc, intented){
   ///////////////////////////////////////////
 
   var switchDiv = document.createElement("div")
-  if(intented)
-  {
+  if (intented) {
     switchDiv.classList.add("col-3")
     switchDiv.classList.add("col-sm-12")
-  }
-  else {
+  } else {
     switchDiv.classList.add("col-8")
     switchDiv.classList.add("col-lg-6")
     switchDiv.classList.add("col-sm-2")
@@ -179,7 +173,7 @@ function wrapDiv(parentId, labelText, populateInputFunc, intented){
   populateInputFunc(switchDiv)
   parent.appendChild(switchDiv)
 
-  if(intented) {
+  if (intented) {
     var postSpace = document.createElement("div")
     postSpace.classList.add("column")
     postSpace.classList.add("col-5")
@@ -191,23 +185,28 @@ function wrapDiv(parentId, labelText, populateInputFunc, intented){
   parent.appendChild(document.createElement("br"))
 }
 
-function addSwitch(parentId, switchId, labelText, onClickCallback = undefined, intented=false) {
-  wrapDiv(parentId, labelText, (switchDiv) => {
-    var switchLabel = document.createElement("label")
-    switchLabel.classList.add("form-switch")
+function addSwitch(parentId, switchId, labelText, onClickCallback = undefined, intented = false) {
+  wrapDiv(
+    parentId,
+    labelText,
+    (switchDiv) => {
+      var switchLabel = document.createElement("label")
+      switchLabel.classList.add("form-switch")
 
-    var switchInput = document.createElement("input")
-    switchInput.type = "checkbox"
-    switchInput.id = switchId
-    if (onClickCallback) switchInput.onclick = onClickCallback
+      var switchInput = document.createElement("input")
+      switchInput.type = "checkbox"
+      switchInput.id = switchId
+      if (onClickCallback) switchInput.onclick = onClickCallback
 
-    var switchIcon = document.createElement("i")
-    switchIcon.classList.add("form-icon")
+      var switchIcon = document.createElement("i")
+      switchIcon.classList.add("form-icon")
 
-    switchLabel.appendChild(switchInput)
-    switchLabel.appendChild(switchIcon)
-    switchDiv.appendChild(switchLabel)
-  }, intented)
+      switchLabel.appendChild(switchInput)
+      switchLabel.appendChild(switchIcon)
+      switchDiv.appendChild(switchLabel)
+    },
+    intented
+  )
 }
 
 function addSelectAux(parentElem, selectId) {
@@ -219,22 +218,32 @@ function addSelectAux(parentElem, selectId) {
   return switchInput
 }
 
-function addSelect(parentId, selectId, labelText, intented=false) {
-  wrapDiv(parentId, labelText, (selectDiv) => {
-    addSelectAux(selectDiv, selectId)
-  }, intented)
+function addSelect(parentId, selectId, labelText, intented = false) {
+  wrapDiv(
+    parentId,
+    labelText,
+    (selectDiv) => {
+      addSelectAux(selectDiv, selectId)
+    },
+    intented
+  )
 }
 
-function addInput(parentId, inputId, labelText, inputType = "number", intented=false) {
-  wrapDiv(parentId, labelText, (selectDiv) => {
-    var switchInput = document.createElement("input")
-    switchInput.classList.add("form-input")
-    switchInput.id = inputId
-    switchInput.type = inputType
-    if (inputType === "number") switchInput.step = "any"
+function addInput(parentId, inputId, labelText, inputType = "number", intented = false) {
+  wrapDiv(
+    parentId,
+    labelText,
+    (selectDiv) => {
+      var switchInput = document.createElement("input")
+      switchInput.classList.add("form-input")
+      switchInput.id = inputId
+      switchInput.type = inputType
+      if (inputType === "number") switchInput.step = "any"
 
-    selectDiv.appendChild(switchInput)
-  }, intented)
+      selectDiv.appendChild(switchInput)
+    },
+    intented
+  )
 }
 
 function addDivider(parentId, labelText) {
@@ -247,28 +256,25 @@ function addDivider(parentId, labelText) {
   dividerDiv.classList.add("divider")
   dividerDiv.classList.add("text-center")
 
-  dividerDiv.setAttribute('data-content',labelText);
+  dividerDiv.setAttribute("data-content", labelText)
 
   mainDiv.appendChild(dividerDiv)
   parent.appendChild(mainDiv)
 }
 
 function strToJSValue(strVal) {
-  if(strVal === undefined)
-    return undefined
+  if (strVal === undefined) return undefined
 
   try {
     strVal = strVal ? strVal.toLowerCase() : strVal
-  }
-  catch(e) {
-  }
+  } catch (e) {}
   if (strVal === "undefined" || strVal === "" || strVal === "none") return undefined
   else if (strVal === "true") return true
   else if (strVal === "false") return false
   return strVal
 }
 
-function generateOptionsAux(parentObj, optionsData, addSelectionValueInDescription=false) {
+function generateOptionsAux(parentObj, optionsData, addSelectionValueInDescription = false) {
   for (const [key, value] of Object.entries(optionsData)) {
     var label = document.createElement("option")
     label.value = key
@@ -298,31 +304,32 @@ function disableNavigationButtons() {
 }
 
 function detectBoardChange(callback) {
-  fetch("/devid").then((response) => {
-    return response.json();
-  }).then(function (data) {
-    var settings_mac = data.id
-    var cookies_mac = Cookies.get('board-mac')
-    console.log("Board mac: ", settings_mac, ", Cookie mac: ", cookies_mac)
-    if (settings_mac !== undefined && settings_mac !== cookies_mac) {
-      alert("board change detected...restarting configuration")
-      redirectTo("index.html")
-      return
-    }
-    showElement('loader', false)
+  fetch("/devid")
+    .then((response) => {
+      return response.json()
+    })
+    .then(function (data) {
+      var settings_mac = data.id
+      var cookies_mac = Cookies.get("board-mac")
+      console.log("Board mac: ", settings_mac, ", Cookie mac: ", cookies_mac)
+      if (settings_mac !== undefined && settings_mac !== cookies_mac) {
+        alert("board change detected...restarting configuration")
+        redirectTo("index.html")
+        return
+      }
+      showElement("loader", false)
 
-    if(callback)
-      callback()
-  }).catch((err) => {
-    console.log("error completing request", err);
-    showElement('loader', false)
-    if(callback)
-      callback()
-  });
+      if (callback) callback()
+    })
+    .catch((err) => {
+      console.log("error completing request", err)
+      showElement("loader", false)
+      if (callback) callback()
+    })
 }
 
 function redirectTo(relUrl) {
-  location.href = relUrl + "?n=" + Math.floor(Math.random()*100000000)
+  location.href = relUrl + "?n=" + Math.floor(Math.random() * 100000000)
 }
 
 function fromMultiWordToOne(initialString, delimeter = " ") {
@@ -337,30 +344,33 @@ function fromMultiWordToOne(initialString, delimeter = " ") {
 
 function fetchInternal(url) {
   return new Promise((resolve, reject) => {
-    fetch(url).then((response) => {
-      return response.json();
-    }).then(function (data) {
-      resolve(data)
-    }).catch((err) => {
-      console.log("error fetching: ", url, ", e: ", err)
-      reject()
-    });
+    fetch(url)
+      .then((response) => {
+        return response.json()
+      })
+      .then(function (data) {
+        resolve(data)
+      })
+      .catch((err) => {
+        console.log("error fetching: ", url, ", e: ", err)
+        reject()
+      })
   })
 }
 
-var progressTimer=undefined
-var activeProgressElementId=undefined
-function startProgressAnimation(elementId="currentWeightProgressMain") {
+var progressTimer = undefined
+var activeProgressElementId = undefined
+function startProgressAnimation(elementId = "currentWeightProgressMain") {
   //<progress id="currentWeightProgressMain" class="progress" value="0" max="30" style="display: none"></progress>
   showElement(elementId, true)
   var elem = document.getElementById(elementId)
   elem.value = 0
   activeProgressElementId = elementId
-  progressTimer = window.setInterval(increaseProgress, 500);
+  progressTimer = window.setInterval(increaseProgress, 500)
 }
 
 function stopProgressAnimation() {
-  if(progressTimer) {
+  if (progressTimer) {
     increaseProgress(30)
     clearInterval(progressTimer)
   }
@@ -378,14 +388,13 @@ function getKeyValuePairs() {
   let returnObj = {}
 
   var i = 0
-  while(1) {
-    var elemKey = document.getElementById("input-key-name-" + i);
-    var elemValue = document.getElementById("input-key-value-" + i);
+  while (1) {
+    var elemKey = document.getElementById("input-key-name-" + i)
+    var elemValue = document.getElementById("input-key-value-" + i)
 
-    if(!elemKey)
-      break
+    if (!elemKey) break
 
-    if (elemKey && elemValue && elemKey.value !== '' && elemValue.value !== '')
+    if (elemKey && elemValue && elemKey.value !== "" && elemValue.value !== "")
       returnObj[elemKey.value.trim()] = elemValue.value.trim()
     i++
   }
@@ -393,9 +402,13 @@ function getKeyValuePairs() {
   return returnObj
 }
 
-function fillKeyValuePairsFromDictionary(dictionaryString, keyElemPrefix='input-key-name-', valueElemPrefix='input-key-value-') {
+function fillKeyValuePairsFromDictionary(
+  dictionaryString,
+  keyElemPrefix = "input-key-name-",
+  valueElemPrefix = "input-key-value-"
+) {
   try {
-    if (dictionaryString && dictionaryString !== 'undefined') {
+    if (dictionaryString && dictionaryString !== "undefined") {
       var i = 0
       keyValueDict = JSON.parse(dictionaryString)
       console.log("keyValueDict: ", keyValueDict)
@@ -403,13 +416,14 @@ function fillKeyValuePairsFromDictionary(dictionaryString, keyElemPrefix='input-
         var keyElem = document.getElementById(keyElemPrefix + i)
         var valueElem = document.getElementById(valueElemPrefix + i)
 
-        if(!keyElem || !valueElem)
-          break
+        if (!keyElem || !valueElem) break
 
         keyElem.value = keyName
         valueElem.value = keyValueDict[keyName]
         i += 1
       }
     }
-  } catch (e) { console.log("error in fillKeyValuePairsFromDictionary: ", e) }
+  } catch (e) {
+    console.log("error in fillKeyValuePairsFromDictionary: ", e)
+  }
 }
