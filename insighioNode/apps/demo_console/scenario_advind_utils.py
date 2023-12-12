@@ -7,15 +7,15 @@ import logging
 try:
     from apps import demo_temp_config as cfg
 
-    logging.info("loaded config: [temp]")
+    logging.info("[scenario_advind_utils] loaded config: [temp]")
 except Exception as e:
     try:
         from . import demo_config as cfg
 
-        logging.info("loaded config: [normal]")
+        logging.info("[scenario_advind_utils] loaded config: [normal]")
     except Exception as e:
         cfg = type("", (), {})()
-        logging.info("loaded config: [fallback]")
+        logging.info("[scenario_advind_utils] loaded config: [fallback]")
 import sensors
 
 

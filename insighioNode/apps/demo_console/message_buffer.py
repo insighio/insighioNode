@@ -3,22 +3,22 @@ import logging
 try:
     from apps import demo_temp_config as cfg
 
-    logging.info("loaded config: [temp]")
+    logging.info("[message_buffer] loaded config: [temp]")
 except Exception as e:
     try:
         from . import demo_config as cfg
 
-        logging.info("loaded config: [normal]")
+        logging.info("[message_buffer] loaded config: [normal]")
     except Exception as e:
         cfg = type("", (), {})()
-        logging.info("loaded config: [fallback]")
+        logging.info("[message_buffer] loaded config: [fallback]")
 import json
 import utils
 import utime
 import _thread
 
 storage_file_name = "measurements.log"
-MAX_NUMBER_OF_FORCED_MESSAGES = const(1000)
+MAX_NUMBER_OF_FORCED_MESSAGES = 1000
 
 
 def get_config(key):

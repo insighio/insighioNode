@@ -6,22 +6,19 @@ import utils
 try:
     from apps import demo_temp_config as cfg
 
-    logging.info("loaded config: [temp]")
+    logging.info("[ota] loaded config: [temp]")
 except Exception as e:
     try:
         from . import demo_config as cfg
 
-        logging.info("loaded config: [normal]")
+        logging.info("[ota] loaded config: [normal]")
     except Exception as e:
         cfg = type("", (), {})()
-        logging.info("loaded config: [fallback]")
+        logging.info("[ota] loaded config: [fallback]")
 
 
 def get_config(key):
     return getattr(cfg, key) if hasattr(cfg, key) else None
-
-
-####
 
 
 def checkAndApply(client):

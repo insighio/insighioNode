@@ -54,7 +54,9 @@ def get_vin(pin="P16"):
 
 
 def set_pin_value(pin, value):
-    """Set pin pernamently to value"""
+    """Set pin permanently to value"""
+    if pin is None or value is None:
+        return
     try:
         tpin = Pin(pin, Pin.OUT)
         tpin.value(value)

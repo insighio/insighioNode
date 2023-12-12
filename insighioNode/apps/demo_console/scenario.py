@@ -10,14 +10,21 @@ import device_info
 from . import scenario_utils
 import gc
 import utils
-from math import floor
 from . import message_buffer
 from .dictionary_utils import set_value_int
 
 try:
-    from . import demo_config as cfg
+    from apps import demo_temp_config as cfg
+
+    logging.info("[scenario] loaded config: [temp]")
 except Exception as e:
-    cfg = type("", (), {})()
+    try:
+        from . import demo_config as cfg
+
+        logging.info("[scenario] loaded config: [normal]")
+    except Exception as e:
+        cfg = type("", (), {})()
+        logging.info("[scenario] loaded config: [fallback]")
 
 # Globals
 timeDiffAfterNTP = None
