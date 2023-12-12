@@ -65,14 +65,20 @@ def set_pin_value(pin, value):
 
 # if voltage is undef 3 Volt and this can be used to terminate the process loop till
 # the battery is adequately charged
-def check_minimum_voltage_threshold(pin_enable_battery_meas="P22", pin_battery_voltage="P13"):
-    set_pin_value(pin_enable_battery_meas, 1)
-    voltage = get_input_voltage(pin_battery_voltage, voltage_divider=2, attn=0)
-    set_pin_value(pin_enable_battery_meas, 0)
-    if voltage < 3000:
-        import machine
+def check_minimum_voltage_threshold():
+    import machine
+    import uos
 
-        machine.deepsleep(180000)
+    voltage = None
+    _is_esp32s3 = "esp32s3" in uos.uname().machine.lower()
+    _UC_IO_BAT_MEAS_ON = 14 if _is_esp32s3 else 27
+    _UC_IO_BAT_READ = 3 if _is_esp32s3 else 36
+
+    set_pin_value(_UC_IO_BAT_MEAS_ON, 1)
+    voltage = get_input_voltage(_UC_IO_BAT_READ, 2, machine.ADC.ATTN_11DB)
+    set_pin_value(_UC_IO_BAT_MEAS_ON, 0)
+    if voltage < 3000:
+        machine.deepsleep(3600000)
 
 
 def timed_pin_pull_up(pin, durationms=500):
