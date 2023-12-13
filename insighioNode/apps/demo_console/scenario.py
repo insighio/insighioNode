@@ -91,6 +91,10 @@ def executeMeasureAndUploadLoop():
     ) = determine_message_buffering_and_network_connection_necessity()
 
     is_first_run = True
+    # None: connection not executed
+    # False: connection failed
+    # True: connection succeded
+    connectAndUploadCompletedWithoutErrors = None
     always_on = isAlwaysOnScenario()
     always_on_period = cfg.get("_ALWAYS_ON_PERIOD")
     if always_on_period:
@@ -137,10 +141,8 @@ def executeMeasureAndUploadLoop():
             execute_connection_procedure = True if always_on else not measurementStored
 
         # connect (if needed) and upload message
-        connectAndUploadCompletedWithoutErrors = False
         if execute_connection_procedure:
             hasGPSFix = executeGetGPSPosition(cfg, measurements, always_on)
-
             if not hasGPSFix and cfg.get("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
                 connectAndUploadCompletedWithoutErrors = False
             else:
@@ -167,6 +169,10 @@ def executeMeasureAndUploadLoop():
                 device_info.wdt_reset()
                 utime.sleep_ms(1000)
             always_on = isAlwaysOnScenario()
+
+    # if connection procedure was executed
+    if connectAndUploadCompletedWithoutErrors is not None:
+        executeNetworkDisconnect()
 
 
 def executeGetGPSPosition(cfg, measurements, always_on):
@@ -295,6 +301,16 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             logging.exception(e, "Exception during disconnection:")
     return message_sent
 
+def executeNetworkDisconnect():
+    selected_network = cfg.get("network")
+    if selected_network == "lora":
+        from . import lora as network
+    elif selected_network == "wifi":
+        from . import wifi as network
+    elif selected_network == "cellular":
+        from . import cellular as network
+    elif selected_network == "satellite":
+        from . import satellite as network
 
 def executeDeviceStatisticsUpload(cfg, network):
     stats = {}
@@ -360,19 +376,6 @@ def notifyDisconnected(network):
 
 def executeDeviceDeinitialization():
     scenario_utils.device_deinit()
-
-    # connect to network
-    selected_network = cfg.get("network")
-    if selected_network == "lora":
-        from . import lora as network
-    elif selected_network == "wifi":
-        from . import wifi as network
-    elif selected_network == "cellular":
-        from . import cellular as network
-    elif selected_network == "satellite":
-        from . import satellite as network
-
-    network.deinit()
 
 
 def executeTimingConfiguration():
