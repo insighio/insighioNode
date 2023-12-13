@@ -1,6 +1,7 @@
 import logging
 import device_info
 import utils
+import gc
 
 from . import cfg
 
@@ -167,13 +168,6 @@ def sendOtaStatusMessage(client, fileId, success, reason_measage=None):
     client.send_control_packet(message.to_json(), "/ota")
 
 
-def progressCallback(microWebCli, progressSize, totalSize):
-    if totalSize:
-        print("Progress: %d bytes of %d downloaded..." % (progressSize, totalSize))
-    else:
-        print("Progress: %d bytes downloaded..." % progressSize)
-
-
 def downloadDeviceConfigurationHTTP(client):
     logging.info("About to download device configuration over HTTP...")
     protocol_config = cfg.get_protocol_config()
@@ -201,27 +195,44 @@ def downloadDeviceConfigurationHTTP(client):
 
                 return configContent
     else:  # not tested
-        from external.MicroWebCli import microWebCli
+        gc.collect()
+        print("mem free: " + str(gc.mem_free()))
+        try:
+            from utils import httpclient
 
-        auth = MicroWebCli.AuthToken(protocol_config.thing_token)
-        wCli = microWebCli.MicroWebCli("https://" + URL_base + URL_PATH, "GET", auth)
-        wCli.QueryParams["id"] = protocol_config.thing_id
-        wCli.QueryParams["channel"] = protocol_config.control_channel_id
-        logging.debug("GET file %s" % wCli.URL)
-        wCli.OpenRequest()
-        resp = wCli.GetResponse()
-        logging.debug("Get file response status: {}, message: {}".format(resp.GetStatusCode(), resp.GetStatusMessage()))
-        if resp.IsSuccess():
-            buf = memoryview(bytearray(2048))
-            while not resp.IsClosed():
-                x = resp.ReadContentInto(buf)
-                if x < len(buf):
-                    buf = buf[:x]
+            headers = {"Authorization": protocol_config.thing_token}
+            params = "id={}&channel={}".format(protocol_config.thing_id, protocol_config.control_channel_id)
+            http_version = "http" if device_info.get_hw_module_verison() == "esp32wroom" else "https"
+            use_https = http_version == "https"
+            url = "{}://{}{}?{}".format(http_version, URL_base, URL_PATH, params)
+            client = httpclient.HttpClient(headers)
+            response = None
             try:
-                return buf.decode("utf-8")
+                response = client.get(url)
             except Exception as e:
-                pass
+                logging.exception(e, "error executing HTTP GET")
 
+            if (not response or response.status_code != 200) and use_https:
+                logging.info("request failed, retrying without HTTPS")
+                response = client.get(url.replace("https://", "http://"))
+
+            if response and response.status_code == 200:
+                try:
+                    resp = response.content.decode("utf-8")
+                    if resp.startswith('"') and resp.endswith('"'):
+                        resp = resp[1:-1]
+                    logging.debug("new configuration: " + resp)
+
+                    utils.deleteModule("utils.httpclient")
+
+                    return resp
+                except Exception as e:
+                    logging.exception(e, " error reading response")
+                    pass
+        except Exception as e:
+            logging.exception(e, "unable to instantiate httpclient")
+
+    utils.deleteModule("utils.httpclient")
     return None
 
 
@@ -238,7 +249,10 @@ def downloadOTA(client, fileId, fileType, fileSize):
     # http://<ip>/packages/download?fuid=<file-uid>&did=<device-id>&dk=<device-key>&cid=<control-channel-id>
     # TODO: fix support of redirections
     protocol_config = cfg.get_protocol_config()
-    URL = "https://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}".format(
+    http_version = "http" if device_info.get_hw_module_verison() == "esp32wroom" else "https"
+    use_https = http_version == "https"
+    URL = "{}://{}/mf-rproxy/packages/download?fuid={}&did={}&dk={}&cid={}".format(
+        http_version,
         protocol_config.server_ip,
         # "console.insigh.io",
         fileId,
@@ -261,17 +275,31 @@ def downloadOTA(client, fileId, fileType, fileSize):
                 return local_file_name
         return None
     else:
-        from external.MicroWebCli import microWebCli
+        gc.collect()
+        print("mem free: " + str(gc.mem_free()))
+        try:
+            from utils import httpclient
 
-        wCli = microWebCli.MicroWebCli(URL)
-        logging.debug("GET file %s" % wCli.URL)
-        wCli.OpenRequest()
-        resp = wCli.GetResponse()
-        logging.debug("Get file response status: {}, message: {}".format(resp.GetStatusCode(), resp.GetStatusMessage()))
-        if resp.IsSuccess():
-            contentType = resp.WriteContentToFile(filename, progressCallback)
-            logging.debug('File was saved to "%s"' % (filename))
-            return filename
+            client = httpclient.HttpClient()
+            response = None
+            try:
+                response = client.get(URL, saveToFile=filename)
+            except Exception as e:
+                logging.exception(e, "error executing HTTP GET")
+
+            if (not response or response.status_code != 200) and use_https:
+                logging.info("request failed, retrying without HTTPS")
+                response = client.get(URL.replace("https://", "http://"), saveToFile=filename)
+
+            success_status = response and response.status_code == 200
+
+            utils.deleteModule("utils.httpclient")
+
+            if success_status:
+                logging.debug("HTTP file downloaded: " + filename)
+                return filename
+        except Exception as e:
+            logging.exception(e, "unable to instantiate httpclient")
     return None
 
 
