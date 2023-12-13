@@ -24,7 +24,7 @@ def getUptime(timeOffset=None):
     uptime = utime.ticks_ms()
     if timeOffset is not None:
         uptime -= timeOffset
-    return uptime
+    return uptime - start_time
 
 
 def now():
@@ -234,6 +234,9 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             is_connected = "status" in connection_results and connection_results["status"]["value"] is True
             if "status" in connection_results:
                 del connection_results["status"]
+
+            # merge results
+            measurements = dict(list(measurements.items()) + list(connection_results.items()))
 
             logging.info("Local time after data connection: {}".format(utime.gmtime()))
 

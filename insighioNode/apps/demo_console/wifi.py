@@ -33,7 +33,6 @@ def connect(cfg, explicit_protocol=None):
         # if network statistics are enabled
         if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
             results["wifi_conn_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connDur}
-            results["wifi_scan_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": scanDur}
             results["wifi_channel"] = {"value": wifiChannel}
             results["wifi_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": wifiRssi}
 
