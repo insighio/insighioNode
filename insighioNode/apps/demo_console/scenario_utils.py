@@ -198,20 +198,6 @@ def default_board_measurements(measurements):
             logging.debug("Getting measurement for [{}] from sensor [{}]".format(meas_key_name, i2c_config))
             read_i2c_sensor(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"), i2c_config, measurements)
 
-    # up to 3 Analog sensors
-    for n in range(1, 4):
-        meas_key_name = "_MEAS_ANALOG_P" + str(n)
-        pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
-        meas_key = cfg.get(meas_key_name)
-        pin = cfg.get(pin_name)
-
-        if pin is None and n == 1:  # backward compatibility towards v1.2
-            pin = 32
-
-        if meas_key is not None and pin is not None and meas_key != cfg.get("_CONST_MEAS_DISABLED"):
-            logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, meas_key, pin))
-            read_analog_digital_sensor(pin, meas_key, measurements, "ap" + str(n))
-
     # up to 3 Digital/Analog sensors
     for n in range(1, 4):
         meas_key_name = "_MEAS_ANALOG_DIGITAL_P" + str(n)
