@@ -68,7 +68,7 @@ def deleteFile(destination):
 
         uos.remove(destination)
     except Exception as e:
-        logging.exception(e, "Error writing to file [{}]".format(destination))
+        logging.exception(e, "Error deleting file [{}]".format(destination))
         return False
 
 
