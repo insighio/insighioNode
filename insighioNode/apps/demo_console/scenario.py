@@ -13,18 +13,7 @@ import utils
 from . import message_buffer
 from .dictionary_utils import set_value_int
 
-try:
-    from apps import demo_temp_config as cfg
-
-    logging.info("[scenario] loaded config: [temp]")
-except Exception as e:
-    try:
-        from . import demo_config as cfg
-
-        logging.info("[scenario] loaded config: [normal]")
-    except Exception as e:
-        cfg = type("", (), {})()
-        logging.info("[scenario] loaded config: [fallback]")
+from . import cfg
 
 # Globals
 timeDiffAfterNTP = None
@@ -46,8 +35,8 @@ def now():
 
 def isAlwaysOnScenario():
     return (
-        scenario_utils.get_config("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)
-    ) or scenario_utils.get_config("_FORCE_ALWAYS_ON_CONNECTION")
+        cfg.get("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)
+    ) or cfg.get("_FORCE_ALWAYS_ON_CONNECTION")
 
 
 def execute():
@@ -64,20 +53,20 @@ def executeDeviceInitialization():
 
     # Operations for compatibility with older configurations
     # default temperature unit: Celsius
-    if scenario_utils.get_config("_MEAS_TEMP_UNIT_IS_CELSIUS") is None:
-        cfg._MEAS_TEMP_UNIT_IS_CELSIUS = True
+    if cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS") is None:
+        cfg.set_config("_MEAS_TEMP_UNIT_IS_CELSIUS", True)
 
     # initializations
     device_info.set_defaults(
         heartbeat=False,
         wifi_on_boot=False,
         wdt_on_boot=False,
-        wdt_on_boot_timeout_sec=scenario_utils.get_config("_WD_PERIOD"),
+        wdt_on_boot_timeout_sec=cfg.get("_WD_PERIOD"),
         bt_on_boot=False,
     )
     device_info.set_led_color("blue")
     _DEVICE_ID = device_info.get_device_id()[0]
-    cfg.device_id = _DEVICE_ID
+    cfg.set_config("device_id", _DEVICE_ID)
     logging.info("Device ID in readable form: {}".format(_DEVICE_ID))
 
     # wachdog reset
@@ -85,7 +74,7 @@ def executeDeviceInitialization():
 
 
 def determine_message_buffering_and_network_connection_necessity():
-    buffered_upload_enabled = scenario_utils.get_config("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
+    buffered_upload_enabled = cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
     execute_connection_procedure = not buffered_upload_enabled
 
     # if RTC is invalid, force network connection
@@ -103,15 +92,15 @@ def executeMeasureAndUploadLoop():
 
     is_first_run = True
     always_on = isAlwaysOnScenario()
-    always_on_period = scenario_utils.get_config("_ALWAYS_ON_PERIOD")
+    always_on_period = cfg.get("_ALWAYS_ON_PERIOD")
     if always_on_period:
         try:
             # set keepalive timing used for heartbeats in open connections
             proto_cfg_instance = cfg.get_protocol_config()
             proto_cfg_instance.keepalive = int(always_on_period * 1.5) if always_on else 0
 
-            if scenario_utils.get_config("_MEAS_GPS_ENABLE"):
-                proto_cfg_instance.keepalive += scenario_utils.get_config("_MEAS_GPS_TIMEOUT")
+            if cfg.get("_MEAS_GPS_ENABLE"):
+                proto_cfg_instance.keepalive += cfg.get("_MEAS_GPS_TIMEOUT")
             logging.debug("keepalive period: " + str(proto_cfg_instance.keepalive))
         except:
             logging.debug("no protocol info, ignoring keepalive configuration")
@@ -120,7 +109,8 @@ def executeMeasureAndUploadLoop():
     if not always_on:  # or not RTCisValid():
         #     time_to_sleep = 5000 # check connection and upload messages every 5 seconds
         # else:
-        time_to_sleep = scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") if scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") else 60
+        time_to_sleep = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
+        time_to_sleep = time_to_sleep if time_to_sleep is not None else 60
         time_to_sleep = time_to_sleep * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
         time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
 
@@ -151,7 +141,7 @@ def executeMeasureAndUploadLoop():
         if execute_connection_procedure:
             hasGPSFix = executeGetGPSPosition(cfg, measurements, always_on)
 
-            if not hasGPSFix and scenario_utils.get_config("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
+            if not hasGPSFix and cfg.get("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
                 connectAndUploadCompletedWithoutErrors = False
             else:
                 connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, always_on)
@@ -181,9 +171,8 @@ def executeMeasureAndUploadLoop():
 
 def executeGetGPSPosition(cfg, measurements, always_on):
     try:
-        if scenario_utils.get_config("_MEAS_GPS_ENABLE") and (
-            not scenario_utils.get_config("_MEAS_GPS_ONLY_ON_BOOT")
-            or (device_info.get_reset_cause() == 0 or device_info.get_reset_cause() == 1)
+        if cfg.get("_MEAS_GPS_ENABLE") and (
+            not cfg.get("_MEAS_GPS_ONLY_ON_BOOT") or (device_info.get_reset_cause() == 0 or device_info.get_reset_cause() == 1)
         ):
             from . import cellular as network_gps
 
@@ -192,7 +181,7 @@ def executeGetGPSPosition(cfg, measurements, always_on):
             gps_status = network_gps.get_gps_position(cfg, measurements, always_on)
 
             # close modem after operation if it is not going to be used for connection
-            if cfg.network != "cellular":
+            if cfg.get("network") != "cellular":
                 network_gps.disconnect()
 
             return gps_status
@@ -207,19 +196,20 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
 
     logging.debug("loading network modules...")
     # connect to network
-    if cfg.network == "lora":
+    selected_network = cfg.get("network")
+    if selected_network == "lora":
         from . import lora as network
-    elif cfg.network == "wifi":
+    elif selected_network == "wifi":
         from . import wifi as network
-    elif cfg.network == "cellular":
+    elif selected_network == "cellular":
         from . import cellular as network
-    elif cfg.network == "satellite":
+    elif selected_network == "satellite":
         from . import satellite as network
 
     network.init(cfg)
     logging.debug("Network modules loaded")
 
-    if cfg.network == "cellular":
+    if selected_network == "cellular":
         network.prepareForConnectAndUpload()
 
     message_sent = False
@@ -232,7 +222,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             if not is_first_run:
                 device_info.set_led_color("red")
                 network.disconnect()
-            logging.info("Connecting to network over: " + cfg.network)
+            logging.info("Connecting to network over: " + selected_network)
             connection_results = network.connect(cfg)
 
             is_connected = "status" in connection_results and connection_results["status"]["value"] is True
@@ -249,12 +239,12 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
         logging.exception(e, "Exception during connection:")
 
     # update radio info
-    if scenario_utils.get_config("_MEAS_NETWORK_STAT_ENABLE"):
+    if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
         network.updateSignalQuality(cfg, measurements)
 
     try:
         if is_first_run:
-            logging.debug("Network [" + cfg.network + "] connected: " + str(is_connected))
+            logging.debug("Network [" + selected_network + "] connected: " + str(is_connected))
 
         if is_connected:
             device_info.set_led_color("green")
@@ -272,14 +262,14 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
                 SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
             )
 
-            message_sent = network.send_message(cfg, network.create_message(cfg.device_id, measurements))
+            message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
             logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
 
             if not always_on or (always_on and is_first_run):
                 network.check_and_apply_ota(cfg)
         else:
-            logging.debug("Network [" + cfg.network + "] connected: False")
+            logging.debug("Network [" + selected_network + "] connected: False")
             device_info.set_led_color("red")
 
     except Exception as e:
@@ -287,12 +277,12 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
         logging.exception(e, "Exception while sending data:")
         return False
 
-    if cfg.network == "cellular":
+    if selected_network == "cellular":
         network.prepareForGPS()
 
     if not message_sent:
         logging.info("Message transmission failed, storing for later")
-        if scenario_utils.get_config("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+        if cfg.get("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
             scenario_utils.storeMeasurement(measurements, True)
 
     # disconnect from network
@@ -302,12 +292,8 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             network.disconnect()
             device_info.set_led_color("red")
         except Exception as e:
-            logging.exception(e, "Exception during disconenction:")
+            logging.exception(e, "Exception during disconnection:")
     return message_sent
-
-
-def get_var_from_module(module, key):
-    return getattr(module, key) if hasattr(module, key) else None
 
 
 def executeDeviceStatisticsUpload(cfg, network):
@@ -316,10 +302,10 @@ def executeDeviceStatisticsUpload(cfg, network):
     try:
         import srcInfo
 
-        stats["sw_branch"] = get_var_from_module(srcInfo, "branch")
-        stats["sw_commit"] = get_var_from_module(srcInfo, "commit")
-        stats["sw_custom_branch"] = get_var_from_module(srcInfo, "custom_branch")
-        stats["sw_custom_commit"] = get_var_from_module(srcInfo, "custom_commit")
+        stats["sw_branch"] = utils.get_var_from_module(srcInfo, "branch")
+        stats["sw_commit"] = utils.get_var_from_module(srcInfo, "commit")
+        stats["sw_custom_branch"] = utils.get_var_from_module(srcInfo, "custom_branch")
+        stats["sw_custom_commit"] = utils.get_var_from_module(srcInfo, "custom_commit")
     except:
         logging.error("no srcInfo file found")
 
@@ -376,24 +362,25 @@ def executeDeviceDeinitialization():
     scenario_utils.device_deinit()
 
     # connect to network
-    if cfg.network == "lora":
+    selected_network = cfg.get("network")
+    if selected_network == "lora":
         from . import lora as network
-    elif cfg.network == "wifi":
+    elif selected_network == "wifi":
         from . import wifi as network
-    elif cfg.network == "cellular":
+    elif selected_network == "cellular":
         from . import cellular as network
-    elif cfg.network == "satellite":
+    elif selected_network == "satellite":
         from . import satellite as network
 
     network.deinit()
 
 
 def executeTimingConfiguration():
-    if scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC") is not None:
+    if cfg.get("_DEEP_SLEEP_PERIOD_SEC") is not None:
         uptime = getUptime(timeDiffAfterNTP)
         logging.debug("end timestamp: " + str(uptime))
         logging.info("Getting into deep sleep...")
-        sleep_period = scenario_utils.get_config("_DEEP_SLEEP_PERIOD_SEC")
+        sleep_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
         sleep_period = sleep_period if sleep_period is not None else 600
         if sleep_period % 60 == 0:
             now_timestamp = utime.time()
@@ -425,22 +412,19 @@ def executeTimingConfiguration():
             )
         )
         machine.deepsleep(sleep_period)
-    elif (
-        scenario_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND") is not None
-        and scenario_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND") is not None
-    ):
+    elif cfg.get("_SCHEDULED_TIMESTAMP_A_SECOND") is not None and cfg.get("_SCHEDULED_TIMESTAMP_B_SECOND") is not None:
         ### RTC tuple format
         ###2021, 7, 8, 3, 16, 8, 45, 890003
         ### yy, MM, dd, DD, hh, mm, ss
         time_tuple = now()
         logging.info("current time: " + str(time_tuple))
 
-        MORNING_MEAS = scenario_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND")
-        EVENING_MEAS = scenario_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND")
+        MORNING_MEAS = cfg.get("_SCHEDULED_TIMESTAMP_A_SECOND")
+        EVENING_MEAS = cfg.get("_SCHEDULED_TIMESTAMP_B_SECOND")
 
         if MORNING_MEAS > EVENING_MEAS:
-            MORNING_MEAS = scenario_utils.get_config("_SCHEDULED_TIMESTAMP_B_SECOND")
-            EVENING_MEAS = scenario_utils.get_config("_SCHEDULED_TIMESTAMP_A_SECOND")
+            MORNING_MEAS = cfg.get("_SCHEDULED_TIMESTAMP_B_SECOND")
+            EVENING_MEAS = cfg.get("_SCHEDULED_TIMESTAMP_A_SECOND")
 
         DAY_SECONDS = 86400
 

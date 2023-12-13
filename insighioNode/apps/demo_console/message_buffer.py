@@ -1,17 +1,6 @@
 import logging
 
-try:
-    from apps import demo_temp_config as cfg
-
-    logging.info("[message_buffer] loaded config: [temp]")
-except Exception as e:
-    try:
-        from . import demo_config as cfg
-
-        logging.info("[message_buffer] loaded config: [normal]")
-    except Exception as e:
-        cfg = type("", (), {})()
-        logging.info("[message_buffer] loaded config: [fallback]")
+from . import cfg
 import json
 import utils
 import utime
@@ -20,12 +9,7 @@ import _thread
 storage_file_name = "measurements.log"
 MAX_NUMBER_OF_FORCED_MESSAGES = 1000
 
-
-def get_config(key):
-    return getattr(cfg, key) if hasattr(cfg, key) else None
-
-
-message_buffer_size = get_config("_BATCH_UPLOAD_MESSAGE_BUFFER")
+message_buffer_size = cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER")
 
 mutex = _thread.allocate_lock()
 
@@ -84,7 +68,7 @@ def parse_stored_measurements_and_upload(network):
         try:
             if not line:
                 continue
-            message = network.create_message(cfg.device_id, json.loads(line))
+            message = network.create_message(cfg.get("device_id"), json.loads(line))
             message_send_status = network.send_message(cfg, message)
 
             logging.debug("Message send status: " + str(message_send_status))

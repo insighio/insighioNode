@@ -23,8 +23,8 @@ class ModemRak4270(modem_base.Modem):
         logging.debug("modem powered off")
 
     def is_connected(self):
-        status = self.send_at_cmd("at+get_config=lora:channel")
-        (status, lines) = self.send_at_cmd("at+get_config=lora:status")
+        status = self.send_at_cmd("at+get=lora:channel")
+        (status, lines) = self.send_at_cmd("at+get=lora:status")
         line_regex = r"Joined Network\s*:\s*(\w+)"
         for line in lines:
             match = ure.search(line_regex, line)

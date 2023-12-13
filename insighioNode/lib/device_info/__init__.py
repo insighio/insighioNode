@@ -2,7 +2,6 @@
 import gc
 import machine
 import uos
-import sys
 import ubinascii
 import logging
 import utime
@@ -10,9 +9,6 @@ import utime
 wdt = None
 wdt_timeout = None
 
-_led_enabled = True
-_led_pin_vdd = 37
-_led_pin_din = 36
 _led_pin_pwr = None
 _led_neopixel = None
 

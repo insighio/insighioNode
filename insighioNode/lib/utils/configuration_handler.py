@@ -250,7 +250,7 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
         return configKeyValues
 
 
-def get_config_URI_param():
+def get_URI_param():
     configDict = get_config_values(False)
 
     uri_str = ""
@@ -262,7 +262,7 @@ def get_config_URI_param():
 
         return uri_str
     except Exception as e:
-        logging.exception(e, "get_config_URI_param:")
+        logging.exception(e, "get_URI_param:")
 
 
 def updateConfigValue(key, new_value):
@@ -310,7 +310,7 @@ def updateConfigValue(key, new_value):
 
 
 def notifyServerWithNewConfig():
-    newConfig = get_config_URI_param()
+    newConfig = get_URI_param()
     utils.writeToFile("/configLog", newConfig)
 
 

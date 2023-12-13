@@ -6,7 +6,7 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 
 def init(cfg):
-    lora.set_pins(cfg._UC_IO_RADIO_GPS_ON, cfg._UC_UART_MODEM_TX, cfg._UC_UART_MODEM_RX)
+    lora.set_pins(cfg.get("_UC_IO_RADIO_GPS_ON"), cfg.get("_UC_UART_MODEM_TX"), cfg.get("_UC_UART_MODEM_RX"))
     is_connected = lora.is_connected()
     logging.info("Lora is connected: {}".format(is_connected))
 
@@ -16,7 +16,7 @@ def deinit():
 
 
 def updateSignalQuality(cfg, measurements):
-    if not cfg._MEAS_NETWORK_STAT_ENABLE:
+    if not cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
         return
     pass
 
@@ -29,7 +29,7 @@ def connect(cfg):
     results["status"] = {"value": joinOk}
 
     # if network statistics are enabled
-    if cfg._MEAS_NETWORK_STAT_ENABLE:
+    if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
         results["lora_join_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": join_duration}
 
     return results

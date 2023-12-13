@@ -1,32 +1,15 @@
 import logging
+from . import cfg
 
-_name_mapping = None
+_name_mapping = cfg.get("_MEAS_NAME_EXT_MAPPING")
 
-
-def convertObsoleteMappingToExtended(_name_mapping):
+# fallback for backward compatibility
+if _name_mapping is None and cfg.has("_MEAS_NAME_MAPPING"):
+    _name_mapping = cfg.get("_MEAS_NAME_MAPPING")
     _name_mapping_extended = {}
     for key, value in _name_mapping.items():
         _name_mapping_extended[key] = {"alias": value, "unit": None}
-    return _name_mapping_extended
-
-
-try:
-    from apps import demo_temp_config as cfg
-except Exception as e:
-    try:
-        from . import demo_config as cfg
-
-        if hasattr(cfg, "_MEAS_NAME_EXT_MAPPING"):
-            _name_mapping = getattr(cfg, "_MEAS_NAME_EXT_MAPPING")
-
-        # fallback for backward compatibility
-        if _name_mapping is None and hasattr(cfg, "_MEAS_NAME_MAPPING"):
-            _name_mapping = getattr(cfg, "_MEAS_NAME_MAPPING")
-            _name_mapping = convertObsoleteMappingToExtended(_name_mapping)
-
-        logging.info("loaded name mapping")
-    except Exception as e:
-        pass
+    _name_mapping = _name_mapping_extended
 
 
 def get_meas_name(or_name):

@@ -4,24 +4,7 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 
-try:
-    from apps import demo_temp_config as cfg
-
-    logging.info("[scenario_advind_utils] loaded config: [temp]")
-except Exception as e:
-    try:
-        from . import demo_config as cfg
-
-        logging.info("[scenario_advind_utils] loaded config: [normal]")
-    except Exception as e:
-        cfg = type("", (), {})()
-        logging.info("[scenario_advind_utils] loaded config: [fallback]")
-import sensors
-
-
-def get_config(key):
-    return getattr(cfg, key) if hasattr(cfg, key) else None
-
+from . import cfg
 
 _sdi12_sensor_switch_list = []
 
@@ -31,9 +14,9 @@ def populateSDI12SensorSwitchList():
     _sdi12_sensor_switch_list = [None] * 11
 
     for i in range(1, 11):
-        pwr_on = get_config("_UC_IO_PWR_SDI_SNSR_" + str(i) + "_ΟΝ")
+        pwr_on = cfg.get("_UC_IO_PWR_SDI_SNSR_" + str(i) + "_ΟΝ")
         if pwr_on is None:
-            pwr_on = get_config("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ΟΝ")
+            pwr_on = cfg.get("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ΟΝ")
         _sdi12_sensor_switch_list[i] = pwr_on
 
 
@@ -55,9 +38,9 @@ def powerOffAllSwitchExcept(excludedIndex=None):
 
 
 def executeSDI12Measurement(sdi12, measurements, index):
-    enabled = get_config("_SDI12_SENSOR_" + str(index) + "_ENABLED")
-    address = get_config("_SDI12_SENSOR_" + str(index) + "_ADDRESS")
-    location = get_config("_SDI12_SENSOR_" + str(index) + "_LOCATION")
+    enabled = cfg.get("_SDI12_SENSOR_" + str(index) + "_ENABLED")
+    address = cfg.get("_SDI12_SENSOR_" + str(index) + "_ADDRESS")
+    location = cfg.get("_SDI12_SENSOR_" + str(index) + "_LOCATION")
 
     if not enabled:
         logging.debug("sdi12 sensor [{}] enabled: {}".format(index, enabled))
@@ -75,29 +58,25 @@ def executeSDI12Measurement(sdi12, measurements, index):
     if _sdi12_sensor_switch_list[location] is not None:
         sensors.set_sensor_power_on(_sdi12_sensor_switch_list[location])
     powerOffAllSwitchExcept(location)
-    utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
+    utime.sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
     read_sdi12_sensor(sdi12, address, measurements)
     powerOffAllSwitchExcept()
 
 
 def shield_measurements(measurements):
     # power on SDI12 regulator
-    if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
-        sensors.set_sensor_power_on(cfg._UC_IO_SNSR_REG_ON)
-
-    # # get pulse counter measurements
-    # read_pulse_counter(measurements)
+    sensors.set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
 
     # get SDI12 measurements
-    utime.sleep_ms(cfg._SDI12_WARM_UP_TIME_MSEC)
+    utime.sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
 
     from external.microsdi12.microsdi12 import SDI12
 
     sdi12 = None
 
     try:
-        sdi12 = SDI12(cfg._UC_IO_DRV_IN, cfg._UC_IO_RCV_OUT, None, 1)
-        sdi12.set_dual_direction_pins(cfg._UC_IO_DRV_ON, cfg._UC_IO_RCV_ON)
+        sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
+        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
@@ -115,8 +94,7 @@ def shield_measurements(measurements):
         logging.exception(e, "Exception while reading 4_20mA data")
 
     # power off SDI12 regulator
-    if hasattr(cfg, "_UC_IO_SNSR_REG_ON"):
-        sensors.set_sensor_power_off(cfg._UC_IO_SNSR_REG_ON)
+    sensors.set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
 
 
 def read_sdi12_sensor(sdi12, address, measurements):
@@ -147,7 +125,7 @@ def read_sdi12_sensor(sdi12, address, measurements):
         parse_generic_sdi12(address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
         parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_ec", "uS/cm")  # dS/m
 
-        cfg_is_celsius = get_config("_MEAS_TEMP_UNIT_IS_CELSIUS")
+        cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
         if cfg_is_celsius:
             responseArrayTemperature = sdi12.get_measurement(address, "C2")
             parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
@@ -232,7 +210,7 @@ def parse_sensor_licor(address, responseArray, measurements):
         set_value_float(measurements, variable_prefix + "_h", responseArray[2], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
         set_value_float(measurements, variable_prefix + "_vpd", responseArray[3], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
         set_value_float(measurements, variable_prefix + "_pa", responseArray[4], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
-        cfg_is_celsius = get_config("_MEAS_TEMP_UNIT_IS_CELSIUS")
+        cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
         if cfg_is_celsius:
             set_value_float(measurements, variable_prefix + "_ta", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, 2)
         else:
@@ -277,26 +255,26 @@ def measure_4_20_mA_on_port(measurements, port_id):
     import gpio_handler
     from sensors import analog_generic
 
-    port_enabled = get_config("_4_20_SNSR_{}_ENABLE".format(port_id))
-    port_formula = get_config("_4_20_SNSR_{}_FORMULA".format(port_id))
+    port_enabled = cfg.get("_4_20_SNSR_{}_ENABLE".format(port_id))
+    port_formula = cfg.get("_4_20_SNSR_{}_FORMULA".format(port_id))
 
     if port_enabled:
-        sensor_on_pin = get_config("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
-        sensor_out_pin = get_config("_CUR_SNSR_OUT_{}".format(port_id))
+        sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
+        sensor_out_pin = cfg.get("_CUR_SNSR_OUT_{}".format(port_id))
 
         try:
-            gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 1)
+            gpio_handler.set_pin_value(cfg.get("_UC_IO_CUR_SNS_ON"), 1)
             gpio_handler.set_pin_value(sensor_on_pin, 1)
 
             raw_mV = analog_generic.get_reading(sensor_out_pin)
-            current_mA = round((raw_mV / (cfg._SHUNT_OHMS * cfg._INA_GAIN)) * 100) / 100
+            current_mA = round((raw_mV / (cfg.get("_SHUNT_OHMS") * cfg.get("_INA_GAIN"))) * 100) / 100
             logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(sensor_out_pin, raw_mV, current_mA))
             set_value_float(measurements, "4_20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
             execute_transformation(measurements, "4_20_{}_current".format(port_id), current_mA, port_formula)
 
             gpio_handler.set_pin_value(sensor_on_pin, 0)
-            gpio_handler.set_pin_value(cfg._UC_IO_CUR_SNS_ON, 0)
+            gpio_handler.set_pin_value(cfg.get("_UC_IO_CUR_SNS_ON"), 0)
         except Exception as e:
             logging.exception(e, "Error getting current sensor output: ID: {}".format(port_id))
 

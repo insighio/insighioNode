@@ -131,3 +131,7 @@ def deleteModule(module_name):
         gc.collect()
     except Exception as e:
         logging.exception(e, "===")
+
+
+def get_var_from_module(module, key):
+    return getattr(module, key) if hasattr(module, key) else None

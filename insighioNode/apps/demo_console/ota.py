@@ -2,23 +2,7 @@ import logging
 import device_info
 import utils
 
-# to change
-try:
-    from apps import demo_temp_config as cfg
-
-    logging.info("[ota] loaded config: [temp]")
-except Exception as e:
-    try:
-        from . import demo_config as cfg
-
-        logging.info("[ota] loaded config: [normal]")
-    except Exception as e:
-        cfg = type("", (), {})()
-        logging.info("[ota] loaded config: [fallback]")
-
-
-def get_config(key):
-    return getattr(cfg, key) if hasattr(cfg, key) else None
+from . import cfg
 
 
 def checkAndApply(client):
@@ -100,7 +84,7 @@ def checkAndApply(client):
         elif hw_version == device_info._CONST_ESP32S3:
             new_offset = hx711.get_reading(5, 4, 8, None, None, 6, True)
 
-        cfg._UC_IO_SCALE_OFFSET = new_offset
+        cfg.set_config("_UC_IO_SCALE_OFFSET", new_offset)
         from utils import configuration_handler
 
         configuration_handler.updateConfigValue("_UC_IO_SCALE_OFFSET", new_offset)

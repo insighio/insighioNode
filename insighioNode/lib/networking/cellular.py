@@ -91,10 +91,6 @@ def get_modem_instance():
                 from networking.modem.modem_base import Modem
 
                 modem_instance = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)  # generic
-        elif modem_id == CELLULAR_SEQUANS:
-            from networking.modem.modem_sequans import ModemSequans
-
-            modem_instance = ModemSequans()
     else:
         logging.debug("modem_instance is not None")
 
@@ -118,7 +114,7 @@ def connect(cfg):
     try:
         logging.debug("Initializing modem")
         modemInst = get_modem_instance()
-        modemInst.init(cfg._IP_VERSION, cfg._APN, cfg._CELLULAR_TECHNOLOGY)
+        modemInst.init(cfg.get("_IP_VERSION"), cfg.get("_APN"), cfg.get("_CELLULAR_TECHNOLOGY"))
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
@@ -133,14 +129,14 @@ def connect(cfg):
             activation_duration = utime.ticks_ms() - start_activation_duration
             # proceed with attachment
             start_attachment_duration = utime.ticks_ms()
-            attachment_timeout = start_attachment_duration + cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC * 1000
+            attachment_timeout = start_attachment_duration + cfg.get("_MAX_ATTACHMENT_ATTEMPT_TIME_SEC") * 1000
 
             modemInst.get_registered_mcc_mnc()
 
             if not modemInst.is_attached():
                 logging.debug("Attaching...")
                 modemInst.attach()
-                # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
+                # lte.attach(band=int(cfg.get("_BAND), apn=cfg.get("_APN, legacyattach=False)
                 while not modemInst.is_attached() and (utime.ticks_ms() < attachment_timeout):
                     utime.sleep_ms(10)
 
@@ -162,7 +158,7 @@ def connect(cfg):
                 if modemInst.has_data_over_ppp():
                     logging.debug("Entering Data State. Modem connecting...")
                     start_connection_duration = utime.ticks_ms()
-                    connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
+                    connection_timeout = start_connection_duration + cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC") * 1000
                     if not modemInst.is_connected():
                         modemInst.connect()
 
@@ -177,7 +173,7 @@ def connect(cfg):
                     # when using AT commands we don't need to explicitly enter data mode
                     status = MODEM_CONNECTED
             else:
-                logging.debug("Unable to attach in {} sec".format(cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC))
+                logging.debug("Unable to attach in {} sec".format(cfg.get("_MAX_ATTACHMENT_ATTEMPT_TIME_SEC")))
     except Exception as e:
         logging.exception(e, "Outer Exception: {}".format(e))
 

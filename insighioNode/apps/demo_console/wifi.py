@@ -18,7 +18,7 @@ def deinit():
 
 
 def updateSignalQuality(cfg, measurements):
-    if not cfg._MEAS_NETWORK_STAT_ENABLE:
+    if not cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
         return
     pass
 
@@ -26,20 +26,22 @@ def updateSignalQuality(cfg, measurements):
 def connect(cfg, explicit_protocol=None):
     with mutex:
         (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(
-            cfg._CONF_NETS, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True
+            cfg.get("_CONF_NETS"), cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC"), force_no_scan=True
         )
         results = {}
         results["status"] = {"value": connOk}
         # if network statistics are enabled
-        if cfg._MEAS_NETWORK_STAT_ENABLE:
+        if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
             results["wifi_conn_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connDur}
             results["wifi_scan_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": scanDur}
             results["wifi_channel"] = {"value": wifiChannel}
             results["wifi_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": wifiRssi}
 
         if connOk:
-            requested_protocol = explicit_protocol if explicit_protocol is not None else cfg.protocol
-            logging.debug("Protocol: config: {}, explicit: {}, selected: {}".format(cfg.protocol, explicit_protocol, requested_protocol))
+            requested_protocol = explicit_protocol if explicit_protocol is not None else cfg.get("protocol")
+            logging.debug(
+                "Protocol: config: {}, explicit: {}, selected: {}".format(cfg.get("protocol"), explicit_protocol, requested_protocol)
+            )
 
             from . import transfer_protocol
 

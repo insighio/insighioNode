@@ -2,16 +2,12 @@ import logging
 from . import locks
 
 
-def get_config(cfg, key):
-    return getattr(cfg, key) if hasattr(cfg, key) else None
-
-
 class TransferProtocol:
     def __init__(self, cfg, modem_instance=None):
         self.connected = False
         self.protocol_config = cfg.get_protocol_config()
-        self.protocol_config.client_name = cfg.device_id
-        self.protocol = cfg.protocol
+        self.protocol_config.client_name = cfg.get("device_id")
+        self.protocol = cfg.get("protocol")
         self.modem_based = False
         if self.protocol_config.keepalive is None:
             self.protocol_config.keepalive = 120
@@ -42,7 +38,7 @@ class TransferProtocolModemAT(TransferProtocol):
         super().__init__(cfg, modem_instance)
         self.modem_instance = modem_instance
         self.modem_based = modem_instance is not None
-        self.require_message_delivery_ack = get_config(self.protocol_config, "REQ_MESG_DEL_ACK")
+        self.require_message_delivery_ack = cfg.get(self.protocol_config, "REQ_MESG_DEL_ACK")
         if self.require_message_delivery_ack is None:
             self.require_message_delivery_ack = True  # enable if configuration is missing
 
@@ -107,10 +103,11 @@ class TransferProtocolMQTT(TransferProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         from protocols import mqtt_client
+        import utils
 
         self.client = mqtt_client.MQTTClientCustom(self.protocol_config)
         self.enable_last_will(self.protocol_config)
-        self.require_message_delivery_ack = get_config(self.protocol_config, "REQ_MESG_DEL_ACK")
+        self.require_message_delivery_ack = utils.get_var_from_module(self.protocol_config, "REQ_MESG_DEL_ACK")
         if self.require_message_delivery_ack is None:
             self.require_message_delivery_ack = True  # enable if configuration is missing
 
