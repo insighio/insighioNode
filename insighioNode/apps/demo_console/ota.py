@@ -155,7 +155,6 @@ def hasEnoughFreeSpace(fileSize):
 # 2: Failed
 # 3: Canceled
 def sendOtaStatusMessage(client, fileId, success, reason_measage=None):
-    from . import transfer_protocol
     from external.kpn_senml.senml_pack_json import SenmlPackJson
     from external.kpn_senml.senml_record import SenmlRecord
 
