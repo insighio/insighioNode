@@ -293,7 +293,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
 
-            if not always_on or (always_on and is_first_run):
+            if cfg.get("_CHECK_FOR_OTA") and (not always_on or (always_on and is_first_run)):
                 network.check_and_apply_ota(cfg)
         else:
             logging.debug("Network [" + selected_network + "] connected: False")
