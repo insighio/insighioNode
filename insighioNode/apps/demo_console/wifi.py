@@ -14,7 +14,8 @@ def init(cfg):
 
 
 def deinit():
-    logging.info("Deactivating WiFi: {}".format(wifi.deactivate()))
+    logging.info("Deactivating WiFi...")
+    wifi.deactivate()
 
 
 def updateSignalQuality(cfg, measurements):

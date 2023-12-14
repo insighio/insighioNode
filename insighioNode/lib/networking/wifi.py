@@ -4,6 +4,13 @@ from machine import RTC
 import utime
 import logging
 
+wl=None
+
+def get_instance():
+    global wl
+    if not wl:
+        wl = network.WLAN(network.STA_IF)
+    return wl
 
 def connect_to_network(wifi_ssid, wifi_pass, max_connection_attempt_time_sec):
     connection_status = False
@@ -12,7 +19,7 @@ def connect_to_network(wifi_ssid, wifi_pass, max_connection_attempt_time_sec):
     rssi = -121
     channel = -1
 
-    wl = network.WLAN(network.STA_IF)
+    get_instance()
     wl.active(True)
 
     try:
@@ -49,7 +56,7 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
     try:
         if not force_no_scan:
             logging.debug("Scanning for known wifi nets")
-            wl = network.WLAN(network.STA_IF)
+            get_instance()
             wl.active(True)
             start_time = utime.ticks_ms()
             available_nets = wl.scan()
@@ -99,7 +106,7 @@ def deactivate():
     start_time_deactivation = utime.ticks_ms()
 
     try:
-        wl = network.WLAN(network.STA_IF)
+        get_instance()
         wl.disconnect()
         wl.active(False)
     except:
@@ -133,4 +140,4 @@ def update_time_ntp():
 
 
 def getSignalQuality():
-    return network.WLAN(network.STA_IF).status("rssi")
+    return get_instance().status("rssi")
