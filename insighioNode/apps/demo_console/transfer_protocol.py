@@ -1,5 +1,6 @@
 import logging
 from . import locks
+import utils
 
 
 class TransferProtocol:
@@ -38,7 +39,7 @@ class TransferProtocolModemAT(TransferProtocol):
         super().__init__(cfg, modem_instance)
         self.modem_instance = modem_instance
         self.modem_based = modem_instance is not None
-        self.require_message_delivery_ack = cfg.get(self.protocol_config, "REQ_MESG_DEL_ACK")
+        self.require_message_delivery_ack = utils.get_var_from_module(self.protocol_config, "REQ_MESG_DEL_ACK")
         if self.require_message_delivery_ack is None:
             self.require_message_delivery_ack = True  # enable if configuration is missing
 
