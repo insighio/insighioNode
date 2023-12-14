@@ -269,6 +269,15 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
     if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
         network.updateSignalQuality(cfg, measurements)
 
+    uptime = getUptime(timeDiffAfterNTP)
+
+    set_value_int(
+        measurements,
+        "uptime",
+        uptime if is_first_run else (uptime - measurement_run_start_timestamp),
+        SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
+    )
+
     try:
         if is_first_run:
             logging.debug("Network [" + selected_network + "] connected: " + str(is_connected))
@@ -280,15 +289,6 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
                 executeDeviceConfigurationUpload(cfg, network)
 
             # create packet
-            uptime = getUptime(timeDiffAfterNTP)
-
-            set_value_int(
-                measurements,
-                "uptime",
-                uptime if is_first_run else (uptime - measurement_run_start_timestamp),
-                SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
-            )
-
             message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
             logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
