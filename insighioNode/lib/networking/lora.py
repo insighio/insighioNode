@@ -23,13 +23,13 @@ def set_pins(power_on=None, modem_tx=None, modem_rx=None, gps_address=None):
 def set_keys(cfg):
     try:
         # get app_eui and app_key in right formats
-        if cfg.get("_APP_EUI") and cfg.get("_APP_KEY"):
-            dev_eui = cfg.get("_DEV_EUI")
-            app_key = cfg.get("_APP_KEY")
-            app_eui = cfg.get("_APP_EUI")
+        if cfg._APP_EUI and cfg._APP_KEY:
+            dev_eui = cfg._DEV_EUI
+            app_key = cfg._APP_KEY
+            app_eui = cfg._APP_EUI
             return (dev_eui, app_eui, app_key)
     except Exception as e:
-        logging.exception(e, "Invalid lora keys: {}, {}, {}".format(cfg.get("_DEV_EUI"), cfg.get("_APP_EUI"), cfg.get("_APP_KEY")))
+        logging.exception(e, "Invalid lora keys: {}, {}, {}".format(cfg._DEV_EUI, cfg._APP_EUI, cfg._APP_KEY))
 
     return (None, None, None)
 
@@ -56,11 +56,12 @@ def join(cfg, lora_keys):
         logging.info("No modem detected, ignoring join request")
         return (False, -1)
 
-    modem.set_dr(cfg.get("_LORA_DR") if cfg.has("_LORA_DR") is not None else 5)
-    modem.set_adr(cfg.get("_LORA_ADR if") cfg.has("_LORA_ADR") is not None else 0)
-    modem.set_region(cfg.get("_LORA_REGION") if cfg.has("_LORA_REGION") is not None else "EU868")
-    modem.set_confirm(cfg.get("_LORA_CONFIRMED") if cfg.has("_LORA_CONFIRMED") is not None else 0)
-    modem.set_retries(cfg.get("_LORA_TX_RETRIES") if cfg.has("_LORA_TX_RETRIES") is not None else 0)
+    modem.set_region(cfg._LORA_REGION if cfg._LORA_REGION is not None else "EU868")
+    modem.set_dr(cfg._LORA_DR if cfg._LORA_DR is not None else 5)
+    modem.set_confirm(cfg._LORA_CONFIRMED if cfg._LORA_CONFIRMED is not None else 0)
+    modem.set_adr(cfg._LORA_ADR if cfg._LORA_ADR is not None else 0)
+    modem.set_retries(cfg._LORA_TX_RETRIES if cfg._LORA_TX_RETRIES is not None else 0)
+
     modem.set_dev_eui(lora_keys[0])
     modem.set_app_eui(lora_keys[1])
     modem.set_app_key(lora_keys[2])
@@ -80,11 +81,11 @@ def join(cfg, lora_keys):
     join_status = modem.join()
     return (join_status, utime.ticks_ms() - start_time)
     #     # set the 3 default channels to the same frequency (must be before sending the OTAA join request)
-    #     config_dr = cfg.get("_LORA_DR if cfg.get("_LORA_DR is not None else 5
+    #     config_dr = cfg._LORA_DR if cfg._LORA_DR is not None else 5
     #     try:
     #         lora.join(activation=LoRa.OTAA, auth=(lora_keys[0], lora_keys[1], lora_keys[2]), timeout=0, dr=config_dr)
     #
-    #         join_timeout = start_time + cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
+    #         join_timeout = start_time + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
     #         # wait until the module has joined the network
     #         while not lora.has_joined() and utime.ticks_ms() < join_timeout:
     #             utime.sleep_ms(10)

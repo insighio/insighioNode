@@ -22,10 +22,14 @@ def get(key):
     return getattr(_cfg, key) if hasattr(_cfg, key) else None
 
 
-def set_config(key, value):
+def set(key, value):
     setattr(_cfg, key, value)
     return True
 
 
 def get_protocol_config():
     return _cfg.get_protocol_config()
+
+
+def get_cfg_module():
+    return _cfg

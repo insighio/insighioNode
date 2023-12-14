@@ -5,15 +5,29 @@ import utime
 start_time = utime.ticks_ms()
 
 import logging
-import machine
-import device_info
-from . import scenario_utils
-import gc
-import utils
+
+logging.debug("s1")
+from . import cfg
+
+logging.debug("s2")
 from . import message_buffer
+
+logging.debug("s3")
+from . import scenario_utils
+
+logging.debug("s4")
 from .dictionary_utils import set_value_int
 
-from . import cfg
+logging.debug("s5")
+import device_info
+
+logging.debug("s6")
+import gc
+
+import machine
+import utils
+
+logging.debug("s7")
 
 # Globals
 timeDiffAfterNTP = None
@@ -34,15 +48,19 @@ def now():
 
 
 def isAlwaysOnScenario():
-    return (
-        cfg.get("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)
-    ) or cfg.get("_FORCE_ALWAYS_ON_CONNECTION")
+    return (cfg.get("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)) or cfg.get(
+        "_FORCE_ALWAYS_ON_CONNECTION"
+    )
 
 
 def execute():
+    logging.debug("-> executeDeviceInitialization...")
     executeDeviceInitialization()
+    logging.debug("-> executeMeasureAndUploadLoop...")
     executeMeasureAndUploadLoop()
+    logging.debug("-> executeDeviceDeinitialization...")
     executeDeviceDeinitialization()
+    logging.debug("-> executeTimingConfiguration...")
     executeTimingConfiguration()
 
 
@@ -54,7 +72,7 @@ def executeDeviceInitialization():
     # Operations for compatibility with older configurations
     # default temperature unit: Celsius
     if cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS") is None:
-        cfg.set_config("_MEAS_TEMP_UNIT_IS_CELSIUS", True)
+        cfg.set("_MEAS_TEMP_UNIT_IS_CELSIUS", True)
 
     # initializations
     device_info.set_defaults(
@@ -66,7 +84,7 @@ def executeDeviceInitialization():
     )
     device_info.set_led_color("blue")
     _DEVICE_ID = device_info.get_device_id()[0]
-    cfg.set_config("device_id", _DEVICE_ID)
+    cfg.set("device_id", _DEVICE_ID)
     logging.info("Device ID in readable form: {}".format(_DEVICE_ID))
 
     # wachdog reset
@@ -304,6 +322,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             logging.exception(e, "Exception during disconnection:")
     return message_sent
 
+
 def executeNetworkDisconnect():
     selected_network = cfg.get("network")
     if selected_network == "lora":
@@ -314,6 +333,8 @@ def executeNetworkDisconnect():
         from . import cellular as network
     elif selected_network == "satellite":
         from . import satellite as network
+    network.deinit()
+
 
 def executeDeviceStatisticsUpload(cfg, network):
     stats = {}
