@@ -162,10 +162,11 @@
       addSwitch("option-always-on-switches", "input-ins-force-always-on", "Force Always-On (ignore power mode)")
       addSwitch("options-batch-upload", "input-ins-batch-upload-enable", "Batch Upload", batchUploadSelected)
 
-      var batchBufferSize = Cookies.get("batch_upload_buffer_size")
+      var batchBufferSize = Cookies.get("batch-upload-buffer-size")
+      console.log("batchBufferSize: ", batchBufferSize)
       var period = Cookies.get("period")
-      var timeA = Cookies.get("scheduled_time_a")
-      var timeB = Cookies.get("scheduled_time_b")
+      var timeA = Cookies.get("scheduled-time-a")
+      var timeB = Cookies.get("scheduled-time-b")
 
       if (timeA && timeB) {
         timingChanged(undefined, 'scheduled')
