@@ -1,4 +1,4 @@
-import utime
+from utime import sleep_ms, ticks_ms
 import logging
 import sensors
 from external.hx711.hx711_spi import HX711
@@ -43,7 +43,7 @@ class ScaleSensor:
                 self.spi = SPI(1, baudrate=1000000, polarity=0, phase=0, sck=spi_sck, mosi=pin_SCK, miso=pin_OUT)
             self.hx = HX711(pin_SCK, pin_OUT, self.spi)
             self.hx.set_gain(128)
-            utime.sleep_ms(50)
+            sleep_ms(50)
 
             if self.offset is not None and self.scale:
                 self.hx.set_offset(self.offset)
@@ -136,12 +136,12 @@ class ScaleSensor:
 
         raw_idle = -1
 
-        start_time = utime.ticks_ms()
+        start_time = ticks_ms()
         timeout_ms = 15000 + start_time
 
         value_buffer = []
 
-        while utime.ticks_ms() < timeout_ms:
+        while ticks_ms() < timeout_ms:
             raw = self.get_reading_raw(10)
             value_buffer.append(raw)
 
@@ -168,7 +168,7 @@ class ScaleSensor:
                 break
 
             last_raw = raw
-            utime.sleep_ms(5)
+            sleep_ms(5)
 
         if raw_idle == -1 and len(value_buffer) > 0:
             logging.debug("fallback due to timeout")

@@ -1,5 +1,5 @@
 from external.umqtt.simple import MQTTClient as uMQTTClient
-import utime
+from utime import sleep_ms, ticks_ms, ticks_diff
 from .mqtt_config import MQTTConfig
 import logging
 import _thread
@@ -55,9 +55,9 @@ class MQTTClientCustom:
             self.lastReceivedMessage["message"] = message
 
     def __check_msg(self, timeout_ms):
-        start_time = utime.ticks_ms()
+        start_time = ticks_ms()
         end_time = start_time + timeout_ms
-        while utime.ticks_ms() < end_time:
+        while ticks_ms() < end_time:
             try:
                 self.client.check_msg()
                 with self.mutex:
@@ -67,7 +67,7 @@ class MQTTClientCustom:
                         return message
             except AssertionError:
                 pass
-            utime.sleep_ms(10)
+            sleep_ms(10)
 
         return None
 
@@ -147,12 +147,12 @@ class MQTTClientCustom:
 
     def keep_alive_thread(self):
         while self._has_connected:
-            pings_due = utime.ticks_diff(utime.ticks_ms(), self.client.last_rx) // self._ping_interval
+            pings_due = ticks_diff(ticks_ms(), self.client.last_rx) // self._ping_interval
             if pings_due >= 4:
                 logging.debug("Reconnect: broker fail.")
                 self._is_connected = False
                 break
-            utime.sleep_ms(self._ping_interval)
+            sleep_ms(self._ping_interval)
             try:
                 self.client.ping()
                 logging.debug("Mqtt Ping ok")

@@ -1,4 +1,4 @@
-import utime
+from utime import sleep_ms
 import logging
 import gpio_handler
 import device_info
@@ -25,9 +25,7 @@ def device_init():
 
     if cfg.get("_NOTIFICATION_LED_ENABLED"):
         if cfg.get("_UC_IO_RGB_DIN") and cfg.get("_UC_RGB_VDD"):
-            device_info.set_led_enabled(
-                cfg.get("_NOTIFICATION_LED_ENABLED"), cfg.get("_UC_RGB_VDD"), cfg.get("_UC_IO_RGB_DIN")
-            )
+            device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"), cfg.get("_UC_RGB_VDD"), cfg.get("_UC_IO_RGB_DIN"))
         else:
             device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"))
     else:
@@ -129,8 +127,7 @@ def get_measurements(cfg_dummy=None):
 
         shield_name = cfg.get("_SELECTED_SHIELD")
         if shield_name is not None and (
-            shield_name == cfg.get("_CONST_SHIELD_ADVIND")
-            or shield_name == cfg.get("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")
+            shield_name == cfg.get("_CONST_SHIELD_ADVIND") or shield_name == cfg.get("_CONST_SELECTED_SHIELD_ESP_GEN_SHIELD_SDI12")
         ):
             from . import scenario_advind_utils
 
@@ -156,9 +153,7 @@ def read_pulse_counter(measurements):
     if cfg.get("_PCNT_1_ENABLE"):
         from . import scenario_pcnt_ulp
 
-        scenario_pcnt_ulp.execute(
-            measurements, cfg.get("UC_IO_DGTL_SNSR_READ"), cfg.get("_PCNT_1_HIGH_FREQ"), cfg.get("_PCNT_1_FORMULA")
-        )
+        scenario_pcnt_ulp.execute(measurements, cfg.get("UC_IO_DGTL_SNSR_READ"), cfg.get("_PCNT_1_HIGH_FREQ"), cfg.get("_PCNT_1_FORMULA"))
     else:
         import utils
 
@@ -173,7 +168,7 @@ def read_battery_voltage():
 
     device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
-    utime.sleep_ms(50)
+    sleep_ms(50)
 
     vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
 
@@ -189,12 +184,7 @@ def default_board_measurements(measurements):
     for n in range(1, 3):
         meas_key_name = "_MEAS_I2C_" + str(n)
         i2c_config = cfg.get(meas_key_name)
-        if (
-            i2c_config
-            and cfg.has("_UC_IO_I2C_SDA")
-            and cfg.has("_UC_IO_I2C_SCL")
-            and i2c_config != cfg.get("_CONST_MEAS_DISABLED")
-        ):
+        if i2c_config and cfg.has("_UC_IO_I2C_SDA") and cfg.has("_UC_IO_I2C_SCL") and i2c_config != cfg.get("_CONST_MEAS_DISABLED"):
             logging.debug("Getting measurement for [{}] from sensor [{}]".format(meas_key_name, i2c_config))
             read_i2c_sensor(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"), i2c_config, measurements)
 
@@ -252,7 +242,7 @@ def read_scale(measurements):
     if is_sensor_debug_on:
         logging.setLevel(logging.DEBUG)
 
-    while True:
+    while 1:
         weight = hx711.get_reading(
             cfg.get("_UC_IO_SCALE_DATA_PIN"),
             cfg.get("_UC_IO_SCALE_CLOCK_PIN"),
@@ -264,7 +254,7 @@ def read_scale(measurements):
             break
 
         logging.debug("Detected weight: {}".format(weight))
-        utime.sleep_ms(10)
+        sleep_ms(10)
 
     if not wlan_is_active:
         wlan.active(False)
@@ -522,12 +512,12 @@ def read_accelerometer():
         logging.info("No sensors detected")
         return
 
-    while True:
+    while 1:
         gc.collect()
 
         (asm330_accX, asm330_accY, asm330_accZ) = asm330.get_acc_reading()
         if asm330_accX is None or asm330_accY is None or asm330_accZ is None:
-            utime.sleep_ms(100)
+            sleep_ms(100)
             continue
 
         measurement = {}
@@ -542,4 +532,4 @@ def read_accelerometer():
         if not network or not network.is_connected() or not message_send_status:
             storeMeasurement(measurement, True)
 
-        utime.sleep_ms(100)
+        sleep_ms(100)

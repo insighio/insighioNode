@@ -1,16 +1,18 @@
 # from network import WLAN
 import network
 from machine import RTC
-import utime
+from utime import ticks_ms, sleep_ms, time
 import logging
 
-wl=None
+wl = None
+
 
 def get_instance():
     global wl
     if not wl:
         wl = network.WLAN(network.STA_IF)
     return wl
+
 
 def connect_to_network(wifi_ssid, wifi_pass, max_connection_attempt_time_sec):
     connection_status = False
@@ -24,12 +26,12 @@ def connect_to_network(wifi_ssid, wifi_pass, max_connection_attempt_time_sec):
 
     try:
         # connect
-        start_time = utime.ticks_ms()
+        start_time = ticks_ms()
         connect_timeout = start_time + max_connection_attempt_time_sec * 1000
         wl.connect(wifi_ssid, wifi_pass)
-        while not wl.isconnected() and utime.ticks_ms() < connect_timeout:
-            utime.sleep_ms(10)
-        conn_attempt_duration = utime.ticks_ms() - start_time
+        while not wl.isconnected() and ticks_ms() < connect_timeout:
+            sleep_ms(10)
+        conn_attempt_duration = ticks_ms() - start_time
 
         if wl.isconnected():
             logging.debug("Connected to " + wifi_ssid + " with IP address:" + wl.ifconfig()[0])
@@ -58,10 +60,10 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
             logging.debug("Scanning for known wifi nets")
             get_instance()
             wl.active(True)
-            start_time = utime.ticks_ms()
+            start_time = ticks_ms()
             available_nets = wl.scan()
             nrScannedNetworks = len(available_nets)
-            scan_attempt_duration = utime.ticks_ms() - start_time
+            scan_attempt_duration = ticks_ms() - start_time
             nets = frozenset([e.ssid for e in available_nets])
             known_nets_names = frozenset([key for key in known_nets])
             net_to_use = list(nets & known_nets_names)
@@ -103,7 +105,7 @@ def deactivate():
     """Actions implemented when turning off wifi, before deep sleep"""
 
     deactivation_status = False
-    start_time_deactivation = utime.ticks_ms()
+    start_time_deactivation = ticks_ms()
 
     try:
         get_instance()
@@ -112,7 +114,7 @@ def deactivate():
     except:
         logging.debug("WiFi disconnecting ignored.")
 
-    return (deactivation_status, utime.ticks_ms() - start_time_deactivation)
+    return (deactivation_status, ticks_ms() - start_time_deactivation)
 
 
 def update_time_ntp():
@@ -127,14 +129,14 @@ def update_time_ntp():
     max_tries = 5
     while cnt < max_tries:
         try:
-            epoch_before = utime.time()
+            epoch_before = time()
             ntptime.settime()
             logging.info("time set")
             break
         except:
             logging.info("time failed")
         cnt += 1
-    epoch_diff = utime.time() - epoch_before
+    epoch_diff = time() - epoch_before
     utils.writeToFile("/epoch_diff", "{}".format(epoch_diff))
     logging.info("time after sync: " + str(rtc.datetime()))
 

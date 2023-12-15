@@ -1,4 +1,4 @@
-import utime
+from utime import sleep_ms
 from .dictionary_utils import set_value_float, set_value_int, set_value
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
@@ -58,7 +58,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
     if _sdi12_sensor_switch_list[location] is not None:
         sensors.set_sensor_power_on(_sdi12_sensor_switch_list[location])
     powerOffAllSwitchExcept(location)
-    utime.sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
+    sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
     read_sdi12_sensor(sdi12, address, measurements)
     powerOffAllSwitchExcept()
 
@@ -68,7 +68,7 @@ def shield_measurements(measurements):
     sensors.set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
 
     # get SDI12 measurements
-    utime.sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
+    sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
 
     from external.microsdi12.microsdi12 import SDI12
 
@@ -247,7 +247,7 @@ def current_sense_4_20mA(measurements):
     for i in range(1, 3):
         measure_4_20_mA_on_port(measurements, i)
 
-    utime.sleep_ms(200)
+    sleep_ms(200)
 
 
 def measure_4_20_mA_on_port(measurements, port_id):

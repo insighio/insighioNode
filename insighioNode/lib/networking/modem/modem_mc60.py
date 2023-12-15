@@ -1,5 +1,5 @@
 from . import modem_base
-import utime
+from utime import sleep_ms, ticks_ms
 import ure
 import logging
 
@@ -42,14 +42,14 @@ class ModemMC60(modem_base.Modem):
         print("Starting query gps")
         my_gps = MicropyGPS()
 
-        start_timestamp = utime.ticks_ms()
+        start_timestamp = ticks_ms()
         last_valid_gps_lat = None
         last_valid_gps_lon = None
         max_satellites = 0
         hdop = None
         timeout_timestamp = start_timestamp + timeoutms
         try:
-            while utime.ticks_ms() < timeout_timestamp:
+            while ticks_ms() < timeout_timestamp:
                 counter += 1
                 (status, lines) = self.send_at_cmd('AT+QGNSSRD="NMEA/GGA"')
                 if status and len(lines) > 0:
@@ -87,7 +87,7 @@ class ModemMC60(modem_base.Modem):
                         if my_gps.satellites_in_use >= satellite_number_threshold:
                             gps_fix = True
                             return (self.gps_timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
-                utime.sleep_ms(1000)
+                sleep_ms(1000)
         except KeyboardInterrupt:
             logging.debug("modem_mc60: gps explicitly interupted")
 

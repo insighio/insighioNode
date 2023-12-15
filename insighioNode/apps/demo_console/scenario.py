@@ -1,8 +1,8 @@
 # setup init
 
-import utime
+from utime import ticks_ms, gmtime, sleep_ms, time
 
-start_time = utime.ticks_ms()
+start_time = ticks_ms()
 
 import logging
 
@@ -35,7 +35,7 @@ measurement_run_start_timestamp = None
 
 
 def getUptime(timeOffset=None):
-    uptime = utime.ticks_ms()
+    uptime = ticks_ms()
     if timeOffset is not None:
         uptime -= timeOffset
     return uptime - start_time
@@ -96,7 +96,7 @@ def determine_message_buffering_and_network_connection_necessity():
     execute_connection_procedure = not buffered_upload_enabled
 
     # if RTC is invalid, force network connection
-    if buffered_upload_enabled and utime.gmtime()[0] < 2021:
+    if buffered_upload_enabled and gmtime()[0] < 2021:
         execute_connection_procedure = True
     return (buffered_upload_enabled, execute_connection_procedure)
 
@@ -127,21 +127,21 @@ def executeMeasureAndUploadLoop():
         except:
             logging.debug("no protocol info, ignoring keepalive configuration")
 
-    always_on_start_timestamp = utime.ticks_ms()
+    always_on_start_timestamp = ticks_ms()
     if not always_on:  # or not RTCisValid():
         #     time_to_sleep = 5000 # check connection and upload messages every 5 seconds
         # else:
         time_to_sleep = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
         time_to_sleep = time_to_sleep if time_to_sleep is not None else 60
-        time_to_sleep = time_to_sleep * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
+        time_to_sleep = time_to_sleep * 1000 - (ticks_ms() - always_on_start_timestamp)
         time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
 
-    while True:
+    while 1:
         logging.info("Always on connection activated: " + str(always_on))
-        always_on_start_timestamp = utime.ticks_ms()
+        always_on_start_timestamp = ticks_ms()
         # measurements = {}
         device_info.wdt_reset()
-        measurement_run_start_timestamp = utime.ticks_ms()
+        measurement_run_start_timestamp = ticks_ms()
 
         # get measurements
         logging.debug("Starting getting measurements...")
@@ -176,16 +176,16 @@ def executeMeasureAndUploadLoop():
                 # to allow them to immediatelly upload events
                 pass
             is_first_run = False
-            time_to_sleep = always_on_period * 1000 - (utime.ticks_ms() - always_on_start_timestamp)
+            time_to_sleep = always_on_period * 1000 - (ticks_ms() - always_on_start_timestamp)
             time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
             logging.info("light sleeping for: " + str(time_to_sleep) + " milliseconds")
             gc.collect()
 
-            start_sleep_time = utime.ticks_ms()
+            start_sleep_time = ticks_ms()
             end_sleep_time = start_sleep_time + time_to_sleep
-            while utime.ticks_ms() < end_sleep_time:
+            while ticks_ms() < end_sleep_time:
                 device_info.wdt_reset()
-                utime.sleep_ms(1000)
+                sleep_ms(1000)
             always_on = isAlwaysOnScenario()
 
     # if connection procedure was executed
@@ -256,7 +256,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             # merge results
             measurements = dict(list(measurements.items()) + list(connection_results.items()))
 
-            logging.info("Local time after data connection: {}".format(utime.gmtime()))
+            logging.info("Local time after data connection: {}".format(gmtime()))
 
             if is_connected:
                 notifyConnected(network)
@@ -410,7 +410,7 @@ def executeTimingConfiguration():
         sleep_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
         sleep_period = sleep_period if sleep_period is not None else 600
         if sleep_period % 60 == 0:
-            now_timestamp = utime.time()
+            now_timestamp = time()
             next_tick = now_timestamp + sleep_period
             remaining = (sleep_period - next_tick % sleep_period) * 1000 - measurement_run_start_timestamp
             logging.debug(

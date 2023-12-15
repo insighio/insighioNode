@@ -1,4 +1,4 @@
-import utime
+from utime import ticks_ms, sleep_ms
 from machine import Pin, UART
 import ure
 import logging
@@ -62,7 +62,7 @@ class Modem:
         p0 = Pin(self.modem_power_key, Pin.OUT)
         p0.on()
         logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
-        utime.sleep_ms(1200)
+        sleep_ms(1200)
         p0.off()
         logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
         logging.info("Waiting for the modem to finish power on")
@@ -85,7 +85,7 @@ class Modem:
         p0 = Pin(self.modem_power_key, Pin.OUT)
         p0.on()
         logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
-        utime.sleep_ms(800)
+        sleep_ms(800)
         p0.off()
         p0 = Pin(self.modem_power_on, Pin.OUT)
         p0.off()
@@ -123,7 +123,7 @@ class Modem:
             if has_sim_check:
                 break
             else:
-                utime.sleep_ms(500)
+                sleep_ms(500)
 
         if not has_sim_check:
             return False
@@ -154,10 +154,10 @@ class Modem:
         pass
 
     def get_network_date_time(self):
-        start_timestamp = utime.ticks_ms()
+        start_timestamp = ticks_ms()
         timeout_timestamp = start_timestamp + 10000
         regex = "(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):\\s*(\\d+):(\\d+)([+-]\\d+)"
-        while utime.ticks_ms() < timeout_timestamp:
+        while ticks_ms() < timeout_timestamp:
             (status, lines) = self.send_at_cmd("AT+CCLK?")
             if status and len(lines) > 0:
                 reg_res = ure.search(regex, lines[0])
@@ -188,16 +188,16 @@ class Modem:
                         logging.exception(e, "Error reading network time: ", e)
                         pass
                 logging.debug("Network time not ready yet")
-            utime.sleep_ms(250)
+            sleep_ms(250)
         return (2000, 0, 0, 0, 0, 0, 0, 0)
 
     def wait_for_registration(self, timeoutms=30000):
         status = False
 
-        start_timestamp = utime.ticks_ms()
+        start_timestamp = ticks_ms()
         timeout_timestamp = start_timestamp + timeoutms
         regex_creg = "\\+CREG:\\s+\\d,(\\d)"
-        while utime.ticks_ms() < timeout_timestamp:
+        while ticks_ms() < timeout_timestamp:
             (status, lines) = self.send_at_cmd("AT+CREG?")
             if status and len(lines) > 0:
                 regex_match = None
@@ -205,7 +205,7 @@ class Modem:
                     regex_match = ure.search(regex_creg, line)
                     if regex_match and (regex_match.group(1) == "1" or regex_match.group(1) == "5"):
                         return True
-            utime.sleep_ms(100)
+            sleep_ms(100)
         return False
 
     def attach(self, do_attach=True):
@@ -234,13 +234,13 @@ class Modem:
         self.ppp.active(True)
         self.ppp.connect()
 
-        start_timestamp = utime.ticks_ms()
+        start_timestamp = ticks_ms()
         timeout_timestamp = start_timestamp + timeoutms
-        while utime.ticks_ms() < timeout_timestamp:
+        while ticks_ms() < timeout_timestamp:
             self.connected = self.is_connected()
             if self.connected:
                 break
-            utime.sleep_ms(100)
+            sleep_ms(100)
 
         return self.connected
 
@@ -363,7 +363,7 @@ class Modem:
         if not write_success:
             return (status, ["error: can not send command"])
 
-        start_timestamp = utime.ticks_ms()
+        start_timestamp = ticks_ms()
         timeout_timestamp = start_timestamp + timeoutms
 
         success_regex = "^([\\w\\s\\+]+)?" + success_condition
@@ -371,11 +371,11 @@ class Modem:
         first_line = True
         is_echo_on = True
 
-        while True:
+        while 1:
             device_info.wdt_reset()
 
             remaining_bytes = self.uart.any()
-            if utime.ticks_ms() >= timeout_timestamp:
+            if ticks_ms() >= timeout_timestamp:
                 if status is None:
                     status = False
                 break
@@ -412,7 +412,7 @@ class Modem:
                     except Exception as e:
                         logging.exception(e, "Excluding line from success matching...")
 
-            utime.sleep_ms(5)
+            sleep_ms(5)
 
         if status is None:
             status = False

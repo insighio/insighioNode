@@ -4,7 +4,7 @@ from external.kpn_senml.senml_record import SenmlRecord
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
-import utime
+from utime import sleep_ms, ticks_ms
 
 transfer_client = None
 mqtt_connected = False
@@ -139,10 +139,10 @@ def get_gps_position(cfg, measurements, keep_open=False):
             if modem_instance.set_gps_state(True):
                 break
             modem_instance.set_gps_state(False)
-            utime.sleep_ms(500)
+            sleep_ms(500)
 
     if modem_instance.is_gps_on():
-        start_time = utime.ticks_ms()
+        start_time = ticks_ms()
 
         timeout_ms = 120000
         min_satellite_fix_num = 4
@@ -153,7 +153,7 @@ def get_gps_position(cfg, measurements, keep_open=False):
             min_satellite_fix_num = cfg.get("_MEAS_GPS_SATELLITE_FIX_NUM")
 
         (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(timeout_ms, min_satellite_fix_num)
-        add_value_if_valid(measurements, "gps_dur", utime.ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+        add_value_if_valid(measurements, "gps_dur", ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         if lat is not None and lon is not None:
             latD = coord_to_double(lat[0], lat[1], lat[2])
             lonD = coord_to_double(lon[0], lon[1], lon[2])

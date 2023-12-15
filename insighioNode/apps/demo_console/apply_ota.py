@@ -2,7 +2,7 @@ import uctypes
 import uos
 import sys
 import uerrno
-import device_info
+from device_info import get_device_root_folder
 import logging
 
 ###############################
@@ -126,7 +126,7 @@ def mkdir(directoryPath):
 def copyfileobj(src, dest, length=512):
     if hasattr(src, "readinto"):
         buf = bytearray(length)
-        while True:
+        while 1:
             sz = src.readinto(buf)
             if not sz:
                 break
@@ -136,7 +136,7 @@ def copyfileobj(src, dest, length=512):
                 b = memoryview(buf)[:sz]
                 dest.write(b)
     else:
-        while True:
+        while 1:
             buf = src.read(length)
             if not buf:
                 break
@@ -214,7 +214,7 @@ def decompress_file_streamed(compressed_file_name):
 
 
 def do_apply(package_file=None):
-    flashRootFolder = device_info.get_device_root_folder()
+    flashRootFolder = get_device_root_folder()
 
     is_compressed = False
     if package_file is None:

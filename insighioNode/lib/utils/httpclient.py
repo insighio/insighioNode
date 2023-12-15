@@ -151,7 +151,7 @@ class HttpClient:
             reason = ""
             if len(l) > 2:
                 reason = l[2].rstrip()
-            while True:
+            while 1:
                 l = s.readline()
                 if not l or l == b"\r\n":
                     break

@@ -4,7 +4,7 @@ import machine
 import uos
 import ubinascii
 import logging
-import utime
+from utime import sleep_ms
 
 wdt = None
 wdt_timeout = None
@@ -217,7 +217,7 @@ def set_led_color(color):
 
 def blink_led(color):
     set_led_color(color)
-    utime.sleep_ms(100)
+    sleep_ms(100)
     set_led_color(0x000000)
 
 

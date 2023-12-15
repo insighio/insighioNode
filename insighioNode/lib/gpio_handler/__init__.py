@@ -1,4 +1,4 @@
-import utime
+from utime import sleep_ms
 import device_info
 
 from machine import ADC, Pin
@@ -7,7 +7,7 @@ from machine import ADC, Pin
 
 import logging
 
-_NUM_ADC_READINGS = const(500)
+_NUM_ADC_READINGS = 500
 
 
 def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cycles=_NUM_ADC_READINGS):
@@ -86,5 +86,5 @@ def check_minimum_voltage_threshold():
 def timed_pin_pull_up(pin, durationms=500):
     set_pin_value(pin, 0)
     set_pin_value(pin, 1)
-    utime.sleep_ms(durationms)
+    sleep_ms(durationms)
     set_pin_value(pin, 0)

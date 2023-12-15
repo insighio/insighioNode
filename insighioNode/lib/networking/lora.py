@@ -1,4 +1,4 @@
-import utime
+from utime import ticks_ms, sleep_ms
 import ubinascii
 import logging
 
@@ -77,9 +77,9 @@ def join(cfg, lora_keys):
     #     logging.debug("Restored LoRa status from NVRAM")
 
     # join network
-    start_time = utime.ticks_ms()
+    start_time = ticks_ms()
     join_status = modem.join()
-    return (join_status, utime.ticks_ms() - start_time)
+    return (join_status, ticks_ms() - start_time)
     #     # set the 3 default channels to the same frequency (must be before sending the OTAA join request)
     #     config_dr = cfg._LORA_DR if cfg._LORA_DR is not None else 5
     #     try:
@@ -87,13 +87,13 @@ def join(cfg, lora_keys):
     #
     #         join_timeout = start_time + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
     #         # wait until the module has joined the network
-    #         while not lora.has_joined() and utime.ticks_ms() < join_timeout:
-    #             utime.sleep_ms(10)
+    #         while not lora.has_joined() and ticks_ms() < join_timeout:
+    #             sleep_ms(10)
     #             # print('Not yet joined...')
     #     except Exception as e:
     #         logging.exception(e, "exception during LoRA join")
     #
-    # conn_attempt_duration = utime.ticks_ms() - start_time
+    # conn_attempt_duration = ticks_ms() - start_time
     # if lora.has_joined():
     #     logging.debug('Lora has joined the network sucessfully in {} sec'.format(conn_attempt_duration))
     #     # save status for potential deep sleep

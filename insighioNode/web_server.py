@@ -4,7 +4,7 @@ import sys
 from external import tinyweb
 
 import device_info
-import utime
+from utime import ticks_ms
 import logging
 import uasyncio
 
@@ -275,7 +275,7 @@ async def server_loop(server_instance, timeoutMs):
 
     # Main program loop until keyboard interrupt,
     try:
-        start_time = utime.ticks_ms()
+        start_time = ticks_ms()
         end_time = start_time + timeoutMs
         # 5 minutes timeout if timeoutMs is > -1 and someone has connected to the wifi
         # self.wlan.isconnected() is confirmed to be NOT supported by firmware 1.18
@@ -291,7 +291,7 @@ async def server_loop(server_instance, timeoutMs):
         keep_active_after_connection = False
         now = 0
         cnt = 0
-        while True:
+        while 1:
             is_connected = wlan.isconnected()
             # if is_connected:
             #     print("_", end='')
@@ -301,7 +301,7 @@ async def server_loop(server_instance, timeoutMs):
             if is_connected:
                 keep_active_after_connection = True
 
-            now = utime.ticks_ms()
+            now = ticks_ms()
             if (
                 timeoutMs <= 0
                 or (not keep_active_after_connection and now < end_time)

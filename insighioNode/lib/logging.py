@@ -1,5 +1,5 @@
 import sys
-import utime
+from utime import ticks_ms
 
 CRITICAL = 50
 ERROR = 40
@@ -32,12 +32,12 @@ class Logger(object):
         global _level
         if level >= (self.level or _level):
             try:
-                print("[{}:{:6d}] {}".format(self._level_str(level), utime.ticks_ms(), msg % args))
+                print("[{}:{:6d}] {}".format(self._level_str(level), ticks_ms(), msg % args))
                 return
             except TypeError as te:
                 pass
             try:
-                print("[{}:{:6d}] {}".format(self._level_str(level), utime.ticks_ms(), msg))
+                print("[{}:{:6d}] {}".format(self._level_str(level), ticks_ms(), msg))
             except TypeError as te:
                 pass
 

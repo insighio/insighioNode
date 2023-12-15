@@ -53,9 +53,8 @@ def appendToFile(destination, content):
 
 def writeToFile(destination, content, do_append=False):
     try:
-        out_file = open(destination, "w" if not do_append else "a")
-        out_file.write(content)
-        out_file.close()
+        with open(destination, "w" if not do_append else "a") as file:
+            file.write(content)
         return True
     except Exception as e:
         logging.exception(e, "Error writing to file [{}]".format(destination))
@@ -64,8 +63,6 @@ def writeToFile(destination, content, do_append=False):
 
 def deleteFile(destination):
     try:
-        import uos
-
         uos.remove(destination)
     except Exception as e:
         logging.exception(e, "Error deleting file [{}]".format(destination))
@@ -74,14 +71,9 @@ def deleteFile(destination):
 
 def countFileLines(fname):
     lines = 0
-    buf_size = 256
-    has_any_bytes = False
     try:
         with open(fname) as f:
-            buf = f.read(buf_size)
-            while buf:
-                lines += buf.count("\n")
-                buf = f.read(buf_size)
+            lines = len(f.readlines())
     except:
         pass
 

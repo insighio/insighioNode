@@ -1,5 +1,5 @@
 from . import modem_base
-import utime
+from utime import sleep_ms, ticks_ms
 import logging
 import ure
 import device_info
@@ -51,7 +51,7 @@ class ModemBG600(modem_base.Modem):
             self.send_at_cmd('AT+QCFG="nwscanmode",{},0'.format(nwscanmode_expected))
             self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
             self.send_at_cmd("ATE0")
-            utime.sleep_ms(1000)
+            sleep_ms(1000)
 
     def wait_for_modem_power_off(self):
         self.send_at_cmd("", 5000, "NORMAL POWER DOWN")
@@ -61,14 +61,14 @@ class ModemBG600(modem_base.Modem):
             self.reset_uart()
             self.send_at_cmd('AT+QGPSCFG="priority",1,0')
             self._last_prioritization_is_gnss = False
-            utime.sleep_ms(1000)
+            sleep_ms(1000)
 
     def prioritizeGNSS(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == False:
             self.reset_uart()
             self.send_at_cmd('AT+QGPSCFG="priority",0,0')
             self._last_prioritization_is_gnss = True
-            utime.sleep_ms(1000)
+            sleep_ms(1000)
 
     def connect(self, timeoutms=30000):
         for i in range(0, 5):
@@ -142,7 +142,7 @@ class ModemBG600(modem_base.Modem):
 
         self.prioritizeGNSS()
 
-        start_timestamp = utime.ticks_ms()
+        start_timestamp = ticks_ms()
         last_valid_gps_lat = None
         last_valid_gps_lon = None
         max_satellites = 0
@@ -150,7 +150,7 @@ class ModemBG600(modem_base.Modem):
         hdop_thresh = 2
         timeout_timestamp = start_timestamp + timeoutms
         try:
-            while utime.ticks_ms() < timeout_timestamp:
+            while ticks_ms() < timeout_timestamp:
                 (status, lines) = self.send_at_cmd('AT+QGPSGNMEA="GGA"')
                 if status and len(lines) > 0:
                     if lines[0].startswith("+QGPSGNMEA:"):
@@ -187,7 +187,7 @@ class ModemBG600(modem_base.Modem):
                         if my_gps.satellites_in_use >= satellite_number_threshold or (my_gps.hdop > 0 and my_gps.hdop <= hdop_thresh):
                             gps_fix = True
                             return (self.gps_timestamp, my_gps.latitude, my_gps.longitude, my_gps.satellites_in_use, my_gps.hdop)
-                utime.sleep_ms(1000)
+                sleep_ms(1000)
         except KeyboardInterrupt:
             logging.debug("modem_bg600: gps explicitly interupted")
 
@@ -211,7 +211,7 @@ class ModemBG600(modem_base.Modem):
                 if len(lines) > 0 and lines[-1].endswith("0,2"):
                     return True
                 break
-            utime.sleep_ms(1000)
+            sleep_ms(1000)
 
         if mqtt_ready:
             retry = 0
@@ -222,7 +222,7 @@ class ModemBG600(modem_base.Modem):
                 )
                 if mqtt_connected:
                     break
-                utime.sleep_ms(1000)
+                sleep_ms(1000)
             return mqtt_connected
         else:
             logging.error("Mqtt not ready")
@@ -251,7 +251,7 @@ class ModemBG600(modem_base.Modem):
                 if mqtt_send_ready:
                     break
                 logging.error("Mqtt not ready to send")
-                utime.sleep_ms(500)
+                sleep_ms(500)
 
             if mqtt_send_ready:
                 for i in range(0, 2):
@@ -264,7 +264,7 @@ class ModemBG600(modem_base.Modem):
                     if mqtt_send_ok:
                         break
                     logging.error("Mqtt publish failed")
-                    utime.sleep_ms(500)
+                    sleep_ms(500)
             if message_sent:
                 break
 
@@ -347,7 +347,7 @@ class ModemBG600(modem_base.Modem):
         buffer = None
         responseLines = []
         is_echo_on = True
-        start_timestamp = utime.ticks_ms()
+        start_timestamp = ticks_ms()
         timeout_timestamp = start_timestamp + timeout_ms
         success_regex = "^([\\w\\s\\+]+)?OK$"
         error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
@@ -358,11 +358,11 @@ class ModemBG600(modem_base.Modem):
         if not write_success:
             return buffer
 
-        while True:
+        while 1:
             device_info.wdt_reset()
 
             remaining_bytes = self.uart.any()
-            if utime.ticks_ms() >= timeout_timestamp:
+            if ticks_ms() >= timeout_timestamp:
                 if status is None:
                     status = False
                 break
@@ -392,7 +392,7 @@ class ModemBG600(modem_base.Modem):
                 elif ure.search(error_regex, line) is not None:
                     status = False
 
-            utime.sleep_ms(50)
+            sleep_ms(50)
 
         if status is None:
             status = False
@@ -438,7 +438,7 @@ class ModemBG600(modem_base.Modem):
                 return False
             fw.write(buffer)
             data_read += byte_length_to_request
-            utime.sleep_ms(10)
+            sleep_ms(10)
         fw.close()
         (file_close_status, _) = self.send_at_cmd("AT+QFCLOSE=" + file_handle)
         return data_read == file_size
@@ -527,14 +527,14 @@ class ModemBG600(modem_base.Modem):
             )
             if coap_is_opening:
                 break
-            utime.sleep_ms(1000)
+            sleep_ms(1000)
 
         while retry < max_retries:
             retry += 1
             coap_opened = self.coap_is_connected()
             if coap_opened:
                 return True
-            utime.sleep_ms(1000)
+            sleep_ms(1000)
 
         return False
 
@@ -585,7 +585,7 @@ class ModemBG600(modem_base.Modem):
                 if coap_send_ready:
                     break
                 logging.error("CoAP not ready to send")
-                utime.sleep_ms(500)
+                sleep_ms(500)
 
             if coap_send_ready:
                 for i in range(0, 2):
@@ -599,7 +599,7 @@ class ModemBG600(modem_base.Modem):
                     if coap_send_ok:
                         break
                     logging.error("CoAP publish failed")
-                    utime.sleep_ms(500)
+                    sleep_ms(500)
             if message_sent:
                 break
 

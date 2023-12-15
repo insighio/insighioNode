@@ -1,5 +1,5 @@
 import device_info
-import utime
+from utime import sleep_ms, ticks_ms, time
 import logging
 import utils
 
@@ -53,7 +53,7 @@ def detect_modem():
     # if modem is still not responding, try power off/on
     if not model_name:
         modemInst.power_off()
-        utime.sleep_ms(1000)
+        sleep_ms(1000)
         modemInst.power_on()
         model_name = modemInst.get_model()
 
@@ -118,17 +118,17 @@ def connect(cfg):
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
-        start_activation_duration = utime.ticks_ms()
+        start_activation_duration = ticks_ms()
         if modemInst.wait_for_registration(120000):
             # print("Modem activated (AT+CFUN=1), continuing...")
             # logging.debug("Deattaching (precautionary)")
             # modemInst.attach(False)
-            # utime.sleep_ms(1000)
+            # sleep_ms(1000)
 
             status = MODEM_ACTIVATED
-            activation_duration = utime.ticks_ms() - start_activation_duration
+            activation_duration = ticks_ms() - start_activation_duration
             # proceed with attachment
-            start_attachment_duration = utime.ticks_ms()
+            start_attachment_duration = ticks_ms()
             attachment_timeout = start_attachment_duration + cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC * 1000
 
             modemInst.get_registered_mcc_mnc()
@@ -137,14 +137,14 @@ def connect(cfg):
                 logging.debug("Attaching...")
                 modemInst.attach()
                 # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
-                while not modemInst.is_attached() and (utime.ticks_ms() < attachment_timeout):
-                    utime.sleep_ms(10)
+                while not modemInst.is_attached() and (ticks_ms() < attachment_timeout):
+                    sleep_ms(10)
 
             update_rtc_from_network_time(modemInst)
 
             if modemInst.is_attached():
                 status = MODEM_ATTACHED
-                attachment_duration = utime.ticks_ms() - start_attachment_duration
+                attachment_duration = ticks_ms() - start_attachment_duration
                 logging.debug("Modem attached")
 
                 # signal quality
@@ -157,7 +157,7 @@ def connect(cfg):
                 # ready to connect
                 if modemInst.has_data_over_ppp():
                     logging.debug("Entering Data State. Modem connecting...")
-                    start_connection_duration = utime.ticks_ms()
+                    start_connection_duration = ticks_ms()
                     connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
                     if not modemInst.is_connected():
                         modemInst.connect()
@@ -166,7 +166,7 @@ def connect(cfg):
                         # modemInst.force_time_update()
                         # update_rtc_from_network_time(modemInst)
                         status = MODEM_CONNECTED
-                        connection_duration = utime.ticks_ms() - start_connection_duration
+                        connection_duration = ticks_ms() - start_connection_duration
                         logging.debug("Modem connected")
                         device_info.set_led_color("yellow")
                 else:
@@ -220,9 +220,9 @@ def update_rtc_from_network_time(modem):
         if time_tuple is not None:
             logging.debug("Setting cellular RTC with: " + str(time_tuple))
 
-            epoch_before = utime.time()
+            epoch_before = time()
             rtc.datetime(time_tuple)
-            epoch_diff = utime.time() - epoch_before
+            epoch_diff = time() - epoch_before
             utils.writeToFile("/epoch_diff", "{}".format(epoch_diff))
 
             logging.debug("New RTC: " + str(rtc.datetime()))
@@ -235,7 +235,7 @@ def deactivate():
 
     modemInst = get_modem_instance()
     deactivation_status = False
-    start_time_deactivation = utime.ticks_ms()
+    start_time_deactivation = ticks_ms()
 
     try:
         if modemInst:
@@ -249,4 +249,4 @@ def deactivate():
     except Exception as e:
         logging.exception(e, "Error in deactivation")
 
-    return (deactivation_status, utime.ticks_ms() - start_time_deactivation)
+    return (deactivation_status, ticks_ms() - start_time_deactivation)
