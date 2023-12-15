@@ -6,24 +6,13 @@ start_time = ticks_ms()
 
 import logging
 
-logging.debug("s1")
 from . import cfg
-
-logging.debug("s2")
 from . import message_buffer
-
-logging.debug("s3")
 from . import scenario_utils
-
-logging.debug("s4")
 from .dictionary_utils import set_value_int
-
-logging.debug("s5")
 import device_info
-
-logging.debug("s6")
+from device_info import set_led_color, wdt_reset
 import gc
-
 import machine
 import utils
 
@@ -82,13 +71,13 @@ def executeDeviceInitialization():
         wdt_on_boot_timeout_sec=cfg.get("_WD_PERIOD"),
         bt_on_boot=False,
     )
-    device_info.set_led_color("blue")
+    set_led_color("blue")
     _DEVICE_ID = device_info.get_device_id()[0]
     cfg.set("device_id", _DEVICE_ID)
     logging.info("Device ID in readable form: {}".format(_DEVICE_ID))
 
     # wachdog reset
-    scenario_utils.watchdog_reset()
+    wdt_reset()
 
 
 def determine_message_buffering_and_network_connection_necessity():
@@ -140,7 +129,7 @@ def executeMeasureAndUploadLoop():
         logging.info("Always on connection activated: " + str(always_on))
         always_on_start_timestamp = ticks_ms()
         # measurements = {}
-        device_info.wdt_reset()
+        wdt_reset()
         measurement_run_start_timestamp = ticks_ms()
 
         # get measurements
@@ -184,7 +173,7 @@ def executeMeasureAndUploadLoop():
             start_sleep_time = ticks_ms()
             end_sleep_time = start_sleep_time + time_to_sleep
             while ticks_ms() < end_sleep_time:
-                device_info.wdt_reset()
+                wdt_reset()
                 sleep_ms(1000)
             always_on = isAlwaysOnScenario()
 
@@ -244,7 +233,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             is_connected = True
         else:
             if not is_first_run:
-                device_info.set_led_color("red")
+                set_led_color("red")
                 network.disconnect()
             logging.info("Connecting to network over: " + selected_network)
             connection_results = network.connect(cfg)
@@ -283,7 +272,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             logging.debug("Network [" + selected_network + "] connected: " + str(is_connected))
 
         if is_connected:
-            device_info.set_led_color("green")
+            set_led_color("green")
 
             if is_first_run:
                 executeDeviceConfigurationUpload(cfg, network)
@@ -297,10 +286,10 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
                 network.check_and_apply_ota(cfg)
         else:
             logging.debug("Network [" + selected_network + "] connected: False")
-            device_info.set_led_color("red")
+            set_led_color("red")
 
     except Exception as e:
-        device_info.set_led_color("red")
+        set_led_color("red")
         logging.exception(e, "Exception while sending data:")
         return False
 
@@ -317,7 +306,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
         try:
             notifyDisconnected(network)
             network.disconnect()
-            device_info.set_led_color("red")
+            set_led_color("red")
         except Exception as e:
             logging.exception(e, "Exception during disconnection:")
     return message_sent

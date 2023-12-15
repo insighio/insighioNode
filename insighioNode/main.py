@@ -5,12 +5,12 @@ sys.path.append("/lib")
 sys.path.append(".frozen")
 sys.path.append("")
 
-import utime
+from utime import ticks_ms
 import logging
 
 # logging.setLevel(logging.ERROR)
 logging.setLevel(logging.DEBUG)
-logging.debug("start timestamp: " + str(utime.ticks_ms()))
+logging.debug("start timestamp: " + str(ticks_ms()))
 
 # main.py -- put your code here!
 import device_info
@@ -55,6 +55,13 @@ try:
 except:
     pass
 
+
+# try:
+#     import machine
+#
+#     machine.freq(240000000)
+# except:
+#     pass
 
 import apps.demo_console.scenario as scenario
 

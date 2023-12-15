@@ -49,14 +49,6 @@ def device_deinit():
     gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 0)
 
 
-def watchdog_reset():
-    # first reset internal hardware watchdog
-    device_info.wdt_reset()
-
-    # then reset external hardware watchdog
-    gpio_handler.timed_pin_pull_up(cfg.get("_UC_IO_WATCHDOG_RESET"), 500)
-
-
 # functions
 def get_measurements(cfg_dummy=None):
     measurements = {}

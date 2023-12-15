@@ -3,7 +3,7 @@ import network
 import sys
 from external import tinyweb
 
-import device_info
+from device_info import get_hw_module_version, get_device_id, get_hw_module_version, set_led_color, wdt_reset
 from utime import ticks_ms
 import logging
 import uasyncio
@@ -12,7 +12,7 @@ insighioSettings = None
 wlan = None
 app = None
 
-hw_version = device_info.get_hw_module_version()
+hw_version = get_hw_module_version()
 
 
 def populateAvailableNets():
@@ -37,17 +37,17 @@ def populateAvailableNets():
     return available_nets
 
 
-ssidCustom = "insigh-" + device_info.get_device_id()[0][-4:]
+ssidCustom = "insigh-" + get_device_id()[0][-4:]
 logging.info("SSID: " + ssidCustom)
-logging.info("Original device id: " + device_info.get_device_id()[0])
+logging.info("Original device id: " + get_device_id()[0])
 
 
 class DevID:
     def get(self, data):
         logging.debug("[web-server][GET]: /devid")
         return {
-            "id": device_info.get_device_id()[0],
-            "hw_module": device_info.get_hw_module_version(),
+            "id": get_device_id()[0],
+            "hw_module": get_hw_module_version(),
         }, 200
 
 
@@ -67,7 +67,7 @@ class Settings:
                 logging.exception(e, "Unable to retrieve old configuration")
 
             insighioSettings["hw_module"] = hw_version
-            insighioSettings["board_mac"] = device_info.get_device_id()[0]
+            insighioSettings["board_mac"] = get_device_id()[0]
 
         if data.get("update_wifi_list") == "1":
             insighioSettings["wifiAvailableNets"] = populateAvailableNets()
@@ -269,9 +269,9 @@ async def server_loop(server_instance, timeoutMs):
     logging.info("Web UI started")
 
     purple = 0x4C004C
-    device_info.set_led_color(purple)
+    set_led_color(purple)
 
-    device_info.wdt_reset()
+    wdt_reset()
 
     # Main program loop until keyboard interrupt,
     try:
@@ -312,11 +312,11 @@ async def server_loop(server_instance, timeoutMs):
                 break
 
             if cnt % 10 == 0:
-                device_info.wdt_reset()
-                device_info.set_led_color(purple)
+                wdt_reset()
+                set_led_color(purple)
             else:
                 if not is_connected:
-                    device_info.set_led_color("black")
+                    set_led_color("black")
 
             cnt += 1
             await uasyncio.sleep_ms(100)
@@ -328,7 +328,7 @@ def start(timeoutMs=120000):
     global wlan
     global app
     logging.info("\n\n** Init WLAN mode and WAP2")
-    device_info.wdt_reset()
+    wdt_reset()
     wlan = network.WLAN(network.AP_IF)
     wlan.active(True)
     wlan.config(essid=ssidCustom)  # set the ESSID of the access point
@@ -336,7 +336,7 @@ def start(timeoutMs=120000):
     wlan.config(authmode=3)  # 3 -- WPA2-PSK
     wlan.config(max_clients=1)  # set how many clients can connect to the network
 
-    device_info.wdt_reset()
+    wdt_reset()
 
     app = tinyweb.webserver(10, 6, 16, False)
 
@@ -410,7 +410,7 @@ def start(timeoutMs=120000):
 
     hx711.deinit_instance()
 
-    device_info.set_led_color("black")
+    set_led_color("black")
 
     try:
         app.shutdown()
@@ -418,7 +418,7 @@ def start(timeoutMs=120000):
     except Exception as e:
         logging.exception(e, "failed to shutdown web server properly")
 
-    device_info.set_led_color("black")
+    set_led_color("black")
 
     wlan.active(False)
     logging.info("Bye\n")

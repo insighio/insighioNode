@@ -2,7 +2,7 @@ from . import modem_base
 from utime import sleep_ms, ticks_ms
 import logging
 import ure
-import device_info
+from device_info import wdt_reset, get_device_id
 from external.micropyGPS.micropyGPS import MicropyGPS
 import math
 
@@ -218,7 +218,7 @@ class ModemBG600(modem_base.Modem):
             while retry < max_retries:
                 retry += 1
                 (mqtt_connected, _) = self.send_at_cmd(
-                    'AT+QMTCONN=1,"{}","{}","{}"'.format(device_info.get_device_id()[0], username, password), 15000, "\\+QMTCONN:\\s+1,0,0"
+                    'AT+QMTCONN=1,"{}","{}","{}"'.format(get_device_id()[0], username, password), 15000, "\\+QMTCONN:\\s+1,0,0"
                 )
                 if mqtt_connected:
                     break
@@ -359,7 +359,7 @@ class ModemBG600(modem_base.Modem):
             return buffer
 
         while 1:
-            device_info.wdt_reset()
+            wdt_reset()
 
             remaining_bytes = self.uart.any()
             if ticks_ms() >= timeout_timestamp:
@@ -575,7 +575,7 @@ class ModemBG600(modem_base.Modem):
 
         message_id = int(random.random() * 65530) + 1
 
-        self.send_at_cmd('AT+QCOAPHEADER=2,{},0,6,"{}"'.format(message_id, device_info.get_device_id()[0]), 15000)
+        self.send_at_cmd('AT+QCOAPHEADER=2,{},0,6,"{}"'.format(message_id, get_device_id()[0]), 15000)
 
         send_success_regex = r"\+QCOAPACK:\s*2,\d+,\d+,0"
 

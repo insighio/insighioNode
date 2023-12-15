@@ -2,7 +2,7 @@ from utime import ticks_ms, sleep_ms
 from machine import Pin, UART
 import ure
 import logging
-import device_info
+from device_info import wdt_reset
 import utils
 
 # TODO: check if some regexes need to be precompiled: ure.compile('\d+mplam,pla')
@@ -372,7 +372,7 @@ class Modem:
         is_echo_on = True
 
         while 1:
-            device_info.wdt_reset()
+            wdt_reset()
 
             remaining_bytes = self.uart.any()
             if ticks_ms() >= timeout_timestamp:

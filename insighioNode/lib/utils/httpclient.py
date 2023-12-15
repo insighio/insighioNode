@@ -1,5 +1,5 @@
 import usocket, os, gc
-import device_info
+from device_info import wdt_reset
 
 # from here: https://github.com/rdehuyss/micropython-ota-updater/blob/master/app/httpclient.py
 CHUNK_SIZE = const(512)  # bytes
@@ -15,7 +15,7 @@ class Response:
                 data = self._socket.read(CHUNK_SIZE)
                 while data:
                     print("saving http file, reading chunk: " + str(CHUNK_SIZE))
-                    device_info.wdt_reset()
+                    wdt_reset()
                     outfile.write(data)
                     data = self._socket.read(CHUNK_SIZE)
                 outfile.close()
