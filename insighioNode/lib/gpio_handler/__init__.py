@@ -67,7 +67,7 @@ def set_pin_value(pin, value):
 
 # if voltage is undef 3 Volt and this can be used to terminate the process loop till
 # the battery is adequately charged
-def check_minimum_voltage_threshold():
+def check_minimum_voltage_threshold(vthreshold=3000):
     import machine
     import uos
 
@@ -79,7 +79,7 @@ def check_minimum_voltage_threshold():
     set_pin_value(_UC_IO_BAT_MEAS_ON, 1)
     voltage = get_input_voltage(_UC_IO_BAT_READ, 2, machine.ADC.ATTN_11DB)
     set_pin_value(_UC_IO_BAT_MEAS_ON, 0)
-    if voltage < 3000:
+    if voltage < vthreshold:
         machine.deepsleep(3600000)
 
 
