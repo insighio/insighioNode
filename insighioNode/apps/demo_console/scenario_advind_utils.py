@@ -3,6 +3,7 @@ from .dictionary_utils import set_value_float, set_value_int, set_value
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
+from sensors import set_sensor_power_on, set_sensor_power_off
 
 from . import cfg
 
@@ -27,14 +28,14 @@ def powerOnAllSwitchExcept(excludedIndex=None):
     for i in range(1, 11):
         if excludedIndex == i or _sdi12_sensor_switch_list[i] is None:
             continue
-        sensors.set_sensor_power_on(_sdi12_sensor_switch_list[i])
+        set_sensor_power_on(_sdi12_sensor_switch_list[i])
 
 
 def powerOffAllSwitchExcept(excludedIndex=None):
     for i in range(1, 11):
         if excludedIndex == i or _sdi12_sensor_switch_list[i] is None:
             continue
-        sensors.set_sensor_power_off(_sdi12_sensor_switch_list[i])
+        set_sensor_power_off(_sdi12_sensor_switch_list[i])
 
 
 def executeSDI12Measurement(sdi12, measurements, index):
@@ -56,7 +57,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
             pass
 
     if _sdi12_sensor_switch_list[location] is not None:
-        sensors.set_sensor_power_on(_sdi12_sensor_switch_list[location])
+        set_sensor_power_on(_sdi12_sensor_switch_list[location])
     powerOffAllSwitchExcept(location)
     sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
     read_sdi12_sensor(sdi12, address, measurements)
@@ -65,7 +66,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
 
 def shield_measurements(measurements):
     # power on SDI12 regulator
-    sensors.set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
+    set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
 
     # get SDI12 measurements
     sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
@@ -94,7 +95,7 @@ def shield_measurements(measurements):
         logging.exception(e, "Exception while reading 4_20mA data")
 
     # power off SDI12 regulator
-    sensors.set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
+    set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
 
 
 def read_sdi12_sensor(sdi12, address, measurements):
