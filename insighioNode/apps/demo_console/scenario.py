@@ -16,8 +16,6 @@ import gc
 import machine
 import utils
 
-logging.debug("s7")
-
 # Globals
 timeDiffAfterNTP = None
 measurement_run_start_timestamp = None
@@ -142,6 +140,14 @@ def executeMeasureAndUploadLoop():
 
         # if the RTC is OK, timestamp message
         if buffered_upload_enabled and not execute_connection_procedure:
+            uptime = getUptime(timeDiffAfterNTP)
+
+            set_value_int(
+                measurements,
+                "uptime",
+                uptime if is_first_run else (uptime - measurement_run_start_timestamp),
+                SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
+            )
             measurementStored = scenario_utils.storeMeasurement(measurements, False)
             # if always on, do run connect and upload
             # else run connection only if measurement was not stored
