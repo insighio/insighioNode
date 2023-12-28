@@ -223,7 +223,7 @@ def update_rtc_from_network_time(modem):
             epoch_before = time()
             rtc.datetime(time_tuple)
             epoch_diff = time() - epoch_before
-            utils.writeToFile("/epoch_diff", "{}".format(epoch_diff))
+            utils.writeToFlagFile("/epoch_diff", "{}".format(epoch_diff))
 
             logging.debug("New RTC: " + str(rtc.datetime()))
     except Exception as e:

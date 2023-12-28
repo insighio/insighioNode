@@ -137,7 +137,7 @@ def update_time_ntp():
             logging.info("time failed")
         cnt += 1
     epoch_diff = time() - epoch_before
-    utils.writeToFile("/epoch_diff", "{}".format(epoch_diff))
+    utils.writeToFlagFile("/epoch_diff", "{}".format(epoch_diff))
     logging.info("time after sync: " + str(rtc.datetime()))
 
 
