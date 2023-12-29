@@ -5,6 +5,7 @@ import utime
 import logging
 from external.kpn_senml.senml_unit import SenmlUnits
 from .dictionary_utils import set_value, set_value_int
+from . import cfg
 
 
 def setup_assembly(is_high_freq, port_number):
@@ -28,7 +29,7 @@ loop_detected:
 	st r2, r3, 0
 
 	SLEEP 100
-	jump entry        
+	jump entry
 """
     )
     return """\
@@ -146,7 +147,7 @@ def read_ulp_values(measurements, formula):
     loops = value(2)
 
     # read last pcnt saved timestamp
-    last_timestamp = utils.readFromFile(TIMESTAMP_FLAG_FILE)
+    last_timestamp = utils.readFromFlagFile(TIMESTAMP_FLAG_FILE)
     now_timestamp = utime.time()
 
     logging.debug("last_timestamp: {}, now_timestamp: {}".format(last_timestamp, now_timestamp))
@@ -155,9 +156,9 @@ def read_ulp_values(measurements, formula):
     setval(1, 0x0)
     setval(2, 0x0)
 
-    utils.writeToFile(TIMESTAMP_FLAG_FILE, "{}".format(now_timestamp))
+    utils.writeToFlagFile(TIMESTAMP_FLAG_FILE, "{}".format(now_timestamp))
 
-    # execute calculcations
+    # execute calculations
 
     time_diff_from_prev = -1
     try:
@@ -167,7 +168,7 @@ def read_ulp_values(measurements, formula):
             time_diff_from_prev = -1
         elif time_diff_from_prev > 86400:  # if bigger than one day
             # check if epoch_diff is stored
-            epoch_diff = utils.readFromFile("/epoch_diff")
+            epoch_diff = utils.readFromFlagFile("/epoch_diff")
             logging.debug("reading epoch diff: {}".format(epoch_diff))
             if epoch_diff:
                 epoch_diff = int(epoch_diff)
@@ -181,15 +182,16 @@ def read_ulp_values(measurements, formula):
     except:
         pass
 
+    if time_diff_from_prev > 0 or cfg.is_temp():
+        edge_cnt = 65536 * loops + edge_cnt_16bit
+
+        set_value_int(measurements, "pcnt_count", edge_cnt / 2, SenmlUnits.SENML_UNIT_COUNTER)
+        set_value_int(measurements, "pcnt_edge_count", edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+        set_value_int(measurements, "pcnt_period_s", time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
+
     if time_diff_from_prev == -1:
         logging.info("Pulse counting: no period detected, waiting for next measurmeent period")
         return
-
-    edge_cnt = 65536 * loops + edge_cnt_16bit
-
-    set_value_int(measurements, "pcnt_count", edge_cnt / 2, SenmlUnits.SENML_UNIT_COUNTER)
-    set_value_int(measurements, "pcnt_edge_count", edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-    set_value_int(measurements, "pcnt_period_s", time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
 
     if formula and formula != "v":
         try:

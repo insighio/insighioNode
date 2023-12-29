@@ -1,7 +1,10 @@
 import logging
 
+is_temp_config = False
+
 try:
     from apps import demo_temp_config as _cfg
+    is_temp_config = True
 
     logging.info("[cfg] loaded config: [temp]")
 except Exception as e:
@@ -33,3 +36,6 @@ def get_protocol_config():
 
 def get_cfg_module():
     return _cfg
+
+def is_temp():
+    return is_temp_config
