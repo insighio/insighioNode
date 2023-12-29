@@ -7,8 +7,9 @@ _name_mapping = cfg.get("_MEAS_NAME_EXT_MAPPING")
 if _name_mapping is None and cfg.has("_MEAS_NAME_MAPPING"):
     _name_mapping = cfg.get("_MEAS_NAME_MAPPING")
     _name_mapping_extended = {}
-    for key, value in _name_mapping.items():
-        _name_mapping_extended[key] = {"alias": value, "unit": None}
+    if _name_mapping is not None:
+        for key, value in _name_mapping.items():
+            _name_mapping_extended[key] = {"alias": value, "unit": None}
     _name_mapping = _name_mapping_extended
 
 
