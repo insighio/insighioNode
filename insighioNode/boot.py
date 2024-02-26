@@ -23,29 +23,48 @@ try:
 except Exception as e:
     print("[boot] No BQ charger detected")
 
+charging_power_good = False
 try:
-    if i2c:
-        # set charging off
-        i2c.writeto_mem(bq_addr, 1, b"\x2B")
+    val = i2c.readfrom_mem(bq_addr, 8, 1)
+    charging_power_good = (int.from_bytes(val, "big") & 0x4) > 0
 except Exception as e:
-    print("[boot] can not close charging")
+    print("[boot] can not check charging state")
 
-set_pin_value(_UC_IO_BAT_MEAS_ON, 1)
-sleep_ms(100)
-voltage = get_input_voltage(_UC_IO_BAT_READ, 2, ADC.ATTN_11DB)
-print("[boot] batt voltage: {}".format(voltage))
-set_pin_value(_UC_IO_BAT_MEAS_ON, 0)
+if not charging_power_good:
+    try:
+        if i2c:
+            # set charging off
+            i2c.writeto_mem(bq_addr, 1, b"\x2B")
+    except Exception as e:
+        print("[boot] can not close charging")
 
-try:
-    if i2c:
-        # set charging on
-        i2c.writeto_mem(bq_addr, 1, b"\x3B")
-except Exception as e:
-    print("[boot] can not open charging")
+    set_pin_value(_UC_IO_BAT_MEAS_ON, 1)
+    sleep_ms(100)
+    voltage = get_input_voltage(_UC_IO_BAT_READ, 2, ADC.ATTN_11DB)
+    print("[boot] batt voltage: {}".format(voltage))
+    set_pin_value(_UC_IO_BAT_MEAS_ON, 0)
 
-if voltage < 3300:
-    print("[boot] Low voltage, sleeping for an hour")
-    deepsleep(3600000)
+    try:
+        if i2c:
+            # set charging on
+            i2c.writeto_mem(bq_addr, 1, b"\x3B")
+    except Exception as e:
+        print("[boot] can not open charging")
+
+    import utils
+    voltage_flag_file = "/low_voltage"
+    file_exists = utils.existsFile(voltage_flag_file)
+    if voltage<3500:
+    	print('Low voltage, sleeping for a day');
+    	utils.writeToFile(voltage_flag_file, "charging")
+    	deepsleep(1000)
+    elif voltage>=3500 and voltage<3600 and file_exists:
+    	print('Low voltage, sleeping for an hour');
+    	deepsleep(1000)
+    elif file_exists:
+    	utils.deleteFile(voltage_flag_file)
+else:
+    print("[boot] device charging")
 
 print("[boot] Voltage OK")
 
