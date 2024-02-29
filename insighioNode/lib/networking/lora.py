@@ -6,10 +6,10 @@ modem_instance = None
 pin_modem_tx = None
 pin_modem_rx = None
 pin_modem_power_on = None
-i2c_gps_address = None
+pin_modem_reset = None
 
 
-def set_pins(power_on=None, modem_tx=None, modem_rx=None, gps_address=None):
+def set_pins(power_on=None, modem_tx=None, modem_rx=None, modem_reset=None):
     global pin_modem_tx
     global pin_modem_rx
     global pin_modem_power_on
@@ -17,7 +17,7 @@ def set_pins(power_on=None, modem_tx=None, modem_rx=None, gps_address=None):
     pin_modem_tx = modem_tx
     pin_modem_rx = modem_rx
     pin_modem_power_on = power_on
-    i2c_gps_address = gps_address
+    pin_modem_reset = modem_reset
 
 
 def set_keys(cfg):

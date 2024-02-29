@@ -6,7 +6,7 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 
 def init(cfg):
-    lora.set_pins(cfg.get("_UC_IO_RADIO_GPS_ON"), cfg.get("_UC_UART_MODEM_TX"), cfg.get("_UC_UART_MODEM_RX"))
+    lora.set_pins(cfg.get("_UC_IO_RADIO_GPS_ON"), cfg.get("_UC_UART_MODEM_TX"), cfg.get("_UC_UART_MODEM_RX"), cfg.get("_UC_LORA_RESET"))
     is_connected = lora.is_connected()
     logging.info("Lora is connected: {}".format(is_connected))
 
