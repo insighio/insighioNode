@@ -96,7 +96,7 @@ TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
 
 def init_ulp(port_number, is_high_freq):
     from esp32 import ULP
-    from external.esp32_ulp_or import src_to_binary
+    from external.esp32_ulp import src_to_binary
 
     logging.info("Starting ULP for pulse counting...")
 
