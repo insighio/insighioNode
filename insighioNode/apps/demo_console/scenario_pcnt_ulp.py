@@ -7,6 +7,7 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from .dictionary_utils import set_value, set_value_int
 from . import cfg
 
+_is_initialized = False
 
 def setup_assembly(is_high_freq, port_number):
     _edge_not_detected_script = "halt" if not is_high_freq else "SLEEP 100\njump entry"
@@ -140,7 +141,7 @@ def setval(start=0, value=0x0):
 
 
 def read_ulp_values(measurements, formula):
-    logging.info("Reading pulse couters from ULP...")
+    logging.info("Reading pulse counters from ULP...")
 
     # read registers
     edge_cnt_16bit = value(1)
@@ -207,12 +208,10 @@ def read_ulp_values(measurements, formula):
 
 
 def execute(measurements, port_number, is_high_freq, formula):
-    if (
-        machine.reset_cause() == machine.PWRON_RESET
-        or machine.reset_cause() == machine.HARD_RESET
-        or machine.reset_cause() == machine.SOFT_RESET
-    ):
+    global _is_initialized
+    if machine.reset_cause() != machine.DEEPSLEEP_RESET and not _is_initialized:
         init_ulp(port_number, is_high_freq)
+        _is_initialized = True
     else:
         init_gpio(port_number)
     read_ulp_values(measurements, formula)
