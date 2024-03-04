@@ -38,10 +38,14 @@ def get_modem_instance():
     global modem_instance
     logging.debug("getting lora modem instance...")
     if modem_instance is None:
-        from networking.modem import modem_rak4270
+        from networking.modem import modem_rak3172
 
-        modem_instance = modem_rak4270.ModemRak4270(pin_modem_power_on, pin_modem_tx, pin_modem_rx)
-        modem_instance.power_on()
+        modem_instance = modem_rak3172.ModemRak3172(pin_modem_reset, pin_modem_tx, pin_modem_rx)
+        if not modem_instance.is_alive():
+            modem_instance.reset()
+            sleep_ms(1000)
+
+        logging.debug("modem rak3172 is alive: ".format(modem_instance.is_alive()))
     else:
         logging.debug("modem_instance is not None")
 
