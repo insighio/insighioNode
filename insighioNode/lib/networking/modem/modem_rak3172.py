@@ -43,12 +43,12 @@ class ModemRak3172(modem_base.Modem):
         # has joined ??
         (status, lines) =  self.send_at_cmd("AT+NJS=?")
 
-        line_regex = r"AT+NJS=(\d+)"
+        line_regex = r"AT\+NJS=(\d+)"
         if status:
             match = ure.search(line_regex, lines[0])
-            if match is None:
-                continue
-            return match.group(1) == "1"
+            if match is not None:
+                print("match.group(1): {}".format(match.group(1)))
+                return match.group(1) == "1"
         return False
 
     def set_dev_eui(self, dev_eui):
@@ -67,13 +67,13 @@ class ModemRak3172(modem_base.Modem):
         region_index = -1
         try:
             region_index = self.LORA_REGIONS.index(region)
-            (status, lines) = self.send_at_cmd("AT+BAND=" + region)
+            (status, lines) = self.send_at_cmd("AT+BAND=" + region_index)
             return status
         except:
             return False
 
     def set_dr(self, dr):
-        (status, lines) = self.send_at_cmd("AT+DR{}".format(dr))
+        (status, lines) = self.send_at_cmd("AT+DR={}".format(dr))
         return status
 
     def set_confirm(self, confirm):
@@ -89,15 +89,7 @@ class ModemRak3172(modem_base.Modem):
         return status
 
     def join(self):
-        (join_succeded, lines) = self.send_at_cmd("AT+JOIN")
-
-        if join_succeded:
-            start_time = ticks_ms()
-            end_time = start_time + 30000
-            while ticks_ms() < end_time:
-                if self.is_connected():
-                    break
-                sleep_ms(50)
+        (join_succeded, lines) = self.send_at_cmd("AT+JOIN", 30000, "\+EVT:JOINED")
 
         return self.is_connected()
 

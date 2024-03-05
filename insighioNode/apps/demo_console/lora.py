@@ -24,7 +24,7 @@ def updateSignalQuality(cfg, measurements):
 def connect(cfg):
     # network connectivity & transmission
     logging.info("Joining network...")
-    (joinOk, join_duration) = lora.join(cfg, lora.set_keys(cfg.get_cfg_module()))
+    (joinOk, join_duration) = lora.join(cfg.get_cfg_module(), lora.set_keys(cfg.get_cfg_module()))
     results = {}
     results["status"] = {"value": joinOk}
 
