@@ -2,7 +2,7 @@ from . import modem_base
 import logging
 import ure
 import gpio_handler
-from utime import sleep_ms
+from utime import sleep_ms, ticks_ms
 
 
 class ModemRak3172(modem_base.Modem):
@@ -41,7 +41,7 @@ class ModemRak3172(modem_base.Modem):
 
     def is_connected(self):
         # has joined ??
-        (status, lines) =  = self.send_at_cmd("AT+NJS=?")
+        (status, lines) =  self.send_at_cmd("AT+NJS=?")
 
         line_regex = r"AT+NJS=(\d+)"
         if status:
@@ -89,8 +89,17 @@ class ModemRak3172(modem_base.Modem):
         return status
 
     def join(self):
-        (status, lines) = self.send_at_cmd("AT+JOIN")
-        return status
+        (join_succeded, lines) = self.send_at_cmd("AT+JOIN")
+
+        if join_succeded:
+            start_time = ticks_ms()
+            end_time = start_time + 30000
+            while ticks_ms() < end_time:
+                if self.is_connected():
+                    break
+                sleep_ms(50)
+
+        return self.is_connected()
 
     def send(self, bytes_hex):
         # random port -> 5

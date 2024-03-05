@@ -45,6 +45,8 @@ def get_modem_instance():
             modem_instance.reset()
             sleep_ms(1000)
 
+        modem_instance.init()
+
         logging.debug("modem rak3172 is alive: ".format(modem_instance.is_alive()))
     else:
         logging.debug("modem_instance is not None")
@@ -70,43 +72,13 @@ def join(cfg, lora_keys):
     modem.set_app_eui(lora_keys[1])
     modem.set_app_key(lora_keys[2])
 
-    # # If we came up from POWERON//WDT_RESET then explicitly JOIN else if we came up from DEEPSLEEP then check NVRAM for stored keys"""
-    # if device_info.get_reset_cause() == 0 or device_info.get_reset_cause() == 2:
-    #     # clear NVRAM if something is in
-    #     lora.nvram_erase()
-    #     logging.debug("Erased LoRa status from NVRAM")
-    # else:
-    #     # restore status if any
-    #     lora.nvram_restore()
-    #     logging.debug("Restored LoRa status from NVRAM")
-
     # join network
     start_time = ticks_ms()
-    join_status = modem.join()
-    return (join_status, ticks_ms() - start_time)
-    #     # set the 3 default channels to the same frequency (must be before sending the OTAA join request)
-    #     config_dr = cfg._LORA_DR if cfg._LORA_DR is not None else 5
-    #     try:
-    #         lora.join(activation=LoRa.OTAA, auth=(lora_keys[0], lora_keys[1], lora_keys[2]), timeout=0, dr=config_dr)
-    #
-    #         join_timeout = start_time + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
-    #         # wait until the module has joined the network
-    #         while not lora.has_joined() and ticks_ms() < join_timeout:
-    #             sleep_ms(10)
-    #             # print('Not yet joined...')
-    #     except Exception as e:
-    #         logging.exception(e, "exception during LoRA join")
-    #
-    # conn_attempt_duration = ticks_ms() - start_time
-    # if lora.has_joined():
-    #     logging.debug('Lora has joined the network sucessfully in {} sec'.format(conn_attempt_duration))
-    #     # save status for potential deep sleep
-    #     lora.nvram_save()
-    #     return (True, conn_attempt_duration)
-    # else:
-    #     logging.debug("Not joined (timeout = {} expired)".format(conn_attempt_duration))
-    #     return (False, conn_attempt_duration)
 
+    if not modem.is_connected():
+        join_status = modem.join()
+
+    return (modem.is_connected(), ticks_ms() - start_time)
 
 def is_connected():
     modem = get_modem_instance()
@@ -134,5 +106,4 @@ def deinit():
 
     if modem is None:
         logging.info("No modem detected, ignoring deinit request")
-    modem.power_off()
     modem_instance = None
