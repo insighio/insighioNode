@@ -120,8 +120,11 @@ def create_message(device_id, measurements):
     # 'i' -> int -> 4 bytes
     try:
         for key in sorted(measurements.keys()):
-            logging.debug("Processing [{}]={}".format(key, measurements[key]["value"]))
-            value = measurements[key]["value"]
+            logging.debug("Processing [{}]={}".format(key, measurements[key]))
+            try:
+                value = measurements[key]["value"]
+            except:
+                value = measurements[key]
             keyparts = key.split("_")
             measurement_index = None
             if len(keyparts) > 1:
@@ -209,7 +212,7 @@ def create_message(device_id, measurements):
             elif key.endswith("_diag"):
                 binary_data += struct.pack(">BBH", TYPE_GENERIC | 0x01, get_location_by_key(key), value)
 
-            elif "gen_" in key:
+            else:
                 keyParts = key.split("_")
                 index = 0
                 if len(keyParts) == 3:
@@ -217,9 +220,16 @@ def create_message(device_id, measurements):
                         index = int(keyParts[2])
                     except Exception as e:
                         pass
-                binary_data += struct.pack(">BBi", TYPE_GENERIC | index, get_location_by_key(key), round(value * 100))
-            else:
-                logging.error("Unregistered measurement: key: " + str(key) + ", value: " + str(value))
+
+                if type(value) == str:
+                    value = bytes(value, 'utf-8')    # Or other appropriate encoding
+                    binary_data += struct.pack("I%ds" % (len(value),), len(value), value)
+                elif type(value) == int:
+                    binary_data += struct.pack(">BBi", TYPE_GENERIC | index, get_location_by_key(key), value)
+                elif type(value) == float:
+                    binary_data += struct.pack(">BBi", TYPE_GENERIC | index, get_location_by_key(key), round(value * 100))
+                else:
+                    logging.error("Unidentified measurement: key: {}, value: {}, type: {}".format(key, value, type(value)))
             logging.info("message: size[{}], data:[{}]".format(len(binary_data), ubinascii.hexlify(binary_data).decode("utf-8")))
     except Exception as e:
         logging.exception(e, "Error encoding lora message")
