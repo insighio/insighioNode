@@ -7,7 +7,7 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from .dictionary_utils import set_value, set_value_int
 from . import cfg
 
-_is_initialized = False
+_is_first_run = True
 
 def setup_assembly(is_high_freq, port_number):
     _edge_not_detected_script = "halt" if not is_high_freq else "SLEEP 100\njump entry"
@@ -161,12 +161,12 @@ def read_ulp_values(measurements, formula):
 
     # execute calculations
 
-    time_diff_from_prev = -1
+    time_diff_from_prev = 0
     try:
         logging.debug("ULP timing: now_timestamp: {}, last_timestamp: {}".format(now_timestamp, last_timestamp))
         time_diff_from_prev = now_timestamp - int(last_timestamp)
         if time_diff_from_prev < 0:
-            time_diff_from_prev = -1
+            time_diff_from_prev = 0
         elif time_diff_from_prev > 86400:  # if bigger than one day
             # check if epoch_diff is stored
             epoch_diff = utils.readFromFlagFile("/epoch_diff")
@@ -177,22 +177,17 @@ def read_ulp_values(measurements, formula):
                 logging.debug("new time diff: {}".format(time_diff_from_prev))
 
                 if time_diff_from_prev > 86400:  # if STILL bigger than one day
-                    time_diff_from_prev = -1
+                    time_diff_from_prev = 0
             else:
-                time_diff_from_prev = -1
+                time_diff_from_prev = 0
     except:
         pass
 
-    if time_diff_from_prev > 0 or cfg.is_temp():
-        edge_cnt = 65536 * loops + edge_cnt_16bit
+    edge_cnt = 65536 * loops + edge_cnt_16bit
 
-        set_value_int(measurements, "pcnt_count", edge_cnt / 2, SenmlUnits.SENML_UNIT_COUNTER)
-        set_value_int(measurements, "pcnt_edge_count", edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-        set_value_int(measurements, "pcnt_period_s", time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
-
-    if time_diff_from_prev == -1:
-        logging.info("Pulse counting: no period detected, waiting for next measurmeent period")
-        return
+    set_value_int(measurements, "pcnt_count", edge_cnt / 2, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_int(measurements, "pcnt_edge_count", edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_int(measurements, "pcnt_period_s", time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
 
     if formula and formula != "v":
         try:
@@ -206,12 +201,16 @@ def read_ulp_values(measurements, formula):
         except Exception as e:
             logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
 
+    if time_diff_from_prev == -1:
+        logging.info("Pulse counting: no period detected, waiting for next measurmeent period")
+        return
+
 
 def execute(measurements, port_number, is_high_freq, formula):
-    global _is_initialized
-    if machine.reset_cause() != machine.DEEPSLEEP_RESET and not _is_initialized:
+    global _is_first_run
+    if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
         init_ulp(port_number, is_high_freq)
-        _is_initialized = True
     else:
         init_gpio(port_number)
     read_ulp_values(measurements, formula)
+    _is_first_run = False
