@@ -26,5 +26,10 @@ _UC_IO_PWRKEY = 10
 _UC_UART_MODEM_TX = 15
 _UC_UART_MODEM_RX = 16
 
+""" External GPS """
+_UC_IO_RADIO_GPS_ON = 35
+_UC_GPS_RESET = 36
+_I2C_GPS_ADDRESS = 0x10
+
 """ const i2c addresses """
 _I2C_BQ_ADDRESS = 0x6B

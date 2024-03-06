@@ -47,7 +47,6 @@ class ModemRak3172(modem_base.Modem):
         if status:
             match = ure.search(line_regex, lines[0])
             if match is not None:
-                print("match.group(1): {}".format(match.group(1)))
                 return match.group(1) == "1"
         return False
 

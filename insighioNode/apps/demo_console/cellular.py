@@ -5,19 +5,10 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from utime import sleep_ms, ticks_ms
+from .dictionary_utils import set_value
 
 transfer_client = None
 mqtt_connected = False
-
-
-def add_value_if_valid(results, key, value, unit=None):
-    if value is None:
-        return
-    elif unit:
-        results[key] = {"unit": unit, "value": value}
-    else:
-        results[key] = {"value": value}
-
 
 def init(cfg):
     cellular.set_pins(
@@ -61,14 +52,14 @@ def updateSignalQuality(cfg, measurements):
     (mcc, mnc) = modem_instance.get_registered_mcc_mnc()
     (lac, ci) = modem_instance.get_lac_n_cell_id()
 
-    add_value_if_valid(measurements, "cell_rssi", rssi, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
-    add_value_if_valid(measurements, "cell_rsrp", rsrp, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
-    add_value_if_valid(measurements, "cell_rsrq", rsrq, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
+    set_value(measurements, "cell_rssi", rssi, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
+    set_value(measurements, "cell_rsrp", rsrp, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
+    set_value(measurements, "cell_rsrq", rsrq, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
 
-    add_value_if_valid(measurements, "cell_mcc", mcc)
-    add_value_if_valid(measurements, "cell_mnc", mnc)
-    add_value_if_valid(measurements, "cell_lac", lac)
-    add_value_if_valid(measurements, "cell_ci", ci)
+    set_value(measurements, "cell_mcc", mcc)
+    set_value(measurements, "cell_mnc", mnc)
+    set_value(measurements, "cell_lac", lac)
+    set_value(measurements, "cell_ci", ci)
 
 
 # network connection
@@ -84,14 +75,14 @@ def connect(cfg):
         return results
 
     (status, activation_duration, attachment_duration, connection_duration) = cellular.connect(cfg.get_cfg_module())
-    add_value_if_valid(results, "status", status == cellular.MODEM_CONNECTED)
+    set_value(results, "status", status == cellular.MODEM_CONNECTED)
 
     # if network statistics are enabled
     if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
-        add_value_if_valid(results, "cell_act_duration", activation_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
-        add_value_if_valid(results, "cell_att_duration", attachment_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+        set_value(results, "cell_act_duration", activation_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+        set_value(results, "cell_att_duration", attachment_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         if not protocol_config.use_custom_socket:
-            add_value_if_valid(results, "cell_con_duration", connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+            set_value(results, "cell_con_duration", connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
 
     if status == cellular.MODEM_CONNECTED:
         global transfer_client
@@ -153,14 +144,14 @@ def get_gps_position(cfg, measurements, keep_open=False):
             min_satellite_fix_num = cfg.get("_MEAS_GPS_SATELLITE_FIX_NUM")
 
         (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(timeout_ms, min_satellite_fix_num)
-        add_value_if_valid(measurements, "gps_dur", ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+        set_value(measurements, "gps_dur", ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         if lat is not None and lon is not None:
             latD = coord_to_double(lat[0], lat[1], lat[2])
             lonD = coord_to_double(lon[0], lon[1], lon[2])
-            add_value_if_valid(measurements, "gps_lat", latD, SenmlUnits.SENML_UNIT_DEGREES_LATITUDE)
-            add_value_if_valid(measurements, "gps_lon", lonD, SenmlUnits.SENML_UNIT_DEGREES_LONGITUDE)
-            add_value_if_valid(measurements, "gps_num_of_sat", num_of_sat)
-            add_value_if_valid(measurements, "gps_hdop", hdop)
+            set_value(measurements, "gps_lat", latD, SenmlUnits.SENML_UNIT_DEGREES_LATITUDE)
+            set_value(measurements, "gps_lon", lonD, SenmlUnits.SENML_UNIT_DEGREES_LONGITUDE)
+            set_value(measurements, "gps_num_of_sat", num_of_sat)
+            set_value(measurements, "gps_hdop", hdop)
             status = True
     if not keep_open:
         modem_instance.set_gps_state(False)
