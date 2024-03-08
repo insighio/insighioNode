@@ -257,16 +257,10 @@ def bq_charger_exec(bq_func):
 
     status = False
     try:
-        p_snsr = Pin(12, Pin.OUT)  # cfg._UC_IO_SENSOR_GND_ON
-        p_snsr.on()
         i2c = SoftI2C(scl=Pin(38), sda=Pin(39))  # cfg._UC_IO_I2C_SCL, cfg._UC_IO_I2C_SDA
         status = bq_func(i2c, 0x6B)  # cfg._I2C_BQ_ADDRESS
     except Exception as e:
         logging.error("No BQ charger detected")
-    try:
-        p_snsr.off()
-    except Exception as e:
-        pass
     return status
 
 
