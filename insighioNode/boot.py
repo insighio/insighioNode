@@ -1,25 +1,3 @@
-##################################################################
-# setup data paritition
-from esp32 import Partition
-p = Partition.find(Partition.TYPE_DATA, label='data')[0]
-
-try:
-    if p:
-        uos.mount(p, "/data")
-        print("[boot] Mounted /data")
-    else:
-        print("[boot] Data partition not found")
-except OSError:
-    try:
-        uos.VfsLfs2.mkfs(p)
-        vfs = uos.VfsLfs2(p)
-        uos.mount(vfs, '/data')
-        print("[boot] Created + Mounted /data")
-    except OSError:
-        print("[boot] Failed mounting /data")
-
-##################################################################
-
 print("[boot] Checking Voltage")
 
 import uos
@@ -122,3 +100,52 @@ else:
     print("[boot] device charging")
 
 print("[boot] Voltage OK")
+
+##################################################################
+# setup data paritition
+from esp32 import Partition
+p = Partition.find(Partition.TYPE_DATA, label='data')[0]
+
+try:
+    if p:
+        uos.mount(p, "/data")
+        print("[boot] Mounted /data")
+    else:
+        print("[boot] Data partition not found")
+except OSError:
+    try:
+        uos.VfsLfs2.mkfs(p)
+        vfs = uos.VfsLfs2(p)
+        uos.mount(vfs, '/data')
+        print("[boot] Created + Mounted /data")
+    except OSError:
+        print("[boot] Failed mounting /data")
+
+##################################################################
+
+##################################################################
+# check performance
+
+from utime import time_ns
+test_load_start = time_ns()
+import utils
+loadtime = time_ns() - test_load_start
+
+if not utils.existsFlagFile("/perfOk"):
+    print("Module load duration {}ms".format(loadtime))
+    prevtime = utils.readFromFile("/loadtesting")
+    try:
+        prevtime = int(prevtime)
+    except:
+        prevtime = None
+
+    if prevtime is not None and prevtime > loadtime:
+        print("======== drop detected ========")
+        utils.writeToFlagFile("/perfOk", "ok")
+        utils.deleteFile("/loadtesting")
+    else:
+        utils.writeToFile("/loadtesting", "{}".format(loadtime))
+    from machine import deepsleep
+    deepsleep(1)
+else:
+    print("[boot]: performance ok")
