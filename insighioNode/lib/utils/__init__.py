@@ -154,7 +154,7 @@ def eraseKeyValue(key):
 
 def clearCachedStates():
     eraseKeyValue("tz_sec_offset")
-    deleteFlagFile("/perfOk")
+    deleteFile("/perfOk")
 
 
 def deleteModule(module_name):
