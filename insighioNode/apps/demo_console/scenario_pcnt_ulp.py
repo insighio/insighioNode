@@ -36,9 +36,9 @@ loop_detected:
     return """\
 
 #define DR_REG_RTCIO_BASE            0x60008400
-#define RTC_IO_TOUCH_PAD2_REG        (DR_REG_RTCIO_BASE + 0x8c)
-#define RTC_IO_TOUCH_PAD2_MUX_SEL_M  (BIT(19))
-#define RTC_IO_TOUCH_PAD2_FUN_IE_M   (BIT(13))
+#define RTC_IO_TOUCH_PADX_REG        (DR_REG_RTCIO_BASE + 0x84 + ({}*0x4))
+#define RTC_IO_TOUCH_PADX_MUX_SEL_M  (BIT(19))
+#define RTC_IO_TOUCH_PADX_FUN_IE_M   (BIT(13))
 #define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
 #define RTC_GPIO_IN_NEXT_S           10
 #define DR_REG_SENS_BASE             0x60008800
@@ -66,10 +66,10 @@ entry:
     WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1)
 
     # connect GPIO to the RTC subsystem so the ULP can read it
-    WRITE_RTC_REG(RTC_IO_TOUCH_PAD2_REG, RTC_IO_TOUCH_PAD2_MUX_SEL_M, 1, 1)
+    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 1)
 
     # switch the GPIO into input mode
-    WRITE_RTC_REG(RTC_IO_TOUCH_PAD2_REG, RTC_IO_TOUCH_PAD2_FUN_IE_M, 1, 1)
+    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 1)
 
 	/* Read the value of lower 16 RTC IOs into R0 */
 	READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
@@ -100,6 +100,7 @@ edge_detected:
 	st r2, r3, 0
 	{}
 """.format(
+        port_number,
         port_number,
         _edge_not_detected_script,
         _loop_counting,
