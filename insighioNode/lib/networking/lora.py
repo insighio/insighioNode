@@ -69,7 +69,12 @@ def join(cfg, lora_keys):
     modem.set_retries(cfg._LORA_TX_RETRIES if cfg._LORA_TX_RETRIES is not None else 0)
 
     modem.set_dev_eui(lora_keys[0])
-    modem.set_app_eui(lora_keys[1])
+
+    if lora_keys[1]:
+        modem.set_app_eui(lora_keys[1])
+    else:
+        _DEFAULT_APP_EUI = "0000000000000001"
+        modem.set_app_eui(_DEFAULT_APP_EUI)
     modem.set_app_key(lora_keys[2])
 
     # join network
