@@ -1,10 +1,25 @@
 ##################################################################
 # check performance
 
+# # boot.py -- run on boot-up
+from machine import Pin
+from neopixel import NeoPixel
+
+Pin(47, Pin.OUT).on()
+_led_neopixel = NeoPixel(Pin(21, Pin.OUT), 1)
+
 from utime import time_ns
 test_load_start = time_ns()
 import utils
 loadtime = time_ns() - test_load_start
+
+color = loadtime << 8
+_led_neopixel[0] = (
+    (color & 0xFF0000) >> 16,
+    (color & 0x00FF00) >> 8,
+    (color & 0x0000FF),
+)
+_led_neopixel.write()
 
 if not utils.existsFile("/perfOk"):
     print("Module load duration {}ms".format(loadtime))
@@ -24,6 +39,9 @@ if not utils.existsFile("/perfOk"):
     deepsleep(1)
 else:
     print("[boot]: performance ok")
+
+Pin(47, Pin.OUT).off()
+
 
 ##################################################################
 # check voltage
