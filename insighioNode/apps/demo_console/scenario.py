@@ -142,6 +142,8 @@ def executeMeasureAndUploadLoop():
         if buffered_upload_enabled and not execute_connection_procedure:
             uptime = getUptime(timeDiffAfterNTP)
 
+            from external.kpn_senml.senml_unit import SenmlSecondaryUnits
+
             set_value_int(
                 measurements,
                 "uptime",
