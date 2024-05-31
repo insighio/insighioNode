@@ -130,8 +130,8 @@
       var protocol = Cookies.get("protocol")
       var ipv = Cookies.get("ipversion")
 
-      setElemValue('input-cell-tech', Cookies.get("cell-tech"), "GSM")
-      setElemValue('input-apn', Cookies.get("cell-apn"), "internet")
+      setElemValue('input-cell-tech', Cookies.get("cell-tech"), "NBIoT")
+      setElemValue('input-apn', Cookies.get("cell-apn"), "iot.1nce.net")
       setElemValue('input-band', Cookies.get("cell-band"), 20)
 
       setRadioGroupValue('protocol', protocol !== undefined && protocol !== "" ? protocol : "mqtt")
