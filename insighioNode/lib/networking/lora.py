@@ -70,7 +70,7 @@ def join(cfg, lora_keys):
 
     modem.set_dev_eui(lora_keys[0])
 
-    if lora_keys[1]:
+    if lora_keys[1] and lora_keys[1] != "None":
         modem.set_app_eui(lora_keys[1])
     else:
         _DEFAULT_APP_EUI = "0000000000000001"

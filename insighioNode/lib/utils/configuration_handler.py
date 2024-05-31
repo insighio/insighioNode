@@ -188,6 +188,8 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
             value = getattr(cfg, key)
             if isinstance(value, (int, float, str)):
                 configKeyValues[webUIKey] = str(value)
+                if configKeyValues[webUIKey] == "None":
+                    configKeyValues[webUIKey] = ""
             elif isinstance(value, bool):
                 configKeyValues[webUIKey] = str(value).lower()
             elif isinstance(value, NoneType):
