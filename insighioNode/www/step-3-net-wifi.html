@@ -216,9 +216,7 @@
     }
 
     function validateMyForm() {
-      if (!validateElemValue('input-ssid', "SSID") ||
-        !validateElemValue('input-ssid-pass', "password")
-      ) return false
+      if (!validateElemValue('input-ssid', "SSID")) return false
 
       storeData()
       return true
