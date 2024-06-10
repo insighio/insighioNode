@@ -138,11 +138,11 @@ def read_sdi12_sensor(sdi12, address, measurements):
         parse_sensor_licor(address, responseArray, measurements)
         responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
     else:
-        set_value(measurements, "gen_{}_i".format(address), manufacturer, None)
+        set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
         responseArrayC = sdi12.get_measurement(address, "C")
         responseArrayM = sdi12.get_measurement(address, "M")
-        parse_generic_sdi12(address, responseArrayC, measurements, "gen", None, "_c")
-        parse_generic_sdi12(address, responseArrayM, measurements, "gen", None, "_m")
+        parse_generic_sdi12(address, responseArrayC, measurements, "sdi12", None, "_c")
+        parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m")
 
 
 def parse_sensor_meter(address, responseArray, measurements):
@@ -263,12 +263,21 @@ def measure_4_20_mA_on_port(measurements, port_id):
         sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
         sensor_out_pin = cfg.get("_CUR_SNSR_OUT_{}".format(port_id))
 
+        _CURRENT_OFFSET_MA = 0.6 # fix for the deviation of values
+
         try:
             gpio_handler.set_pin_value(cfg.get("_UC_IO_CUR_SNS_ON"), 1)
             gpio_handler.set_pin_value(sensor_on_pin, 1)
 
             raw_mV = analog_generic.get_reading(sensor_out_pin)
             current_mA = round((raw_mV / (cfg.get("_SHUNT_OHMS") * cfg.get("_INA_GAIN"))) * 100) / 100
+
+            if current_mA > 3: # do apply offset
+                current_mA += _CURRENT_OFFSET_MA
+
+                # if current_mA < 4:
+                #     current_mA = 4
+
             logging.debug("ANLG SENSOR @ pin {}: {} mV, Current = {} mA".format(sensor_out_pin, raw_mV, current_mA))
             set_value_float(measurements, "4-20_{}_current".format(port_id), current_mA, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE)
 
