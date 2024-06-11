@@ -150,7 +150,7 @@ def read_pulse_counter(measurements):
         import utils
 
         TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
-        utils.deleteFile(TIMESTAMP_FLAG_FILE)
+        utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
 
 
 def read_battery_voltage():

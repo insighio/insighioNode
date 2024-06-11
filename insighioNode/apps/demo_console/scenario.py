@@ -351,7 +351,7 @@ def executeDeviceStatisticsUpload(cfg, network):
 
 def executeDeviceConfigurationUpload(cfg, network):
     # check for configuration pending for upload
-    configUploadFileContent = utils.readFromFile("/configLog")
+    configUploadFileContent = utils.readFromFlagFile("/configLog")
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
         message_sent = network.send_control_message(
@@ -360,13 +360,13 @@ def executeDeviceConfigurationUpload(cfg, network):
             "/configResponse",
         )
         if message_sent:
-            utils.deleteFile("/configLog")
+            utils.deleteFlagFile("/configLog")
 
         # whenever a new config log is uplaoded, upload also statistics for the device
-    if configUploadFileContent or utils.existsFile("/ota_applied_flag"):
+    if configUploadFileContent or utils.existsFlagFile("/ota_applied_flag"):
         message_sent = executeDeviceStatisticsUpload(cfg, network)
         if message_sent:
-            utils.deleteFile("/ota_applied_flag")
+            utils.deleteFlagFile("/ota_applied_flag")
 
 
 def notifyConnected(network):

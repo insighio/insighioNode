@@ -15,7 +15,7 @@ mutex = _thread.allocate_lock()
 
 
 def buffered_measurements_count():
-    return utils.countFileLines(storage_file_name)
+    return utils.countFlagFileLines(storage_file_name)
 
 
 def timestamp_measurements(measurements):
@@ -31,7 +31,7 @@ def timestamp_measurements(measurements):
 def store_measurement(measurements, force_store=False):
     global mutex
     # +1 is added to count the current measurement that has not been stored to the file
-    number_of_measurements = utils.countFileLines(storage_file_name) + 1
+    number_of_measurements = buffered_measurements_count() + 1
     logging.info("Message #" + str(number_of_measurements))
 
     if (
@@ -41,7 +41,7 @@ def store_measurement(measurements, force_store=False):
     ):
         data = json.dumps(measurements) + "\n"
         with mutex:
-            utils.appendToFile(storage_file_name, data)
+            utils.appendToFlagFile(storage_file_name, data)
             logging.debug("Measurement stored: " + str(measurements))
             return True
     return False
@@ -51,16 +51,16 @@ def parse_stored_measurements_and_upload(network):
     global mutex
     # load stored measurements
     failed_messages = []
-    if not utils.existsFile(storage_file_name) and not utils.existsFile(storage_file_name + ".up"):
+    if not utils.existsFlagFile(storage_file_name) and not utils.existsFlagFile(storage_file_name + ".up"):
         return
 
     logging.info("stored measurements found, about to upload")
 
     with mutex:
-        interupted_upload_str = utils.readFromFile(storage_file_name + ".up")
-        stored_measurements_str = utils.readFromFile(storage_file_name)
-        utils.copyFile(storage_file_name, storage_file_name + ".up")
-        utils.deleteFile(storage_file_name)
+        interupted_upload_str = utils.readFromFlagFile(storage_file_name + ".up")
+        stored_measurements_str = utils.readFromFlagFile(storage_file_name)
+        utils.copyFlagFile(storage_file_name, storage_file_name + ".up")
+        utils.deleteFlagFile(storage_file_name)
         stored_measurements_str += "\n" + interupted_upload_str
     uploaded_measurement_count = 0
     for line in stored_measurements_str.split("\n"):
@@ -83,8 +83,8 @@ def parse_stored_measurements_and_upload(network):
             logging.exception(e, "error reading line: [{}]".format(line))
 
     with mutex:
-        utils.deleteFile(storage_file_name + ".up")
+        utils.deleteFlagFile(storage_file_name + ".up")
 
         # if failed messages were logged, recreate the file to upload during next connection
         for failed_message in failed_messages:
-            utils.appendToFile(storage_file_name, failed_message)
+            utils.appendToFlagFile(storage_file_name, failed_message)

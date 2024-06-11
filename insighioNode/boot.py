@@ -21,6 +21,8 @@ _led_neopixel[0] = (
 )
 _led_neopixel.write()
 
+#use normal files (not flags) to check file system performance
+
 if not utils.existsFile("/perfOk"):
     print("Module load duration {}ms".format(loadtime))
     prevtime = utils.readFromFile("/loadtesting")

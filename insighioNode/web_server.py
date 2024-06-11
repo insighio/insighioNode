@@ -141,7 +141,7 @@ class Config:
         import utils
 
         logging.debug("about to save queryParams: {}".format(data["queryParams"]))
-        utils.writeToFile("/configLog", self.convert_params_to_string(data))
+        utils.writeToFlagFile("/configLog", self.convert_params_to_string(data))
 
         try:
             from utils import configuration_handler

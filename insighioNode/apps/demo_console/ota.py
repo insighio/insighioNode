@@ -129,7 +129,7 @@ def checkAndApply(client):
                     import utils
 
                     utils.clearCachedStates()
-                    utils.writeToFile("/ota_applied_flag", "done")
+                    utils.writeToFlagFile("/ota_applied_flag", "done")
                     import machine
 
                     machine.reset()
@@ -183,7 +183,8 @@ def downloadDeviceConfigurationHTTP(client):
             120000,
         )
         if file_downloaded:
-            local_file_name = device_info.get_device_root_folder() + file
+            # already decorated target file to utilize /data partition
+            local_file_name = utils.decorateFlagPath(device_info.get_device_root_folder() + file)
             is_file_locally = client.modem_instance.get_file(file, local_file_name)
             if is_file_locally:
                 client.modem_instance.delete_file(file)
