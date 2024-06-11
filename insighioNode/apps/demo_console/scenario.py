@@ -363,10 +363,11 @@ def executeDeviceConfigurationUpload(cfg, network):
             utils.deleteFlagFile("/configLog")
 
         # whenever a new config log is uplaoded, upload also statistics for the device
-    if configUploadFileContent or utils.existsFlagFile("/ota_applied_flag"):
+    if configUploadFileContent or utils.existsFlagFile("/ota_applied_flag") or utils.existsFile("/ota_applied_flag"):
         message_sent = executeDeviceStatisticsUpload(cfg, network)
         if message_sent:
             utils.deleteFlagFile("/ota_applied_flag")
+            utils.deleteFile("/ota_applied_flag")
 
 
 def notifyConnected(network):
