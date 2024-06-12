@@ -59,39 +59,41 @@ class Settings:
 
         if not insighioSettings:
             insighioSettings = {}
-            from utils import configuration_handler
+            #from utils import configuration_handler
 
             try:
-                insighioSettings = configuration_handler.get_config_values(False)
+                import ujson
+                import utils
+                insighioSettings = ujson.loads(utils.readFromFile("/apps/demo_console/config.json")) #configuration_handler.get_config_values(False)
             except Exception as e:
                 logging.exception(e, "Unable to retrieve old configuration")
 
-            insighioSettings["hw_module"] = hw_version
-            insighioSettings["board_mac"] = get_device_id()[0]
+            insighioSettings["hw-module"] = hw_version
+            insighioSettings["board-mac"] = get_device_id()[0]
 
         if data.get("update_wifi_list") == "1":
             insighioSettings["wifiAvailableNets"] = populateAvailableNets()
         else:
             insighioSettings["wifiAvailableNets"] = []
 
-        import ujson
-
-        res = None
-        try:
-            res = ujson.dumps(insighioSettings, separators=(",", ":"))
-        except:
-            pass
-
-        if res is None:
-            try:
-                res = ujson.dumps(insighioSettings)
-            except:
-                pass
-
-        if res is not None:
-            res_bytes = res.encode("utf-8")
-            logging.debug("Settings: " + res)
-        return res_bytes, 200
+        # import ujson
+        #
+        # res = None
+        # try:
+        #     res = ujson.dumps(insighioSettings, separators=(",", ":"))
+        # except:
+        #     pass
+        #
+        # if res is None:
+        #     try:
+        #         res = ujson.dumps(insighioSettings)
+        #     except:
+        #         pass
+        #
+        # if res is not None:
+        #     res_bytes = res.encode("utf-8")
+        #     logging.debug("Settings: " + res)
+        return insighioSettings, 200
 
 
 class RawWeightIdle:
@@ -121,19 +123,19 @@ class RawWeightIdle:
 
 
 class Config:
-    def convert_params_to_string(self, data):
-        queryString = ""
-        try:
-            for key in data["queryParams"].keys():
-                if key in data["encodedParams"]:
-                    queryString += "{}={}&".format(key, data["encodedParams"][key])
-                else:
-                    queryString += "{}={}&".format(key, data["queryParams"][key])
-            if queryString != "":
-                queryString = queryString[0:-1]
-        except Exception as e:
-            logging.exception(e, "convert_params_to_string")
-        return queryString
+    # def convert_params_to_string(self, data):
+    #     queryString = ""
+    #     try:
+    #         for key in data["queryParams"].keys():
+    #             if key in data["encodedParams"]:
+    #                 queryString += "{}={}&".format(key, data["encodedParams"][key])
+    #             else:
+    #                 queryString += "{}={}&".format(key, data["queryParams"][key])
+    #         if queryString != "":
+    #             queryString = queryString[0:-1]
+    #     except Exception as e:
+    #         logging.exception(e, "convert_params_to_string")
+    #     return queryString
 
     def post(self, data):
         print("received config data: {}".format(data))
@@ -141,12 +143,14 @@ class Config:
         import utils
 
         logging.debug("about to save queryParams: {}".format(data["queryParams"]))
-        utils.writeToFlagFile("/configLog", self.convert_params_to_string(data))
+        utils.writeToFlagFile("/configLog", ujson.dumps(data["queryParams"]))
 
         try:
-            from utils import configuration_handler
-
-            configuration_handler.apply_configuration(data["queryParams"])
+            import ujson
+            utils.writeToFile("/apps/demo_console/config.json", ujson.dumps(data["queryParams"]))
+            # from utils import configuration_handler
+            #
+            # configuration_handler.apply_configuration(data["queryParams"])
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")
@@ -160,9 +164,8 @@ class ConfigTemp:
         import utils
 
         try:
-            from utils import configuration_handler
-
-            configuration_handler.apply_configuration(data["queryParams"], "/apps/demo_temp_config.py")
+            import ujson
+            utils.writeToFile("/apps/demo_temp_config.json", ujson.dumps(data["queryParams"]))
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")
@@ -247,6 +250,7 @@ class WiFiList:
         import ujson
 
         res = None
+        print("wifi list type: {} from: {}".format(type(result), result))
         try:
             res = ujson.dumps(result, separators=(",", ":"))
         except:
@@ -261,6 +265,8 @@ class WiFiList:
         if res is not None:
             res_bytes = res.encode("utf-8")
             logging.debug("wifi list: " + res)
+
+        print("wifi list type: {} from: {}".format(type(res), res))
         return res_bytes, 200
 
 

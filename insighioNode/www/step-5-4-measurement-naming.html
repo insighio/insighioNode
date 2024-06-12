@@ -36,39 +36,45 @@
       <div id="loader" class="loading loading-lg"></div>
       <div class="container grid-lg">
         <div class="columns flex-centered">
-          <div class="columns">
-            <div class="col-12">
-              <div class="divider text-center" data-content="Custom measurement naming"></div>
-            </div>
-            <br />
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>name</th>
-                  <th>alias</th>
-                  <th>unit</th>
-                  <th>value</th>
-                </tr>
-              </thead>
-              <tbody id="measurementList">
-              </tbody>
-              <br />
-            </table>
+          <div class="column col-xl-7 col-md-10 col-sm-12">
+            <div class="form-group">
+              <div class="columns">
+                <div class="col-12">
+                  <div class="divider text-center" data-content="Custom measurement naming"></div>
+                </div>
+                <br />
+                <div id="board-default-options" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>name</th>
+                        <th>alias</th>
+                        <th>unit</th>
+                        <th>value</th>
+                      </tr>
+                    </thead>
+                    <tbody id="measurementList">
+                    </tbody>
+                    <br />
+                  </table>
 
-            <br />
-            <br />
+                </div>
+                <br />
+                <br />
+              </div>
+              <br />
+              <div class="column col-12">
+                <button class="btn btn-primary" type="button" id="update-measurements-button" onclick="executeMeasurements()">Update</button>
+                <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Skip</button>
+                <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+              </div>
+              <br />
+              <br />
+            </div>
           </div>
-          <br />
-          <div class="column col-12">
-            <button class="btn btn-primary" type="button" id="update-measurements-button" onclick="executeMeasurements()">Update</button>
-            <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">Skip</button>
-            <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
-          </div>
-          <br />
-          <br />
-        </div>
-        <div class="toast">
-          Accepted Characters: a-z, A-z, -, _, /, .
+          <div class="toast">
+        Accepted Characters: a-z, A-z, 0-9, -, _, /, .
+      </div>
         </div>
       </div>
     </div>
@@ -88,12 +94,12 @@
       let returnObj = {}
 
       var i = 0
-      while (1) {
+      while(1) {
         var elemKey = document.getElementById("input-key-name-" + i);
         var elemValue = document.getElementById("input-key-value-" + i);
         var elemUnit = document.getElementById("input-key-unit-" + i);
 
-        if (!elemKey || elemKey.value === '')
+        if(!elemKey || elemKey.value === '' )
           break
 
         var new_obj = {}
@@ -101,11 +107,11 @@
         if (elemValue && elemValue.value !== '')
           new_obj.alias = elemValue.value.trim()
 
-        if (elemUnit && (elemUnit.value !== defaultUnits[elemKey.value] || storedMapping[elemKey.value].unitUpdated))
+        if (elemUnit && elemUnit.value !== '' && elemUnit.value !== defaultUnits[elemKey.value])
           new_obj.unit = elemUnit.value.trim()
 
-        if (new_obj.alias || new_obj.unit)
-          returnObj[elemKey.value] = { ...new_obj }
+        if(new_obj.alias || new_obj.unit)
+          returnObj[elemKey.value] = {...new_obj}
 
         i++
       }
@@ -113,14 +119,15 @@
       return returnObj
     }
 
-    function loadCookie(name) {
+    function loadCookie(name, isEncoded) {
       try {
-        storedMapping = JSON.parse(Cookies.get(name))
+        var cookie = Cookies.get(name)
+        storedMapping = JSON.parse(isEncoded ? decodeURIComponent(cookie) : cookie)
         console.log("successfully parsed name", name)
         return storedMapping
       }
       catch (e) {
-        console.log("failed parsing: ", name, ", error:", e)
+        console.log("failed parsing: ", name)
       }
       return undefined
     }
@@ -128,11 +135,13 @@
     function initializeValues() {
       disableNavigationButtons()
 
-      if (!loadCookie("meas-name-ext-mapping") && !loadCookie("meas-name-mapping")) {
-        storedMapping = {}
-      }
-      else {
-        var editedMapping = {}
+      if(!loadCookie("meas-name-ext-mapping", false) && !loadCookie("meas-name-ext-mapping", true) &&
+         !loadCookie("meas-name-mapping", false) && !loadCookie("meas-name-mapping", true)) {
+           storedMapping = {}
+         }
+
+      if (storedMapping) {
+        var editiedMapping = {}
 
         Object.keys(storedMapping).sort().forEach((measurement_name) => {
           var new_obj = {
@@ -140,66 +149,34 @@
             unit: ""
           }
 
-          if (storedMapping[measurement_name]) {
-            if (typeof storedMapping[measurement_name] === 'string')
-              new_obj.alias = storedMapping[measurement_name]
-            else
-              new_obj.alias = storedMapping[measurement_name].alias
-          }
+          new_obj.alias = typeof storedMapping[measurement_name] == 'string' ? storedMapping[measurement_name] : storedMapping[measurement_name].alias
+          new_obj.unit = typeof storedMapping[measurement_name] == 'string' ? "" : storedMapping[measurement_name].unit
 
-          if (storedMapping[measurement_name] && typeof storedMapping[measurement_name] !== 'string') {
-            new_obj.unit = storedMapping[measurement_name].unit
-            new_obj.unitUpdated = true
-          }
-
-          editedMapping[measurement_name] = { ...new_obj }
+          editiedMapping[measurement_name] = {...new_obj}
         })
-
-        storedMapping = editedMapping
 
         document.getElementById("save-button").innerText = "Save"
 
-        populateTable(editedMapping)
+        populateTable(editiedMapping)
       }
 
       detectBoardChange(enableNavigationButtons)
     }
 
     function clearCookies() {
-      Cookies.remove('meas-name-mapping')
-      Cookies.remove('meas-name-ext-mapping')
+
     }
 
     function storeData() {
       disableNavigationButtons()
       clearCookies();
-      Cookies.set('meas-name-ext-mapping', getAliasUnitPairs())
+      Cookies.set('meas-name-ext-mapping', encodeURIComponent(JSON.stringify(getAliasUnitPairs())))
       redirectTo("step-6-timing.html")
       enableNavigationButtons()
     }
 
+
     function validateMyForm() {
-      const validAliasRe = new RegExp("^[a-zA-Z\-_\/\.]+$");
-      var i = 0
-      var hasIssue = false
-      while (1) {
-        var elemValue = document.getElementById("input-key-value-" + i);
-
-        if (!elemValue)
-          break
-
-        if (elemValue.value !== "" && !validAliasRe.exec(elemValue.value.trim())) {
-          elemValue.style.borderColor = "red";
-          elemValue.focus()
-          hasIssue = true
-        }
-        i++
-      }
-      if (hasIssue) {
-        window.alert("Please use only accepted characters for alias: a-z, A-z, -, _, /, .")
-        return false
-      }
-
       storeData()
       return true
     }
@@ -233,15 +210,11 @@
         obj["gps_num_of_sat"] = {}
         obj["gps_hdop"] = {}
       }
-
-      obj["reset_cause"] = {}
-      obj["uptime"] = {}
     }
 
     function executeMeasurements() {
       showElement('loader', true)
 
-      let measurements = {}
       var config = Cookies.get()
       var configString = ""
 
@@ -249,7 +222,7 @@
         if (config.hasOwnProperty(key)) {
           configString += (key + "=" + config[key] + "&")
           if (key == 'wifi-ssid' || key == 'wifi-pass' || key == 'meas-keyvalue') {
-            config[key] = config[key].replaceAll("\\", "\\\\").replaceAll("'", "\\'")
+            config[key] = decodeURIComponent(config[key]).replaceAll("\\", "\\\\").replaceAll("'", "\\'")
           }
         }
       }
@@ -260,7 +233,10 @@
       console.log("configString: ", configString)
       const objToSend = { queryParams: config }
 
-      if (!configString) return
+      if (configString == "") {
+        startOver()
+        return
+      }
 
       fetch('/save-config-temp', {
         method: 'POST',
@@ -269,25 +245,24 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(objToSend)
+      }).then(res => {
+        fetchInternal("/device_measurements")
+          .then((measurements) => {
+            addStaticValuesForNetwork(measurements)
+            console.log("measurements: ", measurements)
+            populateTable(measurements)
+
+            updateFieldsWithMappingFromConfiguration()
+
+            document.getElementById("save-button").innerText = "Save"
+
+            showElement('loader', false)
+
+          }).catch((err) => {
+            showElement('loader', false)
+            console.log("error fetching measurements: ", err)
+          });
       })
-        .then(res => {
-          fetchInternal("/device_measurements")
-            .then((measurements) => {
-              addStaticValuesForNetwork(measurements)
-              console.log("measurements: ", measurements)
-              populateTable(measurements)
-
-              updateFieldsWithMappingFromConfiguration()
-
-              document.getElementById("save-button").innerText = "Save"
-
-              showElement('loader', false)
-
-            }).catch((err) => {
-              showElement('loader', false)
-              console.log("error fetching measurements: ", err)
-            });
-        })
         .catch(err => {
           console.log("error saving config: ", err)
         })
@@ -354,26 +329,26 @@
         var elemValue = document.getElementById("input-key-value-" + i);
         var elemUnit = document.getElementById("input-key-unit-" + i);
 
-        if (!elemKey || elemKey.value.trim() === '')
+        if(!elemKey || elemKey.value.trim() === '' )
           break
 
         var storedMapForKey = storedMapping[elemKey.value]
         var isObject = typeof storedMapForKey === "object"
 
         if (elemValue && storedMapForKey) {
-          if (isObject && storedMapForKey.alias) {  // new version with unit storing
+          if(isObject && storedMapForKey.alias) {  // new version with unit storing
             elemValue.value = storedMapForKey.alias
           }
-          else if (!isObject && storedMapForKey) { // legacy version with alias-only storing
+          else if(!isObject && storedMapForKey) { // legacy version with alias-only storing
             elemValue.value = storedMapForKey
           }
         }
 
         if (elemUnit && storedMapForKey) {
-          if (isObject && storedMapForKey.unit) {  // new version with unit storing
+          if(isObject && storedMapForKey.unit) {  // new version with unit storing
             elemUnit.value = storedMapForKey.unit
           }
-          else if (!isObject) { // legacy version with alias-only storing
+          else if(!isObject) { // legacy version with alias-only storing
             elemUnit.value = ""
           }
         }

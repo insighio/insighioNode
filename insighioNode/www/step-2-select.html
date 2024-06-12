@@ -81,7 +81,7 @@
             fetchInternal("/settings")
             .then((data) => {
               Object.keys(data).forEach(function (key) {
-                Cookies.set(key.replaceAll("_", "-"), data[key])
+                Cookies.set(key, data[key])
               })
               enableButtonsLocal()
               showElement('loader', false)

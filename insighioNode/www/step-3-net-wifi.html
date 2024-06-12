@@ -156,8 +156,8 @@
     function initializeValues() {
       disableNavigationButtons()
       var protocol = Cookies.get("protocol")
-      setElemValue('input-ssid', Cookies.get("wifi-ssid"))
-      setElemValue('input-ssid-pass', Cookies.get("wifi-pass"))
+      setElemValue('input-ssid', decodeURIComponent(Cookies.get("wifi-ssid")))
+      setElemValue('input-ssid-pass', decodeURIComponent(Cookies.get("wifi-pass")))
       setRadioGroupValue('protocol', protocol ? protocol : "mqtt")
 
       fetchInternal("/update_wifi_list")
