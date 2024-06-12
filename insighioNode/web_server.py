@@ -143,11 +143,7 @@ class Config:
         import utils
 
         logging.debug("about to save queryParams: {}".format(data["queryParams"]))
-<<<<<<< HEAD
         utils.writeToFlagFile("/configLog", ujson.dumps(data["queryParams"]))
-=======
-        #utils.writeToFile("/configLog", self.convert_params_to_string(data))
->>>>>>> b5c6169489f1e3102c39d4b2f5d5528af009e20e
 
         try:
             import ujson
