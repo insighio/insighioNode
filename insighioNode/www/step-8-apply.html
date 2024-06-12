@@ -59,29 +59,24 @@
       function apply() {
         var config = Cookies.get()
         var encodedParams = {}
-        var isConfigValid = false
+        var isConfigValid = true
 
         for (let key in config) {
           if (config.hasOwnProperty(key)) {
             isConfigValid = true
-            if (key === 'wifi-ssid' || key === 'wifi-pass') {
-              encodedParams[key] = encodeURIComponent(config[key])
-              config[key] = config[key].replaceAll("\\", "\\\\").replaceAll("'", "\\'")
-            }
-            else if (key === 'meas-name-mapping' || key === 'meas-name-ext-mapping' || key === 'meas-keyvalue') {
-              //config[key] = JSON.stringify(config[key])
-              encodedParams[key] = encodeURIComponent(config[key])
+            if (key === 'wifi-ssid' || key === 'wifi-pass'){ // || (key === 'meas-name-mapping' || key === 'meas-name-ext-mapping' || key === 'meas-keyvalue') {
+              config[key] = encodeURIComponent(config[key])
             }
           }
         }
 
         console.log("queryParams: ", config)
-        const objToSend = { queryParams: config, encodedParams }
+        const objToSend = { queryParams: config }
 
-        if (!isConfigValid) {
-          startOver()
-          return
-        }
+        // if (!isConfigValid) {
+        //   startOver()
+        //   return
+        // }
 
         fetch('/save-config', {
           method: 'POST',

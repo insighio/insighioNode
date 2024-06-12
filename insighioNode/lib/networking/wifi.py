@@ -83,6 +83,11 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
             net_to_use = list(frozenset([key for key in known_nets]))[0]
             sec = 3
             pwd = known_nets[net_to_use]["pwd"]
+
+            import utils
+            net_to_use = utils.unquote(net_to_use)
+            pwd = utils.unquote(pwd )
+
             logging.debug(net_to_use, sec, pwd)
 
         (connection_status, conn_attempt_duration, _, channel, rssi) = connect_to_network(net_to_use, pwd, max_connection_attempt_time_sec)
