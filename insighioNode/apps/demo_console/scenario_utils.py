@@ -23,11 +23,11 @@ def device_init():
         gpio_handler.set_pin_value(cfg.get("_UC_IO_LOAD_PWR_SAVE_OFF"), 1)
         gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 1)
 
-    if cfg.get("_NOTIFICATION_LED_ENABLED"):
+    if cfg.get("meas-led-enabled"):
         if cfg.get("_UC_IO_RGB_DIN") and cfg.get("_UC_RGB_VDD"):
-            device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"), cfg.get("_UC_RGB_VDD"), cfg.get("_UC_IO_RGB_DIN"))
+            device_info.set_led_enabled(cfg.get("meas-led-enabled"), cfg.get("_UC_RGB_VDD"), cfg.get("_UC_IO_RGB_DIN"))
         else:
-            device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"))
+            device_info.set_led_enabled(cfg.get("meas-led-enabled"))
     else:
         device_info.set_led_enabled(False)
 
@@ -54,7 +54,7 @@ def get_measurements(cfg_dummy=None):
     measurements = {}
 
     try:
-        if cfg.get("_MEAS_BATTERY_STAT_ENABLE"):
+        if cfg.get("meas-battery-stat"):
             vbatt = read_battery_voltage()
             set_value_int(
                 measurements,
@@ -63,13 +63,13 @@ def get_measurements(cfg_dummy=None):
                 SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
             )
 
-        if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
+        if cfg.get("meas-board-stat"):
             (mem_alloc, mem_free) = device_info.get_heap_memory()
             set_value(measurements, "reset_cause", device_info.get_reset_cause())
             set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
             set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
             try:
-                if cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS"):
+                if cfg.get("meas-temp-unit"):
                     set_value_float(
                         measurements,
                         "cpu_temp",
@@ -97,7 +97,7 @@ def get_measurements(cfg_dummy=None):
 
     # read internal temperature and humidity
     try:
-        if cfg.get("_MEAS_BOARD_SENSE_ENABLE"):
+        if cfg.get("meas-board-sense"):
             if cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR") == cfg.get("_CONST_SENSOR_SI7021"):
                 from sensors import si7021 as sens
             elif cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR") == cfg.get("_CONST_SENSOR_SHT40"):
@@ -127,7 +127,7 @@ def get_measurements(cfg_dummy=None):
         else:  # if shield_name == cfg.get("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
 
-        if cfg.get("_MEAS_KEYVALUE"):
+        if cfg.get("meas-keyvalue"):
             add_explicit_key_values(measurements)
 
     except Exception as e:
@@ -142,10 +142,10 @@ def get_measurements(cfg_dummy=None):
 
 
 def read_pulse_counter(measurements):
-    if cfg.get("_PCNT_1_ENABLE"):
+    if cfg.get("meas-pcnt-1-enable"):
         from . import scenario_pcnt_ulp
 
-        scenario_pcnt_ulp.execute(measurements, cfg.get("UC_IO_DGTL_SNSR_READ"), cfg.get("_PCNT_1_HIGH_FREQ"), cfg.get("_PCNT_1_FORMULA"))
+        scenario_pcnt_ulp.execute(measurements, cfg.get("UC_IO_DGTL_SNSR_READ"), cfg.get("meas-pcnt-1-high-freq"), cfg.get("meas-pcnt-1-formula"))
     else:
         import utils
 
@@ -174,7 +174,7 @@ def default_board_measurements(measurements):
     meas_key_name = None
 
     for n in range(1, 3):
-        meas_key_name = "_MEAS_I2C_" + str(n)
+        meas_key_name = "meas-i2c-" + str(n)
         i2c_config = cfg.get(meas_key_name)
         if i2c_config and cfg.has("_UC_IO_I2C_SDA") and cfg.has("_UC_IO_I2C_SCL") and i2c_config != cfg.get("_CONST_MEAS_DISABLED"):
             logging.debug("Getting measurement for [{}] from sensor [{}]".format(meas_key_name, i2c_config))
@@ -182,9 +182,9 @@ def default_board_measurements(measurements):
 
     # up to 3 Digital/Analog sensors
     for n in range(1, 4):
-        meas_key_name = "_MEAS_ANALOG_DIGITAL_P" + str(n)
+        meas_key_name = "meas-sensor-a-d-p" + str(n)
         pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
-        transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
+        transformation_key = "meas-sensor-a-d-p" + str(n) + "-t"
         meas_key = cfg.get(meas_key_name)
         pin = cfg.get(pin_name)
 
@@ -197,15 +197,15 @@ def default_board_measurements(measurements):
             read_analog_digital_sensor(pin, meas_key, measurements, "adp" + str(n), transformation)
 
     if cfg.get("_SELECTED_SHIELD") == cfg.get("_CONST_SHIELD_SCALE"):
-        if cfg.get("_MEAS_SCALE_ENABLED"):
+        if cfg.get("meas-scale-enabled"):
             read_scale(measurements)
         read_scale_shield_temperature(measurements)
 
 
 def add_explicit_key_values(measurements):
     try:
-        for key in cfg.get("_MEAS_KEYVALUE"):
-            set_value(measurements, key, cfg.get("_MEAS_KEYVALUE")[key])
+        for key in cfg.get("meas-keyvalue"):
+            set_value(measurements, key, cfg.get("meas-keyvalue")[key])
     except:
         pass
 
@@ -229,7 +229,7 @@ def read_scale(measurements):
     from sensors import hx711
 
     weight = -1
-    is_sensor_debug_on = cfg.get("_MEAS_SCALE_MONITORING_ENABLED")
+    is_sensor_debug_on = cfg.get("meas-scale-monitoring-enabled")
 
     if is_sensor_debug_on:
         logging.setLevel(logging.DEBUG)
@@ -239,8 +239,8 @@ def read_scale(measurements):
             cfg.get("_UC_IO_SCALE_DATA_PIN"),
             cfg.get("_UC_IO_SCALE_CLOCK_PIN"),
             cfg.get("_UC_IO_SCALE_SPI_PIN"),
-            cfg.get("_UC_IO_SCALE_OFFSET"),
-            cfg.get("_UC_IO_SCALE_SCALE"),
+            cfg.get("meas-scale-offset"),
+            cfg.get("meas-scale-scale"),
         )
         if not is_sensor_debug_on:
             break
@@ -472,7 +472,7 @@ def execute_transformation(measurements, name, raw_value, transformator):
 
 
 def storeMeasurement(measurements, force_store=False):
-    if cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") is None and not force_store:
+    if cfg.get("batch-upload-buffer-size") is None and not force_store:
         logging.error("Batch upload not activated, ignoring")
         return False
 
@@ -483,7 +483,7 @@ def storeMeasurement(measurements, force_store=False):
 def read_accelerometer():
     logging.info("starting XL thread")
 
-    if cfg.get("_ALWAYS_ON_CONNECTION") or cfg.get("_FORCE_ALWAYS_ON_CONNECTION"):
+    if cfg.get("always-on-connection") or cfg.get("force-always-on-connection"):
         logging.debug("loading network modules...")
         # connect to network
         if cfg.get("network") == "wifi":

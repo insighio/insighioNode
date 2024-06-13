@@ -15,7 +15,7 @@ def get_protocol_config():
 
         protocol_config = coap_config.CoAPConfig()
         protocol_config.server_port = 5683
-        protocol_config.use_custom_socket = _IP_VERSION == "IPV6"
+        protocol_config.use_custom_socket = ipversion == "IPV6"
     elif protocol == "mqtt":
         from protocols import mqtt_client
         from protocols import mqtt_config
@@ -27,7 +27,7 @@ def get_protocol_config():
         print("Not supported transport protocol. Choose between CoAP and MQTT")
         return None
 
-    if _IP_VERSION == "IPV6":
+    if ipversion == "IPV6":
         protocol_config.server_ip = "2001:41d0:701:1100:0:0:0:2060"
     else:
         protocol_config.server_ip = "console.insigh.io"

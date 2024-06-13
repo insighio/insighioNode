@@ -15,6 +15,9 @@ CELLULAR_UNKNOWN = 4
 CELLULAR_MC60_STR = "mc60"
 CELLULAR_BG600_STR = "bg600"
 
+_MAX_ATTACHMENT_ATTEMPT_TIME_SEC = 90
+_MAX_CONNECTION_ATTEMPT_TIME_SEC = 600
+
 # Modem state
 MODEM_DETTACHED = -1  # initial value, nothing happened
 MODEM_ACTIVATED = 0
@@ -97,7 +100,7 @@ def get_modem_instance():
     return modem_instance
 
 
-def connect(cfg):
+def connect(ip_version, cell_apn, cell_tech):
     """Complete cellular connection procedure (activation, attachment, data connection)
     Returns:
         status: "Modem state" see enums NBIOT_*.
@@ -114,7 +117,7 @@ def connect(cfg):
     try:
         logging.debug("Initializing modem")
         modemInst = get_modem_instance()
-        modemInst.init(cfg._IP_VERSION, cfg._APN, cfg._CELLULAR_TECHNOLOGY)
+        modemInst.init(ip_version, cell_apn, cell_tech)
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
@@ -129,14 +132,13 @@ def connect(cfg):
             activation_duration = ticks_ms() - start_activation_duration
             # proceed with attachment
             start_attachment_duration = ticks_ms()
-            attachment_timeout = start_attachment_duration + cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC * 1000
+            attachment_timeout = start_attachment_duration + _MAX_ATTACHMENT_ATTEMPT_TIME_SEC * 1000
 
             modemInst.get_registered_mcc_mnc()
 
             if not modemInst.is_attached():
                 logging.debug("Attaching...")
                 modemInst.attach()
-                # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
                 while not modemInst.is_attached() and (ticks_ms() < attachment_timeout):
                     sleep_ms(10)
 
@@ -158,7 +160,7 @@ def connect(cfg):
                 if modemInst.has_data_over_ppp():
                     logging.debug("Entering Data State. Modem connecting...")
                     start_connection_duration = ticks_ms()
-                    connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
+                    connection_timeout = start_connection_duration + _MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
                     if not modemInst.is_connected():
                         modemInst.connect()
 
@@ -173,7 +175,7 @@ def connect(cfg):
                     # when using AT commands we don't need to explicitly enter data mode
                     status = MODEM_CONNECTED
             else:
-                logging.debug("Unable to attach in {} sec".format(cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC))
+                logging.debug("Unable to attach in {} sec".format(_MAX_ATTACHMENT_ATTEMPT_TIME_SEC))
     except Exception as e:
         logging.exception(e, "Outer Exception: {}".format(e))
 

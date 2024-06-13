@@ -40,7 +40,7 @@ def prepareForGPS():
 
 
 def updateSignalQuality(cfg, measurements):
-    if not cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+    if not cfg.get("meas-network-stat"):
         return
 
     modem_instance = cellular.get_modem_instance()
@@ -78,7 +78,7 @@ def connect(cfg):
     set_value(results, "status", status == cellular.MODEM_CONNECTED)
 
     # if network statistics are enabled
-    if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+    if cfg.get("meas-network-stat"):
         set_value(results, "cell_act_duration", activation_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         set_value(results, "cell_att_duration", attachment_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         if not protocol_config.use_custom_socket:
@@ -137,11 +137,11 @@ def get_gps_position(cfg, measurements, keep_open=False):
 
         timeout_ms = 120000
         min_satellite_fix_num = 4
-        if cfg.has("_MEAS_GPS_TIMEOUT"):
-            timeout_ms = cfg.get("_MEAS_GPS_TIMEOUT") * 1000
+        if cfg.has("meas-gps-timeout"):
+            timeout_ms = cfg.get("meas-gps-timeout") * 1000
 
-        if cfg.has("_MEAS_GPS_SATELLITE_FIX_NUM"):
-            min_satellite_fix_num = cfg.get("_MEAS_GPS_SATELLITE_FIX_NUM")
+        if cfg.has("meas-gps-sat-num"):
+            min_satellite_fix_num = cfg.get("meas-gps-sat-num")
 
         (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(timeout_ms, min_satellite_fix_num)
         set_value(measurements, "gps_dur", ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)

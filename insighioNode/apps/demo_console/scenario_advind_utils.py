@@ -39,9 +39,9 @@ def powerOffAllSwitchExcept(excludedIndex=None):
 
 
 def executeSDI12Measurement(sdi12, measurements, index):
-    enabled = cfg.get("_SDI12_SENSOR_" + str(index) + "_ENABLED")
-    address = cfg.get("_SDI12_SENSOR_" + str(index) + "_ADDRESS")
-    location = cfg.get("_SDI12_SENSOR_" + str(index) + "_LOCATION")
+    enabled = cfg.get("meas-sdi-" + str(index) + "-enabled")
+    address = cfg.get("meas-sdi-" + str(index) + "-address")
+    location = cfg.get("meas-sdi-" + str(index) + "-loc")
 
     if not enabled:
         logging.debug("sdi12 sensor [{}] enabled: {}".format(index, enabled))
@@ -59,7 +59,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
     if _sdi12_sensor_switch_list[location] is not None:
         set_sensor_power_on(_sdi12_sensor_switch_list[location])
     powerOffAllSwitchExcept(location)
-    sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
+    sleep_ms(cfg.get("meas-sdi-warmup-time"))
     read_sdi12_sensor(sdi12, address, measurements)
     powerOffAllSwitchExcept()
 
@@ -69,7 +69,7 @@ def shield_measurements(measurements):
     set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
 
     # get SDI12 measurements
-    sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
+    sleep_ms(cfg.get("meas-sdi-warmup-time"))
 
     from external.microsdi12.microsdi12 import SDI12
 
@@ -126,7 +126,7 @@ def read_sdi12_sensor(sdi12, address, measurements):
         parse_generic_sdi12(address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
         parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_ec", "uS/cm")  # dS/m
 
-        cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
+        cfg_is_celsius = cfg.get("meas-temp-unit")
         if cfg_is_celsius:
             responseArrayTemperature = sdi12.get_measurement(address, "C2")
             parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
@@ -211,7 +211,7 @@ def parse_sensor_licor(address, responseArray, measurements):
         set_value_float(measurements, variable_prefix + "_h", responseArray[2], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
         set_value_float(measurements, variable_prefix + "_vpd", responseArray[3], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
         set_value_float(measurements, variable_prefix + "_pa", responseArray[4], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
-        cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
+        cfg_is_celsius = cfg.get("meas-temp-unit")
         if cfg_is_celsius:
             set_value_float(measurements, variable_prefix + "_ta", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, 2)
         else:
@@ -256,8 +256,8 @@ def measure_4_20_mA_on_port(measurements, port_id):
     import gpio_handler
     from sensors import analog_generic
 
-    port_enabled = cfg.get("_4_20_SNSR_{}_ENABLE".format(port_id))
-    port_formula = cfg.get("_4_20_SNSR_{}_FORMULA".format(port_id))
+    port_enabled = cfg.get("meas-4-20-snsr-{}-enable".format(port_id))
+    port_formula = cfg.get("meas-4-20-snsr-{}-formula".format(port_id))
 
     if port_enabled:
         sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))

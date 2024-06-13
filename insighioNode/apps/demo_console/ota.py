@@ -85,10 +85,10 @@ def checkAndApply(client):
         elif hw_version == device_info._CONST_ESP32S3:
             new_offset = hx711.get_reading(5, 4, 8, None, None, 6, True)
 
-        cfg.set("_UC_IO_SCALE_OFFSET", new_offset)
+        cfg.set("meas-scale-offset", new_offset)
         from utils import configuration_handler
 
-        configuration_handler.updateConfigValue("_UC_IO_SCALE_OFFSET", new_offset)
+        configuration_handler.updateConfigValue("meas-scale-offset", new_offset)
         client.clear_retained(topic)
     elif topic.endswith("/cmd") and message == "reboot":
         client.clear_retained(topic)

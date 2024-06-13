@@ -8,6 +8,8 @@ import _thread
 transfer_client = None
 mutex = _thread.allocate_lock()
 
+_MAX_CONNECTION_ATTEMPT_TIME_SEC = 60
+
 
 def init(cfg):
     pass
@@ -19,7 +21,7 @@ def deinit():
 
 
 def updateSignalQuality(cfg, measurements):
-    if not cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+    if not cfg.get("meas-network-stat"):
         return
     pass
 
@@ -27,12 +29,12 @@ def updateSignalQuality(cfg, measurements):
 def connect(cfg, explicit_protocol=None):
     with mutex:
         (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(
-            cfg.get("_CONF_NETS"), cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC"), force_no_scan=True
+            cfg.get("_CONF_NETS"), _MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True
         )
         results = {}
         results["status"] = {"value": connOk}
         # if network statistics are enabled
-        if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+        if cfg.get("meas-network-stat"):
             results["wifi_conn_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connDur}
             results["wifi_channel"] = {"value": wifiChannel}
             results["wifi_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": wifiRssi}

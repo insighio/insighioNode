@@ -4,4 +4,4 @@ network="wifi"
 _MAX_CONNECTION_ATTEMPT_TIME_SEC = 20
 _CONF_NETS = {'<wifi-ssid>': {'pwd': '<wifi-pass>'}}
 
-_IP_VERSION = "IP"
+ipversion = "IP"

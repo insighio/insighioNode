@@ -9,7 +9,7 @@ import _thread
 storage_file_name = "measurements.log"
 MAX_NUMBER_OF_FORCED_MESSAGES = 1000
 
-message_buffer_size = cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER")
+message_buffer_size = cfg.get("batch-upload-buffer-size")
 
 mutex = _thread.allocate_lock()
 
