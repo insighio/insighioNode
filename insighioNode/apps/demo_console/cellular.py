@@ -74,7 +74,12 @@ def connect(cfg):
     if modem_instance is None or not modem_instance.has_sim():
         return results
 
-    (status, activation_duration, attachment_duration, connection_duration) = cellular.connect(cfg.get_cfg_module())
+    config = cellular.CellularConfig()
+    config.ip_version = "IP"
+    config.apn = cfg.get("cell-apn")
+    config.technology = cfg.get("cell-tech")
+
+    (status, activation_duration, attachment_duration, connection_duration) = cellular.connect(config)
     set_value(results, "status", status == cellular.MODEM_CONNECTED)
 
     # if network statistics are enabled

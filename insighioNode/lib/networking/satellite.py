@@ -98,7 +98,7 @@ def is_alive():
     return modem.is_alive()
 
 
-def send(cfg, byte_msg):
+def send(byte_msg):
     modem = get_modem_instance()
 
     if modem is None:

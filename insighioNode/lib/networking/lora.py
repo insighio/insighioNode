@@ -10,16 +10,6 @@ pin_modem_reset = None
 
 _DEFAULT_LORA_APP_EUI = "0000000000000001"
 
-def set_pins(power_on=None, modem_tx=None, modem_rx=None, modem_reset=None):
-    global pin_modem_tx
-    global pin_modem_rx
-    global pin_modem_power_on
-    global i2c_gps_address
-    pin_modem_tx = modem_tx
-    pin_modem_rx = modem_rx
-    pin_modem_power_on = power_on
-    pin_modem_reset = modem_reset
-
 class LoraConfig:
     def __init__(self):
         self.dev_eui = ""
@@ -30,6 +20,16 @@ class LoraConfig:
         self.dr = 5
         self.confirmed = 0
         self.tx_retries = 0
+
+def set_pins(power_on=None, modem_tx=None, modem_rx=None, modem_reset=None):
+    global pin_modem_tx
+    global pin_modem_rx
+    global pin_modem_power_on
+    global i2c_gps_address
+    pin_modem_tx = modem_tx
+    pin_modem_rx = modem_rx
+    pin_modem_power_on = power_on
+    pin_modem_reset = modem_reset
 
 
 def get_modem_instance():
@@ -52,7 +52,7 @@ def get_modem_instance():
     return modem_instance
 
 
-def join(cfg, lora_cfg):
+def join(lora_cfg):
     """Join network using a tuple of (dev_eui,app_eui,app_key)"""
     modem = get_modem_instance()
 

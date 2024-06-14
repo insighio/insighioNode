@@ -8,10 +8,10 @@ def init(cfg):
     is_alive = satellite.is_alive()
     logging.info("satellite modem is alive: {}".format(is_alive))
 
-    if cfg.get("_SATELLITE_ASTROCAST_DEVKIT_EN"):
-        ssid = cfg.get("_SATELLITE_ASTROCAST_DEVKIT_SSID")
-        password = cfg.get("_SATELLITE_ASTROCAST_DEVKIT_PASS")
-        token = cfg.get("_SATELLITE_ASTROCAST_DEVKIT_TOKEN")
+    if cfg.get("sat-astro-devkit-en"):
+        ssid = cfg.get("sat-astro-devkit-ssid")
+        password = cfg.get("sat-astro-devkit-pass")
+        token = cfg.get("sat-astro-devkit-token")
         logging.info("Setting DevKit wifi credentials and access token")
         res = satellite.get_modem_instance().modem_instance.wifi_configuration_write(ssid, password, token)
         logging.info("WiFi configuration setup result: {}".format(res))
@@ -66,7 +66,7 @@ def create_message(device_id, measurements):
 
 def send_message(cfg, message, explicit_channel_name=None):
     logging.info("Sending byte packet of {} bytes length".format(len(message)))
-    return satellite.send(cfg, message)
+    return satellite.send(message)
 
 
 def send_control_message(cfg, message, subtopic):

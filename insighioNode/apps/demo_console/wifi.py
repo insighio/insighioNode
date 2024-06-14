@@ -5,6 +5,7 @@ from external.kpn_senml.senml_record import SenmlRecord
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import _thread
 
+
 transfer_client = None
 mutex = _thread.allocate_lock()
 
@@ -28,9 +29,12 @@ def updateSignalQuality(cfg, measurements):
 
 def connect(cfg, explicit_protocol=None):
     with mutex:
-        (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(
-            cfg.get("_CONF_NETS"), _MAX_CONNECTION_ATTEMPT_TIME_SEC, force_no_scan=True
-        )
+        config = wifi.WifiConfig()
+        config.ssid = cfg.get("wifi-ssid")
+        config.pass = cfg.get("wifi-pass")
+        config.max_connection_attempt_time_sec = _MAX_CONNECTION_ATTEMPT_TIME_SEC
+
+        (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(config)
         results = {}
         results["status"] = {"value": connOk}
         # if network statistics are enabled

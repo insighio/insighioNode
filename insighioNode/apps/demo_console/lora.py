@@ -22,9 +22,19 @@ def updateSignalQuality(cfg, measurements):
 
 
 def connect(cfg):
+    config = lora.LoraConfig()
+    config.dev_eui = cfg.get("lora-dev-eui")
+    config.app_eui = cfg.get("lora-app-eui")
+    config.app_key = cfg.get("lora-app-key")
+    config.region = cfg.get("lora-region")
+    config.adr = cfg.get("lora-adr")
+    config.dr = cfg.get("lora-dr")
+    config.confirmed = cfg.get("lora-confirmed")
+    config.tx_retries = cfg.get("lora-retries")
+
     # network connectivity & transmission
     logging.info("Joining network...")
-    (joinOk, join_duration) = lora.join(cfg.get_cfg_module(), lora.set_keys(cfg.get_cfg_module()))
+    (joinOk, join_duration) = lora.join(config)
     results = {}
     results["status"] = {"value": joinOk}
 

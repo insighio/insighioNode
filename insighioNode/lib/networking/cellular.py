@@ -33,6 +33,13 @@ pin_modem_power_on = None
 pin_modem_power_key = None
 
 
+class CellularConfig:
+    def __init__(self):
+        self.ip_version = "IP"
+        self.apn = "iot.1nce.net"
+        self.technology = "NBIoT"
+
+
 def set_pins(power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx=None, gps_rx=None):
     global pin_modem_tx
     global pin_modem_rx
@@ -100,7 +107,7 @@ def get_modem_instance():
     return modem_instance
 
 
-def connect(ip_version, cell_apn, cell_tech):
+def connect(cellular_cfg):
     """Complete cellular connection procedure (activation, attachment, data connection)
     Returns:
         status: "Modem state" see enums NBIOT_*.
@@ -114,10 +121,11 @@ def connect(ip_version, cell_apn, cell_tech):
     rsrp = None
     rsrq = None
 
+
     try:
         logging.debug("Initializing modem")
         modemInst = get_modem_instance()
-        modemInst.init(ip_version, cell_apn, cell_tech)
+        modemInst.init(cellular_cfg.ip_version, cellular_cfg.apn, cellular_cfg.technology)
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
