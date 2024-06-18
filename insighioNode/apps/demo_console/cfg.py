@@ -1,27 +1,54 @@
 import logging
+import ujson
+import utils
 
+is_config_valid = False
 is_temp_config = False
+user_settings = {}
+device_settings = {}
+
+_tmp_config_file_path = "/apps/tmp_config.json"
+_user_config_file_path = "/apps/user_config.json"
+_device_config_file_path = "/apps/device_config.json"
+
+################################################
+# load json files
+try:
+    if utlis.existsFile(_tmp_config_file_path):
+        user_settings = ujson.loads(utils.readFromFile(_tmp_config_file_path))
+        is_temp_config = True
+        is_config_valid = True
+        logging.info("[cfg] loaded config: [temp]")
+except Exception as e:
+    pass
+
+if not is_temp_config:
+    try:
+        if utils.existsFile(_user_config_file_path):
+            user_settings = ujson.loads(utils.readFromFile(_user_config_file_path))
+            logging.info("[cfg] loaded config: [normal]")
+            is_config_valid = True
+    except Exception as e:
+        pass
+
+if not is_config_valid:
+    user_settings = {}
+    logging.info("[cfg] loaded config: [fallback]")
 
 try:
-    from apps import demo_temp_config as _cfg
-    is_temp_config = True
-
-    logging.info("[cfg] loaded config: [temp]")
+    device_settings = ujson.loads(utils.readFromFile("/apps/device_config.json"))
+    logging.info("[cfg] loaded device config")
 except Exception as e:
-    try:
-        from . import demo_config as _cfg
+    logging.exception(e, "Unable to retrieve old configuration")
 
-        logging.info("[cfg] loaded config: [normal]")
-    except Exception as e:
-        cfg = type("", (), {})()
-        logging.info("[cfg] loaded config: [fallback]")
-
+################################################
+# auxilary functions
 
 def has(key):
     return hasattr(_cfg, key)
 
 
-def get(key):
+def get(key, category="user"):
     return getattr(_cfg, key) if hasattr(_cfg, key) else None
 
 

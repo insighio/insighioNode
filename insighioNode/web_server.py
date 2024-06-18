@@ -61,12 +61,12 @@ class Settings:
             insighioSettings = {}
             #from utils import configuration_handler
 
-            try:
+`            try:
                 import ujson
                 import utils
-                insighioSettings = ujson.loads(utils.readFromFile("/apps/demo_console/config.json")) #configuration_handler.get_config_values(False)
+                insighioSettings = ujson.loads(utils.readFromFile("/apps/user_config.json")) #configuration_handler.get_config_values(False)
             except Exception as e:
-                logging.exception(e, "Unable to retrieve old configuration")
+                logging.exception(e, "Unable to retrieve old configuration")`
 
             insighioSettings["hw-module"] = hw_version
             insighioSettings["board-mac"] = get_device_id()[0]
@@ -143,14 +143,11 @@ class Config:
         import utils
 
         logging.debug("about to save queryParams: {}".format(data["queryParams"]))
-        utils.writeToFlagFile("/configLog", ujson.dumps(data["queryParams"]))
 
         try:
             import ujson
-            utils.writeToFile("/apps/demo_console/config.json", ujson.dumps(data["queryParams"]))
-            # from utils import configuration_handler
-            #
-            # configuration_handler.apply_configuration(data["queryParams"])
+            utils.writeToFile("/apps/user_config.json", ujson.dumps(data["queryParams"]))
+            utils.writeToFlagFile("/configLog", "new")
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")
@@ -165,7 +162,7 @@ class ConfigTemp:
 
         try:
             import ujson
-            utils.writeToFile("/apps/demo_temp_config.json", ujson.dumps(data["queryParams"]))
+            utils.writeToFile("/apps/tmp_config.json", ujson.dumps(data["queryParams"]))
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")
