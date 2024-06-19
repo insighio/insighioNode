@@ -179,16 +179,6 @@ class DeviceMeasurements:
             import sys
 
             try:
-                del sys.modules["apps.demo_console.demo_config"]
-            except:
-                pass
-
-            try:
-                del sys.modules["apps.demo_temp_config"]
-            except:
-                pass
-
-            try:
                 del sys.modules["apps.demo_console.scenario_utils"]
             except:
                 pass
