@@ -6,6 +6,9 @@ is_config_valid = False
 is_temp_config = False
 user_settings = {}
 device_settings = {}
+protocol_config_instance = None
+
+_SETTINGS_FIELD = '_settings_field'
 
 _tmp_config_file_path = "/apps/tmp_config.json"
 _user_config_file_path = "/apps/user_config.json"
@@ -41,66 +44,104 @@ try:
 except Exception as e:
     logging.exception(e, "Unable to retrieve old configuration")
 
+# board # hw-module
+# protocol #
+# shield-sensor
+# shield-radio
+
 ################################################
 # auxilary functions
 
-def has(key):
-    return hasattr(_cfg, key)
+_tmp_obj = None
+_tmp_field = None
+_tmp_subobj = None
 
+def _has(obj, key):
+    if not obj or not key:
+        return False
+    try:
+        return key in obj
+    except:
+        return False
 
-def get(key, category="user"):
-    return getattr(_cfg, key) if hasattr(_cfg, key) else None
+def _get(obj, key):
+    if not obj or not key:
+        return None
+    try:
+        return obj[key]
+    except:
+        return None
+
+def has(key, category=None):
+    global _tmp_obj
+    global _tmp_field
+    global _tmp_subobj
+
+    if category is None:
+        return _has(user_settings, key)
+    else:
+        _tmp_obj = None
+        _tmp_field = None
+        if _has(device_settings, category):
+            _tmp_obj = _get(device_settings, category)
+            _tmp_field = _get(user_settings, _get(_tmp_obj, '_settings_field'))
+            _tmp_subobj = _get(_tmp_obj, _tmp_field)
+            return _has(_tmp_subobj, key):
+    return False
+
+def get(key, category=None):
+    global _tmp_obj
+    global _tmp_field
+    global _tmp_subobj
+
+    if category is None:
+        return _get(user_settings, key)
+    else:
+        _tmp_obj = None
+        _tmp_field = None
+        if _has(device_settings, category):
+            _tmp_obj = _get(device_settings, category)
+            _tmp_field = _get(user_settings, _get(_tmp_obj, '_settings_field'))
+            _tmp_subobj = _get(_tmp_obj, _tmp_field)
+            return _get(_tmp_subobj, key):
+    return None
 
 
 def set(key, value):
-    setattr(_cfg, key, value)
+    global user_settings
+    user_settings[key] = value
     return True
 
 
 def get_protocol_config():
-    pass
-    # protocol_config_instance = None
-    #
-    #
-    # def get_protocol_config():
-    #     global protocol_config_instance
-    #     if protocol_config_instance is not None:
-    #         return protocol_config_instance
-    #
-    #     if protocol == "coap":
-    #         from protocols import coap_client
-    #         from protocols import coap_config
-    #
-    #         protocol_config = coap_config.CoAPConfig()
-    #         protocol_config.server_port = 5683
-    #         protocol_config.use_custom_socket = ipversion == "IPV6"
-    #     elif protocol == "mqtt":
-    #         from protocols import mqtt_client
-    #         from protocols import mqtt_config
-    #
-    #         protocol_config = mqtt_config.MQTTConfig()
-    #         protocol_config.server_port = 1884  # only for mqtt
-    #         protocol_config.use_custom_socket = False
-    #     else:
-    #         print("Not supported transport protocol. Choose between CoAP and MQTT")
-    #         return None
-    #
-    #     if ipversion == "IPV6":
-    #         protocol_config.server_ip = "2001:41d0:701:1100:0:0:0:2060"
-    #     else:
-    #         protocol_config.server_ip = "console.insigh.io"
-    #
-    #     """ console.insigh.io security keys """
-    #     protocol_config.message_channel_id = "<insighio-channel>"
-    #     protocol_config.control_channel_id = "<insighio-control-channel>"
-    #     protocol_config.thing_id = "<insighio-id>"
-    #     protocol_config.thing_token = "<insighio-key>"
-    #     protocol_config_instance = protocol_config
-    #     return protocol_config
+    global protocol_config_instance
 
+    if protocol_config_instance is not None:
+        return protocol_config_instance
 
-def get_cfg_module():
-    return _cfg
+    protocol = get("protocol")
+    ipversion = get("ipversion")
+
+    if protocol == "coap":
+        from protocols import coap_client
+        from protocols import coap_config
+
+        protocol_config_instance = coap_config.CoAPConfig()
+
+    elif protocol == "mqtt":
+        from protocols import mqtt_client
+        from protocols import mqtt_config
+
+        protocol_config_instance = mqtt_config.MQTTConfig()
+
+    protocol_config_instance.server_port = get("server-port", "protocol")
+    protocol_config_instance.use_custom_socket = False
+
+    if ipversion == "IPV6":
+        protocol_config_instance.server_ip = get("server-ipv6", "protocol")
+    else:
+        protocol_config_instance.server_ip = get("server-ipv4", "protocol")
+
 
 def is_temp():
     return is_temp_config

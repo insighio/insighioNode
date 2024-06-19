@@ -8,6 +8,7 @@
   "_CONST_SENSOR_SHT40": "sht40",
   "_CONST_MEAS_DISABLED": "disabled",
   "board": {
+    "_settings_field": "hw-module"
     "esp32": {
       "_BAT_ATT": 3,
       "_BAT_VDIV": 2,
@@ -52,6 +53,7 @@
   }
   ,
   "protocol": {
+    "_settings_field": "protocol"
     "coap": {
       "server-port": 5683,
       "use-custom-socket": false
@@ -66,6 +68,7 @@
     }
   },
   "shield-sensor": {
+    "_settings_field": "selected-shield"
     "advind": {
       "_CUR_SNSR_OUT_1": 4,
       "_CUR_SNSR_OUT_2": 5,
@@ -84,12 +87,7 @@
       "_UC_IO_SNSR_REG_ON": 37,
       "UC_IO_DGTL_SNSR_READ": 2
     },
-    "esp32-scale": {
-      "_UC_IO_SCALE_CLOCK_PIN": 33,
-      "_UC_IO_SCALE_DATA_PIN": 4,
-      "_UC_IO_SCALE_SPI_PIN": 12
-    },
-    "esp32s3-scale": {
+    "scale": {
       "_UC_IO_BUZZER_ON": 1,
       "_UC_IO_LED_1_ON": 11,
       "_UC_IO_LED_2_ON": 17,
@@ -109,6 +107,7 @@
     }
   },
   "shield-radio": {
+    "_settings_field": "network"
     "lora": {
       "_UC_LORA_RESET": 18
     }
