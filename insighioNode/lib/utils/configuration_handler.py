@@ -309,7 +309,7 @@ def updateConfigValue(key, new_value):
 
 def notifyServerWithNewConfig():
     newConfig = get_URI_param()
-    utils.writeToFlagFile("/configLog", newConfig)
+    utils.writeToFlagFile("/configLog", "new")
 
 
 def get_file_config(fileName, keyValuePairs):

@@ -16,33 +16,41 @@ _device_config_file_path = "/apps/device_config.json"
 
 ################################################
 # load json files
-try:
-    if utlis.existsFile(_tmp_config_file_path):
-        user_settings = ujson.loads(utils.readFromFile(_tmp_config_file_path))
-        is_temp_config = True
-        is_config_valid = True
-        logging.info("[cfg] loaded config: [temp]")
-except Exception as e:
-    pass
 
-if not is_temp_config:
+def init():
+    global is_config_valid
+    global is_temp_config
+    global user_settings
+    global device_settings
+    global protocol_config_instance
+
     try:
-        if utils.existsFile(_user_config_file_path):
-            user_settings = ujson.loads(utils.readFromFile(_user_config_file_path))
-            logging.info("[cfg] loaded config: [normal]")
+        if utlis.existsFile(_tmp_config_file_path):
+            user_settings = ujson.loads(utils.readFromFile(_tmp_config_file_path))
+            is_temp_config = True
             is_config_valid = True
+            logging.info("[cfg] loaded config: [temp]")
     except Exception as e:
         pass
 
-if not is_config_valid:
-    user_settings = {}
-    logging.info("[cfg] loaded config: [fallback]")
+    if not is_temp_config:
+        try:
+            if utils.existsFile(_user_config_file_path):
+                user_settings = ujson.loads(utils.readFromFile(_user_config_file_path))
+                logging.info("[cfg] loaded config: [normal]")
+                is_config_valid = True
+        except Exception as e:
+            pass
 
-try:
-    device_settings = ujson.loads(utils.readFromFile("/apps/device_config.json"))
-    logging.info("[cfg] loaded device config")
-except Exception as e:
-    logging.exception(e, "Unable to retrieve old configuration")
+    if not is_config_valid:
+        user_settings = {}
+        logging.info("[cfg] loaded config: [fallback]")
+
+    try:
+        device_settings = ujson.loads(utils.readFromFile("/apps/device_config.json"))
+        logging.info("[cfg] loaded device config")
+    except Exception as e:
+        logging.exception(e, "Unable to retrieve old configuration")
 
 # board # hw-module
 # protocol #
