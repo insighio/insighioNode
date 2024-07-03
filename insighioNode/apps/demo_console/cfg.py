@@ -8,7 +8,7 @@ user_settings = {}
 device_settings = {}
 protocol_config_instance = None
 
-_SETTINGS_FIELD = '_settings_field'
+_SETTINGS_FIELD = "_settings_field"
 
 _tmp_config_file_path = "/apps/tmp_config.json"
 _user_config_file_path = "/apps/user_config.json"
@@ -16,6 +16,7 @@ _device_config_file_path = "/apps/device_config.json"
 
 ################################################
 # load json files
+
 
 def init():
     global is_config_valid
@@ -25,7 +26,7 @@ def init():
     global protocol_config_instance
 
     try:
-        if utlis.existsFile(_tmp_config_file_path):
+        if utils.existsFile(_tmp_config_file_path):
             user_settings = ujson.loads(utils.readFromFile(_tmp_config_file_path))
             is_temp_config = True
             is_config_valid = True
@@ -45,12 +46,16 @@ def init():
     if not is_config_valid:
         user_settings = {}
         logging.info("[cfg] loaded config: [fallback]")
+        return False
 
     try:
-        device_settings = ujson.loads(utils.readFromFile("/apps/device_config.json"))
+        device_settings = ujson.loads(utils.readFromFile(_device_config_file_path))
         logging.info("[cfg] loaded device config")
+        return True
     except Exception as e:
         logging.exception(e, "Unable to retrieve old configuration")
+    return False
+
 
 # board # hw-module
 # protocol #
@@ -64,6 +69,7 @@ _tmp_obj = None
 _tmp_field = None
 _tmp_subobj = None
 
+
 def _has(obj, key):
     if not obj or not key:
         return False
@@ -72,6 +78,7 @@ def _has(obj, key):
     except:
         return False
 
+
 def _get(obj, key):
     if not obj or not key:
         return None
@@ -79,6 +86,7 @@ def _get(obj, key):
         return obj[key]
     except:
         return None
+
 
 def has(key, category=None):
     global _tmp_obj
@@ -92,10 +100,11 @@ def has(key, category=None):
         _tmp_field = None
         if _has(device_settings, category):
             _tmp_obj = _get(device_settings, category)
-            _tmp_field = _get(user_settings, _get(_tmp_obj, '_settings_field'))
+            _tmp_field = _get(user_settings, _get(_tmp_obj, "_settings_field"))
             _tmp_subobj = _get(_tmp_obj, _tmp_field)
-            return _has(_tmp_subobj, key):
+            return _has(_tmp_subobj, key)
     return False
+
 
 def get(key, category=None):
     global _tmp_obj
@@ -109,9 +118,9 @@ def get(key, category=None):
         _tmp_field = None
         if _has(device_settings, category):
             _tmp_obj = _get(device_settings, category)
-            _tmp_field = _get(user_settings, _get(_tmp_obj, '_settings_field'))
+            _tmp_field = _get(user_settings, _get(_tmp_obj, "_settings_field"))
             _tmp_subobj = _get(_tmp_obj, _tmp_field)
-            return _get(_tmp_subobj, key):
+            return _get(_tmp_subobj, key)
     return None
 
 
