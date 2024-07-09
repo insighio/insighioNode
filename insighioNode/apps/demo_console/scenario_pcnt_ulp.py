@@ -169,10 +169,8 @@ def read_ulp_values(measurements, multiplier, label=None):
         loops = value(2)
 
     # read last pcnt saved timestamp
-    last_timestamp = utils.readFromFlagFile(TIMESTAMP_FLAG_FILE)
+    last_timestamp_str = utils.readFromFlagFile(TIMESTAMP_FLAG_FILE)
     now_timestamp = utime.time_ns()
-
-    logging.debug("last_timestamp: {}, now_timestamp: {}".format(last_timestamp, now_timestamp))
 
     # reset registers
     setval(1, 0x0)
@@ -180,12 +178,33 @@ def read_ulp_values(measurements, multiplier, label=None):
 
     utils.writeToFlagFile(TIMESTAMP_FLAG_FILE, "{}".format(now_timestamp))
 
-    # execute calculations
+    # validate timestamps
+    last_timestamp = 0
+    try:
+        last_timestamp = int(last_timestamp_str)
+    except:
+        pass
 
+    if last_timestamp > now_timestamp:
+        last_timestamp = 0
+        now_timestamp = 0
+
+    logging.debug("ULP timing: now_timestamp: {}, last_timestamp: {}".format(now_timestamp, last_timestamp))
+
+    if last_timestamp == 0:
+            set_value_float(measurements, "pcnt_count", 0, SenmlUnits.SENML_UNIT_COUNTER)
+            set_value_int(measurements, "pcnt_edge_count", 0, SenmlUnits.SENML_UNIT_COUNTER)
+            set_value_float(measurements, "pcnt_period_s", 0, SenmlUnits.SENML_UNIT_SECOND)
+            set_value_float(measurements, "pcnt_count_formula", 0)
+            logging.debug("================ {} =======================".format(label))
+            logging.debug("========= pcnt_count: ----------------")
+            logging.debug("=============================================")
+            return
+
+    # execute calculations
     time_diff_from_prev = 0
     try:
-        logging.debug("ULP timing: now_timestamp: {}, last_timestamp: {}".format(now_timestamp, last_timestamp))
-        time_diff_from_prev = now_timestamp - int(last_timestamp)
+        time_diff_from_prev = now_timestamp - last_timestamp
         time_diff_from_prev = time_diff_from_prev / 1E9
         if time_diff_from_prev <= 0:
             time_diff_from_prev = 0
@@ -220,7 +239,7 @@ def read_ulp_values(measurements, multiplier, label=None):
         pass
 
     calculated_value = (edge_cnt / 2)*pcnt_multiplier
-    set_value_float(measurements, "rain_gauge_height", calculated_value, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIMETER)
+    set_value_float(measurements, "pcnt_count_formula", calculated_value)
 
     logging.debug("   ")
     logging.debug("================ {} =======================".format(label))
