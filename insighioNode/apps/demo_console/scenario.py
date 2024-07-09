@@ -289,9 +289,11 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
         network.prepareForGPS()
 
     if not message_sent:
-        logging.info("Message transmission failed, storing for later")
         if cfg.get("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+            logging.info("Message transmission failed, storing for later")
             scenario_utils.storeMeasurement(measurements, True)
+        else:
+            logging.info("Message transmission failed, ignoring message")
 
     # disconnect from network
     if not always_on or not is_connected:
