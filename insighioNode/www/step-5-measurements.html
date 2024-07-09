@@ -369,7 +369,7 @@
       addSwitch("options-sdi12", "ins-esp-gen-pcnt-1-enable", "Pulse Counter Enable")
       //addSelect("options-sdi12", "ins-esp-gen-pcnt-1-cnt-on", "Pulse Counter Trigger")
       addSwitch("options-sdi12", "ins-esp-gen-pcnt-1-high-freq", "High Frequency", undefined, true)
-      addInput('options-sdi12', 'ins-esp-gen-pcnt-1-formula', 'Pulse Counter Formula', "text", true)
+      addInput('options-sdi12', 'ins-esp-gen-pcnt-1-formula', 'Pulse Counter Multiplier', "text", true)
       //addIn
 
       generateOptions("input-i2c-1", i2cOptions)
@@ -448,7 +448,7 @@
       setElemValue("ins-esp-gen-4-20-snsr-2-formula", Cookies.get("meas-4-20-snsr-2-formula"), "v")
       setElemValueBool('ins-esp-gen-pcnt-1-enable', strToJSValue(Cookies.get("meas-pcnt-1-enable")), false)
       //setElemValue('ins-esp-gen-pcnt-1-cnt-on', strToJSValue(Cookies.get("meas-pcnt-1-cnt-on-rising")) ? "rising" : "falling", "rising")
-      setElemValue('ins-esp-gen-pcnt-1-formula', Cookies.get("meas-pcnt-1-formula"), "v")
+      setElemValue('ins-esp-gen-pcnt-1-formula', Cookies.get("meas-pcnt-1-formula"), "1")
       setElemValueBool('ins-esp-gen-pcnt-1-high-freq', strToJSValue(Cookies.get("meas-pcnt-1-high-freq")), true)
 
       setElemValueBool('input-store-meas-if-failed-conn', strToJSValue(Cookies.get("store-meas-if-failed-conn")), false)
