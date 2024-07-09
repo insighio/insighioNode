@@ -68,7 +68,7 @@
           <br />
         </div>
         <div class="toast">
-          Accepted Characters: a-z, A-z, -, _, /, .
+          Accepted Characters: a-z, A-z, 0-9, -, _, /, .
         </div>
       </div>
     </div>
@@ -101,7 +101,7 @@
         if (elemValue && elemValue.value !== '')
           new_obj.alias = elemValue.value.trim()
 
-        if (elemUnit && (elemUnit.value !== defaultUnits[elemKey.value] || storedMapping[elemKey.value].unitUpdated))
+        if (elemUnit && (elemUnit.value !== defaultUnits[elemKey.value] || (storedMapping[elemKey.value] && storedMapping[elemKey.value].unitUpdated)))
           new_obj.unit = elemUnit.value.trim()
 
         if (new_obj.alias || new_obj.unit)
