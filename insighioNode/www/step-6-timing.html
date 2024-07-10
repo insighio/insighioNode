@@ -280,7 +280,7 @@
         periodSeconds = seconds * batchsize
 
       setElemText('timing-sec', periodSeconds, "-")
-      setElemText('timing-proc-h', (periodSeconds / 3600).toFixed(0).toString().padStart(2, "0"), "-")
+      setElemText('timing-proc-h', Math.floor(periodSeconds / 3600).toString().padStart(2, "0"), "-")
       setElemText('timing-proc-s', ((periodSeconds % 3600) / 60).toFixed(0).toString().padStart(2, "0"), "-")
     }
 
