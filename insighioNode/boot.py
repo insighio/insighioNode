@@ -154,7 +154,9 @@ print("[boot] Voltage OK")
 ##################################################################
 # setup data paritition
 from esp32 import Partition
-p = Partition.find(Partition.TYPE_DATA, label='data')[0]
+p = Partition.find(Partition.TYPE_DATA, label='data')
+if len(p) > 0 :
+    p = p[0]
 
 try:
     if p:
