@@ -8,11 +8,11 @@
   "_CONST_SENSOR_SHT40": "sht40",
   "_CONST_MEAS_DISABLED": "disabled",
   "board": {
-    "_settings_field": "hw-module"
+    "_settings_field": "hw-module",
     "esp32": {
       "_BAT_ATT": 3,
       "_BAT_VDIV": 2,
-      "_I2C_BQ_ADDRESS": 0x6B,
+      "_I2C_BQ_ADDRESS": 107,
       "_SENSAIR_EN_PIN_NUM": 33,
       "_SENSAIR_nRDY_PIN_NUM": 4,
       "_UC_INTERNAL_TEMP_HUM_SENSOR": "sht40",
@@ -28,13 +28,13 @@
       "_UC_UART_GPS_RX": 14,
       "_UC_UART_GPS_TX": 13,
       "_UC_UART_MODEM_RX": 18,
-      "_UC_UART_MODEM_TX": 19,
+      "_UC_UART_MODEM_TX": 19
     },
     "esp32s3": {
       "_BAT_ATT": 3,
       "_BAT_VDIV": 2,
-      "_I2C_BQ_ADDRESS": 0x6B,
-      "_I2C_GPS_ADDRESS": 0x10,
+      "_I2C_BQ_ADDRESS": 107,
+      "_I2C_GPS_ADDRESS": 16,
       "_UC_GPS_RESET": 36,
       "_UC_INTERNAL_TEMP_HUM_SENSOR": "sht40",
       "_UC_IO_BAT_MEAS_ON": 14,
@@ -48,31 +48,30 @@
       "_UC_IO_SENSOR_GND_ON": 12,
       "_UC_RGB_VDD": 47,
       "_UC_UART_MODEM_RX": 16,
-      "_UC_UART_MODEM_TX": 15,
+      "_UC_UART_MODEM_TX": 15
     }
-  }
-  ,
+  },
   "protocol": {
-    "_settings_field": "protocol"
+    "_settings_field": "protocol",
     "coap": {
       "server-port": 5683,
-      "use-custom-socket": false
+      "use-custom-socket": false,
       "server-ipv4": "2001:41d0:701:1100:0:0:0:2060",
-      "server-ipv6" : "console.insigh.io"
+      "server-ipv6": "console.insigh.io"
     },
     "mqtt": {
       "server-port": 1884,
-      "use-custom-socket": false
+      "use-custom-socket": false,
       "server-ipv4": "2001:41d0:701:1100:0:0:0:2060",
-      "server-ipv6" : "console.insigh.io"
+      "server-ipv6": "console.insigh.io"
     }
   },
   "shield-sensor": {
-    "_settings_field": "selected-shield"
+    "_settings_field": "selected-shield",
     "advind": {
       "_CUR_SNSR_OUT_1": 4,
       "_CUR_SNSR_OUT_2": 5,
-      "_I2C_CHIP_ID_ADDRESS": 0x54,
+      "_I2C_CHIP_ID_ADDRESS": 84,
       "_INA_GAIN": 100,
       "_SHUNT_OHMS": 0.47,
       "_UC_IO_CUR_SNS_ON": 9,
@@ -107,7 +106,7 @@
     }
   },
   "shield-radio": {
-    "_settings_field": "network"
+    "_settings_field": "network",
     "lora": {
       "_UC_LORA_RESET": 18
     }
