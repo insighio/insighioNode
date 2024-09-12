@@ -139,8 +139,8 @@ def read_sdi12_sensor(sdi12, address, measurements):
         responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
     else:
         set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
-        responseArrayC = sdi12.get_measurement(address, "C")
-        responseArrayM = sdi12.get_measurement(address, "M")
+        responseArrayC = sdi12.get_measurement(address, "C", 2)
+        responseArrayM = sdi12.get_measurement(address, "M", 1)
         parse_generic_sdi12(address, responseArrayC, measurements, "sdi12", None, "_c")
         parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m")
 
