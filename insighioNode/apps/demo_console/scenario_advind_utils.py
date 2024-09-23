@@ -105,12 +105,15 @@ def read_sdi12_sensor(sdi12, address, measurements):
     if sdi12.is_active(address):
         manufacturer, model = sdi12.get_sensor_info(address)
         manufacturer = manufacturer.lower()
+        model = model.lower()
+        # set_value(measurements, "sdi12_{}_model".format(address), model)
+        # set_value(measurements, "sdi12_{}_manufacturer".format(address), manufacturer)
 
     if not manufacturer:
         logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
         return
 
-    if manufacturer == "meter":
+    if manufacturer == "meter" and "at41g2" not in model:
         responseArray = sdi12.get_measurement(address)
         parse_sensor_meter(address, responseArray, measurements)
     elif manufacturer == "acclima":
