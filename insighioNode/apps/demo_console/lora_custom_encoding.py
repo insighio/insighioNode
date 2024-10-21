@@ -23,6 +23,8 @@ LOCATION_RAIN_GAUGE = 0x81
 LOCATION_SOLAR_SENSOR = 0x82
 LOCATION_PULSE_COUNTER = 0x83
 LOCATION_WEATHER_STATION_WIND = 0x84
+LOCATION_SDI12_PORT_1 = 0x90
+LOCATION_SDI12_PORT_2 = 0xA0
 
 TYPE_DEVICE_ID = 0x01
 TYPE_RESET_CAUSE = 0x02
@@ -114,7 +116,22 @@ def get_location_by_key(key):
         elif loc_name == "4-20" and position[0] >= "0" and position[0] <= "9":
             return LOCATION_4_20 + int(position[0])
         elif loc_name == "sdi12" and position[0] >= "0" and position[0] <= "9":
-            return LOCATION_SDI12 + int(position[0])
+            if len(parts) >= 3: # format: sdi12_0_2 -> location_address_port
+                port = None
+                try:
+                    port = int(parts[-1])
+                except:
+                    logging.error("---!---error parsing port: {}".format(port))
+
+                if port:
+                    position_int = int(parts[-2])
+
+                    if port == 1:
+                        return LOCATION_SDI12_PORT_1 + position_int
+                    elif port == 2:
+                        return LOCATION_SDI12_PORT_2 + position_int
+            position_int = int(position[0])
+            return LOCATION_SDI12 + position_int
         elif len(parts) > 2:
             if position == "ap1":
                 return LOCATION_A_P1
@@ -125,17 +142,32 @@ def get_location_by_key(key):
             elif position == "adp2":
                 return LOCATION_AD_P2
             elif position[0] >= "0" and position[0] <= "9":
-                return LOCATION_SDI12 + int(position[0])
+            if len(parts) >= 3: # format: sdi12_0_2 -> location_address_port
+                port = None
+                try:
+                    port = int(parts[-1])
+                except:
+                    logging.error("---!---error parsing port: {}".format(port))
+
+                if port:
+                    position_int = int(parts[-2])
+
+                    if port == 1:
+                        return LOCATION_SDI12_PORT_1 + position_int
+                    elif port == 2:
+                        return LOCATION_SDI12_PORT_2 + position_int
+            position_int = int(position[0])
+            return LOCATION_SDI12 + position_int
 
     logging.error("returning default location for key: " + key)
     return LOCATION_DEFAULT
 
 
 def create_message(device_id, measurements):
-    logging.info("Device ID in readable form: {}".format(device_id))
     (_DEVICE_ID, _DEVICE_ID_BYTES) = device_info.get_device_id()
-
     binary_data = _DEVICE_ID_BYTES
+
+    logging.info("Device ID in readable form: {}".format(_DEVICE_ID))
 
     import ubinascii
 
