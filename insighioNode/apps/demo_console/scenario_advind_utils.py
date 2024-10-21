@@ -60,7 +60,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
         set_sensor_power_on(_sdi12_sensor_switch_list[location])
     powerOffAllSwitchExcept(location)
     sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
-    read_sdi12_sensor(sdi12, address, measurements)
+    read_sdi12_sensor(sdi12, address, measurements,location)
     powerOffAllSwitchExcept()
 
 
@@ -98,7 +98,7 @@ def shield_measurements(measurements):
     set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
 
 
-def read_sdi12_sensor(sdi12, address, measurements):
+def read_sdi12_sensor(sdi12, address, measurements, location=None):
     manufacturer = None
     model = None
     responseArray = None
@@ -106,6 +106,7 @@ def read_sdi12_sensor(sdi12, address, measurements):
         manufacturer, model = sdi12.get_sensor_info(address)
         manufacturer = manufacturer.lower()
         model = model.lower()
+        logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
         # set_value(measurements, "sdi12_{}_model".format(address), model)
         # set_value(measurements, "sdi12_{}_manufacturer".format(address), manufacturer)
 
@@ -116,6 +117,9 @@ def read_sdi12_sensor(sdi12, address, measurements):
     if manufacturer == "meter" and "at41g2" not in model:
         responseArray = sdi12.get_measurement(address)
         parse_sensor_meter(address, responseArray, measurements)
+    elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
+        responseArray = sdi12.get_measurement(address, "M", 1, True)
+        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
     elif manufacturer == "acclima":
         responseArray = sdi12.get_measurement(address)
         parse_sensor_acclima(address, responseArray, measurements)
@@ -227,14 +231,14 @@ def parse_sensor_licor(address, responseArray, measurements):
     except Exception as e:
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
-
-def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit=None, postfix=""):
+def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit=None, postfix="", location=None):
     try:
         if not responseArray or len(responseArray) == 0:
             logging.error("Unrecognized responseArray: {}".format(responseArray))
             return
 
-        variable_prefix = prefix + "_" + address + postfix
+        location_info = ("_" + str(location)) if location else ""
+        variable_prefix = prefix + "_" + address + location_info + postfix
 
         for i, val in enumerate(responseArray):
             try:
