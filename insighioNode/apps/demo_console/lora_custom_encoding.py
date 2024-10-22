@@ -142,22 +142,22 @@ def get_location_by_key(key):
             elif position == "adp2":
                 return LOCATION_AD_P2
             elif position[0] >= "0" and position[0] <= "9":
-            if len(parts) >= 3: # format: sdi12_0_2 -> location_address_port
-                port = None
-                try:
-                    port = int(parts[-1])
-                except:
-                    logging.error("---!---error parsing port: {}".format(port))
+                if len(parts) >= 3: # format: sdi12_0_2 -> location_address_port
+                    port = None
+                    try:
+                        port = int(parts[-1])
+                    except:
+                        logging.error("---!---error parsing port: {}".format(port))
 
-                if port:
-                    position_int = int(parts[-2])
+                    if port:
+                        position_int = int(parts[-2])
 
-                    if port == 1:
-                        return LOCATION_SDI12_PORT_1 + position_int
-                    elif port == 2:
-                        return LOCATION_SDI12_PORT_2 + position_int
-            position_int = int(position[0])
-            return LOCATION_SDI12 + position_int
+                        if port == 1:
+                            return LOCATION_SDI12_PORT_1 + position_int
+                        elif port == 2:
+                            return LOCATION_SDI12_PORT_2 + position_int
+                position_int = int(position[0])
+                return LOCATION_SDI12 + position_int
 
     logging.error("returning default location for key: " + key)
     return LOCATION_DEFAULT
