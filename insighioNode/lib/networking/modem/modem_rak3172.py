@@ -24,6 +24,10 @@ class ModemRak3172(modem_base.Modem):
         (status, lines) = self.send_at_cmd("AT+LPM=1")
         return status
 
+    def send_at_cmd(self, command, timeoutms=30000, success_condition="OK"):
+        res = super().send_at_cmd(command, timeoutms, success_condition)
+        sleep_ms(10)
+        return res
 
     def reset(self):
         # simulate the double press of a reset button on modem_reset pin
