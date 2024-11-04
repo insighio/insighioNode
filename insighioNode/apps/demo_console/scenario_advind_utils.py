@@ -116,49 +116,50 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
 
     if manufacturer == "meter" and "at41g2" not in model:
         responseArray = sdi12.get_measurement(address)
-        parse_sensor_meter(address, responseArray, measurements)
+        parse_sensor_meter(address, responseArray, measurements, location)
     elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
         responseArray = sdi12.get_measurement(address, "M", 1, True)
         parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
     elif manufacturer == "acclima":
         responseArray = sdi12.get_measurement(address)
-        parse_sensor_acclima(address, responseArray, measurements)
+        parse_sensor_acclima(address, responseArray, measurements, location)
     elif manufacturer == "implexx":
         responseArray = sdi12.get_measurement(address)
-        parse_sensor_implexx(address, responseArray, measurements)
+        parse_sensor_implexx(address, responseArray, measurements, location)
     elif manufacturer == "ep100g":  # EnviroPro
         responseArrayMoisture = sdi12.get_measurement(address, "C")  # moisture with salinity
         responseArraySalinity = sdi12.get_measurement(address, "C1")  # salinity
 
-        parse_generic_sdi12(address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
-        parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_ec", "uS/cm")  # dS/m
+        parse_generic_sdi12(address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location)
+        parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_ec", "uS/cm", "", location)  # dS/m
 
         cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
         if cfg_is_celsius:
             responseArrayTemperature = sdi12.get_measurement(address, "C2")
-            parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+            parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location)
         else:
             responseArrayTemperature = sdi12.get_measurement(address, "C5")
-            parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT)
+            parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location)
     elif "li-cor" in manufacturer:
         responseArray = sdi12.get_measurement(address, "M0")
-        parse_sensor_licor(address, responseArray, measurements)
+        parse_sensor_licor(address, responseArray, measurements, location)
         responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
     else:
         set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
         responseArrayC = sdi12.get_measurement(address, "C", 2)
         responseArrayM = sdi12.get_measurement(address, "M", 1)
-        parse_generic_sdi12(address, responseArrayC, measurements, "sdi12", None, "_c")
-        parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m")
+        parse_generic_sdi12(address, responseArrayC, measurements, "sdi12", None, "_c", location)
+        parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
 
 
-def parse_sensor_meter(address, responseArray, measurements):
+def parse_sensor_meter(address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 3:
             logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
             return
 
-        variable_prefix = "meter_" + address
+        location_info = ("_" + str(location)) if location else ""
+        variable_prefix = "meter_" + address + location_info
 
         set_value_float(measurements, variable_prefix + "_vwc", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
         set_value_float(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
@@ -167,13 +168,14 @@ def parse_sensor_meter(address, responseArray, measurements):
         logging.exception(e, "Error processing meter sdi responseArray: [{}]".format(responseArray))
 
 
-def parse_sensor_acclima(address, responseArray, measurements):
+def parse_sensor_acclima(address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 5:
             logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
             return
 
-        variable_prefix = "acclima_" + address
+        location_info = ("_" + str(location)) if location else ""
+        variable_prefix = "acclima_" + address + location_info
 
         set_value_float(measurements, variable_prefix + "_vwc", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
         set_value_float(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
@@ -184,13 +186,14 @@ def parse_sensor_acclima(address, responseArray, measurements):
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
 
-def parse_sensor_implexx(address, responseArray, measurements):
+def parse_sensor_implexx(address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 5:
             logging.error("parse_sensor_implexx: unrecognized responseArray: {}".format(responseArray))
             return
 
-        variable_prefix = "implexx_" + address
+        location_info = ("_" + str(location)) if location else ""
+        variable_prefix = "implexx_" + address + location_info
 
         set_value_float(measurements, variable_prefix + "_sap_flow", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_LITER_PER_HOUR)
         set_value_float(
@@ -205,13 +208,14 @@ def parse_sensor_implexx(address, responseArray, measurements):
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
 
-def parse_sensor_licor(address, responseArray, measurements):
+def parse_sensor_licor(address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 5:
             logging.error("parse_sensor_licor: unrecognized responseArray: {}".format(responseArray))
             return
 
-        variable_prefix = "licor_" + address
+        location_info = ("_" + str(location)) if location else ""
+        variable_prefix = "licor_" + address + location_info
 
         set_value_float(measurements, variable_prefix + "_et", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIMETER, 3)
         set_value_float(measurements, variable_prefix + "_le", responseArray[1], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
