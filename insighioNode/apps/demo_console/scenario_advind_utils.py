@@ -267,7 +267,11 @@ def measure_4_20_mA_on_port(measurements, port_id):
     port_formula = cfg.get("_4_20_SNSR_{}_FORMULA".format(port_id))
 
     if port_enabled:
-        sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
+        sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ON".format(port_id))
+        if not sensor_on_pin:
+            # in folllowing label, ON is written in greek...
+            sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
+
         sensor_out_pin = cfg.get("_CUR_SNSR_OUT_{}".format(port_id))
 
         _CURRENT_OFFSET_MA = 0.6 # fix for the deviation of values
