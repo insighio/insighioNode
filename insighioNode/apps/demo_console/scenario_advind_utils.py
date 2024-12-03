@@ -116,7 +116,7 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
 
     if manufacturer == "meter" and "at41g2" not in model:
         responseArray = sdi12.get_measurement(address)
-        parse_sensor_meter(address, responseArray, measurements, location)
+        parse_sensor_meter(model, address, responseArray, measurements, location)
     elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
         responseArray = sdi12.get_measurement(address, "M", 1, True)
         parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
@@ -152,7 +152,7 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
 
 
-def parse_sensor_meter(address, responseArray, measurements, location=None):
+def parse_sensor_meter(model ,address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 3:
             logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
@@ -161,9 +161,20 @@ def parse_sensor_meter(address, responseArray, measurements, location=None):
         location_info = ("_" + str(location)) if location else ""
         variable_prefix = "meter_" + address + location_info
 
-        set_value_float(measurements, variable_prefix + "_vwc", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
+        set_value_float(measurements, variable_prefix + "_count_vwc", responseArray[0], SenmlUnits.SENML_UNIT_COUNTER)
         set_value_float(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
         set_value_float(measurements, variable_prefix + "_soil_ec", responseArray[2], "uS/cm")
+
+        if model == 'ter12': #apply functions
+            from math import pow
+            calibratedCountsVWC = float(responseArray[0])
+            VWCmineral = 3.879E-4 * calibratedCountsVWC - 0.6956 #mineral soil calibration
+            VWCsoilless = 6.771E-10 * pow(calibratedCountsVWC, 3) - 5.105E-6 * pow(calibratedCountsVWC, 2) + 1.302E-2 * calibratedCountsVWC - 10.848 #soilless substrate calibration
+            VWCdielectric = pow(2.887E-9 * pow(calibratedCountsVWC, 3) - 2.08E-5 * pow(calibratedCountsVWC, 2) + 5.276E-2 * calibratedCountsVWC - 43.39, 2)
+
+            set_value_float(measurements, variable_prefix + "_vwc_mineral", VWCmineral * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
+            set_value_float(measurements, variable_prefix + "_vwc_soilless", VWCsoilless * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
+            set_value_float(measurements, variable_prefix + "_vwc_dielectric", VWCdielectric, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
     except Exception as e:
         logging.exception(e, "Error processing meter sdi responseArray: [{}]".format(responseArray))
 
