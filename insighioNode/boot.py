@@ -109,13 +109,16 @@ if not _is_charging:
     voltage_mid = False
     voltage_ok = False
 
+    VOLTAGE_LOW = 3500
+    VOLTAGE_MIN_OPERATING = 3600
+
     while check_cnt < check_cnt_max:
         sleep_ms(100)
         voltage = get_input_voltage(_UC_IO_BAT_READ, 2, ADC.ATTN_11DB)
 
-        if voltage<3500:
+        if voltage<VOLTAGE_LOW:
             voltage_low = True
-        elif voltage>=3500 and voltage<3600 and low_voltage_flag_exists:
+        elif voltage>=VOLTAGE_LOW and voltage<VOLTAGE_MIN_OPERATING and low_voltage_flag_exists:
             voltage_mid = True
         else:
             voltage_ok = True
