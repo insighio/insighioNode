@@ -26,6 +26,8 @@ def timestamp_measurements(measurements):
     # Friday, April 15, 2022
     if epoch > 1650000000:
         measurements["dt"] = {"value": epoch}  # time offset 1970 -> 2000
+    else:
+        measurements["diff_dt"] = {"value": utime.ticks_ms()}
 
 
 def store_measurement(measurements, force_store=False):
@@ -62,13 +64,22 @@ def parse_stored_measurements_and_upload(network):
         utils.copyFlagFile(storage_file_name, storage_file_name + ".up")
         utils.deleteFlagFile(storage_file_name)
         stored_measurements_str += "\n" + interupted_upload_str
+
     uploaded_measurement_count = 0
+
     for line in stored_measurements_str.split("\n"):
         utime.sleep_ms(50)
         try:
             if not line:
                 continue
-            message = network.create_message(cfg.get("device_id"), json.loads(line))
+
+            data = json.loads(line)
+            if "diff_dt" in data:
+                print(data)
+                data["generation_elapsed_ms"] = {"value": utime.ticks_ms() - data["diff_dt"]["value"]} 
+                del data["diff_dt"]
+
+            message = network.create_message(cfg.get("device_id"), data)
             message_send_status = network.send_message(cfg, message)
 
             logging.debug("Message send status: " + str(message_send_status))
