@@ -52,12 +52,14 @@ def _set_asm(odr_xl=0, fs_xl=0, lpf_xl_en=0):
         logging.debug("Invalid XL ODR Setting (acceptable values: 0 .. 10)")
     else:
         try:
-            i2c_obj.writeto_mem(asm330_addr, _CTRL1_XL, b"\x10")
+            i2c_obj.writeto_mem(asm330_addr, _CTRL1_XL, b"\x40")#b"\x10")
+
+            i2c_obj.writeto_mem(asm330_addr, _CTRL2_G, b"\x00") # power off Gyroscope
         except Exception as e:
             logging.exception(e, "Exception raised in I2C {}")
 
 
-def get_reading():
+def get_reading(get_raw=False):
     """Returns acc reading"""
     if not i2c_obj:
         logging.debug("XL not initialized")
@@ -69,9 +71,12 @@ def get_reading():
     try:
         # LINEAR ACCELERATION X,Y,Z
         data = i2c_obj.readfrom_mem(asm330_addr, _OUTX_L_A, 6)
-        ACC_X = ustruct.unpack_from("<h", data, 0)[0] * _FACTOR
-        ACC_Y = ustruct.unpack_from("<h", data, 2)[0] * _FACTOR
-        ACC_Z = ustruct.unpack_from("<h", data, 4)[0] * _FACTOR
+        # ACC_X = ustruct.unpack_from("<h", data, 0)[0] * _FACTOR
+        # ACC_Y = ustruct.unpack_from("<h", data, 2)[0] * _FACTOR
+        # ACC_Z = ustruct.unpack_from("<h", data, 4)[0] * _FACTOR
+        ACC_X = ustruct.unpack_from("<h", data, 0)[0] * (1 if get_raw else _FACTOR)
+        ACC_Y = ustruct.unpack_from("<h", data, 2)[0] * (1 if get_raw else _FACTOR)
+        ACC_Z = ustruct.unpack_from("<h", data, 4)[0] * (1 if get_raw else _FACTOR)
     except Exception as e:
         logging.exception(e, "Exception raised in I2C {}")
     return (ACC_X, ACC_Y, ACC_Z)
