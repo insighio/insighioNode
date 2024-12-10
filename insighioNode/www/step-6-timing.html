@@ -158,6 +158,7 @@
 
     function initializeValues() {
       disableNavigationButtons()
+      addSwitch("option-always-on-switches", "input-light-sleep-on", "Light sleep ON")
       addSwitch("option-always-on-switches", "input-ins-always-on", "Always-On Connection (main current plugged)")
       addSwitch("option-always-on-switches", "input-ins-force-always-on", "Force Always-On (ignore power mode)")
       addSwitch("options-batch-upload", "input-ins-batch-upload-enable", "Batch Upload", batchUploadSelected)
@@ -181,6 +182,7 @@
       setElemValue('input-message-buffer-size', batchBufferSize, 1)
       document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
 
+      setElemValueBool('input-light-sleep-on', strToJSValue(Cookies.get("light-sleep-on")), false)
       setElemValueBool('input-ins-always-on', strToJSValue(Cookies.get("always-on-connection")), false)
       setElemValueBool('input-ins-force-always-on', strToJSValue(Cookies.get("force-always-on-connection")), false)
       setElemValue('input-always-on-period', Cookies.get("always-on-period"), 60)
@@ -220,6 +222,8 @@
         Cookies.set('force-always-on-connection', boolElemToPyStr('input-ins-force-always-on'))
         Cookies.set('scheduled-time-a', "None")
         Cookies.set('scheduled-time-b', "None")
+
+        Cookies.set('light-sleep-on', boolElemToPyStr('input-light-sleep-on'))
       }
       else if (elementIsVisible("scheduled")) {
         Cookies.set('period', "None")

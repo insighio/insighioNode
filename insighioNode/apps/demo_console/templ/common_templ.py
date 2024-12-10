@@ -13,6 +13,7 @@ _DEPRECATED_BOARD_TYPE = "<selected-board>"
 
 """ System-related configuration options """
 _DEEP_SLEEP_PERIOD_SEC = <period>  # tx period in secs
+_LIGHT_SLEEP_ON = <light-sleep-on>
 _BATCH_UPLOAD_MESSAGE_BUFFER = <batch-upload-buffer-size>
 _SCHEDULED_TIMESTAMP_A_SECOND = <scheduled-time-a>
 _SCHEDULED_TIMESTAMP_B_SECOND = <scheduled-time-b>
