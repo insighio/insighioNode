@@ -342,7 +342,7 @@ class Modem:
     def get_gps_position(self, timeoutms=300000, satellite_number_threshold=5):
         logging.debug("base modem.get_gps_position is empty")
 
-    def send_at_cmd(self, command, timeoutms=30000, success_condition="OK"):
+    def send_at_cmd(self, command, timeoutms=30000, success_condition="OK", extra_error_condition=""):
         status = None
         responseLines = []
 
@@ -367,7 +367,7 @@ class Modem:
         timeout_timestamp = start_timestamp + timeoutms
 
         success_regex = "^([\\w\\s\\+]+)?" + success_condition
-        error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
+        error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)" + ('|({})'.format(extra_error_condition) if extra_error_condition else '' )
         first_line = True
         is_echo_on = True
 

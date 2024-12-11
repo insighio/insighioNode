@@ -98,5 +98,5 @@ class ModemRak3172(modem_base.Modem):
 
     def send(self, bytes_hex):
         # random port -> 5
-        (status, lines) = self.send_at_cmd("AT+SEND=5:" + bytes_hex)
+        (status, lines) = self.send_at_cmd("AT+SEND=5:" + bytes_hex, 10000, "EVT:(SEND_CONFIRMED_OK|TX_DONE)", "AT_PARAM_ERROR|AT_BUSY_ERROR|AT_NO_NETWORK_JOINED|SEND_CONFIRMED_FAILED")
         return status
