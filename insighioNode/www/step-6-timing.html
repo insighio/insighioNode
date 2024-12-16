@@ -64,13 +64,6 @@
                   <br />
                   <div id="option-always-on-switches" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
                   </div>
-
-                  <div class="col-4 col-sm-12">
-                    <label class="form-label" for="input-example-cellular">Always-on measurement period (s)</label>
-                  </div>
-                  <div class="col-8 col-sm-12">
-                    <input class="form-input constr-field" type="number" id="input-always-on-period" />
-                  </div>
                 </div>
                 <div class="form-group columns">
                   <div class="col-1 col-mr-auto"></div>
@@ -159,8 +152,10 @@
     function initializeValues() {
       disableNavigationButtons()
       addSwitch("option-always-on-switches", "input-light-sleep-on", "Light sleep ON")
-      addSwitch("option-always-on-switches", "input-ins-always-on", "Always-On Connection (main current plugged)")
-      addSwitch("option-always-on-switches", "input-ins-force-always-on", "Force Always-On (ignore power mode)")
+      addSwitch("option-always-on-switches", "input-light-sleep-network-active", "Light sleep network active")
+      addSwitch("option-always-on-switches", "input-light-sleep-deactivate-on-battery", "Light sleep deactivate on battery")
+      // addSwitch("option-always-on-switches", "input-ins-always-on", "Always-On Connection (main current plugged)")
+      // addSwitch("option-always-on-switches", "input-ins-force-always-on", "Force Always-On (ignore power mode)")
       addSwitch("options-batch-upload", "input-ins-batch-upload-enable", "Batch Upload", batchUploadSelected)
 
       var batchBufferSize = Cookies.get("batch-upload-buffer-size")
@@ -183,9 +178,20 @@
       document.getElementById('input-ins-batch-upload-enable').checked = batchBufferSize && batchBufferSize > 1
 
       setElemValueBool('input-light-sleep-on', strToJSValue(Cookies.get("light-sleep-on")), false)
-      setElemValueBool('input-ins-always-on', strToJSValue(Cookies.get("always-on-connection")), false)
-      setElemValueBool('input-ins-force-always-on', strToJSValue(Cookies.get("force-always-on-connection")), false)
-      setElemValue('input-always-on-period', Cookies.get("always-on-period"), 60)
+      setElemValueBool('input-light-sleep-network-active', strToJSValue(Cookies.get("light-sleep-network-active")), false)
+      setElemValueBool('input-light-sleep-deactivate-on-battery', strToJSValue(Cookies.get("light-sleep-deactivate-on-battery")), false)
+
+      //backward compatibitily
+      if(Cookies.get("always-on-period"))
+        setElemValue('input-period', Cookies.get("period"), 300)
+
+      if(strToJSValue(Cookies.get("always-on-connection")))
+        setElemValueBool('input-light-sleep-on', strToJSValue(Cookies.get("light-sleep-on")), false)
+
+      if(strToJSValue(Cookies.get("force-always-on-connection")))
+        setElemValueBool('input-light-sleep-deactivate-on-battery', !strToJSValue(Cookies.get("force-always-on-connection")), false)
+
+
 
       checkboxStatusChanged('ins-batch-upload')
       updateEstimatedTime()
@@ -200,6 +206,10 @@
       Cookies.remove('always-on-connection')
       Cookies.remove('force-always-on-connection')
       Cookies.remove('always-on-period')
+
+      Cookies.remove('light-sleep-on')
+      Cookies.remove('light-sleep-network-active')
+      Cookies.remove('light-sleep-deactivate-on-battery')
     }
 
     function stringTimeToSeconds(timeStr) {
@@ -217,13 +227,15 @@
 
       if (elementIsVisible("periodic")) {
         Cookies.set('period', document.getElementById('input-period').value)
-        Cookies.set('always-on-period', document.getElementById('input-always-on-period').value)
-        Cookies.set('always-on-connection', boolElemToPyStr('input-ins-always-on'))
-        Cookies.set('force-always-on-connection', boolElemToPyStr('input-ins-force-always-on'))
+        // Cookies.set('always-on-period', document.getElementById('input-always-on-period').value)
+        // Cookies.set('always-on-connection', boolElemToPyStr('input-ins-always-on'))
+        // Cookies.set('force-always-on-connection', boolElemToPyStr('input-ins-force-always-on'))
         Cookies.set('scheduled-time-a', "None")
         Cookies.set('scheduled-time-b', "None")
 
         Cookies.set('light-sleep-on', boolElemToPyStr('input-light-sleep-on'))
+        Cookies.set('light-sleep-network-active', boolElemToPyStr('input-light-sleep-network-active'))
+        Cookies.set('light-sleep-deactivate-on-battery', boolElemToPyStr('input-light-sleep-deactivate-on-battery'))
       }
       else if (elementIsVisible("scheduled")) {
         Cookies.set('period', "None")
@@ -245,7 +257,7 @@
       var i, tabcontent, tablinks;
 
       tabcontent = document.getElementsByClassName("tabcontent");
-      console.log('tabcontent: ', tabcontent)
+
       for (i = 0; i < tabcontent.length; i++) {
         tabcontent[i].style.display = "none";
       }

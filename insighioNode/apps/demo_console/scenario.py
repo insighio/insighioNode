@@ -34,10 +34,13 @@ def now():
     return RTC().datetime()
 
 
-def isAlwaysOnScenario():
-    return (cfg.get("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)) or cfg.get(
-        "_FORCE_ALWAYS_ON_CONNECTION"
-    )
+def isLightSleepScenario():
+    backward_compatibility_on = cfg.get("_ALWAYS_ON_CONNECTION") is not None and cfg.get("_FORCE_ALWAYS_ON_CONNECTION") is not None
+
+    if backward_compatibility_on:
+        return (cfg.get("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)) or cfg.get("_FORCE_ALWAYS_ON_CONNECTION")
+    else:
+        return cfg.get("_LIGHT_SLEEP_ON") and (not cfg.get("_LIGHT_SLEEP_DEACTIVATE_ON_BATTERY") or device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power))
 
 
 def execute():
@@ -87,7 +90,6 @@ def determine_message_buffering_and_network_connection_necessity():
         execute_connection_procedure = True
     return (buffered_upload_enabled, execute_connection_procedure)
 
-
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
     (
@@ -100,13 +102,15 @@ def executeMeasureAndUploadLoop():
     # False: connection failed
     # True: connection succeded
     connectAndUploadCompletedWithoutErrors = None
-    always_on = isAlwaysOnScenario()
-    always_on_period = cfg.get("_ALWAYS_ON_PERIOD")
-    if always_on_period:
+
+    light_sleep_on = isLightSleepScenario()
+    light_sleep_on_period = cfg.get("_ALWAYS_ON_PERIOD") if not None else cfg.get("_DEEP_SLEEP_PERIOD_SEC")
+
+    if light_sleep_on_period:
         try:
             # set keepalive timing used for heartbeats in open connections
             proto_cfg_instance = cfg.get_protocol_config()
-            proto_cfg_instance.keepalive = int(always_on_period * 1.5) if always_on else 0
+            proto_cfg_instance.keepalive = int(light_sleep_on_period * 1.5) if light_sleep_on else 0
 
             if cfg.get("_MEAS_GPS_ENABLE"):
                 proto_cfg_instance.keepalive += cfg.get("_MEAS_GPS_TIMEOUT")
@@ -114,19 +118,10 @@ def executeMeasureAndUploadLoop():
         except:
             logging.debug("no protocol info, ignoring keepalive configuration")
 
-    always_on_start_timestamp = ticks_ms()
-    if not always_on:  # or not RTCisValid():
-        #     time_to_sleep = 5000 # check connection and upload messages every 5 seconds
-        # else:
-        time_to_sleep = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
-        time_to_sleep = time_to_sleep if time_to_sleep is not None else 60
-        time_to_sleep = time_to_sleep * 1000 - (ticks_ms() - always_on_start_timestamp)
-        time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
+    measurement_run_start_timestamp = ticks_ms()
 
     while 1:
-        logging.info("Always on connection activated: " + str(always_on))
-        always_on_start_timestamp = ticks_ms()
-        # measurements = {}
+        logging.info("Light sleep activated: " + str(light_sleep_on))
         wdt_reset()
         measurement_run_start_timestamp = ticks_ms()
 
@@ -153,49 +148,59 @@ def executeMeasureAndUploadLoop():
             measurementStored = scenario_utils.storeMeasurement(measurements, False)
             # if always on, do run connect and upload
             # else run connection only if measurement was not stored
-            execute_connection_procedure = True if always_on else not measurementStored
+            execute_connection_procedure = True if light_sleep_on else not measurementStored
 
         # connect (if needed) and upload message
         if execute_connection_procedure:
-            hasGPSFix = executeGetGPSPosition(measurements, always_on)
+            hasGPSFix = executeGetGPSPosition(measurements, light_sleep_on)
             if not hasGPSFix and cfg.get("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
                 connectAndUploadCompletedWithoutErrors = False
             else:
-                connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, always_on)
+                connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on)
 
-        # if not connectAndUploadCompletedWithoutErrors or not always_on or not always_on_period:
-        if not always_on or not always_on_period:
+        if is_first_run:
+            # if it is always on, first connect to the network and then start threads,
+            # to allow them to immediatelly upload events
+            scenario_utils.executePostConnectionOperations()
+        is_first_run = False
+
+
+        # if not connectAndUploadCompletedWithoutErrors or not light_sleep_on or not light_sleep_on_period:
+        if not light_sleep_on or not light_sleep_on_period
             # abort measurement while loop
             break
-        else:
-            if is_first_run:
-                # if it is always on, first connect to the network and then start threads,
-                # to allow them to immediatelly upload events
-                pass
-            is_first_run = False
-            time_to_sleep = always_on_period * 1000 - (ticks_ms() - always_on_start_timestamp)
-            time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
-            logging.info("light sleeping for: " + str(time_to_sleep) + " milliseconds")
-            gc.collect()
 
-            start_sleep_time = ticks_ms()
-            end_sleep_time = start_sleep_time + time_to_sleep
-            while ticks_ms() < end_sleep_time:
-                wdt_reset()
-                sleep_ms(1000)
-            always_on = isAlwaysOnScenario()
+        time_to_sleep = 1
+
+        # if connection procedure was executed
+        if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and connectAndUploadCompletedWithoutErrors:
+            executeNetworkDisconnect()
+            set_led_color("black")
+
+        time_to_sleep = light_sleep_on_period * 1000 - (ticks_ms() - measurement_run_start_timestamp)
+        time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
+        logging.info("light sleeping for: " + str(time_to_sleep) + " milliseconds")
+        gc.collect()
+
+        start_sleep_time = ticks_ms()
+        end_sleep_time = start_sleep_time + time_to_sleep
+        while ticks_ms() < end_sleep_time:
+            wdt_reset()
+            sleep_ms(1000)
+        light_sleep_on = isLightSleepScenario()
+
 
     # if connection procedure was executed
     if connectAndUploadCompletedWithoutErrors is not None:
         executeNetworkDisconnect()
 
 
-def executeGetGPSPosition(measurements, always_on):
+def executeGetGPSPosition(measurements, light_sleep_on):
     from . import gps
-    return gps.get_gps_position(cfg, measurements, always_on)
+    return gps.get_gps_position(cfg, measurements, light_sleep_on)
 
 
-def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
+def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
     global timeDiffAfterNTP
     from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
@@ -274,7 +279,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
 
-            if cfg.get("_CHECK_FOR_OTA") and (not always_on or (always_on and is_first_run)):
+            if cfg.get("_CHECK_FOR_OTA") and (not light_sleep_on or (light_sleep_on and is_first_run)):
                 network.check_and_apply_ota(cfg)
         else:
             logging.debug("Network [" + selected_network + "] connected: False")
@@ -296,7 +301,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, always_on):
             logging.info("Message transmission failed, ignoring message")
 
     # disconnect from network
-    if not always_on or not is_connected:
+    if not light_sleep_on or not is_connected:
         try:
             notifyDisconnected(network)
             network.disconnect()

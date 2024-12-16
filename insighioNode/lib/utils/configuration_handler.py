@@ -67,6 +67,8 @@ configDict = {
     "_DEEP_SLEEP_PERIOD_SEC": "period",
     "_DEV_EUI": "lora_dev_eui",
     "_IP_VERSION": "ipversion",
+    "_LIGHT_SLEEP_DEACTIVATE_ON_BATTERY": "light_sleep_deactivate_on_battery",
+    "_LIGHT_SLEEP_NETWORK_ACTIVE": "light_sleep_network_active"
     "_LIGHT_SLEEP_ON": "light_sleep_on",
     "_LORA_ADR": "lora_adr",
     "_LORA_CONFIRMED": "lora_confirmed",

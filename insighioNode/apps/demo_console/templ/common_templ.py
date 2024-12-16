@@ -1,3 +1,4 @@
+_CONST_SHIELD_ACCELEROMETER = "accel"
 _CONST_SHIELD_ADVIND = "advind"
 _CONST_SHIELD_DIG_ANALOG = "dig_analog"
 _CONST_SHIELD_SCALE = "scale"
@@ -14,12 +15,12 @@ _DEPRECATED_BOARD_TYPE = "<selected-board>"
 """ System-related configuration options """
 _DEEP_SLEEP_PERIOD_SEC = <period>  # tx period in secs
 _LIGHT_SLEEP_ON = <light-sleep-on>
+_LIGHT_SLEEP_NETWORK_ACTIVE = <light-sleep-network-active>
+_LIGHT_SLEEP_DEACTIVATE_ON_BATTERY = <light-sleep-deactivate-on-battery>
 _BATCH_UPLOAD_MESSAGE_BUFFER = <batch-upload-buffer-size>
 _SCHEDULED_TIMESTAMP_A_SECOND = <scheduled-time-a>
 _SCHEDULED_TIMESTAMP_B_SECOND = <scheduled-time-b>
-_ALWAYS_ON_CONNECTION = <always-on-connection>
-_FORCE_ALWAYS_ON_CONNECTION = <force-always-on-connection>
-_ALWAYS_ON_PERIOD = <always-on-period>
+
 
 """ Explicit Key-Value Pairs """
 _MEAS_KEYVALUE=<meas-keyvalue>
