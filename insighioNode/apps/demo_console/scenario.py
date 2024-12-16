@@ -166,7 +166,7 @@ def executeMeasureAndUploadLoop():
 
 
         # if not connectAndUploadCompletedWithoutErrors or not light_sleep_on or not light_sleep_on_period:
-        if not light_sleep_on or not light_sleep_on_period
+        if not light_sleep_on or not light_sleep_on_period:
             # abort measurement while loop
             break
 

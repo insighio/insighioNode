@@ -124,7 +124,7 @@ def get_measurements(cfg_dummy=None):
             from . import scenario_advind_utils
 
             scenario_advind_utils.shield_measurements(measurements)
-        elif shield_name == cfg.get("_CONST_SHIELD_ACCELEROMETER")
+        elif shield_name == cfg.get("_CONST_SHIELD_ACCELEROMETER"):
             shield_accel_measurements(measurements)
         else:  # if shield_name == cfg.get("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
@@ -513,7 +513,7 @@ def storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_o
     if do_store_measurement:
         storeMeasurement(measurement, True)
 
-def read_accelerometer(measurements, single_measurement=False:
+def read_accelerometer(measurements=None, single_measurement=False):
     logging.info("starting [read_accelerometer] thread")
 
     try:
