@@ -270,11 +270,11 @@ def bq_charger_setup(i2c, bq_addr):
 
 
 def bq_charger_set_charging_on(i2c, bq_addr):
-    i2c.writeto_mem(bq_addr, 1, b"\x3B")
+    i2c.writeto_mem(bq_addr, 1, b"\x1B")
 
 
 def bq_charger_set_charging_off(i2c, bq_addr):
-    i2c.writeto_mem(bq_addr, 1, b"\x2B")
+    i2c.writeto_mem(bq_addr, 1, b"\x0B")
 
 
 def bq_charger_is_on_external_power(i2c, bq_addr):

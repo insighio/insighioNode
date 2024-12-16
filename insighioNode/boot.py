@@ -51,9 +51,7 @@ Pin(47, Pin.OUT).off()
 print("[boot] Checking Voltage")
 
 import uos
-from gpio_handler import set_pin_value, get_input_voltage
 from machine import SoftI2C, Pin, ADC, deepsleep
-from utime import sleep_ms
 
 voltage = None
 i2c = None
@@ -84,6 +82,9 @@ if _check_charging_state:
         print("[boot] can not check charging state")
 
 if not _is_charging:
+    from gpio_handler import set_pin_value, get_input_voltage
+    from utime import sleep_ms
+
     ##################################################################
     # if not charging, check battery voltage
     import utils
@@ -94,7 +95,7 @@ if not _is_charging:
     # # set charging off
     try:
         if i2c:
-            i2c.writeto_mem(bq_addr, 1, b"\x2B")
+            i2c.writeto_mem(bq_addr, 1, b"\x0B")
     except Exception as e:
         print("[boot] can not close charging")
 
@@ -134,7 +135,7 @@ if not _is_charging:
     try:
         if i2c:
             # set charging on
-            i2c.writeto_mem(bq_addr, 1, b"\x3B")
+            i2c.writeto_mem(bq_addr, 1, b"\x1B")
     except Exception as e:
         print("[boot] can not open charging")
 
