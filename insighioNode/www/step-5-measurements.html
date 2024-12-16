@@ -83,13 +83,16 @@
                 <div class="col-12">
                   <ul class="tab tab-block">
                     <li id="tab-shield-scale-options" class="tab-item" onclick="boardChanged(event, 'shield-scale-options')">
-                      <a class="pointer">Cellular Digital/Scale</a>
+                      <a class="pointer">Shield Digital/Scale</a>
                     </li>
                     <li id="tab-shield-dig-analog-options" class="tab-item active" onclick="boardChanged(event, 'shield-dig-analog-options')">
-                      <a class="pointer">Cellular + Shield I²C/Analog</a>
+                      <a class="pointer">Shield I2C/Analog</a>
                     </li>
                     <li id="tab-shield-advind-options" class="tab-item" onclick="boardChanged(event, 'shield-advind-options')">
-                      <a class="pointer">Cellular + Shield SDI-12</a>
+                      <a class="pointer">Shield SDI-12</a>
+                    </li>
+                    <li id="tab-shield-accelerometer" class="tab-item" onclick="boardChanged(event, 'shield-accel-options')">
+                      <a class="pointer">Shield Accelerometer</a>
                     </li>
                   </ul>
                 </div>
@@ -223,6 +226,19 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- accelerometer related settings -->
+                <div id="shield-accel-options" class="tabcontent columns col-12" style="display: none; margin-left:5px; margin-right:5px">
+                  <br />
+                  <div class="form-group columns">
+                    <br />
+                    <br />
+                    <div class="form-group columns" id="options-accel">
+                    </div>
+                  </div>
+                </div>
+
+
                 <div class="form-group col-12">
                   <div class="divider text-center" data-content="Explicit key-values"></div>
                 </div>
@@ -280,12 +296,14 @@
   <script src="js/utils.js"></script>
   <script>
     var shieldNamePerTab = {
+      "shield-accel-options": "accel",
       "shield-advind-options": "advind",
       "shield-scale-options": "scale",
       "shield-dig-analog-options": "dig_analog"
     }
 
     var tabNamePerShield = {
+      "accel": "shield-accel-options",
       "ins_esp_gen_sdi12": "shield-advind-options",
       "ins_esp_gen_1": "shield-scale-options",
       "ins_gen_s3": "shield-dig-analog-options",
