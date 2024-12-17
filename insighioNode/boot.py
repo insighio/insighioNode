@@ -71,7 +71,7 @@ try:
 except Exception as e:
     print("[boot] No BQ charger detected")
 
-_is_charging = False
+_is_charging = True
 _check_charging_state = False # must be deactivated for devices always conneced to USB charger
 
 if _check_charging_state:
