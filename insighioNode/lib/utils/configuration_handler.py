@@ -154,7 +154,6 @@ configDict = {
     "_PCNT_1_FORMULA": "meas_pcnt_1_formula",
     "_WIFI_SSID": "wifi_ssid",
     "_WIFI_PASS": "wifi_pass",
-    "_SELECTED_SHIELD": "selected_shield",
     "_MEAS_GPS_ONLY_ON_BOOT": "meas_gps_only_on_boot",
 }
 

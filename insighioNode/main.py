@@ -35,6 +35,12 @@ except Exception as e:
 rstCause = device_info.get_reset_cause()
 logging.info("Reset cause: " + str(rstCause))
 if rstCause == 0 or rstCause == 1 or not demo_config_exists:
+    if not demo_config_exists:
+        logging.info("Trying to get device auth from bootstrap")
+        import apps.demo_console.scenario as scenario
+
+        scenario.executeBootstrap()
+
     logging.info("Starting Web server")
     gc.collect()
     try:
@@ -54,14 +60,6 @@ try:
     uos.remove("/apps/demo_temp_config.py")
 except:
     pass
-
-
-# try:
-#     import machine
-#
-#     machine.freq(240000000)
-# except:
-#     pass
 
 import apps.demo_console.scenario as scenario
 
