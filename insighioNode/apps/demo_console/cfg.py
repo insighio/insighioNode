@@ -13,7 +13,7 @@ except Exception as e:
 
         logging.info("[cfg] loaded config: [normal]")
     except Exception as e:
-        cfg = type("", (), {})()
+        _cfg = type("", (), {})()
         logging.info("[cfg] loaded config: [fallback]")
 
 
