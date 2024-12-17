@@ -468,6 +468,11 @@ def executeDeviceConfigurationUpload(cfg, network):
     configUploadFileContent = utils.readFromFlagFile("/configLog")
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
+        from utils import configuration_handler
+
+        configuration_handler.notifyServerWithNewConfig()
+        configUploadFileContent = utils.readFromFlagFile("/configLog") # reload configuration to be sure ov validity
+
         message_sent = network.send_control_message(
             cfg,
             '[{"n":"config","vs":"' + configUploadFileContent + '"}]',
