@@ -144,6 +144,7 @@ def executeBootstrap(useExistingConfiguration=False):
                         keyValueDict.update(keyValueDictContent)
 
                 logging.info("about to apply: {}".format(keyValueDict))
+                configuration_handler.notifyServerWithNewConfig()
                 configuration_handler.apply_configuration(keyValueDict)
 
                 logging.info("about to reboot to apply new config")
