@@ -211,7 +211,9 @@ def executeMeasureAndUploadLoop():
     connectAndUploadCompletedWithoutErrors = None
 
     light_sleep_on = isLightSleepScenario()
-    light_sleep_on_period = cfg.get("_ALWAYS_ON_PERIOD") if not None else cfg.get("_DEEP_SLEEP_PERIOD_SEC")
+    light_sleep_on_period = cfg.get("_ALWAYS_ON_PERIOD")
+    if light_sleep_on_period is None:
+        light_sleep_on_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
 
     if light_sleep_on_period:
         try:
@@ -275,25 +277,31 @@ def executeMeasureAndUploadLoop():
         # if not connectAndUploadCompletedWithoutErrors or not light_sleep_on or not light_sleep_on_period:
         if not light_sleep_on or not light_sleep_on_period:
             # abort measurement while loop
+            logging.info("exiting measurement loop, light_sleep_on: {}, light_sleep_on_period: {}".format(light_sleep_on, light_sleep_on_period))
             break
 
+        logging.debug("[light sleep]: continuing execution")
         time_to_sleep = 1
 
         # if connection procedure was executed
+        logging.debug("[light sleep]: active: {}, connected: {}".format(cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors))
         if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and connectAndUploadCompletedWithoutErrors:
+            logging.debug("[light sleep]: disconnecting")
             executeNetworkDisconnect()
             set_led_color("black")
+        else:
+            logging.debug("[light sleep]: ignoring disconnection")
 
         time_to_sleep = light_sleep_on_period * 1000 - (ticks_ms() - measurement_run_start_timestamp)
         time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
-        logging.info("light sleeping for: " + str(time_to_sleep) + " milliseconds")
+        logging.info("[light sleep]: sleeping for: " + str(time_to_sleep) + " milliseconds")
         gc.collect()
 
         start_sleep_time = ticks_ms()
         end_sleep_time = start_sleep_time + time_to_sleep
         while ticks_ms() < end_sleep_time:
             wdt_reset()
-            sleep_ms(1000)
+            sleep_ms(100)
         light_sleep_on = isLightSleepScenario()
 
 
