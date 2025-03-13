@@ -116,7 +116,8 @@ export default {
       insighio_id: "",
       insighio_key: "",
       insighio_channel: "",
-      insighio_control_channel: ""
+      insighio_control_channel: "",
+      idRegex: "[0-9a-f]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}"
     }
   },
   computed: {
@@ -154,12 +155,19 @@ export default {
       this.$cookies.remove("insighio-channel")
       this.$cookies.remove("insighio-channel-control")
     },
+    validateElemValue(val, message) {
+      var value = val.trim()
+      if (value == "" || (this.idRegex && !new RegExp(this.idRegex, "g").exec(value))) {
+        window.alert("Please enter a valid " + message)
+        return false
+      }
+      return true
+    },
     validateMyForm() {
-      var idRegex = "[0-9a-f]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}"
       if (
-        !this.validateElemValue("input-id", "device ID", idRegex) ||
-        !this.validateElemValue("input-key", "device Key", idRegex) ||
-        !this.validateElemValue("input-channel", "channel ID", idRegex)
+        !this.validateElemValue(this.insighio_id, "device ID") ||
+        !this.validateElemValue(this.insighio_key, "device Key") ||
+        !this.validateElemValue(this.insighio_channel, "channel ID")
       )
         return false
 
@@ -167,16 +175,14 @@ export default {
       return true
     },
     storeData() {
-      this.disableNavigationButtons()
       this.clearCookies()
 
-      this.$cookies.set("insighio-id", document.getElementById("input-id").value.trim())
-      this.$cookies.set("insighio-key", document.getElementById("input-key").value.trim())
-      this.$cookies.set("insighio-channel", document.getElementById("input-channel").value.trim())
-      this.$cookies.set("insighio-control-channel", document.getElementById("input-control-channel").value.trim())
+      this.$cookies.set("insighio-id", this.insighio_id)
+      this.$cookies.set("insighio-key", this.insighio_key)
+      this.$cookies.set("insighio-channel", this.insighio_channel)
+      this.$cookies.set("insighio-control-channel", this.insighio_control_channel)
 
-      //redirectTo("step-5-measurements.html")
-      this.enableNavigationButtons()
+      this.requestGoNext()
     }
   }
 }
