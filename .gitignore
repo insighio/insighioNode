@@ -1,2 +1,4 @@
 pymakr.conf
 insighioNode/apps/local_demos
+webui/dist/*
+webui/node_modules/*
