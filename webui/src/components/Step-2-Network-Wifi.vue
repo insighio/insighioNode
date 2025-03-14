@@ -1,5 +1,6 @@
 <template>
   <div class="form-group">
+    <br />
     <div class="columns">
       <div class="col-12">
         <div class="divider text-center" data-content="Connection Configuration" />
@@ -113,10 +114,7 @@ export default {
   computed: {
     // Add your computed properties here
   },
-  mounted() {
-    // Add your mounted logic here
-    this.initializeValues()
-  },
+
   methods: {
     // Add your component methods here
     clearCookies() {

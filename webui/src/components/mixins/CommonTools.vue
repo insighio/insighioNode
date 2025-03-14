@@ -15,6 +15,7 @@ export default {
   },
   mounted() {
     // Add your mounted logic here
+    this.initializeValues()
   },
   methods: {
     enableButtonsLocal() {
@@ -24,7 +25,7 @@ export default {
     disableButtonsLocal() {
       this.disableButtons = true
     },
-
+    initializeValues() {},
     clearAllCookies() {
       console.log("this.$cookies.keys(): ", this.$cookies.keys())
       this.$cookies.keys().forEach((key) => {
@@ -49,6 +50,20 @@ export default {
     },
     getValueWithDefaults(val, defaultVal = undefined) {
       return val !== undefined ? val : defaultVal
+    },
+    strToJSValue(strVal, defaultVal = undefined) {
+      if (strVal === undefined) return defaultVal
+
+      try {
+        strVal = strVal ? strVal.toLowerCase() : strVal
+      } catch (e) {}
+      if (strVal === "undefined" || strVal === "" || strVal === "none") return defaultVal
+      else if (strVal === "true") return true
+      else if (strVal === "false") return false
+      return strVal
+    },
+    boolToPyStr(val) {
+      return val ? "True" : "False"
     }
   },
   computed: {

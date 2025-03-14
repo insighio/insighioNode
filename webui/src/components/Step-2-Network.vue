@@ -74,10 +74,6 @@ export default {
       settingsAcquired: false
     }
   },
-  mounted() {
-    // Add your mounted logic here
-    this.initializeValues()
-  },
   methods: {
     initializeValues() {
       if (this.settingsAcquired) return
