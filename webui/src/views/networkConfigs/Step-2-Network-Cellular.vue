@@ -2,66 +2,44 @@
   <div class="form-group">
     <br />
     <div class="columns">
-      <div class="col-12">
-        <div class="divider text-center" data-content="Connection Configuration"></div>
-      </div>
+      <SDivider label="Connection Configuration" />
       <br />
       <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-cellular">APN</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <input class="form-input constr-field" type="text" v-model="cell_apn" />
-      </div>
+      <SInput label="APN" v-model:value="cell_apn" @update:value="cell_apn = $event" :colsLabel="3" :colsInput="9" />
       <br />
       <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="measurements">Technology</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <select class="form-select" v-model="cell_tech">
-          <option v-for="tech in cell_tech_options" :key="tech" :value="tech">{{ tech }}</option>
-        </select>
-      </div>
+
+      <SSelect
+        label="Technology"
+        v-model:value="cell_tech"
+        @update:value="cell_tech = $event"
+        :valueOptions="cell_tech_options"
+        :colsLabel="3"
+        :colsInput="9"
+      />
       <br />
       <br />
-      <div class="col-12">
-        <div class="divider text-center" data-content="Generic Configuration"></div>
-      </div>
+      <SDivider label="Generic Configuration" />
       <br />
       <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-cellular">Protocol</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <label class="form-radio">
-          <input type="radio" name="protocol" value="mqtt" v-model="protocol" />
-          <i class="form-icon"></i> MQTT
-        </label>
-        <label class="form-radio">
-          <input type="radio" name="protocol" value="coap" v-model="protocol" />
-          <i class="form-icon"></i> CoAP
-        </label>
-      </div>
+      <SRadioGroup
+        label="Protocol"
+        v-model:value="protocol"
+        @update:value="protocol = $event"
+        :valueOptions="protocol_options"
+        :colsLabel="3"
+        :colsInput="9"
+      />
       <br />
       <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-cellular">IP version</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <label class="form-radio">
-          <input type="radio" value="IP" v-model="ipversion" />
-          <i class="form-icon"></i> IPv4
-        </label>
-        <label class="form-radio">
-          <input type="radio" value="IPV6" v-model="ipversion" />
-          <i class="form-icon"></i> IPv6
-        </label>
-        <label class="form-radio">
-          <input type="radio" value="IPV4V6" v-model="ipversion" />
-          <i class="form-icon"></i> IPv4/v6
-        </label>
-      </div>
+      <SRadioGroup
+        label="IP version"
+        v-model:value="ipversion"
+        @update:value="ipversion = $event"
+        :valueOptions="ipversion_options"
+        :colsLabel="3"
+        :colsInput="9"
+      />
       <br />
       <br />
       <div class="column col-12">
@@ -81,10 +59,15 @@
 
 <script>
 import CommonTools from "@/components/mixins/CommonTools.vue"
+import SInput from "@/components/SInput.vue"
+import SSelect from "@/components/SSelect.vue"
+import SRadioGroup from "@/components/SRadioGroup.vue"
+import SDivider from "@/components/SDivider.vue"
 
 export default {
   name: "NetworkCellular",
   mixins: [CommonTools],
+  components: { SInput, SSelect, SRadioGroup, SDivider },
   data() {
     return {
       // Add your component data here
@@ -93,7 +76,31 @@ export default {
       cell_tech: "NBIoT",
       cell_apn: "iot.1nce.net",
       cell_band: 20,
-      cell_tech_options: ["GSM", "NBIoT", "LTE-M", "auto"]
+      cell_tech_options: ["GSM", "NBIoT", "LTE-M", "auto"],
+      protocol_options: [
+        {
+          label: "MQTT",
+          value: "mqtt"
+        },
+        {
+          label: "CoAP",
+          value: "coap"
+        }
+      ],
+      ipversion_options: [
+        {
+          label: "IPv4",
+          value: "IP"
+        },
+        {
+          label: "IPv6",
+          value: "IPV6"
+        },
+        {
+          label: "IPv4/v6",
+          value: "IPV4V6"
+        }
+      ]
     }
   },
   methods: {

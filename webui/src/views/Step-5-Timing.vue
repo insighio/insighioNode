@@ -14,52 +14,31 @@
       <br />
       <br />
       <div class="columns flex-centered">
-        <div class="col-4 col-sm-12">
-          <label class="form-label" for="input-example-cellular">Sleep Period (s)</label>
-        </div>
-        <div class="col-8 col-sm-12">
-          <input
-            class="form-input constr-field"
-            type="number"
-            @change="updateEstimatedTime()"
-            v-model="timing_period"
-          />
-        </div>
+        <SInput
+          label="Sleep Period (s)"
+          v-model:value="timing_period"
+          @update:value="timing_period = $event"
+          @change="updateEstimatedTime()"
+        />
         <br />
         <br />
-        <div class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-          <div class="col-4 col-sm-12">
-            <label class="form-label">Light sleep ON</label>
-          </div>
-          <div class="col-8 col-sm-12">
-            <label class="form-switch">
-              <input type="checkbox" v-model="timing_light_sleep_on" />
-              <i class="form-icon"></i>
-            </label>
-          </div>
-        </div>
-        <div class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-          <div class="col-4 col-sm-12">
-            <label class="form-label">Light sleep network active</label>
-          </div>
-          <div class="col-8 col-sm-12">
-            <label class="form-switch">
-              <input type="checkbox" v-model="timing_light_sleep_network_active" />
-              <i class="form-icon"></i>
-            </label>
-          </div>
-        </div>
-        <div class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-          <div class="col-4 col-sm-12">
-            <label class="form-label">Light sleep deactivate on battery</label>
-          </div>
-          <div class="col-8 col-sm-12">
-            <label class="form-switch">
-              <input type="checkbox" v-model="timing_light_sleep_deactivate_on_battery" />
-              <i class="form-icon"></i>
-            </label>
-          </div>
-        </div>
+        <SSwitch
+          label="Light sleep ON"
+          v-model:value="timing_light_sleep_on"
+          @update:value="timing_light_sleep_on = $event"
+        />
+
+        <SSwitch
+          label="Light sleep network active"
+          v-model:value="timing_light_sleep_network_active"
+          @update:value="timing_light_sleep_network_active = $event"
+        />
+
+        <SSwitch
+          label="Light sleep deactivate on battery"
+          v-model:value="timing_light_sleep_deactivate_on_battery"
+          @update:value="timing_light_sleep_deactivate_on_battery = $event"
+        />
       </div>
       <div class="form-group columns">
         <div class="col-1 col-mr-auto"></div>
@@ -101,17 +80,11 @@
       <hr />
       <div class="columns flex-centered">
         <div class="columns col-12">
-          <div class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-            <div class="col-4 col-sm-12">
-              <label class="form-label">Batch Upload</label>
-            </div>
-            <div class="col-8 col-sm-12">
-              <label class="form-switch">
-                <input type="checkbox" v-model="timing_batch_enabled" />
-                <i class="form-icon"></i>
-              </label>
-            </div>
-          </div>
+          <SSwitch
+            label="Batch Upload"
+            v-model:value="timing_batch_enabled"
+            @update:value="timing_batch_enabled = $event"
+          />
         </div>
         <div class="col-12" v-show="timing_batch_enabled">
           <br />
@@ -155,8 +128,14 @@
 </template>
 
 <script>
+import CommonTools from "@/components/mixins/CommonTools.vue"
+import SSwitch from "@/components/SSwitch.vue"
+import SInput from "@/components/SInput.vue"
+
 export default {
   name: "Step5Timing",
+  mixins: [CommonTools],
+  components: { SSwitch, SInput },
   data() {
     return {
       // Add your component data here
@@ -253,17 +232,14 @@ export default {
       if (elementIsVisible("periodic")) {
         this.$cookies.set("period", document.getElementById("input-period").value)
         // this.$cookies.set('always-on-period', document.getElementById('input-always-on-period').value)
-        // this.$cookies.set('always-on-connection', boolElemToPyStr('input-ins-always-on'))
-        // this.$cookies.set('force-always-on-connection', boolElemToPyStr('input-ins-force-always-on'))
+        // this.$cookies.set('always-on-connection', boolToPyStr('input-ins-always-on'))
+        // this.$cookies.set('force-always-on-connection', boolToPyStr('input-ins-force-always-on'))
         this.$cookies.set("scheduled-time-a", "None")
         this.$cookies.set("scheduled-time-b", "None")
 
-        this.$cookies.set("light-sleep-on", boolElemToPyStr("input-light-sleep-on"))
-        this.$cookies.set("light-sleep-network-active", boolElemToPyStr("input-light-sleep-network-active"))
-        this.$cookies.set(
-          "light-sleep-deactivate-on-battery",
-          boolElemToPyStr("input-light-sleep-deactivate-on-battery")
-        )
+        this.$cookies.set("light-sleep-on", boolToPyStr("input-light-sleep-on"))
+        this.$cookies.set("light-sleep-network-active", boolToPyStr("input-light-sleep-network-active"))
+        this.$cookies.set("light-sleep-deactivate-on-battery", boolToPyStr("input-light-sleep-deactivate-on-battery"))
       } else if (elementIsVisible("scheduled")) {
         this.$cookies.set("period", "None")
         this.$cookies.set(

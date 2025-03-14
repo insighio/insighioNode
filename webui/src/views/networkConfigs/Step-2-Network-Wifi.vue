@@ -2,45 +2,32 @@
   <div class="form-group">
     <br />
     <div class="columns">
-      <div class="col-12">
-        <div class="divider text-center" data-content="Connection Configuration" />
-      </div>
+      <SDivider label="Connection Configuration" />
       <br />
       <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-1">SSID</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <input class="form-input constr-field" type="text" v-model="wifi_ssid" />
-      </div>
+      <SInput label="SSID" v-model:value="wifi_ssid" @update:value="wifi_ssid = $event" :colsLabel="3" :colsInput="9" />
       <br />
       <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-1">Password</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <input class="form-input constr-field" type="text" v-model="wifi_pass" />
-      </div>
+      <SInput
+        label="Password"
+        v-model:value="wifi_pass"
+        @update:value="wifi_pass = $event"
+        :colsLabel="3"
+        :colsInput="9"
+      />
       <br />
       <br />
-      <div class="col-12">
-        <div class="divider text-center" data-content="Generic Configuration"></div>
-      </div>
+      <SDivider label="Generic Configuration" />
       <br />
       <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-cellular">Protocol</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <label class="form-radio">
-          <input type="radio" name="protocol" value="mqtt" v-model="protocol" />
-          <i class="form-icon"></i> MQTT
-        </label>
-        <label class="form-radio">
-          <input type="radio" name="protocol" value="coap" v-model="protocol" />
-          <i class="form-icon"></i> CoAP
-        </label>
-      </div>
+      <SRadioGroup
+        label="Protocol"
+        v-model:value="protocol"
+        @update:value="protocol = $event"
+        :valueOptions="protocol_options"
+        :colsLabel="3"
+        :colsInput="9"
+      />
       <br />
       <br />
       <div class="column col-12">
@@ -98,9 +85,14 @@
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import { fetchInternal } from "@/js/utils.js"
 
+import SDivider from "@/components/SDivider.vue"
+import SInput from "@/components/SInput.vue"
+import SRadioGroup from "@/components/SRadioGroup.vue"
+
 export default {
   name: "NetworkWifi",
   mixins: [CommonTools],
+  components: { SDivider, SInput, SRadioGroup },
   data() {
     return {
       // Add your component data here
@@ -108,7 +100,17 @@ export default {
       wifi_pass: undefined,
       protocol: undefined,
       wifiAvailableNets: [],
-      localLoading: false
+      localLoading: false,
+      protocol_options: [
+        {
+          label: "MQTT",
+          value: "mqtt"
+        },
+        {
+          label: "CoAP",
+          value: "coap"
+        }
+      ]
     }
   },
   computed: {

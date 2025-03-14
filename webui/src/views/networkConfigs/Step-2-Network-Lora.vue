@@ -124,8 +124,8 @@ export default {
       this.clearCookies()
       this.$cookies.set("network", "lora")
 
-      this.$cookies.set("lora-adr", this.boolElemToPyStr(this.lora_adr))
-      this.$cookies.set("lora-confirmed", this.boolElemToPyStr(this.lora_confirmed))
+      this.$cookies.set("lora-adr", this.boolToPyStr(this.lora_adr))
+      this.$cookies.set("lora-confirmed", this.boolToPyStr(this.lora_confirmed))
       this.$cookies.set("lora-dr", this.lora_dr)
       this.$cookies.set("lora-region", this.lora_region)
       this.$cookies.set("lora-retries", this.lora_retries)

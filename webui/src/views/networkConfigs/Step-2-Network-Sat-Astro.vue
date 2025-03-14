@@ -7,47 +7,24 @@
       </div>
       <br />
       <br />
-      <div class="col-4 col-sm-12">
-        <label class="form-label"> Enable AstroNode DevKit </label>
-      </div>
-      <div class="col-8 col-sm-12">
-        <label class="form-switch">
-          <input type="checkbox" id="input-satAstroDevkitEnable" />
-          <i class="form-icon"></i>
-        </label>
-      </div>
+      <SSwitch label="Enable AstroNode DevKit" v-model:value="dev_enable" @update:value="dev_enable = $event" />
       <br />
       <br />
-      <div class="col-4 col-sm-12">
-        <label class="form-label" for="input-satAstroSSID">SSID</label>
-      </div>
-      <div class="col-8 col-sm-12">
-        <input class="form-input constr-field" id="input-satAstroSSID" />
-      </div>
+      <SInput label="SSID" v-model:value="dev_ssid" @update:value="dev_ssid = $event" />
       <br />
       <br />
-      <div class="col-4 col-sm-12">
-        <label class="form-label" for="input-satAstroPass">Password</label>
-      </div>
-      <div class="col-8 col-sm-12">
-        <input class="form-input constr-field" id="input-satAstroPass" />
-      </div>
+      <SInput label="Password" v-model:value="dev_pass" @update:value="dev_pass = $event" />
       <br />
       <br />
-      <div class="col-4 col-sm-12">
-        <label class="form-label" for="input-satAstroToken">Access Token</label>
-      </div>
-      <div class="col-8 col-sm-12">
-        <input class="form-input constr-field" id="input-satAstroToken" />
-      </div>
+      <SInput label="Access Token" v-model:value="dev_token" @update:value="dev_token = $event" />
       <br />
       <br />
     </div>
     <div class="column col-12">
-      <button class="btn btn-primary float-right" onClick="validateMyForm()" id="save-button" style="margin-left: 30px">
+      <button class="btn btn-primary float-right" @click="validateMyForm()" id="save-button" style="margin-left: 30px">
         Save
       </button>
-      <button class="btn btn-primary float-right" type="button" id="back-button" onclick="goBack()">Back</button>
+      <button class="btn btn-primary float-right" type="button" id="back-button" @click="requestGoBack()">Back</button>
     </div>
     <br />
     <br />
@@ -56,10 +33,13 @@
 
 <script>
 import CommonTools from "@/components/mixins/CommonTools.vue"
+import SSwitch from "@/components/SSwitch.vue"
+import SInput from "@/components/SInput.vue"
 
 export default {
   name: "NetworkSatAstro",
   mixins: [CommonTools],
+  components: { SSwitch, SInput },
   data() {
     return {
       // Add your component data here
@@ -93,7 +73,7 @@ export default {
 
       this.$cookies.set("network", "satellite")
 
-      this.$cookies.set("sat-astro-devkit-en", this.boolElemToPyStr(this.dev_enable))
+      this.$cookies.set("sat-astro-devkit-en", this.boolToPyStr(this.dev_enable))
       this.$cookies.set("sat-astro-devkit-ssid", this.dev_ssid)
       this.$cookies.set("sat-astro-devkit-pass", this.dev_pass)
       this.$cookies.set("sat-astro-devkit-token", this.dev_token)
