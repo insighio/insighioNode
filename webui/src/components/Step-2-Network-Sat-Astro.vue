@@ -1,5 +1,6 @@
 <template>
   <div class="form-group">
+    <br />
     <div class="columns">
       <div class="col-12">
         <div class="divider text-center" data-content="Connection Configuration"></div>

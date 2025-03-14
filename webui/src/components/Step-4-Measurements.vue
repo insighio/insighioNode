@@ -7,7 +7,7 @@
 
 <script>
 export default {
-  name: "Measurements",
+  name: "Step4Measurements",
   data() {
     return {
       // Add your component data here
@@ -21,7 +21,7 @@ export default {
   },
   mounted() {
     // Add your mounted logic here
-  },
+  }
 }
 </script>
 

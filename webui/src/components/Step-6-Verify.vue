@@ -7,7 +7,7 @@
 
 <script>
 export default {
-  name: "Timing",
+  name: "Step6Verify",
   data() {
     return {
       // Add your component data here
@@ -21,7 +21,7 @@ export default {
   },
   mounted() {
     // Add your mounted logic here
-  },
+  }
 }
 </script>
 
