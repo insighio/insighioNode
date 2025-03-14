@@ -35,7 +35,7 @@ export default {
   data() {
     return {
       username: "",
-      password: "",
+      password: ""
     }
   },
   computed: {
@@ -47,15 +47,16 @@ export default {
   methods: {
     checkPassword() {
       if (this.username === "admin" && this.password === "insighiodev") {
+        this.clearAllCookies()
         this.requestGoNext()
         return true
       } else {
         alert("Wrong Password!")
         return false
       }
-    },
+    }
     // Add your component methods here
-  },
+  }
 }
 </script>
 

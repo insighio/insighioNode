@@ -45,7 +45,17 @@ const goToNextStep = () => {
       <div>
         <Step1Login v-if="tabActive === 0" @goNext="goToNextStep" />
         <Step2Network v-else-if="tabActive === 1" @goNext="goToNextStep" @goBack="goToPreviousStep" />
-        <Step3APIKeys v-else-if="tabActive === 2" @goNext="goToNextStep" @goBack="goToPreviousStep" />
+        <Step3APIKeys
+          v-else-if="tabActive === 2 && networkTech !== 'lora'"
+          @goNext="goToNextStep"
+          @goBack="goToPreviousStep"
+        />
+        <Step3LoRaKeys
+          v-else-if="tabActive === 2 && networkTech === 'lora'"
+          @goNext="goToNextStep"
+          @goBack="goToPreviousStep"
+        />
+
         <Step4Measurements v-else-if="tabActive === 3" @goNext="goToNextStep" @goBack="goToPreviousStep" />
         <Step5Timing v-else-if="tabActive === 4" @goNext="goToNextStep" @goBack="goToPreviousStep" />
         <Step6Verify v-else-if="tabActive === 5" @goNext="goToNextStep" @goBack="goToPreviousStep" />
@@ -58,6 +68,7 @@ const goToNextStep = () => {
 import Step1Login from "@/components/Step-1-Login.vue"
 import Step2Network from "@/components/Step-2-Network.vue"
 import Step3APIKeys from "@/components/Step-3-APIKeys.vue"
+import Step3LoRaKeys from "@/components/Step-3-LoRa-Keys.vue"
 import Step4Measurements from "@/components/Step-4-Measurements.vue"
 import Step5Timing from "@/components/Step-5-Timing.vue"
 import Step6Verify from "@/components/Step-6-Verify.vue"
@@ -66,11 +77,12 @@ import "@/assets/css/spectre.min.css"
 
 export default {
   name: "MainPage",
-  components: { Step1Login, Step2Network, Step3APIKeys, Step4Measurements, Step5Timing, Step6Verify },
+  components: { Step1Login, Step2Network, Step3APIKeys, Step3LoRaKeys, Step4Measurements, Step5Timing, Step6Verify },
   data() {
     return {
       tabs: ["Login", "Network", "API Keys", "Measurements", "Timing", "Verify"],
       tabActive: 0,
+      networkTech: ""
     }
   },
   methods: {
@@ -78,12 +90,13 @@ export default {
       this.tabActive += 1
 
       console.log("goToNextStep: ", this.tabActive)
+      //networkTech
     },
     goToPreviousStep() {
       this.tabActive -= 1
 
       console.log("goToPrevStep: ", this.tabActive)
-    },
+    }
   },
   computed: {
     // Add your computed properties here
@@ -93,7 +106,7 @@ export default {
   },
   setup() {
     console.log("accessing setup")
-  },
+  }
 }
 </script>
 

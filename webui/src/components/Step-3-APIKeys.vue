@@ -155,19 +155,12 @@ export default {
       this.$cookies.remove("insighio-channel")
       this.$cookies.remove("insighio-channel-control")
     },
-    validateElemValue(val, message) {
-      var value = val.trim()
-      if (value == "" || (this.idRegex && !new RegExp(this.idRegex, "g").exec(value))) {
-        window.alert("Please enter a valid " + message)
-        return false
-      }
-      return true
-    },
+
     validateMyForm() {
       if (
-        !this.validateElemValue(this.insighio_id, "device ID") ||
-        !this.validateElemValue(this.insighio_key, "device Key") ||
-        !this.validateElemValue(this.insighio_channel, "channel ID")
+        !this.validateElemValue(this.insighio_id, "device ID", this.idRegex) ||
+        !this.validateElemValue(this.insighio_key, "device Key", this.idRegex) ||
+        !this.validateElemValue(this.insighio_channel, "channel ID", this.idRegex)
       )
         return false
 

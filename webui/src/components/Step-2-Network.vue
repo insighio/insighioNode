@@ -27,16 +27,16 @@
               Satellite
             </button>
           </div>
-          <div v-if="activeNetwork === 'WiFi'">
+          <div v-show="activeNetwork === 'WiFi'">
             <NetworkWifi @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-else-if="activeNetwork === 'Cellular'">
+          <div v-show="activeNetwork === 'Cellular'">
             <NetworkCellular @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-else-if="activeNetwork === 'LoRa'">
+          <div v-show="activeNetwork === 'LoRa'">
             <NetworkLoRa @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-else-if="activeNetwork === 'Satellite'">
+          <div v-show="activeNetwork === 'Satellite'">
             <NetworkSatAstro @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
         </div>
@@ -70,7 +70,8 @@ export default {
   data() {
     return {
       activeNetwork: undefined,
-      localLoading: false
+      localLoading: false,
+      settingsAcquired: false
     }
   },
   mounted() {
@@ -79,8 +80,9 @@ export default {
   },
   methods: {
     initializeValues() {
+      if (this.settingsAcquired) return
+
       this.localLoading = true
-      this.clearAllCookies()
       this.disableButtonsLocal()
 
       fetchInternal("/settings")
@@ -90,6 +92,7 @@ export default {
           })
           this.enableButtonsLocal()
           this.localLoading = false
+          this.settingsAcquired = true
         })
         .catch((err) => {
           console.log("error completing request", err)

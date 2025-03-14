@@ -126,7 +126,7 @@ export default {
       this.$cookies.remove("protocol")
     },
     initializeValues() {
-      this.protocol = this.$cookies.get("protocol")
+      this.protocol = this.getValueWithDefaults(this.$cookies.get("protocol"), "mqtt")
       this.wifi_ssid = this.$cookies.get("wifi-ssid")
       this.wifi_pass = this.$cookies.get("wifi-pass")
 
@@ -149,7 +149,7 @@ export default {
       //wifi
       this.$cookies.set("network", "wifi")
       this.$cookies.set("wifi-ssid", this.wifi_ssid.trim())
-      this.$cookies.set("wifi-pass", this.wifi_pass.trim())
+      this.$cookies.set("wifi-pass", this.wifi_pass ? this.wifi_pass.trim() : "")
       this.$cookies.set("protocol", this.protocol)
 
       this.requestGoNext()
