@@ -1,27 +1,3 @@
-<!--script setup>
-import Step1Login from "@/components/Step-1-Login.vue"
-import Step2Network from "@/components/Step-2-Network.vue"
-import Step3APIKeys from "@/components/Step-3-APIKeys.vue"
-import Step4Measurements from "@/components/Step-4-Measurements.vue"
-import Step5Timing from "@/components/Step-5-Timing.vue"
-import Step6Verify from "@/components/Step-6-Verify.vue"
-
-import "@/assets/css/spectre.min.css"
-import "@/assets/css/style.css"
-
-const openReadmeInEditor = () => fetch("/__open-in-editor?file=README.md")
-let tabActive = 0
-
-const tabs = ["Login", "Network", "API Keys", "Measurements", "Timing", "Verify"]
-
-const goToNextStep = () => {
-  console.log("goToNextStep")
-  tabActive += 1
-
-  console.log("goToNextStep: ", tabActive)
-}
-</script-->
-
 <template>
   <div>
     <img src="@/assets/img/logo.png" class="img-responsive px-2 py-2 img-center" />
@@ -65,13 +41,13 @@ const goToNextStep = () => {
 </template>
 
 <script>
-import Step1Login from "@/components/Step-1-Login.vue"
-import Step2Network from "@/components/Step-2-Network.vue"
-import Step3APIKeys from "@/components/Step-3-APIKeys.vue"
-import Step3LoRaKeys from "@/components/Step-3-LoRa-Keys.vue"
-import Step4Measurements from "@/components/Step-4-Measurements.vue"
-import Step5Timing from "@/components/Step-5-Timing.vue"
-import Step6Verify from "@/components/Step-6-Verify.vue"
+import Step1Login from "@/views/Step-1-Login.vue"
+import Step2Network from "@/views/Step-2-Network.vue"
+import Step3APIKeys from "@/views/Step-3-APIKeys.vue"
+import Step3LoRaKeys from "@/views/Step-3-LoRa-Keys.vue"
+import Step4Measurements from "@/views/Step-4-Measurements.vue"
+import Step5Timing from "@/views/Step-5-Timing.vue"
+import Step6Verify from "@/views/Step-6-Verify.vue"
 
 import "@/assets/css/spectre.min.css"
 

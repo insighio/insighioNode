@@ -51,10 +51,10 @@ import "@/assets/css/spectre.min.css"
 import "@/assets/css/style.css"
 import { fetchInternal } from "@/js/utils.js"
 
-import NetworkWifi from "@/components/Step-2-Network-Wifi.vue"
-import NetworkCellular from "@/components/Step-2-Network-Cellular.vue"
-import NetworkLoRa from "@/components/Step-2-Network-Lora.vue"
-import NetworkSatAstro from "@/components/Step-2-Network-Sat-Astro.vue"
+import NetworkWifi from "@/views/networkConfigs/Step-2-Network-Wifi.vue"
+import NetworkCellular from "@/views/networkConfigs/Step-2-Network-Cellular.vue"
+import NetworkLoRa from "@/views/networkConfigs/Step-2-Network-Lora.vue"
+import NetworkSatAstro from "@/views/networkConfigs/Step-2-Network-Sat-Astro.vue"
 
 import CommonTools from "@/components/mixins/CommonTools.vue"
 
