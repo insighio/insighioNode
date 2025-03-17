@@ -43,19 +43,25 @@ export default {
   },
   mounted() {
     // Add your mounted logic here
+    this.checkAlreadyLoggedIn()
   },
   methods: {
     checkPassword() {
       if (this.username === "admin" && this.password === "insighiodev") {
         this.clearAllCookies()
+        this.$cookies.set("session", "true")
         this.requestGoNext()
         return true
       } else {
         alert("Wrong Password!")
         return false
       }
+    },
+    checkAlreadyLoggedIn() {
+      if (this.$cookies.isKey("session")) {
+        this.requestGoNext()
+      }
     }
-    // Add your component methods here
   }
 }
 </script>
