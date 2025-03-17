@@ -3,29 +3,16 @@
     <br />
     <div class="text-center">Select network technology to be used:</div>
     <br />
-    <div id="loader" v-show="localLoading" class="loading loading-lg"></div>
+    <div v-show="localLoading" class="loading loading-lg"></div>
     <br />
     <div class="container grid-lg">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="btn-group btn-group-block img-center">
-            <button class="btn" id="button-wifi" :disabled="disableButtons" @click="operationSelected('WiFi')">
-              WiFi
-            </button>
-            <button class="btn" id="button-cellular" :disabled="disableButtons" @click="operationSelected('Cellular')">
-              Cellular
-            </button>
-            <button class="btn" id="button-lora" :disabled="disableButtons" @click="operationSelected('LoRa')">
-              LoRa
-            </button>
-            <button
-              class="btn"
-              id="button-satellite"
-              :disabled="disableButtons"
-              @click="operationSelected('Satellite')"
-            >
-              Satellite
-            </button>
+            <button class="btn" :disabled="disableButtons" @click="operationSelected('WiFi')">WiFi</button>
+            <button class="btn" :disabled="disableButtons" @click="operationSelected('Cellular')">Cellular</button>
+            <button class="btn" :disabled="disableButtons" @click="operationSelected('LoRa')">LoRa</button>
+            <button class="btn" :disabled="disableButtons" @click="operationSelected('Satellite')">Satellite</button>
           </div>
           <div v-show="activeNetwork === 'WiFi'">
             <NetworkWifi @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />

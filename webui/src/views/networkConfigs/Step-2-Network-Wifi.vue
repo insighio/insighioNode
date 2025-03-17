@@ -35,7 +35,7 @@
             <th>Quality</th>
           </tr>
         </thead>
-        <tbody id="ssidList">
+        <tbody>
           <tr v-for="network in wifiAvailableNets" :key="network.ssid" @click="ssidSelected(network)">
             <td>{{ network.ssid }}</td>
             <td>{{ network.rssi }}</td>
@@ -59,7 +59,7 @@
           </tr>
         </tbody>
       </table>
-      <div id="loader" v-show="localLoading" class="loading loading-lg"></div>
+      <div v-show="localLoading" class="loading loading-lg"></div>
     </div>
   </div>
 </template>

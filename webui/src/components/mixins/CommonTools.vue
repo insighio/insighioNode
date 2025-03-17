@@ -41,6 +41,11 @@ export default {
       this.$emit("goBack")
     },
     validateElemValue(val, message, idRegex) {
+      if (val === undefined || val === null) {
+        window.alert("Please enter field: " + message)
+        return false
+      }
+
       var value = val.trim()
       if (value == "" || (idRegex && !new RegExp(idRegex, "g").exec(value))) {
         window.alert("Please enter a valid " + message)

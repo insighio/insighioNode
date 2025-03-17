@@ -3,10 +3,10 @@
     <div class="text-center">Timing</div>
     <br />
     <ul class="tab tab-block">
-      <li id="tab-periodic" class="tab-item active" @click="timingChanged(event, 'periodic')">
+      <li class="tab-item active" @click="timingChanged(event, 'periodic')">
         <a class="pointer">Periodic</a>
       </li>
-      <li id="tab-scheduled" class="tab-item" @click="timingChanged(event, 'scheduled')">
+      <li class="tab-item" @click="timingChanged(event, 'scheduled')">
         <a class="pointer">Time Scheduled</a>
       </li>
     </ul>

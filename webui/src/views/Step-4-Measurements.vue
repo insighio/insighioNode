@@ -1,14 +1,13 @@
 <template>
   <div class="panel-body">
     <br />
-    <div id="loader" class="loading loading-lg"></div>
+    <!--div id="loader" class="loading loading-lg"></div-->
     <div class="container grid-lg">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="form-group">
             <div class="columns">
-              <SDivider class="col-12" data-content="Available measurements" />
-              <br />
+              <SDivider label="Available measurements" />
               <SSwitch label="LED notifications" v-model:value="ledEnabled" @update:value="ledEnabled = $event" />
               <SSwitch label="Battery statistics" v-model:value="batteryStats" @update:value="batteryStats = $event" />
               <SSwitch
@@ -30,15 +29,8 @@
                 :valueOptions="temperatureUnitOptions"
               />
               <SSwitch label="GPS enabled" v-model:value="gpsEnabled" @update:value="gpsEnabled = $event" />
-              <SSwitch
-                label="Discard measurements if no GPS fix"
-                v-model:value="gpsNoFixNoUpload"
-                @update:value="gpsNoFixNoUpload = $event"
-              />
-              <SSwitch label="GPS only on boot" v-m odel:value="gpsOnlyOnBoot" @update:value="gpsOnlyOnBoot = $event" />
 
-              <br />
-              <div id="address-gps" class="columns flex-centered col-12">
+              <div v-if="gpsEnabled" style="margin: 20px" class="columns flex-centered col-12">
                 <SInput
                   label="GPS Timeout (seconds)"
                   v-model:value="gpsTimeout"
@@ -51,12 +43,22 @@
                   type="number"
                   @update:value="gpsSatNum = $event"
                 />
+
+                <SSwitch
+                  label="Discard measurements if no GPS fix"
+                  v-model:value="gpsNoFixNoUpload"
+                  @update:value="gpsNoFixNoUpload = $event"
+                />
+                <SSwitch
+                  label="GPS only on boot"
+                  v-m
+                  odel:value="gpsOnlyOnBoot"
+                  @update:value="gpsOnlyOnBoot = $event"
+                />
               </div>
               <br />
-              <div class="col-12">
-                <div class="divider text-center" data-content="Device Selection"></div>
-              </div>
-              <br />
+              <SDivider label="Shield Selection" />
+
               <ul class="tab tab-block">
                 <li
                   v-for="(tab, index) in tabs"

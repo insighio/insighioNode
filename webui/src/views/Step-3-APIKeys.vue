@@ -30,12 +30,7 @@
                 <label class="form-label" for="input-id">ID</label>
               </div>
               <div class="col-9 col-sm-12">
-                <input
-                  class="form-input constr-field"
-                  type="text"
-                  v-model="insighio_id"
-                  @paste.prevent="fillClipboardData"
-                />
+                <input class="form-input constr-field" type="text" v-model="insighio_id" @paste="fillClipboardData" />
               </div>
               <br />
               <br />
@@ -43,12 +38,7 @@
                 <label class="form-label" for="input-key">KEY</label>
               </div>
               <div class="col-9 col-sm-12">
-                <input
-                  class="form-input constr-field"
-                  type="text"
-                  v-model="insighio_key"
-                  @paste.prevent="fillClipboardData"
-                />
+                <input class="form-input constr-field" type="text" v-model="insighio_key" @paste="fillClipboardData" />
               </div>
               <br />
               <br />
@@ -60,7 +50,7 @@
                   class="form-input constr-field"
                   type="text"
                   v-model="insighio_channel"
-                  @paste.prevent="fillClipboardData"
+                  @paste="fillClipboardData"
                 />
               </div>
               <br />
@@ -73,7 +63,7 @@
                   class="form-input constr-field"
                   type="text"
                   v-model="insighio_control_channel"
-                  @paste.prevent="fillClipboardData"
+                  @paste="fillClipboardData"
                 />
               </div>
               <br />
@@ -145,9 +135,11 @@ export default {
       if (
         !this.validateElemValue(this.insighio_id, "device ID", this.idRegex) ||
         !this.validateElemValue(this.insighio_key, "device Key", this.idRegex) ||
-        !this.validateElemValue(this.insighio_channel, "channel ID", this.idRegex)
-      )
+        !this.validateElemValue(this.insighio_channel, "channel ID", this.idRegex) ||
+        !this.validateElemValue(this.insighio_control_channel, "control channel ID", this.idRegex)
+      ) {
         return false
+      }
 
       this.storeData()
       return true

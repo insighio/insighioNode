@@ -1,7 +1,6 @@
 <template>
   <div class="panel-body">
     <br />
-    <div id="loader" class="loading loading-lg"></div>
     <div class="text-center">Set keys provided by the LoRa Server.</div>
     <br />
     <div class="container grid-lg">
@@ -16,24 +15,7 @@
                 :colsLabel="3"
                 :colsInput="9"
               />
-              <div class="col-3 col-sm-12">
-                <label class="form-label" for="input-app-eui"
-                  >APP_EUI
-                  <div class="popover popover-bottom">
-                    <button class="btn btn-link">(Optional)</button>
-                    <div class="popover-container">
-                      <div class="card">
-                        <div class="card-body">If left blank, default value "0000000000000001" will be used</div>
-                      </div>
-                    </div>
-                  </div>
-                </label>
-              </div>
-              <div class="col-9 col-sm-12">
-                <input class="form-input constr-field" type="text" v-model="lora_app_eui" />
-              </div>
-              <br />
-              <br />
+
               <SInput
                 label="APP_KEY"
                 v-model:value="lora_app_key"
@@ -41,6 +23,18 @@
                 :colsLabel="3"
                 :colsInput="9"
               />
+
+              <SInput
+                label="APP_EUI*"
+                v-model:value="lora_app_eui"
+                @update:value="lora_app_eui = $event"
+                :colsLabel="3"
+                :colsInput="9"
+              >
+              </SInput>
+              <div class="col-12">
+                <div>*If left blank, default value "0000000000000001" will be used</div>
+              </div>
             </div>
             <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
           </div>
@@ -99,8 +93,10 @@ export default {
       if (
         !this.validateElemValue(this.lora_dev_eui, "Dev EUI", euiRegex) ||
         !this.validateElemValue(this.lora_app_key, "App Key", appKeyRegex)
-      )
+      ) {
+        window.alert("DevEUI or APP key are invalid")
         return false
+      }
 
       this.storeData()
       return true
