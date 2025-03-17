@@ -5,7 +5,7 @@
     </div>
     <div :class="'col-' + colsInput + ' col-sm-12'">
       <select class="form-select" v-model="internalValue">
-        <option v-for="opt in valueOptions" :key="opt" :value="opt">{{ opt }}</option>
+        <option v-for="opt in valueOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
       </select>
     </div>
     <br />

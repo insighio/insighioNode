@@ -112,9 +112,14 @@ export default {
       //detectBoardChange(enableNavigationButtons)
     },
     fillClipboardData(evt) {
-      this.$nextTick(() => {
+      const clipboardData = evt.clipboardData.getData("text")
+      if (!clipboardData) {
+        return
+      }
+
+      setTimeout(() => {
         try {
-          var obj = JSON.parse(evt.clipboardData.getData("text"))
+          var obj = JSON.parse(clipboardData)
           this.insighio_id = obj.id
           this.insighio_key = obj.key
           this.insighio_channel = obj.channel
@@ -122,7 +127,10 @@ export default {
         } catch (e) {
           console.log("Error parsing clipboard data: ", e)
         }
-      })
+      }, 100)
+      // this.$nextTick(() => {
+
+      // })
     },
     clearCookies() {
       this.$cookies.remove("insighio-id")

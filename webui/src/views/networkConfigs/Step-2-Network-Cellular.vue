@@ -60,7 +60,12 @@ export default {
       cell_tech: "NBIoT",
       cell_apn: "iot.1nce.net",
       cell_band: 20,
-      cell_tech_options: ["GSM", "NBIoT", "LTE-M", "auto"],
+      cell_tech_options: [
+        { value: "GSM", label: "GSM" },
+        { value: "NBIoT", label: "NBIoT" },
+        { value: "LTE-M", label: "LTE-M" },
+        { value: "auto", label: "auto" }
+      ],
       protocol_options: [
         {
           label: "MQTT",

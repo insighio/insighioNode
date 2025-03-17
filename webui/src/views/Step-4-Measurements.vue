@@ -24,8 +24,8 @@
               />
               <SSelect
                 label="Temperature unit"
-                v-model:value="temperatureUnitIsCelcius"
-                @update:value="temperatureUnitIsCelcius = $event"
+                v-model:value="temperatureUnitIsCelsius"
+                @update:value="temperatureUnitIsCelsius = $event"
                 :valueOptions="temperatureUnitOptions"
               />
               <SSwitch label="GPS enabled" v-model:value="gpsEnabled" @update:value="gpsEnabled = $event" />
@@ -51,63 +51,76 @@
                 />
                 <SSwitch
                   label="GPS only on boot"
-                  v-m
-                  odel:value="gpsOnlyOnBoot"
+                  v-model:value="gpsOnlyOnBoot"
                   @update:value="gpsOnlyOnBoot = $event"
                 />
               </div>
               <br />
+
+              <SDivider label="Explicit key-values" />
+              <div class="accordion">
+                <input type="checkbox" id="accordion-1" name="accordion-checkbox" hidden />
+                <label class="accordion-header" for="accordion-1">
+                  <i class="icon icon-arrow-right mr-1"></i>
+                  Explicit key-values
+                </label>
+                <div class="accordion-body">
+                  <div class="columns">
+                    <div class="col-12">
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(pair, index) in keyValuePairs" :key="index">
+                            <td>
+                              <input type="text" v-model="pair.key" placeholder="key name" style="width: 100%" />
+                            </td>
+                            <td>
+                              <input type="text" v-model="pair.value" placeholder="key value" style="width: 100%" />
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <button class="btn btn-primary" @click="keyValuePairs.push({ key: '', value: '' })">
+                        Add key-value pair
+                      </button>
+                    </div>
+                  </div>
+                  <br />
+                </div>
+              </div>
+              <!--SDivider label="Explicit key-values" /-->
+
               <SDivider label="Shield Selection" />
 
-              <ul class="tab tab-block">
-                <li
-                  v-for="(tab, index) in tabs"
-                  :key="index"
-                  :class="['tab-item', { active: activeTab === tab.id }]"
-                  @click="changeTab(tab.id)"
-                >
-                  <a class="pointer">{{ tab.label }}</a>
-                </li>
-              </ul>
-              <br />
-              <div v-for="(tab, index) in tabs" :key="index" v-show="activeTab === tab.id">
-                <div v-if="tab.id === 'shield-scale-options'">
-                  <SInput label="I2C #1" v-model:value="i2c1" />
-                  <SInput label="I2C #2" v-model:value="i2c2" />
-                  <SSwitch label="Weight Scale" v-model:value="scaleEnabled" @update:value="scaleEnabled = $event" />
-                </div>
-                <div v-else-if="tab.id === 'shield-dig-analog-options'">
-                  <SInput label="I2C" v-model:value="i2c1" />
-                  <SInput label="Analog / Digital P1" v-model:value="analogDigitalP1" />
-                </div>
-                <!-- Add other tab-specific content here -->
+              <div class="col-12">
+                <ul class="tab tab-block">
+                  <li
+                    v-for="(tab, index) in tabs"
+                    :key="index"
+                    :class="['tab-item', { active: activeTab === tab.id }]"
+                    @click="changeTab(tab.id)"
+                  >
+                    <a class="pointer">{{ tab.label }}</a>
+                  </li>
+                </ul>
               </div>
               <br />
-              <div class="form-group col-12">
-                <div class="divider text-center" data-content="Explicit key-values"></div>
+              <div class="col-12" v-for="(tab, index) in tabs" :key="index" v-show="activeTab === tab.id">
+                <br />
+                <br />
+                <ShieldScale v-if="tab.id === 'shield-scale-options'" />
+                <ShieldDigitalAnalog v-else-if="tab.id === 'shield-dig-analog-options'" />
+                <ShieldAdvind v-else-if="tab.id === 'shield-advind-options'" />
+                <ShieldAccelerometer v-else-if="tab.id === 'shield-accel-options'" />
               </div>
               <br />
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Key</th>
-                    <th>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(pair, index) in keyValuePairs" :key="index">
-                    <td>
-                      <input type="text" v-model="pair.key" placeholder="key name" style="width: 100%" />
-                    </td>
-                    <td>
-                      <input type="text" v-model="pair.value" placeholder="key value" style="width: 100%" />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
               <br />
             </div>
-            <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
           </div>
         </div>
       </div>
@@ -121,12 +134,24 @@ import SSwitch from "@/components/SSwitch.vue"
 import SInput from "@/components/SInput.vue"
 import SDivider from "@/components/SDivider.vue"
 import SSelect from "@/components/SSelect.vue"
-import WebuiFooter from "@/components/WebuiFooter.vue"
+import ShieldScale from "./shields/ShieldScale.vue"
+import ShieldDigitalAnalog from "./shields/ShieldDigitalAnalog.vue"
+import ShieldAdvind from "./shields/ShieldAdvind.vue"
+import ShieldAccelerometer from "./shields/ShieldAccelerometer.vue"
 
 export default {
   name: "Step4Measurements",
   mixins: [CommonTools],
-  components: { SSwitch, SInput, SDivider, SSelect, WebuiFooter },
+  components: {
+    SSwitch,
+    SInput,
+    SDivider,
+    SSelect,
+    ShieldScale,
+    ShieldDigitalAnalog,
+    ShieldAdvind,
+    ShieldAccelerometer
+  },
   data() {
     return {
       ledEnabled: true,
@@ -136,7 +161,7 @@ export default {
       networkStat: true,
       otaEnabled: true,
       storeMeasIfFailedConn: true,
-      temperatureUnitIsCelcius: true,
+      temperatureUnitIsCelsius: true,
       gpsEnabled: true,
       gpsTimeout: 120,
       gpsSatNum: 4,

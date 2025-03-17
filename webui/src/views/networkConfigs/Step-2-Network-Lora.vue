@@ -61,19 +61,19 @@ export default {
     return {
       // Add your component data here
       lora_region_list: [
-        "EU433",
-        "CN470",
-        "RU864",
-        "IN865",
-        "EU868",
-        "US915",
-        "AU915",
-        "LA915",
-        "KR920",
-        "AS923-1",
-        "AS923-2",
-        "AS923-3",
-        "AS923-4"
+        { value: "EU433", label: "EU433" },
+        { value: "CN470", label: "CN470" },
+        { value: "RU864", label: "RU864" },
+        { value: "IN865", label: "IN865" },
+        { value: "EU868", label: "EU868" },
+        { value: "US915", label: "US915" },
+        { value: "AU915", label: "AU915" },
+        { value: "LA915", label: "LA915" },
+        { value: "KR920", label: "KR920" },
+        { value: "AS923-1", label: "AS923-1" },
+        { value: "AS923-2", label: "AS923-2" },
+        { value: "AS923-3", label: "AS923-3" },
+        { value: "AS923-4", label: "AS923-4" }
       ],
       lora_region: "EU868",
       lora_dr: 5,

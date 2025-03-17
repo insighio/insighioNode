@@ -1,16 +1,17 @@
 <template>
-  <div class="timing">
-    <h1>Timing</h1>
-    <!-- Add your component template here -->
+  <div class="form-group columns">
+    <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>
 
 <script>
 import CommonTools from "@/components/mixins/CommonTools.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
-  name: "Step6Verify",
+  name: "ShieldAccelerometer",
   mixins: [CommonTools],
+  components: { WebuiFooter },
   data() {
     return {
       // Add your component data here
