@@ -2,6 +2,7 @@
   <div :class="'col-' + colsSum">
     <div v-if="label" class="divider text-center" data-content="Connection Configuration"></div>
     <div v-else class="divider"></div>
+    <br />
   </div>
 </template>
 

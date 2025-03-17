@@ -3,11 +3,8 @@
     <br />
     <div class="columns">
       <SDivider label="Connection Configuration" />
-      <br />
-      <br />
+
       <SInput label="APN" v-model:value="cell_apn" @update:value="cell_apn = $event" :colsLabel="3" :colsInput="9" />
-      <br />
-      <br />
 
       <SSelect
         label="Technology"
@@ -17,11 +14,9 @@
         :colsLabel="3"
         :colsInput="9"
       />
-      <br />
-      <br />
+
       <SDivider label="Generic Configuration" />
-      <br />
-      <br />
+
       <SRadioGroup
         label="Protocol"
         v-model:value="protocol"
@@ -30,8 +25,7 @@
         :colsLabel="3"
         :colsInput="9"
       />
-      <br />
-      <br />
+
       <SRadioGroup
         label="IP version"
         v-model:value="ipversion"
@@ -40,19 +34,8 @@
         :colsLabel="3"
         :colsInput="9"
       />
-      <br />
-      <br />
-      <div class="column col-12">
-        <button
-          class="btn btn-primary float-right"
-          @click="validateMyForm()"
-          id="save-button"
-          style="margin-left: 30px"
-        >
-          Save
-        </button>
-        <button class="btn btn-primary float-right" type="button" id="back-button" @click="requestGoBack">Back</button>
-      </div>
+
+      <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
     </div>
   </div>
 </template>
@@ -63,11 +46,12 @@ import SInput from "@/components/SInput.vue"
 import SSelect from "@/components/SSelect.vue"
 import SRadioGroup from "@/components/SRadioGroup.vue"
 import SDivider from "@/components/SDivider.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "NetworkCellular",
   mixins: [CommonTools],
-  components: { SInput, SSelect, SRadioGroup, SDivider },
+  components: { SInput, SSelect, SRadioGroup, SDivider, WebuiFooter },
   data() {
     return {
       // Add your component data here

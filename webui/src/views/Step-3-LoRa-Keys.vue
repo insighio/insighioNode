@@ -9,14 +9,13 @@
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="form-group">
             <div class="columns">
-              <div class="col-3 col-sm-12">
-                <label class="form-label" for="input-dev-eui">DEV_EUI</label>
-              </div>
-              <div class="col-9 col-sm-12">
-                <input class="form-input constr-field" type="text" v-model="lora_dev_eui" />
-              </div>
-              <br />
-              <br />
+              <SInput
+                label="DEV_EUI"
+                v-model:value="lora_dev_eui"
+                @update:value="lora_dev_eui = $event"
+                :colsLabel="3"
+                :colsInput="9"
+              />
               <div class="col-3 col-sm-12">
                 <label class="form-label" for="input-app-eui"
                   >APP_EUI
@@ -27,39 +26,23 @@
                         <div class="card-body">If left blank, default value "0000000000000001" will be used</div>
                       </div>
                     </div>
-                  </div></label
-                >
+                  </div>
+                </label>
               </div>
               <div class="col-9 col-sm-12">
                 <input class="form-input constr-field" type="text" v-model="lora_app_eui" />
               </div>
               <br />
               <br />
-              <div class="col-3 col-sm-12">
-                <label class="form-label" for="input-app-key">APP_KEY</label>
-              </div>
-              <div class="col-9 col-sm-12">
-                <input class="form-input constr-field" type="text" v-model="lora_app_key" />
-              </div>
-              <br />
-              <br />
+              <SInput
+                label="APP_KEY"
+                v-model:value="lora_app_key"
+                @update:value="lora_app_key = $event"
+                :colsLabel="3"
+                :colsInput="9"
+              />
             </div>
-            <div class="column col-12">
-              <button
-                class="btn btn-primary float-right"
-                @click="validateMyForm()"
-                id="save-button"
-                style="margin-left: 30px"
-              >
-                Save
-              </button>
-              <button class="btn btn-primary float-right" type="button" id="back-button" @click="goBack()">Back</button>
-            </div>
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
+            <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
           </div>
         </div>
       </div>
@@ -69,10 +52,13 @@
 
 <script>
 import CommonTools from "@/components/mixins/CommonTools.vue"
+import SInput from "@/components/SInput.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "Step3LoRaKeys",
   mixins: [CommonTools],
+  components: { SInput, WebuiFooter },
   data() {
     return {
       lora_dev_eui: "",

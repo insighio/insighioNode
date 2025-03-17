@@ -116,14 +116,7 @@
       <br />
       <br />
     </div>
-    <div class="column col-12">
-      <button class="btn btn-primary float-right" @click="validateMyForm()" id="save-button" style="margin-left: 30px">
-        Save
-      </button>
-      <button class="btn btn-primary float-right" type="button" id="back-button" @click="goBack()">Back</button>
-    </div>
-    <br />
-    <br />
+    <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>
 
@@ -131,11 +124,12 @@
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import SSwitch from "@/components/SSwitch.vue"
 import SInput from "@/components/SInput.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "Step5Timing",
   mixins: [CommonTools],
-  components: { SSwitch, SInput },
+  components: { SSwitch, SInput, WebuiFooter },
   data() {
     return {
       // Add your component data here

@@ -9,6 +9,8 @@
         <i class="form-icon"></i> {{ opt.label }}
       </label>
     </div>
+    <br />
+    <br />
   </div>
 </template>
 

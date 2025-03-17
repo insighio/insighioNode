@@ -63,6 +63,8 @@ export default {
   },
   methods: {
     goToNextStep() {
+      this.networkTech = this.$cookies.get("network")
+
       this.tabActive += 1
 
       console.log("goToNextStep: ", this.tabActive)

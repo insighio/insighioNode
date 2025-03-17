@@ -9,6 +9,8 @@
         <i class="form-icon"></i>
       </label>
     </div>
+    <br />
+    <br />
   </div>
 </template>
 

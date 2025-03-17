@@ -8,6 +8,8 @@
         <option v-for="opt in valueOptions" :key="opt" :value="opt">{{ opt }}</option>
       </select>
     </div>
+    <br />
+    <br />
   </div>
 </template>
 

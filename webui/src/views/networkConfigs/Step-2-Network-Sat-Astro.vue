@@ -2,32 +2,13 @@
   <div class="form-group">
     <br />
     <div class="columns">
-      <div class="col-12">
-        <div class="divider text-center" data-content="Connection Configuration"></div>
-      </div>
-      <br />
-      <br />
+      <SDivider label="Connection Configuration" />
       <SSwitch label="Enable AstroNode DevKit" v-model:value="dev_enable" @update:value="dev_enable = $event" />
-      <br />
-      <br />
       <SInput label="SSID" v-model:value="dev_ssid" @update:value="dev_ssid = $event" />
-      <br />
-      <br />
       <SInput label="Password" v-model:value="dev_pass" @update:value="dev_pass = $event" />
-      <br />
-      <br />
       <SInput label="Access Token" v-model:value="dev_token" @update:value="dev_token = $event" />
-      <br />
-      <br />
     </div>
-    <div class="column col-12">
-      <button class="btn btn-primary float-right" @click="validateMyForm()" id="save-button" style="margin-left: 30px">
-        Save
-      </button>
-      <button class="btn btn-primary float-right" type="button" id="back-button" @click="requestGoBack()">Back</button>
-    </div>
-    <br />
-    <br />
+    <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>
 
@@ -35,11 +16,13 @@
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import SSwitch from "@/components/SSwitch.vue"
 import SInput from "@/components/SInput.vue"
+import SDivider from "@/components/SDivider.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "NetworkSatAstro",
   mixins: [CommonTools],
-  components: { SSwitch, SInput },
+  components: { SSwitch, SInput, SDivider, WebuiFooter },
   data() {
     return {
       // Add your component data here

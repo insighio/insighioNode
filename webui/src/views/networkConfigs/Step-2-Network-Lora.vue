@@ -2,78 +2,61 @@
   <div class="form-group">
     <br />
     <div class="columns">
-      <div class="col-12">
-        <div class="divider text-center" data-content="Connection Configuration"></div>
-      </div>
-      <br />
-      <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="measurements">Region</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <select class="form-select" v-model="lora_region">
-          <option v-for="region in lora_region_list" :key="region" :value="region">{{ region }}</option>
-        </select>
-      </div>
-      <br />
-      <br />
+      <SDivider label="Connection Configuration" />
 
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-cellular">DR</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <input class="form-input constr-field" type="number" v-model="lora_dr" />
-      </div>
-      <br />
-      <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-cellular">TX Retries</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <input class="form-input constr-field" type="number" v-model="lora_retries" />
-      </div>
-      <br />
-      <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-cellular">ADR</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <label class="form-switch">
-          <input type="checkbox" v-model="lora_adr" />
-          <i class="form-icon"></i>
-        </label>
-      </div>
-      <br />
-      <br />
-      <div class="col-3 col-sm-12">
-        <label class="form-label" for="input-example-cellular">Confirmed</label>
-      </div>
-      <div class="col-9 col-sm-12">
-        <label class="form-switch">
-          <input type="checkbox" v-model="lora_confirmed" />
-          <i class="form-icon"></i>
-        </label>
-      </div>
-      <br />
-      <br />
+      <SSelect
+        label="Region"
+        v-model:value="lora_region"
+        @update:value="lora_region = $event"
+        :valueOptions="lora_region_list"
+        :colsLabel="3"
+        :colsInput="9"
+      />
+
+      <SInput
+        label="DR"
+        v-model:value="lora_dr"
+        inputType="number"
+        @update:value="lora_dr = $event"
+        :colsLabel="3"
+        :colsInput="9"
+      />
+
+      <SInput
+        label="TX Retries"
+        v-model:value="lora_retries"
+        inputType="number"
+        @update:value="lora_retries = $event"
+        :colsLabel="3"
+        :colsInput="9"
+      />
+
+      <SSwitch label="ADR" v-model:value="lora_adr" @update:value="lora_adr = $event" :colsLabel="3" :colsInput="9" />
+
+      <SSwitch
+        label="Confirmed"
+        v-model:value="lora_confirmed"
+        @update:value="lora_confirmed = $event"
+        :colsLabel="3"
+        :colsInput="9"
+      />
     </div>
-    <div class="column col-12">
-      <button class="btn btn-primary float-right" @click="validateMyForm()" id="save-button" style="margin-left: 30px">
-        Save
-      </button>
-      <button class="btn btn-primary float-right" type="button" id="back-button" @click="requestGoBack">Back</button>
-    </div>
-    <br />
-    <br />
+    <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>
 
 <script>
 import CommonTools from "@/components/mixins/CommonTools.vue"
+import SInput from "@/components/SInput.vue"
+import SSelect from "@/components/SSelect.vue"
+import SDivider from "@/components/SDivider.vue"
+import SSwitch from "@/components/SSwitch.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "NetworkLoRa",
   mixins: [CommonTools],
+  components: { SInput, SSelect, SDivider, SSwitch, WebuiFooter },
   data() {
     return {
       // Add your component data here

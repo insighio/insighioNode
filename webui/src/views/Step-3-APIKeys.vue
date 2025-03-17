@@ -3,7 +3,7 @@
     <br />
     <div class="text-center">
       Set API keys that were generated during device creation in console.insigh.io.
-      <div class="popover popover-bottom">
+      <!--div class="popover popover-bottom">
         <button class="btn btn-link">Tip: Autofill</button>
         <div class="popover-container">
           <div class="card">
@@ -18,7 +18,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </div-->
     </div>
     <br />
     <div class="container grid-lg">
@@ -79,24 +79,7 @@
               <br />
               <br />
             </div>
-            <div class="column col-12">
-              <button
-                class="btn btn-primary float-right"
-                @click="validateMyForm()"
-                id="save-button"
-                style="margin-left: 30px"
-              >
-                Save
-              </button>
-              <button class="btn btn-primary float-right" type="button" id="back-button" @click="requestGoBack()">
-                Back
-              </button>
-            </div>
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
+            <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
           </div>
         </div>
       </div>
@@ -106,10 +89,12 @@
 
 <script>
 import CommonTools from "@/components/mixins/CommonTools.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "ApiKeys",
   mixins: [CommonTools],
+  components: { WebuiFooter },
   data() {
     return {
       // Add your component data here

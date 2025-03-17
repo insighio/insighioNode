@@ -6,6 +6,8 @@
     <div :class="'col-' + colsInput + ' col-sm-12'">
       <input :type="inputType" class="form-input constr-field" v-model="internalValue" />
     </div>
+    <br />
+    <br />
   </div>
 </template>
 

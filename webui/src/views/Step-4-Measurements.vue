@@ -105,14 +105,7 @@
               </table>
               <br />
             </div>
-            <div class="column col-12">
-              <button class="btn btn-primary float-right" @click="validateMyForm" style="margin-left: 30px">
-                Save
-              </button>
-              <button class="btn btn-primary float-right" type="button" @click="requestGoBack">Back</button>
-            </div>
-            <br />
-            <br />
+            <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
           </div>
         </div>
       </div>
@@ -126,11 +119,12 @@ import SSwitch from "@/components/SSwitch.vue"
 import SInput from "@/components/SInput.vue"
 import SDivider from "@/components/SDivider.vue"
 import SSelect from "@/components/SSelect.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "Step4Measurements",
   mixins: [CommonTools],
-  components: { SSwitch, SInput, SDivider, SSelect },
+  components: { SSwitch, SInput, SDivider, SSelect, WebuiFooter },
   data() {
     return {
       ledEnabled: true,

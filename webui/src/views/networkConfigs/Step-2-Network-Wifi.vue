@@ -3,11 +3,7 @@
     <br />
     <div class="columns">
       <SDivider label="Connection Configuration" />
-      <br />
-      <br />
       <SInput label="SSID" v-model:value="wifi_ssid" @update:value="wifi_ssid = $event" :colsLabel="3" :colsInput="9" />
-      <br />
-      <br />
       <SInput
         label="Password"
         v-model:value="wifi_pass"
@@ -15,11 +11,7 @@
         :colsLabel="3"
         :colsInput="9"
       />
-      <br />
-      <br />
       <SDivider label="Generic Configuration" />
-      <br />
-      <br />
       <SRadioGroup
         label="Protocol"
         v-model:value="protocol"
@@ -28,16 +20,7 @@
         :colsLabel="3"
         :colsInput="9"
       />
-      <br />
-      <br />
-      <div class="column col-12">
-        <button class="btn btn-primary float-right" @click="validateMyForm()" style="margin-left: 30px">Save</button>
-        <button class="btn btn-primary float-right" type="button" id="back-button" @click="requestGoBack()">
-          Back
-        </button>
-      </div>
-      <br />
-      <br />
+      <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
       <div class="text-normal">
         SSIDs in range:
         <button class="btn btn-link tooltip" data-tooltip="Not showing weak networks">
@@ -88,11 +71,12 @@ import { fetchInternal } from "@/js/utils.js"
 import SDivider from "@/components/SDivider.vue"
 import SInput from "@/components/SInput.vue"
 import SRadioGroup from "@/components/SRadioGroup.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "NetworkWifi",
   mixins: [CommonTools],
-  components: { SDivider, SInput, SRadioGroup },
+  components: { SDivider, SInput, SRadioGroup, WebuiFooter },
   data() {
     return {
       // Add your component data here
