@@ -8,52 +8,25 @@
           <div class="form-group">
             <div class="columns">
               <SDivider label="Available measurements" />
-              <SSwitch label="LED notifications" v-model:value="ledEnabled" @update:value="ledEnabled = $event" />
-              <SSwitch label="Battery statistics" v-model:value="batteryStats" @update:value="batteryStats = $event" />
-              <SSwitch
-                label="Board humidity/temperature"
-                v-model:value="boardSense"
-                @update:value="boardSense = $event"
-              />
-              <SSwitch label="Network statistics" v-model:value="networkStat" @update:value="networkStat = $event" />
-              <SSwitch label="OTA enabled" v-model:value="otaEnabled" @update:value="otaEnabled = $event" />
-              <SSwitch
-                label="Store measurements if failed connection"
-                v-model:value="storeMeasIfFailedConn"
-                @update:value="storeMeasIfFailedConn = $event"
-              />
+              <SSwitch label="LED notifications" v-model:value="ledEnabled" />
+              <SSwitch label="Battery statistics" v-model:value="batteryStats" />
+              <SSwitch label="Board humidity/temperature" v-model:value="boardSense" />
+              <SSwitch label="Network statistics" v-model:value="networkStat" />
+              <SSwitch label="OTA enabled" v-model:value="otaEnabled" />
+              <SSwitch label="Store measurements if failed connection" v-model:value="storeMeasIfFailedConn" />
               <SSelect
                 label="Temperature unit"
                 v-model:value="temperatureUnitIsCelsius"
-                @update:value="temperatureUnitIsCelsius = $event"
                 :valueOptions="temperatureUnitOptions"
               />
-              <SSwitch label="GPS enabled" v-model:value="gpsEnabled" @update:value="gpsEnabled = $event" />
+              <SSwitch label="GPS enabled" v-model:value="gpsEnabled" />
 
               <div v-if="gpsEnabled" style="margin: 20px" class="columns flex-centered col-12">
-                <SInput
-                  label="GPS Timeout (seconds)"
-                  v-model:value="gpsTimeout"
-                  type="number"
-                  @update:value="gpsTimeout = $event"
-                />
-                <SInput
-                  label="Min number of satellites"
-                  v-model:value="gpsSatNum"
-                  type="number"
-                  @update:value="gpsSatNum = $event"
-                />
+                <SInput label="GPS Timeout (seconds)" v-model:value="gpsTimeout" type="number" />
+                <SInput label="Min number of satellites" v-model:value="gpsSatNum" type="number" />
 
-                <SSwitch
-                  label="Discard measurements if no GPS fix"
-                  v-model:value="gpsNoFixNoUpload"
-                  @update:value="gpsNoFixNoUpload = $event"
-                />
-                <SSwitch
-                  label="GPS only on boot"
-                  v-model:value="gpsOnlyOnBoot"
-                  @update:value="gpsOnlyOnBoot = $event"
-                />
+                <SSwitch label="Discard measurements if no GPS fix" v-model:value="gpsNoFixNoUpload" />
+                <SSwitch label="GPS only on boot" v-model:value="gpsOnlyOnBoot" />
               </div>
               <br />
 
@@ -113,10 +86,7 @@
               <div class="col-12" v-for="(tab, index) in tabs" :key="index" v-show="activeTab === tab.id">
                 <br />
                 <br />
-                <ShieldScale v-if="tab.id === 'shield-scale-options'" />
-                <ShieldDigitalAnalog v-else-if="tab.id === 'shield-dig-analog-options'" />
-                <ShieldAdvind v-else-if="tab.id === 'shield-advind-options'" />
-                <ShieldAccelerometer v-else-if="tab.id === 'shield-accel-options'" />
+                <component :is="tab.component" />
               </div>
               <br />
               <br />
@@ -177,10 +147,10 @@ export default {
         { value: false, label: "Fahrenheit (F)" }
       ],
       tabs: [
-        { id: "shield-scale-options", label: "Shield Digital/Scale" },
-        { id: "shield-dig-analog-options", label: "Shield I2C/Analog" },
-        { id: "shield-advind-options", label: "Shield SDI-12" },
-        { id: "shield-accel-options", label: "Shield Accelerometer" }
+        { id: "shield-scale-options", label: "Shield Digital/Scale", component: "ShieldScale" },
+        { id: "shield-dig-analog-options", label: "Shield I2C/Analog", component: "ShieldDigitalAnalog" },
+        { id: "shield-advind-options", label: "Shield SDI-12", component: "ShieldAdvind" },
+        { id: "shield-accel-options", label: "Shield Accelerometer", component: "ShieldAccelerometer" }
       ],
       activeTab: "shield-scale-options"
     }
