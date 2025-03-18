@@ -17,24 +17,21 @@
               />
 
               <SInput
+                label="APP_EUI"
+                v-model:value="lora_app_eui"
+                @update:value="lora_app_eui = $event"
+                :colsLabel="3"
+                :colsInput="9"
+                :tooltip="tooltip"
+              />
+
+              <SInput
                 label="APP_KEY"
                 v-model:value="lora_app_key"
                 @update:value="lora_app_key = $event"
                 :colsLabel="3"
                 :colsInput="9"
               />
-
-              <SInput
-                label="APP_EUI*"
-                v-model:value="lora_app_eui"
-                @update:value="lora_app_eui = $event"
-                :colsLabel="3"
-                :colsInput="9"
-              >
-              </SInput>
-              <div class="col-12">
-                <div>*If left blank, default value "0000000000000001" will be used</div>
-              </div>
             </div>
             <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
           </div>
@@ -57,7 +54,8 @@ export default {
     return {
       lora_dev_eui: "",
       lora_app_eui: "",
-      lora_app_key: ""
+      lora_app_key: "",
+      tooltip: "If left blank,\ndefault value '0000000000000001'\nwill be used"
     }
   },
   mounted() {

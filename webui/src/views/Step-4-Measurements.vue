@@ -107,7 +107,7 @@ import SSelect from "@/components/SSelect.vue"
 import ShieldScale from "./shields/ShieldScale.vue"
 import ShieldDigitalAnalog from "./shields/ShieldDigitalAnalog.vue"
 import ShieldAdvind from "./shields/ShieldAdvind.vue"
-import ShieldAccelerometer from "./shields/ShieldAccelerometer.vue"
+//import ShieldAccelerometer from "./shields/ShieldAccelerometer.vue"
 
 export default {
   name: "Step4Measurements",
@@ -119,8 +119,8 @@ export default {
     SSelect,
     ShieldScale,
     ShieldDigitalAnalog,
-    ShieldAdvind,
-    ShieldAccelerometer
+    ShieldAdvind
+    // ShieldAccelerometer
   },
   data() {
     return {
@@ -149,8 +149,8 @@ export default {
       tabs: [
         { id: "shield-scale-options", label: "Shield Digital/Scale", component: "ShieldScale" },
         { id: "shield-dig-analog-options", label: "Shield I2C/Analog", component: "ShieldDigitalAnalog" },
-        { id: "shield-advind-options", label: "Shield SDI-12", component: "ShieldAdvind" },
-        { id: "shield-accel-options", label: "Shield Accelerometer", component: "ShieldAccelerometer" }
+        { id: "shield-advind-options", label: "Shield SDI-12", component: "ShieldAdvind" }
+        //{ id: "shield-accel-options", label: "Shield Accelerometer", component: "ShieldAccelerometer" }
       ],
       activeTab: "shield-scale-options"
     }
