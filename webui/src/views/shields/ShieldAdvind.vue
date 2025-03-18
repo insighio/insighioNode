@@ -142,7 +142,7 @@ export default {
       this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: true })
     },
     validateMyForm() {
-      // Add your validation logic here
+      this.requestGoNext()
     }
   },
   computed: {

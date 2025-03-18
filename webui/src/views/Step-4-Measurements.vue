@@ -86,7 +86,7 @@
               <div class="col-12" v-for="(tab, index) in tabs" :key="index" v-show="activeTab === tab.id">
                 <br />
                 <br />
-                <component :is="tab.component" />
+                <component :is="tab.component" @goNext="validateMyForm" @goBack="requestGoBack" />
               </div>
               <br />
               <br />

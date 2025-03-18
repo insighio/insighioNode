@@ -66,6 +66,9 @@ export default {
   },
   methods: {
     // Add your component methods here
+    validateMyForm() {
+      this.requestGoNext()
+    }
   },
   computed: {
     // Add your computed properties here

@@ -90,25 +90,14 @@
           <br />
           <div class="form-group columns">
             <div class="col-1 col-mr-auto"></div>
-            <div class="col-3 col-sm-12">
-              <label class="form-label" for="measurements"
-                >Message Buffer Size
-                <button
-                  class="btn btn-link tooltip"
-                  data-tooltip="Defines the number of measurements that&#xa;should be executed before the device&#xa;connects to the network and upload&#xa;Connection period:&#xa;   Sleep Period * Buffer Size"
-                >
-                  <i class="icon icon-flag"></i>
-                </button>
-              </label>
-            </div>
-            <div class="col-3 col-sm-12">
-              <input
-                class="form-input constr-field"
-                type="number"
-                @change="updateEstimatedTime()"
-                id="input-message-buffer-size"
-              />
-            </div>
+            <SInput
+              label="Message Buffer Size"
+              v-model:value="timing_batch_upload_buffer_size"
+              @update:value="bufferSizeUpdated($event)"
+              :tooltip="batchTooltip"
+              :colsLabel="3"
+              :colsInput="3"
+            />
             <div class="column col-5 col-mr-auto"></div>
           </div>
         </div>
@@ -143,7 +132,9 @@ export default {
       timing_scheduled_time_a: "None",
       timing_scheduled_time_b: "None",
       timing_proc_h: 0,
-      timing_proc_s: 0
+      timing_proc_s: 0,
+      batchTooltip:
+        "Defines the number of measurements that\nshould be executed before the device\nconnects to the network and upload\nConnection period:\n   Sleep Period * Buffer Size"
     }
   },
   computed: {
@@ -181,7 +172,7 @@ export default {
         false
       )
 
-      //backward compatibitily
+      //backward compatibility
       if (this.$cookies.get("always-on-period") !== undefined)
         this.timing_period = this.getValueWithDefaults(this.$cookies.get("period"), 300)
 
@@ -197,6 +188,10 @@ export default {
       checkboxStatusChanged("ins-batch-upload")
       updateEstimatedTime()
       detectBoardChange(enableNavigationButtons)
+    },
+    bufferSizeUpdated(evt) {
+      this.timing_batch_upload_buffer_size = evt
+      this.updateEstimatedTime()
     },
     clearCookies() {
       this.$cookies.remove("period")
