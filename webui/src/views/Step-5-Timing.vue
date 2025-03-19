@@ -142,6 +142,7 @@ export default {
   },
   mounted() {
     // Add your mounted logic here
+    this.initializeValues()
   },
   methods: {
     secondsToStringTime(seconds) {

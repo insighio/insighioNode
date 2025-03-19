@@ -36,7 +36,7 @@
       <br />
     </div>
     <div class="col-12">
-      <button class="btn btn-primary" @click="addSdi12Row">Add SDI-12 sensor</button>
+      <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">Add SDI-12 sensor</button>
     </div>
     <SInput
       label="Warmup time (ms)"
@@ -122,10 +122,7 @@ export default {
         { value: "1", label: "SDI snr 1" },
         { value: "2", label: "SDI snr 2" }
       ],
-      sdi12Rows: [
-        { sensorId: 1, boardLocation: "1", active: true },
-        { sensorId: 2, boardLocation: "2", active: true }
-      ],
+      sdi12Rows: [],
       sdi12WarmupTimeMs: 1000,
       sens_4_20_num1_enable: false,
       sens_4_20_num1_formula: "v",
@@ -138,11 +135,177 @@ export default {
     }
   },
   methods: {
+    initializeValues() {
+      for (let i = 1; i <= 10; ++i) {
+        const rowEnabled = this.strToJSValue(this.$cookies.get("meas-sdi-" + i + "-enabled"))
+        const rowLoc = this.$cookies.get("meas-sdi-" + i + "-loc")
+        const rowAddress = this.$cookies.get("meas-sdi-" + i + "-address")
+
+        this.sdi12Rows.push({ sensorId: rowAddress, boardLocation: rowLoc, active: rowEnabled })
+      }
+
+      this.sdi12WarmupTimeMs = this.$cookies.get("meas-sdi-warmup-time")
+        ? this.$cookies.get("meas-sdi-warmup-time")
+        : 1000
+      this.sens_4_20_num1_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-1-enable"), false)
+      this.sens_4_20_num2_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-2-enable"), false)
+      this.sens_4_20_num1_formula = this.$cookies.get("meas-4-20-snsr-1-formula")
+        ? this.$cookies.get("meas-4-20-snsr-1-formula")
+        : "v"
+      this.sens_4_20_num2_formula = this.$cookies.get("meas-4-20-snsr-2-formula")
+        ? this.$cookies.get("meas-4-20-snsr-2-formula")
+        : "v"
+      this.pulseCounterEnable = this.strToJSValue(this.$cookies.get("meas-pcnt-1-enable"), false)
+      this.pulseCounterHighFreq = this.strToJSValue(this.$cookies.get("meas-pcnt-1-high-freq"), true)
+      this.pulseCounterFormula = this.$cookies.get("meas-pcnt-1-formula")
+        ? this.$cookies.get("meas-pcnt-1-formula")
+        : "1"
+    },
     addSdi12Row() {
-      this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: true })
+      if (this.sdi12Rows.length < 10) this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: true })
     },
     validateMyForm() {
       this.requestGoNext()
+    },
+    clearCookies() {
+      this.$cookies.remove("meas-led-enabled")
+      this.$cookies.remove("meas-battery-stat")
+      this.$cookies.remove("meas-board-sense")
+      this.$cookies.remove("meas-board-stat")
+      this.$cookies.remove("meas-gps-enabled")
+      this.$cookies.remove("meas-gps-no-fix-no-upload")
+      this.$cookies.remove("meas-gps-only-on-boot")
+      this.$cookies.remove("meas-gps-sat-num")
+      this.$cookies.remove("meas-gps-timeout")
+      this.$cookies.remove("meas-i2c-1")
+      this.$cookies.remove("meas-i2c-2")
+      this.$cookies.remove("meas-network-stat")
+      this.$cookies.remove("meas-scale-enabled")
+      this.$cookies.remove("meas-sensor-a-d-p1")
+      this.$cookies.remove("meas-sensor-a-d-p1-t")
+      this.$cookies.remove("meas-sensor-a-d-p2")
+      this.$cookies.remove("meas-sensor-a-d-p2-t")
+      this.$cookies.remove("meas-sensor-a-d-p3")
+      this.$cookies.remove("meas-sensor-a-d-p3-t")
+      this.$cookies.remove("meas-sensor-scale-enabled")
+      this.$cookies.remove("meas-temp-unit")
+      this.$cookies.remove("selected-shield")
+      this.$cookies.remove("system-enable-ota")
+      this.$cookies.remove("meas-keyvalue")
+      this.$cookies.remove("store-meas-if-failed-conn")
+      this.$cookies.remove("meas-4-20-snsr-1-enable")
+      this.$cookies.remove("meas-4-20-snsr-2-enable")
+      this.$cookies.remove("meas-4-20-snsr-1-formula")
+      this.$cookies.remove("meas-4-20-snsr-2-formula")
+      this.$cookies.remove("meas-scale-monitoring-enabled")
+      this.$cookies.remove("meas-pcnt-1-enable")
+      this.$cookies.remove("meas-pcnt-1-cnt-on-rising")
+      this.$cookies.remove("meas-pcnt-1-formula")
+      this.$cookies.remove("meas-pcnt-1-high-freq")
+
+      for (let i = 1; i < 11; ++i) {
+        this.$cookies.remove("meas-sdi-" + i + "-enabled")
+        this.$cookies.remove("meas-sdi-" + i + "-address")
+        this.$cookies.remove("meas-sdi-" + i + "-loc")
+      }
+    },
+
+    storeData() {
+      disableNavigationButtons()
+      clearthis.$cookies()
+
+      this.$cookies.set("meas-led-enabled", boolElemToPyStr("input-led-enabled"))
+      this.$cookies.set("meas-battery-stat", boolElemToPyStr("input-battery"))
+      this.$cookies.set("meas-board-sense", boolElemToPyStr("input-board-sense"))
+      this.$cookies.set("meas-board-stat", boolElemToPyStr("input-board-stat"))
+      this.$cookies.set("meas-network-stat", boolElemToPyStr("input-network"))
+      this.$cookies.set("system-enable-ota", boolElemToPyStr("input-ota"))
+      this.$cookies.set("meas-gps-enabled", boolElemToPyStr("input-gps-enable"))
+
+      console.log(
+        "document.getElementById('input-gps-timeout').value: ",
+        document.getElementById("input-temp-unit").value
+      )
+      this.$cookies.set(
+        "meas-temp-unit",
+        document.getElementById("input-temp-unit").value === "false" ? "False" : "True"
+      )
+
+      this.$cookies.set("meas-gps-timeout", document.getElementById("input-gps-timeout").value)
+      this.$cookies.set("meas-gps-sat-num", document.getElementById("input-gps-sat-num").value)
+      this.$cookies.set("meas-gps-no-fix-no-upload", boolElemToPyStr("input-gps-no-fix-no-upload"))
+      this.$cookies.set("meas-gps-only-on-boot", boolElemToPyStr("input-gps-only-on-boot"))
+
+      this.$cookies.set("store-meas-if-failed-conn", boolElemToPyStr("input-store-meas-if-failed-conn"))
+
+      this.$cookies.set("meas-keyvalue", getKeyValuePairs())
+
+      if (elementIsVisible("shield-advind-options")) {
+        this.$cookies.set("selected-shield", shieldNamePerTab["shield-advind-options"])
+
+        for (let i = 1; i < 11; ++i) {
+          setSDI12Cookie(i)
+        }
+
+        this.$cookies.set("meas-4-20-snsr-1-enable", boolElemToPyStr("ins-esp-gen-4-20-snsr-1-enable"))
+        this.$cookies.set("meas-4-20-snsr-2-enable", boolElemToPyStr("ins-esp-gen-4-20-snsr-2-enable"))
+        this.$cookies.set("meas-4-20-snsr-1-formula", document.getElementById("ins-esp-gen-4-20-snsr-1-formula").value)
+        this.$cookies.set("meas-4-20-snsr-2-formula", document.getElementById("ins-esp-gen-4-20-snsr-2-formula").value)
+
+        this.$cookies.set("meas-sdi-warmup-time", document.getElementById("input-gen-sdi12-warmup-time").value)
+
+        this.$cookies.set("meas-pcnt-1-enable", boolElemToPyStr("ins-esp-gen-pcnt-1-enable"))
+        ///this.$cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
+        this.$cookies.set("meas-pcnt-1-formula", document.getElementById("ins-esp-gen-pcnt-1-formula").value)
+        this.$cookies.set("meas-pcnt-1-high-freq", boolElemToPyStr("ins-esp-gen-pcnt-1-high-freq"))
+
+        redirectoToMeasurementNaming()
+      } else if (elementIsVisible("shield-scale-options")) {
+        this.$cookies.set("selected-shield", shieldNamePerTab["shield-scale-options"])
+        this.$cookies.set("meas-i2c-1", document.getElementById("input-i2c-1").value)
+        this.$cookies.set("meas-i2c-2", document.getElementById("input-i2c-2").value)
+        this.$cookies.set("meas-sensor-a-d-p1", document.getElementById("input-sensor-a-d-p1").value)
+        this.$cookies.set("meas-scale-enabled", boolElemToPyStr("input-scale-enabled"))
+        this.$cookies.set("meas-scale-monitoring-enabled", boolElemToPyStr("input-scale-monitoring"))
+
+        if (!isChecked("input-scale-enabled")) {
+          this.$cookies.set("meas-scale-offset", 0)
+          this.$cookies.set("meas-scale-scale", 1)
+          redirectoToMeasurementNaming()
+        } else {
+          var scale = this.$cookies.get("meas-scale-scale")
+          var offset = this.$cookies.get("meas-scale-offset")
+
+          console.log("offset: ", offset, ", scale:", scale)
+
+          if (scale && offset) {
+            this.$cookies.set("meas-scale-offset", offset)
+            this.$cookies.set("meas-scale-scale", scale)
+            redirectTo("step-5-3-scale-calibr-res.html")
+          } else {
+            redirectTo("step-5-1-scale-idle.html")
+          }
+        }
+      } else if (elementIsVisible("shield-dig-analog-options")) {
+        this.$cookies.set("selected-shield", shieldNamePerTab["shield-dig-analog-options"])
+        this.$cookies.set("meas-i2c-1", document.getElementById("input-s1-i2c").value)
+        this.$cookies.set("meas-sensor-a-d-p1", document.getElementById("input-s1-sensor-a-d-p1").value)
+        this.$cookies.set("meas-sensor-a-d-p2", document.getElementById("input-s1-sensor-a-d-p2").value)
+        this.$cookies.set("meas-sensor-a-d-p3", document.getElementById("input-s1-sensor-a-d-p3").value)
+
+        if (elementIsVisible("input-s1-sensor-a-d-p1-trans-div"))
+          this.$cookies.set("meas-sensor-a-d-p1-t", document.getElementById("input-s1-sensor-a-d-p1-t").value)
+
+        if (elementIsVisible("input-s1-sensor-a-d-p2-trans-div"))
+          this.$cookies.set("meas-sensor-a-d-p2-t", document.getElementById("input-s1-sensor-a-d-p2-t").value)
+
+        if (elementIsVisible("input-s1-sensor-a-d-p3-trans-div"))
+          this.$cookies.set("meas-sensor-a-d-p3-t", document.getElementById("input-s1-sensor-a-d-p3-t").value)
+
+        redirectoToMeasurementNaming()
+      }
+
+      enableNavigationButtons()
     }
   },
   computed: {
@@ -154,6 +317,7 @@ export default {
       this.sdi12SensorIdOptions.push({ value: i, label: i.toString() })
     }
     // Add your mounted logic here
+    this.initializeValues()
   }
 }
 </script>
