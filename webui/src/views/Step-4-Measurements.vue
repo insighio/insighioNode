@@ -255,7 +255,6 @@ export default {
 
       this.$cookies.set("selected-shield", this.activeTab)
 
-
       if (this.activeTab === "advind") {
         redirectoToMeasurementNaming()
       } else if (this.activeTab === "scale") {
@@ -274,7 +273,7 @@ export default {
             redirectTo("step-5-1-scale-idle.html")
           }
         }
-      } else if (this.activeTab === "dig_analog")) {
+      } else if (this.activeTab === "dig_analog") {
         redirectoToMeasurementNaming()
       }
     },
