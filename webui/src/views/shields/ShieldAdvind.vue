@@ -168,40 +168,16 @@ export default {
       this.requestGoNext()
     },
     clearCookies() {
-      this.$cookies.remove("meas-led-enabled")
-      this.$cookies.remove("meas-battery-stat")
-      this.$cookies.remove("meas-board-sense")
-      this.$cookies.remove("meas-board-stat")
-      this.$cookies.remove("meas-gps-enabled")
-      this.$cookies.remove("meas-gps-no-fix-no-upload")
-      this.$cookies.remove("meas-gps-only-on-boot")
-      this.$cookies.remove("meas-gps-sat-num")
-      this.$cookies.remove("meas-gps-timeout")
-      this.$cookies.remove("meas-i2c-1")
-      this.$cookies.remove("meas-i2c-2")
-      this.$cookies.remove("meas-network-stat")
-      this.$cookies.remove("meas-scale-enabled")
-      this.$cookies.remove("meas-sensor-a-d-p1")
-      this.$cookies.remove("meas-sensor-a-d-p1-t")
-      this.$cookies.remove("meas-sensor-a-d-p2")
-      this.$cookies.remove("meas-sensor-a-d-p2-t")
-      this.$cookies.remove("meas-sensor-a-d-p3")
-      this.$cookies.remove("meas-sensor-a-d-p3-t")
-      this.$cookies.remove("meas-sensor-scale-enabled")
-      this.$cookies.remove("meas-temp-unit")
-      this.$cookies.remove("selected-shield")
-      this.$cookies.remove("system-enable-ota")
-      this.$cookies.remove("meas-keyvalue")
-      this.$cookies.remove("store-meas-if-failed-conn")
       this.$cookies.remove("meas-4-20-snsr-1-enable")
       this.$cookies.remove("meas-4-20-snsr-2-enable")
       this.$cookies.remove("meas-4-20-snsr-1-formula")
       this.$cookies.remove("meas-4-20-snsr-2-formula")
-      this.$cookies.remove("meas-scale-monitoring-enabled")
       this.$cookies.remove("meas-pcnt-1-enable")
       this.$cookies.remove("meas-pcnt-1-cnt-on-rising")
       this.$cookies.remove("meas-pcnt-1-formula")
       this.$cookies.remove("meas-pcnt-1-high-freq")
+
+      this.$cookies.remove("meas-sdi-warmup-time")
 
       for (let i = 1; i < 11; ++i) {
         this.$cookies.remove("meas-sdi-" + i + "-enabled")
@@ -212,15 +188,15 @@ export default {
 
     storeData() {
       disableNavigationButtons()
-      clearthis.$cookies()
+      this.clearCookies()
 
-      this.$cookies.set("meas-led-enabled", boolElemToPyStr("input-led-enabled"))
-      this.$cookies.set("meas-battery-stat", boolElemToPyStr("input-battery"))
-      this.$cookies.set("meas-board-sense", boolElemToPyStr("input-board-sense"))
-      this.$cookies.set("meas-board-stat", boolElemToPyStr("input-board-stat"))
-      this.$cookies.set("meas-network-stat", boolElemToPyStr("input-network"))
-      this.$cookies.set("system-enable-ota", boolElemToPyStr("input-ota"))
-      this.$cookies.set("meas-gps-enabled", boolElemToPyStr("input-gps-enable"))
+      this.$cookies.set("meas-led-enabled", this.boolElemToPyStr("input-led-enabled"))
+      this.$cookies.set("meas-battery-stat", this.boolElemToPyStr("input-battery"))
+      this.$cookies.set("meas-board-sense", this.boolElemToPyStr("input-board-sense"))
+      this.$cookies.set("meas-board-stat", this.boolElemToPyStr("input-board-stat"))
+      this.$cookies.set("meas-network-stat", this.boolElemToPyStr("input-network"))
+      this.$cookies.set("system-enable-ota", this.boolElemToPyStr("input-ota"))
+      this.$cookies.set("meas-gps-enabled", this.boolElemToPyStr("input-gps-enable"))
 
       console.log(
         "document.getElementById('input-gps-timeout').value: ",
@@ -233,10 +209,10 @@ export default {
 
       this.$cookies.set("meas-gps-timeout", document.getElementById("input-gps-timeout").value)
       this.$cookies.set("meas-gps-sat-num", document.getElementById("input-gps-sat-num").value)
-      this.$cookies.set("meas-gps-no-fix-no-upload", boolElemToPyStr("input-gps-no-fix-no-upload"))
-      this.$cookies.set("meas-gps-only-on-boot", boolElemToPyStr("input-gps-only-on-boot"))
+      this.$cookies.set("meas-gps-no-fix-no-upload", this.boolElemToPyStr("input-gps-no-fix-no-upload"))
+      this.$cookies.set("meas-gps-only-on-boot", this.boolElemToPyStr("input-gps-only-on-boot"))
 
-      this.$cookies.set("store-meas-if-failed-conn", boolElemToPyStr("input-store-meas-if-failed-conn"))
+      this.$cookies.set("store-meas-if-failed-conn", this.boolElemToPyStr("input-store-meas-if-failed-conn"))
 
       this.$cookies.set("meas-keyvalue", getKeyValuePairs())
 
@@ -247,17 +223,17 @@ export default {
           setSDI12Cookie(i)
         }
 
-        this.$cookies.set("meas-4-20-snsr-1-enable", boolElemToPyStr("ins-esp-gen-4-20-snsr-1-enable"))
-        this.$cookies.set("meas-4-20-snsr-2-enable", boolElemToPyStr("ins-esp-gen-4-20-snsr-2-enable"))
+        this.$cookies.set("meas-4-20-snsr-1-enable", this.boolElemToPyStr("ins-esp-gen-4-20-snsr-1-enable"))
+        this.$cookies.set("meas-4-20-snsr-2-enable", this.boolElemToPyStr("ins-esp-gen-4-20-snsr-2-enable"))
         this.$cookies.set("meas-4-20-snsr-1-formula", document.getElementById("ins-esp-gen-4-20-snsr-1-formula").value)
         this.$cookies.set("meas-4-20-snsr-2-formula", document.getElementById("ins-esp-gen-4-20-snsr-2-formula").value)
 
         this.$cookies.set("meas-sdi-warmup-time", document.getElementById("input-gen-sdi12-warmup-time").value)
 
-        this.$cookies.set("meas-pcnt-1-enable", boolElemToPyStr("ins-esp-gen-pcnt-1-enable"))
+        this.$cookies.set("meas-pcnt-1-enable", this.boolElemToPyStr("ins-esp-gen-pcnt-1-enable"))
         ///this.$cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
         this.$cookies.set("meas-pcnt-1-formula", document.getElementById("ins-esp-gen-pcnt-1-formula").value)
-        this.$cookies.set("meas-pcnt-1-high-freq", boolElemToPyStr("ins-esp-gen-pcnt-1-high-freq"))
+        this.$cookies.set("meas-pcnt-1-high-freq", this.boolElemToPyStr("ins-esp-gen-pcnt-1-high-freq"))
 
         redirectoToMeasurementNaming()
       } else if (elementIsVisible("shield-scale-options")) {
@@ -265,8 +241,8 @@ export default {
         this.$cookies.set("meas-i2c-1", document.getElementById("input-i2c-1").value)
         this.$cookies.set("meas-i2c-2", document.getElementById("input-i2c-2").value)
         this.$cookies.set("meas-sensor-a-d-p1", document.getElementById("input-sensor-a-d-p1").value)
-        this.$cookies.set("meas-scale-enabled", boolElemToPyStr("input-scale-enabled"))
-        this.$cookies.set("meas-scale-monitoring-enabled", boolElemToPyStr("input-scale-monitoring"))
+        this.$cookies.set("meas-scale-enabled", this.boolElemToPyStr("input-scale-enabled"))
+        this.$cookies.set("meas-scale-monitoring-enabled", this.boolElemToPyStr("input-scale-monitoring"))
 
         if (!isChecked("input-scale-enabled")) {
           this.$cookies.set("meas-scale-offset", 0)
