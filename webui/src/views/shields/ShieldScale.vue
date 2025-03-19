@@ -93,98 +93,31 @@ export default {
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas-led-enabled", this.boolElemToPyStr("input-led-enabled"))
-      this.$cookies.set("meas-battery-stat", this.boolElemToPyStr("input-battery"))
-      this.$cookies.set("meas-board-sense", this.boolElemToPyStr("input-board-sense"))
-      this.$cookies.set("meas-board-stat", this.boolElemToPyStr("input-board-stat"))
-      this.$cookies.set("meas-network-stat", this.boolElemToPyStr("input-network"))
-      this.$cookies.set("system-enable-ota", this.boolElemToPyStr("input-ota"))
-      this.$cookies.set("meas-gps-enabled", this.boolElemToPyStr("input-gps-enable"))
+      this.$cookies.set("meas-i2c-1", this.i2c1)
+      this.$cookies.set("meas-i2c-2", this.i2c2)
+      this.$cookies.set("meas-sensor-a-d-p1", this.adcP1)
+      this.$cookies.set("meas-scale-enabled", this.boolToPyStr(this.scaleEnabled))
+      this.$cookies.set("meas-scale-monitoring-enabled", this.boolToPyStr(this.scaleMonitoring))
 
-      console.log(
-        "document.getElementById('input-gps-timeout').value: ",
-        document.getElementById("input-temp-unit").value
-      )
-      this.$cookies.set(
-        "meas-temp-unit",
-        document.getElementById("input-temp-unit").value === "false" ? "False" : "True"
-      )
+      if (!this.scaleEnabled) {
+        this.$cookies.set("meas-scale-offset", 0)
+        this.$cookies.set("meas-scale-scale", 1)
+      } else {
+        var scale = this.$cookies.get("meas-scale-scale")
+        var offset = this.$cookies.get("meas-scale-offset")
 
-      this.$cookies.set("meas-gps-timeout", document.getElementById("input-gps-timeout").value)
-      this.$cookies.set("meas-gps-sat-num", document.getElementById("input-gps-sat-num").value)
-      this.$cookies.set("meas-gps-no-fix-no-upload", this.boolElemToPyStr("input-gps-no-fix-no-upload"))
-      this.$cookies.set("meas-gps-only-on-boot", this.boolElemToPyStr("input-gps-only-on-boot"))
+        console.log("offset: ", offset, ", scale:", scale)
 
-      this.$cookies.set("store-meas-if-failed-conn", this.boolElemToPyStr("input-store-meas-if-failed-conn"))
-
-      this.$cookies.set("meas-keyvalue", getKeyValuePairs())
-
-      if (elementIsVisible("shield-advind-options")) {
-        this.$cookies.set("selected-shield", shieldNamePerTab["shield-advind-options"])
-
-        for (let i = 1; i < 11; ++i) {
-          setSDI12Cookie(i)
-        }
-
-        this.$cookies.set("meas-4-20-snsr-1-enable", this.boolElemToPyStr("ins-esp-gen-4-20-snsr-1-enable"))
-        this.$cookies.set("meas-4-20-snsr-2-enable", this.boolElemToPyStr("ins-esp-gen-4-20-snsr-2-enable"))
-        this.$cookies.set("meas-4-20-snsr-1-formula", document.getElementById("ins-esp-gen-4-20-snsr-1-formula").value)
-        this.$cookies.set("meas-4-20-snsr-2-formula", document.getElementById("ins-esp-gen-4-20-snsr-2-formula").value)
-
-        this.$cookies.set("meas-sdi-warmup-time", document.getElementById("input-gen-sdi12-warmup-time").value)
-
-        this.$cookies.set("meas-pcnt-1-enable", this.boolElemToPyStr("ins-esp-gen-pcnt-1-enable"))
-        ///this.$cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
-        this.$cookies.set("meas-pcnt-1-formula", document.getElementById("ins-esp-gen-pcnt-1-formula").value)
-        this.$cookies.set("meas-pcnt-1-high-freq", this.boolElemToPyStr("ins-esp-gen-pcnt-1-high-freq"))
-
-        redirectoToMeasurementNaming()
-      } else if (elementIsVisible("shield-scale-options")) {
-        this.$cookies.set("selected-shield", shieldNamePerTab["shield-scale-options"])
-        this.$cookies.set("meas-i2c-1", document.getElementById("input-i2c-1").value)
-        this.$cookies.set("meas-i2c-2", document.getElementById("input-i2c-2").value)
-        this.$cookies.set("meas-sensor-a-d-p1", document.getElementById("input-sensor-a-d-p1").value)
-        this.$cookies.set("meas-scale-enabled", this.boolElemToPyStr("input-scale-enabled"))
-        this.$cookies.set("meas-scale-monitoring-enabled", this.boolElemToPyStr("input-scale-monitoring"))
-
-        if (!isChecked("input-scale-enabled")) {
-          this.$cookies.set("meas-scale-offset", 0)
-          this.$cookies.set("meas-scale-scale", 1)
-          redirectoToMeasurementNaming()
+        if (scale && offset) {
+          this.$cookies.set("meas-scale-offset", offset)
+          this.$cookies.set("meas-scale-scale", scale)
+          redirectTo("step-5-3-scale-calibr-res.html")
         } else {
-          var scale = this.$cookies.get("meas-scale-scale")
-          var offset = this.$cookies.get("meas-scale-offset")
-
-          console.log("offset: ", offset, ", scale:", scale)
-
-          if (scale && offset) {
-            this.$cookies.set("meas-scale-offset", offset)
-            this.$cookies.set("meas-scale-scale", scale)
-            redirectTo("step-5-3-scale-calibr-res.html")
-          } else {
-            redirectTo("step-5-1-scale-idle.html")
-          }
+          redirectTo("step-5-1-scale-idle.html")
         }
-      } else if (elementIsVisible("shield-dig-analog-options")) {
-        this.$cookies.set("selected-shield", shieldNamePerTab["shield-dig-analog-options"])
-        this.$cookies.set("meas-i2c-1", document.getElementById("input-s1-i2c").value)
-        this.$cookies.set("meas-sensor-a-d-p1", document.getElementById("input-s1-sensor-a-d-p1").value)
-        this.$cookies.set("meas-sensor-a-d-p2", document.getElementById("input-s1-sensor-a-d-p2").value)
-        this.$cookies.set("meas-sensor-a-d-p3", document.getElementById("input-s1-sensor-a-d-p3").value)
-
-        if (elementIsVisible("input-s1-sensor-a-d-p1-trans-div"))
-          this.$cookies.set("meas-sensor-a-d-p1-t", document.getElementById("input-s1-sensor-a-d-p1-t").value)
-
-        if (elementIsVisible("input-s1-sensor-a-d-p2-trans-div"))
-          this.$cookies.set("meas-sensor-a-d-p2-t", document.getElementById("input-s1-sensor-a-d-p2-t").value)
-
-        if (elementIsVisible("input-s1-sensor-a-d-p3-trans-div"))
-          this.$cookies.set("meas-sensor-a-d-p3-t", document.getElementById("input-s1-sensor-a-d-p3-t").value)
-
-        redirectoToMeasurementNaming()
       }
 
-      enableNavigationButtons()
+      this.requestGoNext()
     }
   },
   computed: {

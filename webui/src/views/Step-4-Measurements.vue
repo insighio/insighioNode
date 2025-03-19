@@ -216,41 +216,15 @@ export default {
       this.$cookies.remove("meas-gps-only-on-boot")
       this.$cookies.remove("meas-gps-sat-num")
       this.$cookies.remove("meas-gps-timeout")
-      this.$cookies.remove("meas-i2c-1")
-      this.$cookies.remove("meas-i2c-2")
       this.$cookies.remove("meas-network-stat")
-      this.$cookies.remove("meas-scale-enabled")
-      this.$cookies.remove("meas-sensor-a-d-p1")
-      this.$cookies.remove("meas-sensor-a-d-p1-t")
-      this.$cookies.remove("meas-sensor-a-d-p2")
-      this.$cookies.remove("meas-sensor-a-d-p2-t")
-      this.$cookies.remove("meas-sensor-a-d-p3")
-      this.$cookies.remove("meas-sensor-a-d-p3-t")
-      this.$cookies.remove("meas-sensor-scale-enabled")
       this.$cookies.remove("meas-temp-unit")
       this.$cookies.remove("selected-shield")
       this.$cookies.remove("system-enable-ota")
       this.$cookies.remove("meas-keyvalue")
       this.$cookies.remove("store-meas-if-failed-conn")
-      this.$cookies.remove("meas-4-20-snsr-1-enable")
-      this.$cookies.remove("meas-4-20-snsr-2-enable")
-      this.$cookies.remove("meas-4-20-snsr-1-formula")
-      this.$cookies.remove("meas-4-20-snsr-2-formula")
-      this.$cookies.remove("meas-scale-monitoring-enabled")
-      this.$cookies.remove("meas-pcnt-1-enable")
-      this.$cookies.remove("meas-pcnt-1-cnt-on-rising")
-      this.$cookies.remove("meas-pcnt-1-formula")
-      this.$cookies.remove("meas-pcnt-1-high-freq")
-
-      for (let i = 1; i < 11; ++i) {
-        this.$cookies.remove("meas-sdi-" + i + "-enabled")
-        this.$cookies.remove("meas-sdi-" + i + "-address")
-        this.$cookies.remove("meas-sdi-" + i + "-loc")
-      }
     },
 
     storeData() {
-      disableNavigationButtons()
       this.clearCookies()
 
       this.$cookies.set("meas-led-enabled", this.boolElemToPyStr("input-led-enabled"))
@@ -277,11 +251,16 @@ export default {
 
       this.$cookies.set("store-meas-if-failed-conn", this.boolElemToPyStr("input-store-meas-if-failed-conn"))
 
-      this.$cookies.set("meas-keyvalue", getKeyValuePairs())
+      this.$cookies.set("meas-keyvalue", this.getKeyValuePairs())
 
-      if (elementIsVisible("shield-advind-options")) {
+      this.$cookies.set("selected-shield", this.activeTab)
+
+
+      if (this.activeTab === "advind") {
         redirectoToMeasurementNaming()
-      } else if (elementIsVisible("shield-scale-options")) {
+      } else if (this.activeTab === "scale") {
+        let scale = this.$cookies.get("meas-scale-scale")
+        let offset = this.$cookies.get("meas-scale-offset")
         if (!isChecked("input-scale-enabled")) {
           this.$cookies.set("meas-scale-offset", 0)
           this.$cookies.set("meas-scale-scale", 1)
@@ -295,9 +274,20 @@ export default {
             redirectTo("step-5-1-scale-idle.html")
           }
         }
-      } else if (elementIsVisible("shield-dig-analog-options")) {
+      } else if (this.activeTab === "dig_analog")) {
         redirectoToMeasurementNaming()
       }
+    },
+    getKeyValuePairs() {
+      let localObj = {}
+
+      this.keyValuePairs.forEach((pair) => {
+        if (pair.key && pair.value) {
+          localObj[pair.key] = pair.value
+        }
+      })
+
+      return localObj
     }
   }
 }
