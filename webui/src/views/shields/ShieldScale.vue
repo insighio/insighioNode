@@ -32,6 +32,16 @@
       :colsLabel="4"
       :colsInput="8"
     />
+    <div v-if="scaleEnabled" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
+      <div class="col-4 col-sm-12">
+        <label class="form-label"></label>
+      </div>
+      <div class="col-8 col-sm-12">
+        <button class="btn btn-primary" @click="startCalibration()" style="margin-left: 30px">Calibrate</button>
+      </div>
+      <br />
+      <br />
+    </div>
     <SSwitch
       label="[Debug] Enable Scale Sensor Monitoring"
       v-model:value="scaleMonitoring"
@@ -39,7 +49,6 @@
       :colsLabel="4"
       :colsInput="8"
     />
-    <button class="btn btn-primary float-right" @click="startCalibration()" style="margin-left: 30px">Calibrate</button>
     <br />
     <br />
     <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />

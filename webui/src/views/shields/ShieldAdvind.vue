@@ -1,6 +1,7 @@
 <template>
   <div class="form-group columns">
     <div class="col-12">
+      <SDivider label="SDI12" />
       <table class="table table-striped table-hover">
         <thead>
           <tr>
@@ -8,6 +9,11 @@
             <th>Sensor ID</th>
             <th>Board Location</th>
             <th>Active</th>
+            <th>
+              <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">
+                <i class="icon icon-plus"></i>
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody id="option-sdi12-table-rows">
@@ -29,21 +35,27 @@
                 <i class="form-icon"></i>
               </label>
             </td>
+            <td>
+              <button class="btn btn-primary" @click="sdi12Rows.splice(index, 1)">
+                <i class="icon icon-delete"></i>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
 
       <br />
+
+      <SInput
+        label="Warmup time (ms)"
+        type="number"
+        v-model:value="sdi12WarmupTimeMs"
+        @update:value="sdi12WarmupTimeMs = $event"
+      />
     </div>
-    <div class="col-12">
+    <!--div class="col-12">
       <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">Add SDI-12 sensor</button>
-    </div>
-    <SInput
-      label="Warmup time (ms)"
-      type="number"
-      v-model:value="sdi12WarmupTimeMs"
-      @update:value="sdi12WarmupTimeMs = $event"
-    />
+    </div-->
     <div class="col-12 columns">
       <SDivider label="4-20mA sensing" />
       <SSwitch label="Sensor 1 enable" v-model:value="sens_4_20_num1_enable" />
@@ -136,12 +148,26 @@ export default {
   },
   methods: {
     initializeValues() {
+      this.sdi12Rows = []
       for (let i = 1; i <= 10; ++i) {
         const rowEnabled = this.strToJSValue(this.$cookies.get("meas-sdi-" + i + "-enabled"))
         const rowLoc = this.$cookies.get("meas-sdi-" + i + "-loc")
         const rowAddress = this.$cookies.get("meas-sdi-" + i + "-address")
 
+        if (
+          rowEnabled === undefined ||
+          rowEnabled === null ||
+          !rowLoc ||
+          rowAddress === undefined ||
+          rowAddress === null
+        ) {
+          continue
+        }
         this.sdi12Rows.push({ sensorId: rowAddress, boardLocation: rowLoc, active: rowEnabled })
+      }
+
+      if (this.sdi12Rows.length === 0) {
+        this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: false })
       }
 
       this.sdi12WarmupTimeMs = this.$cookies.get("meas-sdi-warmup-time")
