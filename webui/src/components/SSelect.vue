@@ -18,7 +18,7 @@ export default {
   name: "SSelect",
   props: {
     value: {
-      type: String,
+      type: [String, Number, Boolean],
       required: true
     },
     valueOptions: {

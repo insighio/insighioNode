@@ -57,7 +57,7 @@ export default {
       return val !== undefined ? val : defaultVal
     },
     strToJSValue(strVal, defaultVal = undefined) {
-      if (strVal === undefined) return defaultVal
+      if (strVal === undefined || strVal === null) return defaultVal
 
       try {
         strVal = strVal ? strVal.toLowerCase() : strVal

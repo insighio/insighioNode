@@ -21,7 +21,8 @@ export default {
   name: "SInput",
   props: {
     value: {
-      type: String,
+      type: [String, Number],
+      default: "",
       required: true
     },
     label: {

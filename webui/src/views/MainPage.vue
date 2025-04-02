@@ -65,7 +65,7 @@ export default {
     let storedActiveTab = this.$cookies.get("activeTab")
 
     console.log("storedActiveTab: ", storedActiveTab)
-    if (storedActiveTab !== undefined) this.tabActive = parseInt(storedActiveTab)
+    if (storedActiveTab !== undefined && storedActiveTab !== null) this.tabActive = parseInt(storedActiveTab)
     else {
       this.tabActive = 0
       this.$cookies.set("activeTab", this.tabActive)

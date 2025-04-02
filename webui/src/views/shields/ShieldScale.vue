@@ -159,9 +159,9 @@ export default {
   methods: {
     initializeValues() {
       // Add initialization logic here
-      this.i2c1 = this.$cookies.get("meas-i2c-1")
-      this.i2c2 = this.$cookies.get("meas-i2c-2")
-      this.adcP1 = this.$cookies.get("meas-sensor-a-d-p1")
+      this.i2c1 = this.strToJSValue(this.$cookies.get("meas-i2c-1"), "disabled")
+      this.i2c2 = this.strToJSValue(this.$cookies.get("meas-i2c-2"), "disabled")
+      this.adcP1 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p1"), "disabled")
       this.scaleEnabled = this.strToJSValue(this.$cookies.get("meas-scale-enabled"), false)
       this.scaleMonitoring = this.strToJSValue(this.$cookies.get("meas-scale-monitoring-enabled"), false)
     },

@@ -180,7 +180,7 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.gpsEnabled = this.strToJSValue(this.$cookies.get("meas-gps-enabled"))
+      this.gpsEnabled = this.strToJSValue(this.$cookies.get("meas-gps-enabled"), true)
 
       this.ledEnabled = this.strToJSValue(this.$cookies.get("meas-led-enabled"), true)
       this.batteryStats = this.strToJSValue(this.$cookies.get("meas-battery-stat"), true)
