@@ -2,10 +2,16 @@
 Tiny Web - pretty simple and powerful web server for tiny platforms like ESP8266 / ESP32
 MIT license
 (C) Konstantin Belyalov 2017-2018
+
+checked out hash: https://github.com/belyalov/tinyweb/commit/7669f03cdcbb62a847e7d4917673be52ad2f7e79
 """
+
 import logging
-import uasyncio as asyncio
-import uasyncio.core
+
+try:
+    import asyncio
+except:
+    import uasyncio as asyncio
 import ujson as json
 import gc
 import uos as os
@@ -13,14 +19,18 @@ import sys
 import uerrno as errno
 import usocket as socket
 
+import logging as log
 
-log = logging.getLogger("WEB")
+
+# log = logging.getLogger("WEB")
 
 type_gen = type((lambda: (yield))())
 
-# uasyncio v3 is shipped with MicroPython 1.13, and contains some subtle
+# with v1.21.0 release all u-modules where renamend without the u prefix
+# -> uasyncio no named asyncio
+# asyncio v3 is shipped with MicroPython 1.13, and contains some subtle
 # but breaking changes. See also https://github.com/peterhinch/micropython-async/blob/master/v3/README.md
-IS_UASYNCIO_V3 = hasattr(asyncio, "__version__") and asyncio.__version__ >= (3,)
+IS_ASYNCIO_V3 = hasattr(asyncio, "__version__") and asyncio.__version__ >= (3,)
 
 
 def urldecode_plus(s):
@@ -116,7 +126,7 @@ class request:
             frags = line.split(b":", 1)
             if len(frags) != 2:
                 raise HTTPException(400)
-            if frags[0] in save_headers:
+            if frags[0].lower() in save_headers:
                 self.headers[frags[0]] = frags[1].strip()
 
     async def read_parse_form_data(self):
@@ -367,6 +377,7 @@ async def restful_resource_handler(req, resp, param=None):
 
 
 class webserver:
+
     def __init__(self, request_timeout=3, max_concurrency=3, backlog=16, debug=False):
         """Tiny Web Server class.
         Keyword arguments:
@@ -394,7 +405,6 @@ class webserver:
         self.conns = {}
         # Statistics
         self.processed_connections = 0
-        self._server_coro_task = None
 
     def _find_url_handler(self, req):
         """Helper to find URL handler.
@@ -456,7 +466,6 @@ class webserver:
 
             # Ensure that HTTP method is allowed for this path
             if req.method not in req.params["methods"]:
-                print("req.method: {}, req.params['methods']: {}".format(req.method, req.params["methods"]))
                 raise HTTPException(405)
 
             # Handle URL
@@ -475,16 +484,16 @@ class webserver:
                 try:
                     await resp.error(500)
                 except Exception as e:
-                    logging.exception(e, "")
+                    log.exception(e, f"Failed to send 500 error after OSError. Original error: {e}")
         except HTTPException as e:
             try:
                 await resp.error(e.code)
             except Exception as e:
-                logging.exception(e)
+                log.exception(e, f"Failed to send error after HTTPException. Original error: {e}")
         except Exception as e:
             # Unhandled expection in user's method
-            logging.error(req.path.decode())
-            logging.exception(e, "")
+            log.error(req.path.decode())
+            log.exception(e, f"Unhandled exception in user's method. Original error: {e}")
             try:
                 await resp.error(500)
                 # Send exception info if desired
@@ -497,11 +506,9 @@ class webserver:
             # Max concurrency support -
             # if queue is full schedule resume of TCP server task
             if len(self.conns) == self.max_concurrency:
-                self._server_coro_task = self.loop.create_task(self._server_coro)
+                self.loop.create_task(self._server_coro)
             # Delete connection, using socket as a key
-            sock_id = id(writer.s)
-            if sock_id in self.conns.keys():
-                del self.conns[sock_id]
+            del self.conns[id(writer.s)]
 
     def add_route(self, url, f, **kwargs):
         """Add URL to function mapping.
@@ -523,15 +530,15 @@ class webserver:
         params = {
             "methods": ["GET"],
             "save_headers": [],
-            "max_body_size": 4096,  # 1024,
+            "max_body_size": 1024,
             "allowed_access_control_headers": "*",
             "allowed_access_control_origins": "*",
         }
         params.update(kwargs)
         params["allowed_access_control_methods"] = ", ".join(params["methods"])
         # Convert methods/headers to bytestring
-        params["methods"] = [x.encode() for x in params["methods"]]
-        params["save_headers"] = [x.encode() for x in params["save_headers"]]
+        params["methods"] = [x.encode().upper() for x in params["methods"]]
+        params["save_headers"] = [x.encode().lower() for x in params["save_headers"]]
         # If URL has a parameter
         if url.endswith(">"):
             idx = url.rfind("<")
@@ -659,8 +666,8 @@ class webserver:
         sock.listen(backlog)
         try:
             while True:
-                if IS_UASYNCIO_V3:
-                    yield uasyncio.core._io_queue.queue_read(sock)
+                if IS_ASYNCIO_V3:
+                    yield asyncio.core._io_queue.queue_read(sock)
                 else:
                     yield asyncio.IORead(sock)
                 csock, caddr = sock.accept()
@@ -670,7 +677,8 @@ class webserver:
                 self.processed_connections += 1
                 hid = id(csock)
                 handler = self._handler(asyncio.StreamReader(csock), asyncio.StreamWriter(csock, {}))
-                self.conns[hid] = self.loop.create_task(handler)
+                self.conns[hid] = handler
+                self.loop.create_task(handler)
                 # In case of max concurrency reached - temporary pause server:
                 # 1. backlog must be greater than max_concurrency, otherwise
                 #    client will got "Connection Reset"
@@ -692,14 +700,12 @@ class webserver:
             loop_forever - run loo.loop_forever(), otherwise caller must run it by itself.
         """
         self._server_coro = self._tcp_server(host, port, self.backlog)
-        self._server_coro_task = self.loop.create_task(self._server_coro)
+        self.loop.create_task(self._server_coro)
         if loop_forever:
             self.loop.run_forever()
 
     def shutdown(self):
         """Gracefully shutdown Web Server"""
-        if self._server_coro_task is not None:
-            self._server_coro_task.cancel()
-
-        for hid, coro_task in self.conns.items():
-            coro_task.cancel()
+        asyncio.cancel(self._server_coro)
+        for hid, coro in self.conns.items():
+            asyncio.cancel(coro)
