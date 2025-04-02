@@ -55,10 +55,21 @@
                             <td>
                               <input type="text" v-model="pair.value" placeholder="key value" style="width: 100%" />
                             </td>
+                            <td>
+                              <button class="btn btn-primary" @click="keyValuePairs.splice(index, 1)">
+                                <i class="icon icon-delete"></i>
+                              </button>
+                            </td>
                           </tr>
                         </tbody>
                       </table>
-                      <button class="btn btn-primary" @click="keyValuePairs.push({ key: '', value: '' })">
+                    </div>
+                    <div class="col-12">
+                      <button
+                        class="btn btn-primary"
+                        style="margin-left: 5px"
+                        @click="keyValuePairs.push({ key: '', value: '' })"
+                      >
                         Add key-value pair
                       </button>
                     </div>

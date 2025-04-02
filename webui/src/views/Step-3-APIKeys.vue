@@ -140,14 +140,14 @@ export default {
     },
 
     validateMyForm() {
-      if (
-        !this.validateElemValue(this.insighio_id, "device ID", this.idRegex) ||
-        !this.validateElemValue(this.insighio_key, "device Key", this.idRegex) ||
-        !this.validateElemValue(this.insighio_channel, "channel ID", this.idRegex) ||
-        !this.validateElemValue(this.insighio_control_channel, "control channel ID", this.idRegex)
-      ) {
-        return false
-      }
+      // if (
+      //   !this.validateElemValue(this.insighio_id, "device ID", this.idRegex) ||
+      //   !this.validateElemValue(this.insighio_key, "device Key", this.idRegex) ||
+      //   !this.validateElemValue(this.insighio_channel, "channel ID", this.idRegex) ||
+      //   !this.validateElemValue(this.insighio_control_channel, "control channel ID", this.idRegex)
+      // ) {
+      //   return false
+      // }
 
       this.storeData()
       return true

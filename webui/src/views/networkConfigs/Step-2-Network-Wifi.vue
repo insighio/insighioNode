@@ -23,9 +23,7 @@
       <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
       <div class="text-normal">
         SSIDs in range:
-        <button class="btn btn-link tooltip" data-tooltip="Not showing weak networks">
-          <i class="icon icon-flag"></i>
-        </button>
+        <button class="btn btn-primary" type="button" @click="updateWifiList()">Refresh</button>
       </div>
       <table class="table table-striped table-hover">
         <thead>
@@ -113,7 +111,8 @@ export default {
       this.protocol = this.getValueWithDefaults(this.$cookies.get("protocol"), "mqtt")
       this.wifi_ssid = this.$cookies.get("wifi-ssid")
       this.wifi_pass = this.$cookies.get("wifi-pass")
-
+    },
+    updateWifiList() {
       this.localLoading = true
 
       fetchInternal("/update_wifi_list")

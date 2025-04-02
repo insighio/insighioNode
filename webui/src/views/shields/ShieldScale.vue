@@ -62,8 +62,8 @@
             </p>
             <div class="empty-action">
               <div class="column col-12">
-                <button class="btn btn-primary" @click="closeWizard">Back</button>
-                <button class="btn btn-primary" @click="goToNextStep">Measure</button>
+                <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="closeWizard">Back</button>
+                <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="goToNextStep">Measure</button>
               </div>
             </div>
           </div>
@@ -78,16 +78,16 @@
               <span class="text-bold">Measure</span> to complete calibration.
             </p>
             <div class="columns">
-              <div class="col-2 col-sm-12 col-ml-auto">
+              <div class="col-3 col-sm-12 col-ml-auto">
                 <label class="form-label p-centered" for="input-ref-weight">Reference Weight (g)</label>
               </div>
-              <div class="col-2 col-sm-12 col-mr-auto">
+              <div class="col-3 col-sm-12 col-mr-auto">
                 <input class="form-input p-centered" type="number" v-model="referenceWeight" style="width: 300px" />
               </div>
             </div>
             <div class="empty-action">
-              <button class="btn btn-primary" @click="goToPreviousStep">Back</button>
-              <button class="btn btn-primary" @click="goToNextStep">Measure</button>
+              <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="goToPreviousStep">Back</button>
+              <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="goToNextStep">Measure</button>
             </div>
           </div>
           <div class="empty" v-if="currentStep === 3">
@@ -106,8 +106,8 @@
               Current Weight(g): <span class="text-bold">{{ currentWeight }}</span>
             </p>
             <div class="empty-action">
-              <button class="btn btn-primary" @click="goToPreviousStep">Back</button>
-              <button class="btn btn-primary" @click="saveCalibration">Save</button>
+              <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="goToPreviousStep">Back</button>
+              <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="saveCalibration">Save</button>
             </div>
           </div>
         </div>
