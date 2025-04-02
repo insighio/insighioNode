@@ -60,16 +60,16 @@ def executeBootstrap(useExistingConfiguration=False):
         executeDeviceInitialization()
         cfg.set("_CONF_NETS", {'deviceHotspot': {'pwd': '12345678'}})
 
-        cfg.set("_MAX_CONNECTION_ATTEMPT_TIME_SEC",  120)
+        cfg.set("_MAX_CONNECTION_ATTEMPT_TIME_SEC",  20)
         cfg.set("_MEAS_NETWORK_STAT_ENABLE", False)
         cfg.set("protocol", None)
 
-        from . import wifi as network
-        network.init(cfg) #?
-        logging.debug("Network modules loaded")
+    from . import wifi as network
+    network.init(cfg) #?
+    logging.debug("Network modules loaded")
 
-        connection_results = network.connect(cfg)
-        is_connected = "status" in connection_results
+    connection_results = network.connect(cfg)
+    is_connected = "status" in connection_results
 
     _DEVICE_ID = device_info.get_device_id()[0]
     cfg.set("device_id", _DEVICE_ID)
@@ -155,6 +155,8 @@ def executeBootstrap(useExistingConfiguration=False):
                 logging.exception(e, " error reading response")
     except Exception as e:
         logging.exception(e, "error trying to execute bootstrap HTTP GET")
+
+    network.deinit()
 
     utils.deleteModule('utils.httpclient')
 
