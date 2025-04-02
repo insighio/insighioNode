@@ -234,7 +234,7 @@ def read_ulp_values(measurements, multiplier, label=None):
 
     pcnt_multiplier = 1
     try:
-        pcnt_multiplier = int(multiplier)
+        pcnt_multiplier = float(multiplier)
     except:
         pass
 
