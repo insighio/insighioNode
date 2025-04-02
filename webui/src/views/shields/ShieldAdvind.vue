@@ -188,7 +188,7 @@ export default {
         : "1"
     },
     addSdi12Row() {
-      if (this.sdi12Rows.length < 10) this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: true })
+      if (this.sdi12Rows.length < 10) this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: false })
     },
     validateMyForm() {
       this.storeData()

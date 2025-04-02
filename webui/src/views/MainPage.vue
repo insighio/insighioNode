@@ -57,9 +57,21 @@ export default {
   data() {
     return {
       tabs: ["Login", "Network", "API Keys", "Measurements", "Timing", "Verify"],
-      tabActive: 0,
+      tabActive: -1,
       networkTech: ""
     }
+  },
+  mounted() {
+    let storedActiveTab = this.$cookies.get("activeTab")
+
+    console.log("storedActiveTab: ", storedActiveTab)
+    if (storedActiveTab !== undefined) this.tabActive = parseInt(storedActiveTab)
+    else {
+      this.tabActive = 0
+      this.$cookies.set("activeTab", this.tabActive)
+    }
+
+    this.networkTech = this.$cookies.get("network")
   },
   methods: {
     goToNextStep() {
@@ -67,20 +79,18 @@ export default {
 
       this.tabActive += 1
 
+      this.$cookies.set("activeTab", this.tabActive)
+
       console.log("goToNextStep: ", this.tabActive)
       //networkTech
     },
     goToPreviousStep() {
       this.tabActive -= 1
 
+      this.$cookies.set("activeTab", this.tabActive)
+
       console.log("goToPrevStep: ", this.tabActive)
     }
-  },
-  computed: {
-    // Add your computed properties here
-  },
-  mounted() {
-    // Add your mounted logic here
   },
   setup() {
     console.log("accessing setup")
