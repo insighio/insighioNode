@@ -476,12 +476,12 @@ def executeDeviceStatisticsUpload(cfg, network):
 def executeDeviceConfigurationUpload(cfg, network):
     # check for configuration pending for upload
     configUploadFileContent = utils.readFromFlagFile("/configLog")
+    logging.debug("configUploadFileContent: {}".format(configUploadFileContent))
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
         from utils import configuration_handler
 
         configuration_handler.notifyServerWithNewConfig()
-        configUploadFileContent = utils.readFromFlagFile("/configLog") # reload configuration to be sure ov validity
 
         message_sent = network.send_control_message(
             cfg,
