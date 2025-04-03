@@ -54,7 +54,7 @@ export default {
       return true
     },
     getValueWithDefaults(val, defaultVal = undefined) {
-      return val !== undefined ? val : defaultVal
+      return val !== undefined && val !== null ? val : defaultVal
     },
     strToJSValue(strVal, defaultVal = undefined) {
       if (strVal === undefined || strVal === null) return defaultVal

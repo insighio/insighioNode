@@ -45,7 +45,7 @@
 
 <script>
 import Cookies from "js-cookie"
-import { redirectTo, showElement } from "@/utils"
+import { redirectTo } from "@/utils"
 
 export default {
   name: "Step7Apply",
@@ -60,7 +60,7 @@ export default {
       redirectTo("step-2-select.html")
     },
     apply() {
-      const config = Cookies.get()
+      const config = this.$cookies.get()
       const encodedParams = {}
       let isConfigValid = false
 

@@ -254,7 +254,7 @@ export default {
 
       this.$cookies.set("selected-shield", this.activeTab)
 
-      this.redirectoToMeasurementNaming()
+      this.requestGoNext()
     },
     getKeyValuePairs() {
       let localObj = {}

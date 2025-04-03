@@ -1,111 +1,115 @@
 <template>
-  <div class="form-group">
-    <div class="text-center">Timing</div>
+  <div class="panel-body">
     <br />
-    <ul class="tab tab-block">
-      <li class="tab-item active" @click="timingChanged(event, 'periodic')">
-        <a class="pointer">Periodic</a>
-      </li>
-      <li class="tab-item" @click="timingChanged(event, 'scheduled')">
-        <a class="pointer">Time Scheduled</a>
-      </li>
-    </ul>
-    <div id="periodic" class="tabcontent" style="display: block">
-      <br />
-      <br />
+    <div class="text-center">Timing:</div>
+    <br />
+    <div class="container grid-lg">
       <div class="columns flex-centered">
-        <SInput
-          label="Sleep Period (s)"
-          v-model:value="timing_period"
-          @update:value="timing_period = $event"
-          @change="updateEstimatedTime()"
-        />
-        <br />
-        <br />
-        <SSwitch
-          label="Light sleep ON"
-          v-model:value="timing_light_sleep_on"
-          @update:value="timing_light_sleep_on = $event"
-        />
+        <div class="column col-xl-7 col-md-10 col-sm-12">
+          <ul class="tab tab-block">
+            <li :class="['tab-item', { active: timing_type === 'periodic' }]" @click="timingChanged('periodic')">
+              <a class="pointer">Periodic</a>
+            </li>
+            <li :class="['tab-item', { active: timing_type === 'scheduled' }]" @click="timingChanged('scheduled')">
+              <a class="pointer">Time Scheduled</a>
+            </li>
+          </ul>
+          <div v-if="timing_type === 'periodic'" class="tabcontent">
+            <br />
+            <br />
+            <div class="columns flex-centered">
+              <SInput label="Sleep Period (s)" v-model:value="timing_period" @update:value="sleepPeriodUpdated" />
+              <br />
+              <br />
+              <SSwitch
+                label="Light sleep ON"
+                v-model:value="timing_light_sleep_on"
+                @update:value="timing_light_sleep_on = $event"
+              />
 
-        <SSwitch
-          label="Light sleep network active"
-          v-model:value="timing_light_sleep_network_active"
-          @update:value="timing_light_sleep_network_active = $event"
-        />
+              <SSwitch
+                label="Light sleep network active"
+                v-model:value="timing_light_sleep_network_active"
+                @update:value="timing_light_sleep_network_active = $event"
+              />
 
-        <SSwitch
-          label="Light sleep deactivate on battery"
-          v-model:value="timing_light_sleep_deactivate_on_battery"
-          @update:value="timing_light_sleep_deactivate_on_battery = $event"
-        />
-      </div>
-      <div class="form-group columns">
-        <div class="col-1 col-mr-auto"></div>
-        <div class="col-3 col-sm-12">
-          <label class="form-label" for="measurements">Estimated Upload Period</label>
-        </div>
-        <div class="col-3 col-sm-12">
-          <span> {{ timing_period }} </span> s <i class="icon icon-arrow-right"></i> <span>{{ timing_proc_h }}</span
-          >:<span>{{ timing_proc_s }}</span>
-          h
-        </div>
-        <div class="column col-5 col-mr-auto"></div>
-      </div>
-    </div>
-    <div id="scheduled" class="tabcontent" style="display: none">
-      <br />
-      <br />
-      Run two times in a day, at the timestamps defined below:
-      <br />
-      <br />
-      <div class="columns flex-centered">
-        <div class="col-1 col-sm-12">
-          <label class="form-label" for="input-scheduled-time-a">A:</label>
-        </div>
-        <div class="col-3 col-sm-12">
-          <input type="time" id="input-scheduled-time-a" name="appt" value="05:30" />
-        </div>
-        <div class="col-1 col-sm-12">
-          <label class="form-label" for="input-scheduled-time-b">B:</label>
-        </div>
-        <div class="col-3 col-sm-12">
-          <input type="time" id="input-scheduled-time-b" name="appt" value="21:30" />
-        </div>
-        <div class="column col-6 col-mr-auto"></div>
-      </div>
-    </div>
-    <div>
-      <br />
-      <hr />
-      <div class="columns flex-centered">
-        <div class="columns col-12">
-          <SSwitch
-            label="Batch Upload"
-            v-model:value="timing_batch_enabled"
-            @update:value="timing_batch_enabled = $event"
-          />
-        </div>
-        <div class="col-12" v-show="timing_batch_enabled">
-          <br />
-          <div class="form-group columns">
-            <div class="col-1 col-mr-auto"></div>
-            <SInput
-              label="Message Buffer Size"
-              v-model:value="timing_batch_upload_buffer_size"
-              @update:value="bufferSizeUpdated($event)"
-              :tooltip="batchTooltip"
-              :colsLabel="3"
-              :colsInput="3"
-            />
-            <div class="column col-5 col-mr-auto"></div>
+              <SSwitch
+                label="Light sleep deactivate on battery"
+                v-model:value="timing_light_sleep_deactivate_on_battery"
+                @update:value="timing_light_sleep_deactivate_on_battery = $event"
+              />
+            </div>
+            <div class="form-group columns">
+              <div class="col-1 col-mr-auto"></div>
+              <div class="col-3 col-sm-12">
+                <label class="form-label" for="measurements">Estimated Upload Period</label>
+              </div>
+              <div class="col-3 col-sm-12">
+                <span> {{ timing_period }} </span> s <i class="icon icon-arrow-right"></i>
+                <span>{{ timing_proc_h }}</span
+                >:<span>{{ timing_proc_s }}</span>
+                h
+              </div>
+              <div class="column col-5 col-mr-auto"></div>
+            </div>
           </div>
+          <div v-if="timing_type === 'scheduled'" class="tabcontent">
+            <br />
+            <br />
+            Run two times in a day, at the timestamps defined below:
+            <br />
+            <br />
+            <div class="columns flex-centered">
+              <div class="col-1 col-sm-12">
+                <label class="form-label" for="input-scheduled-time-a">A:</label>
+              </div>
+              <div class="col-3 col-sm-12">
+                <input type="time" id="input-scheduled-time-a" name="appt" value="05:30" />
+              </div>
+              <div class="col-1 col-sm-12">
+                <label class="form-label" for="input-scheduled-time-b">B:</label>
+              </div>
+              <div class="col-3 col-sm-12">
+                <input type="time" id="input-scheduled-time-b" name="appt" value="21:30" />
+              </div>
+              <div class="column col-6 col-mr-auto"></div>
+            </div>
+          </div>
+          <div>
+            <br />
+            <hr />
+            <div class="columns flex-centered">
+              <div class="columns col-12">
+                <SSwitch
+                  label="Batch Upload"
+                  v-model:value="timing_batch_enabled"
+                  @update:value="batchUploadStatusChanged"
+                />
+              </div>
+              <div class="col-12" v-show="timing_batch_enabled">
+                <br />
+                <div class="columns">
+                  <div class="col-1 col-mr-auto"></div>
+                  <SInput
+                    label="Message Buffer Size"
+                    v-model:value="timing_batch_upload_buffer_size"
+                    @update:value="bufferSizeUpdated($event)"
+                    :tooltip="batchTooltip"
+                    :colsLabel="3"
+                    :colsInput="3"
+                  />
+                  <div class="column col-5 col-mr-auto"></div>
+                </div>
+              </div>
+            </div>
+            <br />
+            <br />
+          </div>
+
+          <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
         </div>
       </div>
-      <br />
-      <br />
     </div>
-    <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>
 
@@ -122,6 +126,7 @@ export default {
   data() {
     return {
       // Add your component data here
+      timing_type: "periodic",
       timing_light_sleep_on: false,
       timing_light_sleep_network_active: false,
       timing_light_sleep_deactivate_on_battery: false,
@@ -157,11 +162,11 @@ export default {
       let timeB = this.$cookies.get("scheduled-time-b")
 
       if (timeA && timeB) {
-        this.timingChanged(undefined, "scheduled")
+        this.timingChanged("scheduled")
 
         this.timing_scheduled_time_a = this.secondsToStringTime(timeA)
         this.timing_scheduled_time_b = this.secondsToStringTime(timeB)
-      } else this.timingChanged(undefined, "periodic")
+      } else this.timingChanged("periodic")
 
       this.timing_period = this.getValueWithDefaults(this.$cookies.get("period"), 300)
       this.timing_batch_enabled = this.timing_batch_upload_buffer_size && this.timing_batch_upload_buffer_size > 1
@@ -181,14 +186,12 @@ export default {
         this.timing_light_sleep_on = this.strToJSValue(this.$cookies.get("light-sleep-on"), false)
 
       if (this.$cookies.get("force-always-on-connection") !== undefined)
-        this.this.timing_light_sleep_deactivate_on_battery = strToJSValue(
+        this.timing_light_sleep_deactivate_on_battery = this.strToJSValue(
           this.$cookies.get("force-always-on-connection"),
           false
         )
 
-      checkboxStatusChanged("ins-batch-upload")
-      updateEstimatedTime()
-      detectBoardChange(enableNavigationButtons)
+      this.updateEstimatedTime()
     },
     bufferSizeUpdated(evt) {
       this.timing_batch_upload_buffer_size = evt
@@ -216,67 +219,38 @@ export default {
       return timeSec
     },
     storeData() {
-      disableNavigationButtons()
-      clearCookies()
+      this.clearCookies()
 
-      if (elementIsVisible("periodic")) {
-        this.$cookies.set("period", document.getElementById("input-period").value)
-        // this.$cookies.set('always-on-period', document.getElementById('input-always-on-period').value)
-        // this.$cookies.set('always-on-connection', boolToPyStr('input-ins-always-on'))
-        // this.$cookies.set('force-always-on-connection', boolToPyStr('input-ins-force-always-on'))
+      if (this.timing_type === "periodic") {
+        this.$cookies.set("period", this.timing_period)
         this.$cookies.set("scheduled-time-a", "None")
         this.$cookies.set("scheduled-time-b", "None")
 
-        this.$cookies.set("light-sleep-on", boolToPyStr("input-light-sleep-on"))
-        this.$cookies.set("light-sleep-network-active", boolToPyStr("input-light-sleep-network-active"))
-        this.$cookies.set("light-sleep-deactivate-on-battery", boolToPyStr("input-light-sleep-deactivate-on-battery"))
-      } else if (elementIsVisible("scheduled")) {
+        this.$cookies.set("light-sleep-on", this.boolToPyStr(this.timing_light_sleep_on))
+        this.$cookies.set("light-sleep-network-active", this.boolToPyStr(this.timing_light_sleep_network_active))
+        this.$cookies.set(
+          "light-sleep-deactivate-on-battery",
+          this.boolToPyStr(this.timing_light_sleep_deactivate_on_battery)
+        )
+      } else if (this.timing_type === "scheduled") {
         this.$cookies.set("period", "None")
-        this.$cookies.set(
-          "scheduled-time-a",
-          stringTimeToSeconds(document.getElementById("input-scheduled-time-a").value)
-        )
-        this.$cookies.set(
-          "scheduled-time-b",
-          stringTimeToSeconds(document.getElementById("input-scheduled-time-b").value)
-        )
+        this.$cookies.set("scheduled-time-a", this.stringTimeToSeconds(this.timing_scheduled_time_a))
+        this.$cookies.set("scheduled-time-b", this.stringTimeToSeconds(this.timing_scheduled_time_b))
       }
 
-      if (document.getElementById("input-ins-batch-upload-enable").checked)
-        this.$cookies.set("batch-upload-buffer-size", document.getElementById("input-message-buffer-size").value)
+      if (this.timing_batch_upload_enabled && this.timing_batch_upload_buffer_size >= 1)
+        this.$cookies.set("batch-upload-buffer-size", this.timing_batch_upload_buffer_size)
       else this.$cookies.set("batch-upload-buffer-size", "1")
 
-      redirectTo("step-7-verify.html")
-      enableNavigationButtons()
+      this.requestGoNext()
     },
-    timingChanged(evt, boardDivId) {
-      var i, tabcontent, tablinks
-
-      tabcontent = document.getElementsByClassName("tabcontent")
-
-      for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none"
-      }
-
-      tablinks = document.getElementsByClassName("tab-item")
-      for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "")
-      }
-
-      showElement(boardDivId, true)
-
-      var enableBatchUploadDefault = boardDivId !== "scheduled"
-      document.getElementById("input-ins-batch-upload-enable").checked = enableBatchUploadDefault
-      checkboxStatusChanged("ins-batch-upload")
-
-      document.getElementById("tab-" + boardDivId).className += " active"
+    timingChanged(boardDivId) {
+      this.timing_type = boardDivId
+      this.timing_batch_enabled = boardDivId !== "scheduled"
     },
     validateMyForm() {
-      storeData()
+      this.storeData()
       return true
-    },
-    batchUploadSelected() {
-      checkboxStatusChanged("ins-batch-upload")
     },
     updateEstimatedTime() {
       console.log("to update estimated time")
@@ -292,6 +266,14 @@ export default {
         .padStart(2, "0")
 
       this.timing_proc_s = ((periodSeconds % 3600) / 60).toFixed(0).toString().padStart(2, "0")
+    },
+    sleepPeriodUpdated(newSleepPeriod) {
+      this.timing_period = newSleepPeriod
+      this.updateEstimatedTime()
+    },
+    batchUploadStatusChanged(new_batch_upload_status) {
+      this.timing_batch_enabled = new_batch_upload_status
+      this.updateEstimatedTime()
     }
   }
 }
