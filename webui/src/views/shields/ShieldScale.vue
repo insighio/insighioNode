@@ -355,7 +355,7 @@ export default {
     },
     requestTare() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
+      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
         .then((response) => {
           return response.json()
         })
@@ -372,7 +372,7 @@ export default {
     },
     requestMeasure() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
+      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
         .then((response) => {
           return response.json()
         })

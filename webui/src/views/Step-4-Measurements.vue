@@ -5,7 +5,7 @@
     <div class="container grid-lg">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
-          <div class="form-group">
+          <div class="container">
             <div class="columns">
               <SDivider label="Available measurements" />
               <SSwitch label="LED notifications" v-model:value="ledEnabled" />
@@ -45,6 +45,11 @@
                           <tr>
                             <th>Key</th>
                             <th>Value</th>
+                            <th>
+                              <button class="btn btn-primary" @click="keyValuePairs.push({ key: '', value: '' })">
+                                <i class="icon icon-plus"></i>
+                              </button>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -63,15 +68,6 @@
                           </tr>
                         </tbody>
                       </table>
-                    </div>
-                    <div class="col-12">
-                      <button
-                        class="btn btn-primary"
-                        style="margin-left: 5px"
-                        @click="keyValuePairs.push({ key: '', value: '' })"
-                      >
-                        Add key-value pair
-                      </button>
                     </div>
                   </div>
                   <br />
