@@ -6,6 +6,7 @@ key_value_storage = esp32.NVS("insighio")
 
 _DATA_DIR = "/data"
 
+
 def existsFile(source):
     try:
         print("existsFile: " + source)
@@ -14,7 +15,20 @@ def existsFile(source):
     except Exception as e:
         return False
 
+
 _USE_DATA_DIR = existsFile("/data")
+
+
+def update_USE_DATA_DIR():
+    global _USE_DATA_DIR
+    _USE_DATA_DIR = existsFile("/data")
+    if not _USE_DATA_DIR:
+        print("No /data directory found. Using root directory.")
+    else:
+        print("Using /data directory.")
+
+def data_partition_in_use():
+    return _USE_DATA_DIR
 
 def copyFile(source, destination):
     try:
@@ -30,6 +44,7 @@ def copyFile(source, destination):
         logging.exception(e, "Error copying file [{}] to [{}]".format(source, destination))
         return False
 
+
 def renameFile(source, destination):
     try:
         print("renameFile: " + source + ", " + destination)
@@ -39,9 +54,10 @@ def renameFile(source, destination):
         logging.exception(e, "Error renaming file [{}] to [{}]".format(source, destination))
         return False
 
+
 def readFromFile(source):
     try:
-        print("readFromFile: "+ source)
+        print("readFromFile: " + source)
         f = open(source, "r")
         contents = f.read()
         f.close()
@@ -50,9 +66,11 @@ def readFromFile(source):
         logging.error("Error reading file [{}]".format(source))
         return ""
 
+
 def appendToFile(destination, content):
-    print("appendToFile: " + destination )
+    print("appendToFile: " + destination)
     return writeToFile(destination, content, True)
+
 
 def writeToFile(destination, content, do_append=False):
     try:
@@ -64,6 +82,7 @@ def writeToFile(destination, content, do_append=False):
         logging.exception(e, "Error writing to file [{}]".format(destination))
         return False
 
+
 def deleteFile(destination):
     try:
         print("deleteFile: " + destination)
@@ -71,6 +90,7 @@ def deleteFile(destination):
     except Exception as e:
         logging.exception(e, "Error deleting file [{}]".format(destination))
         return False
+
 
 def countFileLines(source):
     lines = 0
@@ -83,48 +103,60 @@ def countFileLines(source):
 
     return lines
 
+
 ############ Auxilary file system functions
+
 
 def decorateFlagPath(path):
     if _USE_DATA_DIR:
         path = _DATA_DIR + ("" if path.startswith("/") else "/") + path
     return path
 
+
 def existsFlagFile(source):
     source = decorateFlagPath(source)
     return existsFile(source)
 
+
 def copyFlagFile(source, destination):
     source = decorateFlagPath(source)
-    destination =  decorateFlagPath(destination)
+    destination = decorateFlagPath(destination)
     return copyFile(source, destination)
+
 
 def renameFlagFile(source, destination):
     source = decorateFlagPath(source)
-    destination =  decorateFlagPath(destination)
+    destination = decorateFlagPath(destination)
     return copyFile(source, destination)
+
 
 def readFromFlagFile(source):
     source = decorateFlagPath(source)
     return readFromFile(source)
 
+
 def appendToFlagFile(destination, content):
     destination = decorateFlagPath(destination)
     return appendToFile(destination, content)
 
+
 def writeToFlagFile(destination, content):
-    destination =  decorateFlagPath(destination)
+    destination = decorateFlagPath(destination)
     return writeToFile(destination, content, False)
 
+
 def deleteFlagFile(destination):
-    destination =  decorateFlagPath(destination)
+    destination = decorateFlagPath(destination)
     return deleteFile(destination)
 
+
 def countFlagFileLines(destination):
-    destination =  decorateFlagPath(destination)
+    destination = decorateFlagPath(destination)
     return countFileLines(destination)
 
+
 #########################################################3
+
 
 # key max length: 15 chars
 def getKeyValueInteger(key):
