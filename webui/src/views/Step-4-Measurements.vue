@@ -238,55 +238,27 @@ export default {
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas-led-enabled", this.boolElemToPyStr("input-led-enabled"))
-      this.$cookies.set("meas-battery-stat", this.boolElemToPyStr("input-battery"))
-      this.$cookies.set("meas-board-sense", this.boolElemToPyStr("input-board-sense"))
-      this.$cookies.set("meas-board-stat", this.boolElemToPyStr("input-board-stat"))
-      this.$cookies.set("meas-network-stat", this.boolElemToPyStr("input-network"))
-      this.$cookies.set("system-enable-ota", this.boolElemToPyStr("input-ota"))
-      this.$cookies.set("meas-gps-enabled", this.boolElemToPyStr("input-gps-enable"))
+      this.$cookies.set("meas-led-enabled", this.boolToPyStr(this.ledEnabled))
+      this.$cookies.set("meas-battery-stat", this.boolToPyStr(this.batteryStats))
+      this.$cookies.set("meas-board-sense", this.boolToPyStr(this.boardSense))
+      this.$cookies.set("meas-board-stat", this.boolToPyStr(this.boardStat))
+      this.$cookies.set("meas-network-stat", this.boolToPyStr(this.networkStat))
+      this.$cookies.set("system-enable-ota", this.boolToPyStr(this.otaEnabled))
+      this.$cookies.set("meas-gps-enabled", this.boolToPyStr(this.gpsEnabled))
+      this.$cookies.set("meas-temp-unit", this.boolToPyStr(this.temperatureUnitIsCelsius))
 
-      console.log(
-        "document.getElementById('input-gps-timeout').value: ",
-        document.getElementById("input-temp-unit").value
-      )
-      this.$cookies.set(
-        "meas-temp-unit",
-        document.getElementById("input-temp-unit").value === "false" ? "False" : "True"
-      )
+      this.$cookies.set("meas-gps-timeout", this.gpsTimeout)
+      this.$cookies.set("meas-gps-sat-num", this.gpsSatNum)
+      this.$cookies.set("meas-gps-no-fix-no-upload", this.boolToPyStr(this.gpsNoFixNoUpload))
+      this.$cookies.set("meas-gps-only-on-boot", this.boolToPyStr(this.gpsOnlyOnBoot))
 
-      this.$cookies.set("meas-gps-timeout", document.getElementById("input-gps-timeout").value)
-      this.$cookies.set("meas-gps-sat-num", document.getElementById("input-gps-sat-num").value)
-      this.$cookies.set("meas-gps-no-fix-no-upload", this.boolElemToPyStr("input-gps-no-fix-no-upload"))
-      this.$cookies.set("meas-gps-only-on-boot", this.boolElemToPyStr("input-gps-only-on-boot"))
-
-      this.$cookies.set("store-meas-if-failed-conn", this.boolElemToPyStr("input-store-meas-if-failed-conn"))
+      this.$cookies.set("store-meas-if-failed-conn", this.boolToPyStr(this.storeMeasIfFailedConn))
 
       this.$cookies.set("meas-keyvalue", this.getKeyValuePairs())
 
       this.$cookies.set("selected-shield", this.activeTab)
 
-      if (this.activeTab === "advind") {
-        redirectoToMeasurementNaming()
-      } else if (this.activeTab === "scale") {
-        let scale = this.$cookies.get("meas-scale-scale")
-        let offset = this.$cookies.get("meas-scale-offset")
-        if (!isChecked("input-scale-enabled")) {
-          this.$cookies.set("meas-scale-offset", 0)
-          this.$cookies.set("meas-scale-scale", 1)
-          redirectoToMeasurementNaming()
-        } else {
-          if (scale && offset) {
-            this.$cookies.set("meas-scale-offset", offset)
-            this.$cookies.set("meas-scale-scale", scale)
-            redirectTo("step-5-3-scale-calibr-res.html")
-          } else {
-            redirectTo("step-5-1-scale-idle.html")
-          }
-        }
-      } else if (this.activeTab === "dig_analog") {
-        redirectoToMeasurementNaming()
-      }
+      this.redirectoToMeasurementNaming()
     },
     getKeyValuePairs() {
       let localObj = {}

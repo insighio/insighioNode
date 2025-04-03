@@ -80,7 +80,17 @@
             <!-- Step 2: Reference Weight -->
             <p class="empty-title h5">Weight Scale Calibration</p>
             <p class="empty-subtitle">
-              Idle value (offset) is <span id="idle-weight-value" class="text-bold">{{ idleWeight }}</span>
+              Idle value (offset) is:
+              <span id="idle-weight-value" class="text-bold"
+                ><div v-if="isLoading" id="loader" class="loading"></div>
+                <progress
+                  class="progress"
+                  :value="progressValue"
+                  max="30"
+                  style="display: none; margin: auto"
+                ></progress
+                >{{ scaleOffset }}</span
+              >
             </p>
             <p class="empty-subtitle">
               Place your reference weight on the scale, fill its exact weight in grams at the following field and press
@@ -95,28 +105,94 @@
               </div>
             </div>
             <div class="empty-action">
-              <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="goToPreviousStep">Back</button>
-              <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="goToNextStep">Measure</button>
+              <button
+                :disabled="isLoading"
+                style="margin: 0px 5px 0px 5px"
+                class="btn btn-primary"
+                @click="goToPreviousStep"
+              >
+                Back
+              </button>
+              <button
+                :disabled="isLoading"
+                style="margin: 0px 5px 0px 5px"
+                class="btn btn-primary"
+                @click="goToNextStep"
+              >
+                Measure
+              </button>
             </div>
           </div>
           <div class="empty" v-if="currentStep === 3">
             <!-- Step 3: Calibration Results -->
             <p class="empty-title h5">Weight Scale Calibration</p>
             <p class="empty-subtitle">
-              Offset: <span class="text-bold">{{ idleWeight }}</span>
+              Offset: <span class="text-bold">{{ scaleOffset }}</span>
             </p>
             <p class="empty-subtitle">
               Measured reference weight: <span class="text-bold">{{ measuredRefWeight }}</span>
             </p>
             <p class="empty-subtitle">
-              Scale: <span class="text-bold">{{ scale }}</span>
+              Scale: <span class="text-bold">{{ scaleScale }}</span>
             </p>
             <p class="empty-subtitle">
-              Current Weight(g): <span class="text-bold">{{ currentWeight }}</span>
+              Current Weight(g):
+              <span class="text-bold"
+                ><progress
+                  class="progress"
+                  :value="progressValue"
+                  max="30"
+                  style="display: none; margin: auto"
+                ></progress
+                >{{ currentWeight }}</span
+              >
             </p>
             <div class="empty-action">
-              <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="goToPreviousStep">Back</button>
-              <button style="margin: 0px 5px 0px 5px" class="btn btn-primary" @click="saveCalibration">Save</button>
+              <button
+                class="btn btn-primary"
+                id="recalibrate-button"
+                :disabled="isLoading"
+                style="margin-top: 5px; margin-right: 5px"
+                @click="recalibrate()"
+              >
+                Recalibrate
+              </button>
+              <button
+                class="btn btn-primary"
+                id="measure-button"
+                :disabled="isLoading"
+                style="margin-top: 5px; margin-right: 5px"
+                @click="requestMeasure()"
+              >
+                Measure
+              </button>
+              <button
+                class="btn btn-primary"
+                id="tare-button"
+                :disabled="isLoading"
+                style="margin-top: 5px; margin-right: 5px"
+                @click="requestTare()"
+              >
+                Tare
+              </button>
+              <button
+                class="btn btn-primary"
+                id="back-button"
+                :disabled="isLoading"
+                style="margin-top: 5px; margin-right: 5px"
+                @click="goToPreviousStep()"
+              >
+                Back
+              </button>
+              <button
+                class="btn btn-primary"
+                id="save-button"
+                :disabled="isLoading"
+                style="margin-top: 5px; margin-right: 5px"
+                @click="saveCalibration()"
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>
@@ -146,11 +222,14 @@ export default {
       scaleMonitoring: false,
       showWizard: false,
       currentStep: 1,
-      idleWeight: null,
       referenceWeight: null,
       measuredRefWeight: null,
-      scale: null,
-      currentWeight: null
+      scaleOffset: null,
+      scaleScale: null,
+      currentWeight: null,
+      isLoading: false,
+      progressValue: 0,
+      progressInterval: null
     }
   },
   mounted() {
@@ -164,11 +243,14 @@ export default {
       this.adcP1 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p1"), "disabled")
       this.scaleEnabled = this.strToJSValue(this.$cookies.get("meas-scale-enabled"), false)
       this.scaleMonitoring = this.strToJSValue(this.$cookies.get("meas-scale-monitoring-enabled"), false)
+      this.scaleOffset = this.$cookies.get("meas-scale-offset")
+      this.scaleScale = this.$cookies.get("meas-scale-scale")
     },
     // Add your component methods here
     validateMyForm() {
       this.requestGoNext()
     },
+
     clearCookies() {
       this.$cookies.remove("meas-i2c-1")
       this.$cookies.remove("meas-i2c-2")
@@ -176,6 +258,8 @@ export default {
       this.$cookies.remove("meas-sensor-a-d-p1-t")
       this.$cookies.remove("meas-sensor-scale-enabled")
       this.$cookies.remove("meas-scale-monitoring-enabled")
+      this.$cookies.remove("meas-scale-offset")
+      this.$cookies.remove("meas-scale-scale")
     },
 
     storeData() {
@@ -184,28 +268,34 @@ export default {
       this.$cookies.set("meas-i2c-1", this.i2c1)
       this.$cookies.set("meas-i2c-2", this.i2c2)
       this.$cookies.set("meas-sensor-a-d-p1", this.adcP1)
-      this.$cookies.set("meas-scale-enabled", this.boolToPyStr(this.scaleEnabled))
-      this.$cookies.set("meas-scale-monitoring-enabled", this.boolToPyStr(this.scaleMonitoring))
+      this.$cookies.set("meas-scale-enabled", this.strToJSValue(this.scaleEnabled))
+      this.$cookies.set("meas-scale-monitoring-enabled", this.strToJSValue(this.scaleMonitoring))
 
-      // if (!this.scaleEnabled) {
-      //   this.$cookies.set("meas-scale-offset", 0)
-      //   this.$cookies.set("meas-scale-scale", 1)
-      // } else {
-      //   var scale = this.$cookies.get("meas-scale-scale")
-      //   var offset = this.$cookies.get("meas-scale-offset")
-
-      //   console.log("offset: ", offset, ", scale:", scale)
-
-      //   if (scale && offset) {
-      //     this.$cookies.set("meas-scale-offset", offset)
-      //     this.$cookies.set("meas-scale-scale", scale)
-      //     redirectTo("step-5-3-scale-calibr-res.html")
-      //   } else {
-      //     redirectTo("step-5-1-scale-idle.html")
-      //   }
-      // }
+      if (this.scaleEnabled) {
+        this.$cookies.set("meas-scale-scale", this.scaleScale)
+        this.$cookies.set("meas-scale-offset", this.scaleOffset)
+      } else {
+        this.$cookies.set("meas-scale-scale", 1)
+        this.$cookies.set("meas-scale-offset", 0)
+      }
 
       this.requestGoNext()
+    },
+    startProgressAnimation() {
+      this.isLoading = true
+      this.progressValue = 0
+      this.progressInterval = setInterval(() => {
+        this.progressValue += 1
+        if (this.progressValue >= 30) {
+          clearInterval(this.progressInterval)
+          this.isLoading = false
+        }
+      }, 500)
+    },
+
+    stopProgressAnimation() {
+      clearInterval(this.progressInterval)
+      this.isLoading = false
     },
     startCalibration() {
       this.showWizard = true
@@ -216,8 +306,7 @@ export default {
     },
     goToNextStep() {
       if (this.currentStep === 1) {
-        // Simulate saving idle weight
-        this.idleWeight = 0 // Replace with actual logic
+        this.getScaleOffset()
       } else if (this.currentStep === 2) {
         // Simulate measuring reference weight
         this.measuredRefWeight = this.referenceWeight // Replace with actual logic
@@ -225,12 +314,89 @@ export default {
       }
       this.currentStep++
     },
+    getScaleOffset() {
+      // Simulate saving idle weight
+      this.startProgressAnimation()
+      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
+        .then((response) => {
+          return response.json()
+        })
+        .then((data) => {
+          this.scaleOffset = data.raw
+
+          this.stopProgressAnimation()
+        })
+        .catch((err) => {
+          this.stopProgressAnimation()
+        })
+    },
+    calculateScaleMultiplier() {
+      this.startProgressAnimation()
+      fetch("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
+        .then((response) => {
+          return response.json()
+        })
+        .then(function (data) {
+          var referenceExpectedWeight = this.referenceWeight
+          this.scaleScale = (data.raw - this.scaleOffset) / referenceExpectedWeight
+          this.stopProgressAnimation()
+        })
+        .catch((err) => {
+          console.log("error completing request", err)
+          this.stopProgressAnimation()
+        })
+    },
+    recalibrate() {
+      this.currentStep = 1
+      this.scaleOffset = null
+      this.scaleScale = null
+      this.currentWeight = null
+      this.referenceWeight = null
+    },
+    requestTare() {
+      this.startProgressAnimation()
+      fetch("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
+        .then((response) => {
+          return response.json()
+        })
+        .then(function (data) {
+          this.scaleOffset = data.raw
+          this.currentWeight = 0
+
+          this.stopProgressAnimation()
+        })
+        .catch((err) => {
+          console.log("error setting tare", err)
+          this.stopProgressAnimation()
+        })
+    },
+    requestMeasure() {
+      this.startProgressAnimation()
+      fetch("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
+        .then((response) => {
+          return response.json()
+        })
+        .then(function (data) {
+          const offset = parseFloat(this.scaleOffset)
+          const scale = parseFloat(this.scaleScale)
+          if (scale !== 0) {
+            let weight = (data.raw - offset) / scale
+            this.currentWeight = Math.round(weight)
+          }
+
+          this.stopProgressAnimation()
+        })
+        .catch((err) => {
+          console.log("error completing request", err)
+          this.stopProgressAnimation()
+        })
+    },
     goToPreviousStep() {
       this.currentStep--
     },
     saveCalibration() {
-      // Simulate saving calibration data
       this.closeWizard()
+      this.storeData()
     }
   },
   computed: {
