@@ -244,10 +244,10 @@ def get_cpu_temp(unit_in_celsius=True):
         return temp
 
 
-def get_free_flash():
+def get_free_flash(partition_path='/'):
     import uos
 
-    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(get_device_root_folder())
+    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(partition_path)
     freesize = f_bsize * f_bfree
     return freesize
 

@@ -461,6 +461,7 @@ def executeDeviceStatisticsUpload(cfg, network):
     stats["fw_v_patch"] = patch
     stats["fw_v_commit"] = commit
     stats["free_flash"] = device_info.get_free_flash()
+    stats["free_data_flash"] = device_info.get_free_flash('/data')
     stats["serial"] = device_info.get_device_id()[0]
     try:
         import platform
