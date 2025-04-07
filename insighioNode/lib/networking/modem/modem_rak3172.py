@@ -11,7 +11,21 @@ class ModemRak3172(modem_base.Modem):
         self.connection_status = False
         self.data_over_ppp = True
         self.modem_reset = modem_reset
-        self.LORA_REGIONS = ["EU433","CN470","RU864","IN865","EU868","US915","AU915","KR920","AS923-1","AS923-2","AS923-3","AS923-4","LA915"]
+        self.LORA_REGIONS = [
+            "EU433",
+            "CN470",
+            "RU864",
+            "IN865",
+            "EU868",
+            "US915",
+            "AU915",
+            "KR920",
+            "AS923-1",
+            "AS923-2",
+            "AS923-3",
+            "AS923-4",
+            "LA915",
+        ]
 
     def power_on(self):
         pass
@@ -20,12 +34,12 @@ class ModemRak3172(modem_base.Modem):
         pass
 
     def init(self):
-        #LPM makes the device sleep automatically after sending AT commands
+        # LPM makes the device sleep automatically after sending AT commands
         (status, lines) = self.send_at_cmd("AT+LPM=1")
         return status
 
-    def send_at_cmd(self, command, timeoutms=30000, success_condition="OK"):
-        res = super().send_at_cmd(command, timeoutms, success_condition)
+    def send_at_cmd(self, command, timeoutms=30000, success_condition="OK", extra_error_condition=""):
+        res = super().send_at_cmd(command, timeoutms, success_condition, extra_error_condition)
         sleep_ms(10)
         return res
 
@@ -45,7 +59,7 @@ class ModemRak3172(modem_base.Modem):
 
     def is_connected(self):
         # has joined ??
-        (status, lines) =  self.send_at_cmd("AT+NJS=?")
+        (status, lines) = self.send_at_cmd("AT+NJS=?")
 
         line_regex = r"AT\+NJS=(\d+)"
         if status:
@@ -98,5 +112,10 @@ class ModemRak3172(modem_base.Modem):
 
     def send(self, bytes_hex):
         # random port -> 5
-        (status, lines) = self.send_at_cmd("AT+SEND=5:" + bytes_hex, 10000, "EVT:(SEND_CONFIRMED_OK|TX_DONE)", "AT_PARAM_ERROR|AT_BUSY_ERROR|AT_NO_NETWORK_JOINED|SEND_CONFIRMED_FAILED")
+        (status, lines) = self.send_at_cmd(
+            "AT+SEND=5:" + bytes_hex,
+            10000,
+            "EVT:(SEND_CONFIRMED_OK|TX_DONE)",
+            "NO_NETWORK",
+        )
         return status
