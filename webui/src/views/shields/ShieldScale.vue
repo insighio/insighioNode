@@ -393,15 +393,6 @@ export default {
       this.closeWizard()
       this.storeData()
     }
-  },
-  computed: {
-    // Add your computed properties here
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

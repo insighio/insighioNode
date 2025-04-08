@@ -136,9 +136,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

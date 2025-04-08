@@ -14,11 +14,6 @@
 <script>
 export default {
   name: "WebuiFooter",
-  data() {
-    return {
-      // Add your component data here
-    }
-  },
   methods: {
     // Add your component methods here
     savePressed() {
@@ -27,18 +22,6 @@ export default {
     backPressed() {
       this.$emit("backPressed")
     }
-  },
-  computed: {
-    // Add your computed properties here
-  },
-  mounted() {
-    // Add your mounted logic here
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

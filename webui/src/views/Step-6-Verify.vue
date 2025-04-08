@@ -61,9 +61,6 @@ export default {
       configToStoreEven: []
     }
   },
-  computed: {
-    // Add your computed properties here
-  },
   mounted() {
     this.initializeValues()
   },
@@ -83,9 +80,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

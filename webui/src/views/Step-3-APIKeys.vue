@@ -95,13 +95,6 @@ export default {
       idRegex: "[0-9a-f]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}"
     }
   },
-  computed: {
-    // Add your computed properties here
-  },
-  mounted() {
-    // Add your mounted logic here
-    // this.initializeValues()
-  },
   methods: {
     initializeValues() {
       this.insighio_id = this.$cookies.get("insighio-id")
@@ -165,9 +158,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

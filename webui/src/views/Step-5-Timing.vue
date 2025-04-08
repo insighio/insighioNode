@@ -142,9 +142,6 @@ export default {
         "Defines the number of measurements that\nshould be executed before the device\nconnects to the network and upload\nConnection period:\n   Sleep Period * Buffer Size"
     }
   },
-  computed: {
-    // Add your computed properties here
-  },
   mounted() {
     // Add your mounted logic here
     this.initializeValues()
@@ -278,9 +275,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

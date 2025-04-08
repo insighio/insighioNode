@@ -12,28 +12,11 @@ export default {
   name: "ShieldAccelerometer",
   mixins: [CommonTools],
   components: { WebuiFooter },
-  data() {
-    return {
-      // Add your component data here
-    }
-  },
   methods: {
     // Add your component methods here
     validateMyForm() {
       this.requestGoNext()
     }
-  },
-  computed: {
-    // Add your computed properties here
-  },
-  mounted() {
-    // Add your mounted logic here
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

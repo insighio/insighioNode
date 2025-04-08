@@ -236,9 +236,6 @@ export default {
       this.requestGoNext()
     }
   },
-  computed: {
-    // Add your computed properties here
-  },
   mounted() {
     this.sdi12SensorIdOptions = []
     for (let i = 1; i <= 10; i++) {
@@ -249,9 +246,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

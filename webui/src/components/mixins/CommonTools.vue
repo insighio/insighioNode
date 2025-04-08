@@ -70,9 +70,6 @@ export default {
     boolToPyStr(val) {
       return val ? "True" : "False"
     }
-  },
-  computed: {
-    // Add your computed properties here
   }
 }
 </script>

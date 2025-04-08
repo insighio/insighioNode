@@ -86,26 +86,7 @@ export default {
 
     operationSelected(operationName) {
       this.activeNetwork = operationName
-      // this.disableButtonsLocal()
-
-      // if (operationName == "WiFi") redirectTo("step-3-net-wifi.html")
-      // else if (operationName == "Cellular") redirectTo("step-3-net-cellular.html")
-      // else if (operationName == "LoRa") redirectTo("step-3-net-lora.html")
-      // else if (operationName == "Satellite") {
-      //   redirectTo("step-3-net-sat-astro.html")
-      // }
-
-      // this.enableButtonsLocal()
     }
-  },
-  computed: {
-    // Add your computed properties here
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>

@@ -99,15 +99,6 @@ export default {
       this.storeData()
       return true
     }
-  },
-  computed: {
-    // Add your computed properties here
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>
