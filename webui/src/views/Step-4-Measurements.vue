@@ -108,53 +108,7 @@
     </div>
   </div>
 
-  <div v-if="isMeasurementNamingDialogOpen" class="modal-overlay">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h5 class="modal-title">Custom Measurement Naming</h5>
-        <button class="btn btn-clear float-right" @click="closeMeasurementNamingDialog"></button>
-      </div>
-      <div class="modal-body">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Alias</th>
-              <th>Unit</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(measurement, index) in measurements" :key="index">
-              <td>
-                <input
-                  type="text"
-                  :value="measurement.name"
-                  readonly
-                  style="border-width: 0px; border: none; box-shadow: none"
-                />
-              </td>
-              <td>
-                <input type="text" v-model="measurement.alias" :id="'input-key-value-' + index" />
-              </td>
-              <td>
-                <select v-model="measurement.unit" :id="'input-key-unit-' + index">
-                  <option v-for="unit in unitOptions" :key="unit" :value="unit">{{ unit }}</option>
-                </select>
-              </td>
-              <td>{{ measurement.value }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="toast">Accepted Characters: a-z, A-z, 0-9, -, _, /, .</div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" @click="updateMeasurements">Update</button>
-        <button class="btn btn-primary" @click="skipMeasurementNaming">Skip</button>
-        <button class="btn btn-secondary" @click="closeMeasurementNamingDialog">Close</button>
-      </div>
-    </div>
-  </div>
+  <CustomNamingDialog v-model:isOpen="isMeasurementNamingDialogOpen" @save="closeAndProceed" />
 </template>
 
 <script>
@@ -166,7 +120,7 @@ import SSelect from "@/components/SSelect.vue"
 import ShieldScale from "./shields/ShieldScale.vue"
 import ShieldDigitalAnalog from "./shields/ShieldDigitalAnalog.vue"
 import ShieldAdvind from "./shields/ShieldAdvind.vue"
-//import ShieldAccelerometer from "./shields/ShieldAccelerometer.vue"
+import CustomNamingDialog from "@/views/aux/CustomNamingDialog.vue"
 
 export default {
   name: "Step4Measurements",
@@ -178,8 +132,8 @@ export default {
     SSelect,
     ShieldScale,
     ShieldDigitalAnalog,
-    ShieldAdvind
-    // ShieldAccelerometer
+    ShieldAdvind,
+    CustomNamingDialog
   },
   data() {
     return {
@@ -339,23 +293,9 @@ export default {
       this.isMeasurementNamingDialogOpen = true
       this.initializeMeasurementNaming()
     },
-    closeMeasurementNamingDialog() {
+    closeAndProceed() {
       this.isMeasurementNamingDialogOpen = false
-    },
-    initializeMeasurementNaming() {
-      // Fetch and populate measurements data
-      this.measurements = [
-        { name: "Temperature", alias: "", unit: "Celsius", value: "25" },
-        { name: "Humidity", alias: "", unit: "%", value: "60" }
-      ]
-    },
-    updateMeasurements() {
-      console.log("Updated measurements:", this.measurements)
-      this.closeMeasurementNamingDialog()
-    },
-    skipMeasurementNaming() {
-      console.log("Skipping measurement naming")
-      this.closeMeasurementNamingDialog()
+      this.requestGoNext()
     }
   }
 }
