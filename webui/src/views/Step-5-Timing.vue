@@ -64,13 +64,13 @@
                 <label class="form-label" for="input-scheduled-time-a">A:</label>
               </div>
               <div class="col-3 col-sm-12">
-                <input type="time" id="input-scheduled-time-a" name="appt" value="05:30" />
+                <input type="time" name="appt" value="05:30" />
               </div>
               <div class="col-1 col-sm-12">
                 <label class="form-label" for="input-scheduled-time-b">B:</label>
               </div>
               <div class="col-3 col-sm-12">
-                <input type="time" id="input-scheduled-time-b" name="appt" value="21:30" />
+                <input type="time" name="appt" value="21:30" />
               </div>
               <div class="column col-6 col-mr-auto"></div>
             </div>

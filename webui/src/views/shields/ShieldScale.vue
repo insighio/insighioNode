@@ -81,8 +81,8 @@
             <p class="empty-title h5">Weight Scale Calibration</p>
             <p class="empty-subtitle">
               Idle value (offset) is:
-              <span id="idle-weight-value" class="text-bold"
-                ><div v-if="isLoading" id="loader" class="loading"></div>
+              <span class="text-bold"
+                ><div v-if="isLoading" class="loading"></div>
                 <progress
                   class="progress"
                   :value="progressValue"
@@ -150,7 +150,6 @@
             <div class="empty-action">
               <button
                 class="btn btn-primary"
-                id="recalibrate-button"
                 :disabled="isLoading"
                 style="margin-top: 5px; margin-right: 5px"
                 @click="recalibrate()"
@@ -159,7 +158,6 @@
               </button>
               <button
                 class="btn btn-primary"
-                id="measure-button"
                 :disabled="isLoading"
                 style="margin-top: 5px; margin-right: 5px"
                 @click="requestMeasure()"
@@ -168,7 +166,6 @@
               </button>
               <button
                 class="btn btn-primary"
-                id="tare-button"
                 :disabled="isLoading"
                 style="margin-top: 5px; margin-right: 5px"
                 @click="requestTare()"
@@ -177,7 +174,6 @@
               </button>
               <button
                 class="btn btn-primary"
-                id="back-button"
                 :disabled="isLoading"
                 style="margin-top: 5px; margin-right: 5px"
                 @click="goToPreviousStep()"
@@ -186,7 +182,6 @@
               </button>
               <button
                 class="btn btn-primary"
-                id="save-button"
                 :disabled="isLoading"
                 style="margin-top: 5px; margin-right: 5px"
                 @click="saveCalibration()"

@@ -15,7 +15,7 @@
             </th>
           </tr>
         </thead>
-        <tbody id="option-sdi12-table-rows">
+        <tbody>
           <tr v-for="(row, index) in sdi12Rows" :key="index">
             <td>{{ "SDI-12 n." + (index + 1) }}</td>
             <td>

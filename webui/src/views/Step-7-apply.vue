@@ -1,18 +1,19 @@
 <template>
   <div class="panel-body">
     <br />
-    <div v-if="isLoading" id="loader" class="loading loading-lg"></div>
+    <div v-if="isLoading" class="loading loading-lg"></div>
     <div class="empty">
-      <div v-show="isFinished" id="finished_icon_1" class="empty-icon">
+      <div v-show="!isLoading" class="empty-icon">
         <i class="icon icon-2x icon-check"></i>
       </div>
-      <p v-if="isLoading" id="loading_label_1" class="empty-title h5">Applying Configuration...</p>
-      <p v-show="isFinished" id="finished_label_1" class="empty-title h5">Configuration Applied</p>
-      <p v-show="isFinished" id="finished_label_2" class="empty-subtitle">
-        The device will soon reboot to the desired configuration.
-      </p>
+      <p v-if="isLoading" class="empty-title h5">Applying Configuration...</p>
+      <div v-else>
+        <p class="empty-title h5">Configuration Applied</p>
+        <p class="empty-subtitle">The device will soon reboot to the desired configuration.</p>
+      </div>
+
       <div class="empty-action">
-        <button class="btn btn-primary" id="save-button" @click="startOver">Start over?</button>
+        <button class="btn btn-primary" @click="startOver">Start over?</button>
       </div>
       <br />
       <br />
@@ -25,9 +26,11 @@ export default {
   name: "Step7Apply",
   data() {
     return {
-      isLoading: true,
-      isFinished: false
+      isLoading: true
     }
+  },
+  mounted() {
+    this.apply()
   },
   methods: {
     apply() {
@@ -61,7 +64,6 @@ export default {
     },
     requestReboot() {
       this.isLoading = false
-      this.isFinished = true
 
       fetch("/reboot", {
         method: "POST",
@@ -76,9 +78,6 @@ export default {
           console.log("error rebooting: ", err)
         })
     }
-  },
-  mounted() {
-    this.apply()
   }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div class="panel-body">
     <br />
-    <!--div id="loader" class="loading loading-lg"></div-->
+    <!--div class="loading loading-lg"></div-->
     <div class="container grid-lg">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
@@ -32,7 +32,7 @@
 
               <SDivider label="Explicit key-values" />
               <div class="accordion">
-                <input type="checkbox" id="accordion-1" name="accordion-checkbox" hidden />
+                <input type="checkbox" name="accordion-checkbox" hidden />
                 <label class="accordion-header" for="accordion-1">
                   <i class="icon icon-arrow-right mr-1"></i>
                   Explicit key-values
