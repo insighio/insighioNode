@@ -90,10 +90,14 @@
                 </ul>
               </div>
               <br />
-              <div class="col-12" v-for="(tab, index) in tabs" :key="index" v-show="activeTab === tab.id">
-                <br />
-                <br />
-                <component :is="tab.component" @goNext="validateMyForm" @goBack="requestGoBack" />
+              <div class="col-12" v-for="(tab, index) in tabs" :key="index">
+                <transition :name="transitionDirection" mode="out-in">
+                  <div v-if="activeTab === tab.id" :key="tab.id">
+                    <br />
+                    <br />
+                    <component :is="tab.component" @goNext="validateMyForm" @goBack="requestGoBack" />
+                  </div>
+                </transition>
               </div>
               <br />
               <br />
@@ -168,7 +172,8 @@ export default {
         advind: "advind",
         scale: "scale",
         dig_analog: "dig_analog"
-      }
+      },
+      transitionDirection: "slide-left" // Default transition direction
     }
   },
   mounted() {
@@ -207,10 +212,21 @@ export default {
       //fillKeyValuePairsFromDictionary(this.$cookies.get("meas-keyvalue"))
     },
     changeTab(tabId) {
+      // Add form validation and saving logic here
+      const currentIndex = this.tabs.findIndex((tab) => tab.id === this.activeTab)
+      const newIndex = this.tabs.findIndex((tab) => tab.id === tabId)
+
+      console.log("Current index:", currentIndex, ", New index:", newIndex)
+
+      // Determine transition direction
+      this.transitionDirection = newIndex > currentIndex ? "slide-left" : "slide-right"
+
+      console.log("Transition direction:", this.transitionDirection)
+
+      // Update the active tab
       this.activeTab = tabId
     },
     validateMyForm() {
-      // Add form validation and saving logic here
       this.storeData()
     },
     clearCookies() {
@@ -272,7 +288,33 @@ export default {
 </script>
 
 <style scoped>
-.measurements {
-  /* Add your component styles here */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+.slide-left-enter {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.slide-left-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+.slide-right-enter {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.slide-right-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
 }
 </style>

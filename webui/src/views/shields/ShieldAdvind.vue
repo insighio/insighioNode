@@ -1,7 +1,6 @@
 <template>
   <div class="form-group columns">
     <div class="col-12">
-      <SDivider label="SDI12" />
       <table class="table table-striped table-hover">
         <thead>
           <tr>
