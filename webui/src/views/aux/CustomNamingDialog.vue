@@ -146,17 +146,18 @@ export default {
     executeMeasurements() {
       this.isLoading = true
 
-      var config = this.$cookies.get()
+      var cookieKeys = this.$cookies.keys()
       var configString = ""
+      var config = {} // or []
 
-      for (let key in config) {
-        if (Object.prototype.hasOwnProperty.call(config, key)) {
-          configString += key + "=" + config[key] + "&"
-          if (key == "wifi-ssid" || key == "wifi-pass" || key == "meas-keyvalue") {
-            config[key] = config[key].replaceAll("\\", "\\\\").replaceAll("'", "\\'")
-          }
+      cookieKeys.forEach((key) => {
+        let value = this.$cookies.get(key)
+        configString += key + "=" + value + "&"
+        if (key == "wifi-ssid" || key == "wifi-pass" || key == "meas-keyvalue") {
+          value = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
         }
-      }
+        config[key] = value
+      })
 
       if (configString !== "") configString = configString.slice(0, -1)
 
@@ -186,21 +187,6 @@ export default {
                 }
               })
               this.measurements.sort((a, b) => a.name.localeCompare(b.name))
-              // this.measurements.forEach((measurement) => {
-              //   if (measurement.alias === "") {
-              //     measurement.alias = measurement.name
-              //   }
-              // })
-              // this.measurements.forEach((measurement) => {
-              //   if (measurement.unit === "") {
-              //     measurement.unit = "unit"
-              //   }
-              // })
-              // this.measurements.forEach((measurement) => {
-              //   if (measurement.value === "") {
-              //     measurement.value = 0
-              //   }
-              // })
 
               this.isSaveButtonVisible = true
 

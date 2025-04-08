@@ -35,6 +35,7 @@
         <Step4Measurements v-else-if="tabActive === 3" @goNext="goToNextStep" @goBack="goToPreviousStep" />
         <Step5Timing v-else-if="tabActive === 4" @goNext="goToNextStep" @goBack="goToPreviousStep" />
         <Step6Verify v-else-if="tabActive === 5" @goNext="goToNextStep" @goBack="goToPreviousStep" />
+        <Step7Apply v-else-if="tabActive === 6" @restart="goToStart" />
       </div>
     </div>
   </div>
@@ -48,15 +49,25 @@ import Step3LoRaKeys from "@/views/Step-3-LoRa-Keys.vue"
 import Step4Measurements from "@/views/Step-4-Measurements.vue"
 import Step5Timing from "@/views/Step-5-Timing.vue"
 import Step6Verify from "@/views/Step-6-Verify.vue"
+import Step7Apply from "@/views/Step-7-apply.vue"
 
 import "@/assets/css/spectre.min.css"
 
 export default {
   name: "MainPage",
-  components: { Step1Login, Step2Network, Step3APIKeys, Step3LoRaKeys, Step4Measurements, Step5Timing, Step6Verify },
+  components: {
+    Step1Login,
+    Step2Network,
+    Step3APIKeys,
+    Step3LoRaKeys,
+    Step4Measurements,
+    Step5Timing,
+    Step6Verify,
+    Step7Apply
+  },
   data() {
     return {
-      tabs: ["Login", "Network", "API Keys", "Measurements", "Timing", "Verify"],
+      tabs: ["Login", "Network", "API Keys", "Measurements", "Timing", "Verify", "Apply"],
       tabActive: -1,
       networkTech: ""
     }
@@ -90,6 +101,11 @@ export default {
       this.$cookies.set("activeTab", this.tabActive)
 
       console.log("goToPrevStep: ", this.tabActive)
+    },
+    goToStart() {
+      this.tabActive = 1
+      this.$cookies.set("activeTab", this.tabActive)
+      this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
     }
   },
   setup() {
