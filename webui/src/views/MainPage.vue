@@ -43,18 +43,26 @@
 
 <script>
 import "@/assets/css/spectre.min.css"
+import Step1Login from "@/views/Step-1-Login.vue"
+import Step2Network from "@/views/Step-2-Network.vue"
+import Step3APIKeys from "@/views/Step-3-APIKeys.vue"
+import Step3LoRaKeys from "@/views/Step-3-LoRa-Keys.vue"
+import Step4Measurements from "@/views/Step-4-Measurements.vue"
+import Step5Timing from "@/views/Step-5-Timing.vue"
+import Step6Verify from "@/views/Step-6-Verify.vue"
+import Step7Apply from "@/views/Step-7-apply.vue"
 
 export default {
   name: "MainPage",
   components: {
-    Step1Login: () => import("@/views/Step-1-Login.vue"),
-    Step2Network: () => import("@/views/Step-2-Network.vue"),
-    Step3APIKeys: () => import("@/views/Step-3-APIKeys.vue"),
-    Step3LoRaKeys: () => import("@/views/Step-3-LoRa-Keys.vue"),
-    Step4Measurements: () => import("@/views/Step-4-Measurements.vue"),
-    Step5Timing: () => import("@/views/Step-5-Timing.vue"),
-    Step6Verify: () => import("@/views/Step-6-Verify.vue"),
-    Step7Apply: () => import("@/views/Step-7-apply.vue")
+    Step1Login,
+    Step2Network,
+    Step3APIKeys,
+    Step3LoRaKeys,
+    Step4Measurements,
+    Step5Timing,
+    Step6Verify,
+    Step7Apply
   },
   data() {
     return {
