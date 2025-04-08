@@ -107,6 +107,54 @@
       </div>
     </div>
   </div>
+
+  <div v-if="isMeasurementNamingDialogOpen" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h5 class="modal-title">Custom Measurement Naming</h5>
+        <button class="btn btn-clear float-right" @click="closeMeasurementNamingDialog"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Alias</th>
+              <th>Unit</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(measurement, index) in measurements" :key="index">
+              <td>
+                <input
+                  type="text"
+                  :value="measurement.name"
+                  readonly
+                  style="border-width: 0px; border: none; box-shadow: none"
+                />
+              </td>
+              <td>
+                <input type="text" v-model="measurement.alias" :id="'input-key-value-' + index" />
+              </td>
+              <td>
+                <select v-model="measurement.unit" :id="'input-key-unit-' + index">
+                  <option v-for="unit in unitOptions" :key="unit" :value="unit">{{ unit }}</option>
+                </select>
+              </td>
+              <td>{{ measurement.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="toast">Accepted Characters: a-z, A-z, 0-9, -, _, /, .</div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" @click="updateMeasurements">Update</button>
+        <button class="btn btn-primary" @click="skipMeasurementNaming">Skip</button>
+        <button class="btn btn-secondary" @click="closeMeasurementNamingDialog">Close</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -173,7 +221,10 @@ export default {
         scale: "scale",
         dig_analog: "dig_analog"
       },
-      transitionDirection: "slide-left" // Default transition direction
+      transitionDirection: "slide-left", // Default transition direction
+      isMeasurementNamingDialogOpen: false,
+      measurements: [],
+      unitOptions: ["Celsius", "Fahrenheit", "Kelvin"] // Example units
     }
   },
   mounted() {
@@ -270,7 +321,8 @@ export default {
 
       this.$cookies.set("selected-shield", this.activeTab)
 
-      this.requestGoNext()
+      //this.requestGoNext()
+      this.openMeasurementNamingDialog()
     },
     getKeyValuePairs() {
       let localObj = {}
@@ -282,6 +334,28 @@ export default {
       })
 
       return localObj
+    },
+    openMeasurementNamingDialog() {
+      this.isMeasurementNamingDialogOpen = true
+      this.initializeMeasurementNaming()
+    },
+    closeMeasurementNamingDialog() {
+      this.isMeasurementNamingDialogOpen = false
+    },
+    initializeMeasurementNaming() {
+      // Fetch and populate measurements data
+      this.measurements = [
+        { name: "Temperature", alias: "", unit: "Celsius", value: "25" },
+        { name: "Humidity", alias: "", unit: "%", value: "60" }
+      ]
+    },
+    updateMeasurements() {
+      console.log("Updated measurements:", this.measurements)
+      this.closeMeasurementNamingDialog()
+    },
+    skipMeasurementNaming() {
+      console.log("Skipping measurement naming")
+      this.closeMeasurementNamingDialog()
     }
   }
 }
@@ -316,5 +390,45 @@ export default {
 .slide-right-leave-to {
   transform: translateX(100%);
   opacity: 0;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 5px;
+  width: 90%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 1rem;
+}
+
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 </style>
