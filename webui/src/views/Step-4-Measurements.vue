@@ -186,16 +186,16 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.gpsEnabled = this.strToJSValue(this.$cookies.get("meas-gps-enabled"), true)
+      const getCookieValue = (key, defaultValue) => this.$cookies.get(key) ?? defaultValue
 
-      this.ledEnabled = this.strToJSValue(this.$cookies.get("meas-led-enabled"), true)
-      this.batteryStats = this.strToJSValue(this.$cookies.get("meas-battery-stat"), true)
-      this.boardSense = this.strToJSValue(this.$cookies.get("meas-board-sense"), true)
-      this.boardStat = this.strToJSValue(this.$cookies.get("meas-board-stat"), false)
-      this.networkStat = this.strToJSValue(this.$cookies.get("meas-network-stat"), true)
-      this.otaEnabled = this.strToJSValue(this.$cookies.get("system-enable-ota"), true)
-
-      this.temperatureUnitIsCelsius = this.strToJSValue(this.$cookies.get("meas-temp-unit"), true)
+      this.gpsEnabled = this.strToJSValue(getCookieValue("meas-gps-enabled", true))
+      this.ledEnabled = this.strToJSValue(getCookieValue("meas-led-enabled", true))
+      this.batteryStats = this.strToJSValue(getCookieValue("meas-battery-stat", true))
+      this.boardSense = this.strToJSValue(getCookieValue("meas-board-sense", true))
+      this.boardStat = this.strToJSValue(getCookieValue("meas-board-stat", false))
+      this.networkStat = this.strToJSValue(getCookieValue("meas-network-stat", true))
+      this.otaEnabled = this.strToJSValue(getCookieValue("system-enable-ota", true))
+      this.temperatureUnitIsCelsius = this.strToJSValue(getCookieValue("meas-temp-unit", true))
 
       var selectedShield = this.$cookies.get("selected-shield")
         ? this.$cookies.get("selected-shield")

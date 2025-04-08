@@ -113,16 +113,15 @@ export default {
       this.wifi_pass = this.$cookies.get("wifi-pass")
     },
     updateWifiList() {
-      this.localLoading = true
+      if (this.localLoading) return
 
+      this.localLoading = true
       fetchInternal("/update_wifi_list")
         .then((data) => {
           this.wifiAvailableNets = data.wifiAvailableNets
-          // detectBoardChange(enableNavigationButtons)
-          this.localLoading = false
         })
-        .catch((err) => {
-          console.log("error completing request", err)
+        .catch((err) => console.error("Error fetching WiFi list:", err))
+        .finally(() => {
           this.localLoading = false
         })
     },

@@ -32,24 +32,16 @@ export default {
   methods: {
     apply() {
       const encodedParams = {}
+      const config = {}
       let isConfigValid = false
 
-      var cookieKeys = this.$cookies.keys()
-      var config = {} // or []
-
-      cookieKeys.forEach((key) => {
+      this.$cookies.keys().forEach((key) => {
+        const value = this.$cookies.get(key)
         isConfigValid = true
-        config[key] = this.$cookies.get(key)
-        if (key === "wifi-ssid" || key === "wifi-pass") {
-          encodedParams[key] = encodeURIComponent(config[key])
-          config[key] = config[key].replaceAll("\\", "\\\\").replaceAll("'", "\\'")
-        } else if (key === "meas-name-mapping" || key === "meas-name-ext-mapping" || key === "meas-keyvalue") {
-          encodedParams[key] = encodeURIComponent(config[key])
-        }
+        config[key] =
+          key === "wifi-ssid" || key === "wifi-pass" ? value.replaceAll("\\", "\\\\").replaceAll("'", "\\'") : value
+        encodedParams[key] = encodeURIComponent(value)
       })
-
-      console.log("queryParams: ", config)
-      const objToSend = { queryParams: config, encodedParams }
 
       if (!isConfigValid) {
         this.startOver()
@@ -58,19 +50,14 @@ export default {
 
       fetch("/save-config", {
         method: "POST",
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(objToSend)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ queryParams: config, encodedParams })
       })
         .then(() => {
           this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
           this.requestReboot()
         })
-        .catch((err) => {
-          console.log("error saving config: ", err)
-        })
+        .catch((err) => console.error("Error saving config:", err))
     },
     requestReboot() {
       this.isLoading = false
