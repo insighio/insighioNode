@@ -108,7 +108,7 @@
     </div>
   </div>
 
-  <CustomNamingDialog v-model:isOpen="isMeasurementNamingDialogOpen" @save="closeAndProceed" />
+  <CustomNamingDialog v-model:isOpen="isMeasurementNamingDialogOpen" @save="closeAndProceed" @close="closeAndStay" />
 </template>
 
 <script>
@@ -292,6 +292,9 @@ export default {
     openMeasurementNamingDialog() {
       this.isMeasurementNamingDialogOpen = true
       this.initializeMeasurementNaming()
+    },
+    closeAndStay() {
+      this.isMeasurementNamingDialogOpen = false
     },
     closeAndProceed() {
       this.isMeasurementNamingDialogOpen = false
