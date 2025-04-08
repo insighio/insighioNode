@@ -35,7 +35,7 @@
         <Step4Measurements v-else-if="tabActive === 3" @goNext="goToNextStep" @goBack="goToPreviousStep" />
         <Step5Timing v-else-if="tabActive === 4" @goNext="goToNextStep" @goBack="goToPreviousStep" />
         <Step6Verify v-else-if="tabActive === 5" @goNext="goToNextStep" @goBack="goToPreviousStep" />
-        <Step7Apply v-else-if="tabActive === 6" @restart="goToStart" />
+        <Step7Apply v-else-if="tabActive === 6" @start-over="goToStart" />
       </div>
     </div>
   </div>
@@ -104,7 +104,9 @@ export default {
     goToStart() {
       this.tabActive = 1
       this.$cookies.set("activeTab", this.tabActive)
+      const savedSession = this.$cookies.get("session")
       this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
+      this.$cookies.set("session", savedSession)
     }
   },
   setup() {

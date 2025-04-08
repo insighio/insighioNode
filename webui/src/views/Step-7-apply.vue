@@ -42,7 +42,9 @@ export default {
         const value = this.$cookies.get(key)
         isConfigValid = true
         config[key] =
-          key === "wifi-ssid" || key === "wifi-pass" ? value.replaceAll("\\", "\\\\").replaceAll("'", "\\'") : value
+          (key === "wifi-ssid" || key === "wifi-pass") && value
+            ? value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
+            : value
         encodedParams[key] = encodeURIComponent(value)
       })
 
@@ -77,6 +79,9 @@ export default {
         .catch((err) => {
           console.log("error rebooting: ", err)
         })
+    },
+    startOver() {
+      this.$emit("startOver")
     }
   }
 }

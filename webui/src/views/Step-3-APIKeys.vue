@@ -1,25 +1,7 @@
 <template>
   <div class="panel-body">
     <br />
-    <div class="text-center">
-      Set API keys that were generated during device creation in console.insigh.io.
-      <!--div class="popover popover-bottom">
-        <button class="btn btn-link">Tip: Autofill</button>
-        <div class="popover-container">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title h5">Auto fill fields</div>
-            </div>
-            <div class="card-body">
-              In <a href="https://console.insigh.io/devices/list">Device List view</a> select the required device and
-              press Options <img src="@/assets/img/devOpt.png" style="margin-bottom: -5px" /> -> JSON
-              <img src="@/assets/img/copy.png" style="margin-bottom: -5px" />. Then paste in any of the input fields and
-              the contents will be auto-filled.
-            </div>
-          </div>
-        </div>
-      </div-->
-    </div>
+    <div class="text-center">Set API keys that were generated during device creation in console.insigh.io.</div>
     <br />
     <div class="container grid-lg">
       <div class="columns flex-centered">
@@ -133,14 +115,14 @@ export default {
     },
 
     validateMyForm() {
-      // if (
-      //   !this.validateElemValue(this.insighio_id, "device ID", this.idRegex) ||
-      //   !this.validateElemValue(this.insighio_key, "device Key", this.idRegex) ||
-      //   !this.validateElemValue(this.insighio_channel, "channel ID", this.idRegex) ||
-      //   !this.validateElemValue(this.insighio_control_channel, "control channel ID", this.idRegex)
-      // ) {
-      //   return false
-      // }
+      if (
+        !this.validateElemValue(this.insighio_id, "device ID", this.idRegex) ||
+        !this.validateElemValue(this.insighio_key, "device Key", this.idRegex) ||
+        !this.validateElemValue(this.insighio_channel, "channel ID", this.idRegex) ||
+        !this.validateElemValue(this.insighio_control_channel, "control channel ID", this.idRegex)
+      ) {
+        return false
+      }
 
       this.storeData()
       return true
