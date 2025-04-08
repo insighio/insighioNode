@@ -181,8 +181,9 @@ export default {
       this.sens_4_20_num2_formula = this.$cookies.get("meas-4-20-snsr-2-formula")
         ? this.$cookies.get("meas-4-20-snsr-2-formula")
         : "v"
+
       this.pulseCounterEnable = this.strToJSValue(this.$cookies.get("meas-pcnt-1-enable"), false)
-      this.pulseCounterHighFreq = this.strToJSValue(this.$cookies.get("meas-pcnt-1-high-freq"), true)
+      this.pulseCounterHighFreq = this.strToJSValue(this.$cookies.get("meas-pcnt-1-high-freq"), false)
       this.pulseCounterFormula = this.$cookies.get("meas-pcnt-1-formula")
         ? this.$cookies.get("meas-pcnt-1-formula")
         : "1"
@@ -229,8 +230,7 @@ export default {
 
       this.$cookies.set("meas-sdi-warmup-time", this.sdi12WarmupTimeMs)
 
-      this.$cookies.set("meas-pcnt-1-enable", this.boolToPyStr)
-      ///this.$cookies.set('meas-pcnt-1-cnt-on-rising', document.getElementById('ins-esp-gen-pcnt-1-cnt-on').value === "rising")
+      this.$cookies.set("meas-pcnt-1-enable", this.boolToPyStr(this.pulseCounterEnable))
       this.$cookies.set("meas-pcnt-1-formula", this.pulseCounterFormula)
       this.$cookies.set("meas-pcnt-1-high-freq", this.boolToPyStr(this.pulseCounterHighFreq))
 
