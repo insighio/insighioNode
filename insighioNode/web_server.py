@@ -7,6 +7,7 @@ from device_info import get_hw_module_version, get_device_id, get_hw_module_vers
 from utime import ticks_ms
 import logging
 import uasyncio
+import utils
 
 insighioSettings = None
 wlan = None
@@ -340,6 +341,16 @@ def start(timeoutMs=120000):
 
     app = tinyweb.webserver(10, 6, 16, False)
 
+    def get_content_type(file_name):
+        if file_name.endswith("css"):
+            return "text/css"
+        elif file_name.endswith("js"):
+            return "application/javascript"
+        elif file_name.endswith("png"):
+            return "image/png"
+        else:
+            return ""
+
     ############################################################################
     # callback registration
     # Index page
@@ -347,34 +358,54 @@ def start(timeoutMs=120000):
     async def index(req, resp):
         # Just send file
         logging.debug("[web-server]: /")
-        await resp.send_file("www/index.html")
+        if utils.existsFile("www/index.html.gz"):
+            await resp.send_file("www/index.html.gz", content_encoding="gzip")
+        else:
+            await resp.send_file("www/index.html")
 
     @app.route("/<fn>")
     async def httpfiles(req, resp, fn):
         # Just send file
         logging.debug("[web-server]: /{}".format(fn))
-        await resp.send_file("www/{}".format(fn))
+        file_path = "www/{}".format(fn)
+        file_path_compressed = file_path + '.gz'
+        if utils.existsFile(file_path_compressed):
+            await resp.send_file(file_path_compressed, content_type=get_content_type(fn), content_encoding="gzip")
+        else:
+            await resp.send_file("www/{}".format(fn), content_type=get_content_type(fn))
 
-    @app.route("/js/<fn>")
-    async def files_js(req, resp, fn):
-        logging.debug("[web-server]: /js/{}".format(fn))
-        await resp.send_file("www/js/{}".format(fn), content_type="application/javascript")
-        # await resp.send_file('www/js/{}.gz'.format(fn),
-        #                      content_type='application/javascript',
-        #                      content_encoding='gzip')
+    @app.route("/assets/<fn>")
+    async def httpfiles(req, resp, fn):
+        # Just send file
+        logging.debug("[web-server]: /assets/{}".format(fn))
+        file_path = "www/assets/{}".format(fn)
+        file_path_compressed = file_path + '.gz'
 
-    # The same for css files - e.g.
-    # Raw version of bootstrap.min.css is about 146k, compare to gzipped version - 20k
-    @app.route("/css/<fn>")
-    async def files_css(req, resp, fn):
-        logging.debug("[web-server]: /css/{}".format(fn))
-        await resp.send_file("www/css/{}.gz".format(fn), content_type="text/css", content_encoding="gzip")
+        if utils.existsFile(file_path_compressed):
+            await resp.send_file(file_path_compressed, content_type=get_content_type(fn), content_encoding="gzip")
+        else:
+            await resp.send_file(file_path, content_type=get_content_type(fn))
 
-    # Images
-    @app.route("/img/<fn>")
-    async def files_images(req, resp, fn):
-        logging.debug("[web-server]: /img/{}".format(fn))
-        await resp.send_file("www/img/{}".format(fn), content_type="image/png")
+    # @app.route("/js/<fn>")
+    # async def files_js(req, resp, fn):
+    #     logging.debug("[web-server]: /js/{}".format(fn))
+    #     await resp.send_file("www/js/{}".format(fn), content_type="application/javascript")
+    #     # await resp.send_file('www/js/{}.gz'.format(fn),
+    #     #                      content_type='application/javascript',
+    #     #                      content_encoding='gzip')
+    #
+    # # The same for css files - e.g.
+    # # Raw version of bootstrap.min.css is about 146k, compare to gzipped version - 20k
+    # @app.route("/css/<fn>")
+    # async def files_css(req, resp, fn):
+    #     logging.debug("[web-server]: /css/{}".format(fn))
+    #     await resp.send_file("www/css/{}.gz".format(fn), content_type="text/css", content_encoding="gzip")
+    #
+    # # Images
+    # @app.route("/img/<fn>")
+    # async def files_images(req, resp, fn):
+    #     logging.debug("[web-server]: /img/{}".format(fn))
+    #     await resp.send_file("www/img/{}".format(fn), content_type="image/png")
 
     @app.route("/reboot", methods=["POST"])
     async def reboot(req, resp):
