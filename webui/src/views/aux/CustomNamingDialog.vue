@@ -31,10 +31,10 @@
                 />
               </td>
               <td>
-                <input type="text" v-model="measurement.alias" :id="'input-key-value-' + index" />
+                <input type="text" v-model="measurement.alias" :id="'value-' + index" />
               </td>
               <td>
-                <select v-model="measurement.unit" :id="'input-key-unit-' + index">
+                <select v-model="measurement.unit" :id="'unit-' + index">
                   <option v-for="unitObj in unitOptions" :key="unitObj.unit" :value="unitObj.unit">
                     {{ unitObj.label }}
                   </option>
@@ -47,7 +47,7 @@
       </div>
       <div class="toast">Accepted Characters: a-z, A-z, 0-9, -, _, /, .</div>
       <div class="modal-footer">
-        <button class="btn btn-primary" @click="$emit('update')">Update</button>
+        <button class="btn btn-primary" @click="executeMeasurements">Update</button>
         <button v-if="isSaveButtonVisible" class="btn btn-primary" @click="validateMyForm">Save</button>
         <button v-else class="btn btn-primary" @click="doSkip">Skip</button>
         <button class="btn btn-secondary" @click="$emit('close')">Close</button>
@@ -82,10 +82,7 @@ export default {
   data() {
     return {
       storedMapping: undefined,
-      measurements: [
-        // { name: "Measurement 2", alias: "", unit: "unit2", value: 0 },
-        // { name: "Measurement 1", alias: "", unit: "unit1", value: 0 }
-      ],
+      measurements: [],
       unitOptions: [],
       isSaveButtonVisible: false,
       isLoading: false
@@ -96,12 +93,20 @@ export default {
   },
   methods: {
     loadCookie(name) {
-      try {
-        this.storedMapping = JSON.parse(this.$cookies.get(name))
-        console.log("successfully parsed name", name)
+      let obj = this.$cookies.get(name)
+
+      if (typeof obj === "string") {
+        try {
+          this.storedMapping = JSON.parse(obj)
+          console.log("successfully parsed name", name)
+          return this.storedMapping
+        } catch (e) {
+          console.log("failed parsing: ", name, ", error:", e)
+        }
+      } else if (typeof obj === "object") {
+        this.storedMapping = obj
+        console.log("successfully loaded name", name)
         return this.storedMapping
-      } catch (e) {
-        console.log("failed parsing: ", name, ", error:", e)
       }
       return undefined
     },
@@ -134,6 +139,13 @@ export default {
             }
 
             editedMapping[measurement_name] = { ...new_obj }
+
+            this.measurements.push({
+              name: measurement_name,
+              alias: new_obj.alias,
+              unit: new_obj.unit,
+              value: undefined
+            })
           })
 
         this.storedMapping = editedMapping
@@ -152,8 +164,18 @@ export default {
 
       cookieKeys.forEach((key) => {
         let value = this.$cookies.get(key)
+        console.log("cookie: ", key, " value: ", value)
         configString += key + "=" + value + "&"
-        if (key == "wifi-ssid" || key == "wifi-pass" || key == "meas-keyvalue") {
+
+        if (key === "meas-keyvalue" || key === "meas-name-ext-mapping") {
+          try {
+            value = JSON.stringify(value)
+          } catch (e) {
+            console.log("failed parsing: ", key, ", error:", e)
+          }
+        }
+
+        if (key === "wifi-ssid" || key === "wifi-pass" || key === "meas-keyvalue" || key === "meas-name-ext-mapping") {
           value = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
         }
         config[key] = value
@@ -166,7 +188,11 @@ export default {
 
       if (!configString) return
 
-      fetch("/save-config-temp", {
+      const storedMappingToArray = Object.keys(this.storedMapping).map((key) => {
+        return { name: key, alias: this.storedMapping[key].alias, unit: this.storedMapping[key].unit }
+      })
+
+      fetch("http://192.168.4.1" + "/save-config-temp", {
         method: "POST",
         headers: {
           Accept: "application/json, text/plain, */*",
@@ -176,20 +202,33 @@ export default {
       })
         .then((res) => {
           fetchInternal("/device_measurements")
-            .then((measurements) => {
-              this.addStaticValuesForNetwork(measurements)
-              console.log("measurements: ", measurements)
-              this.measurements = measurements
-              this.measurements.forEach((measurement) => {
-                if (this.storedMapping[measurement.name]) {
-                  measurement.alias = this.storedMapping[measurement.name].alias
-                  measurement.unit = this.storedMapping[measurement.name].unit
+            .then((measurementNaming) => {
+              this.addStaticValuesForNetwork(measurementNaming)
+              console.log("measurements: ", measurementNaming)
+              this.measurements = []
+              Object.keys(measurementNaming).forEach((measurementName) => {
+                const tmpObj = measurementNaming[measurementName]
+                var measurement = {
+                  name: measurementName,
+                  alias: "",
+                  unit: tmpObj.unit,
+                  value: tmpObj.value
                 }
+
+                //if alias is stored, the device will use the alias as measurement name
+                let storedInfo = storedMappingToArray.find((obj) => obj.alias === measurementName)
+                if (storedInfo) {
+                  measurement.name = storedInfo.name
+                  measurement.alias = storedInfo.alias
+                } else storedInfo = this.storedMapping[measurementName]
+
+                if (storedInfo && storedInfo.unit) measurement.unit = this.storedMapping[measurementName].unit
+
+                this.measurements.push(measurement)
               })
               this.measurements.sort((a, b) => a.name.localeCompare(b.name))
 
               this.isSaveButtonVisible = true
-
               this.isLoading = false
             })
             .catch((err) => {
@@ -206,21 +245,21 @@ export default {
       var netStats = this.$cookies.get("meas-network-stat")
 
       if (net === "wifi" && netStats === "True") {
-        obj["wifi_conn_duration"] = {}
-        obj["wifi_scan_duration"] = {}
+        obj["wifi_conn_duration"] = { unit: "ms" }
+        obj["wifi_scan_duration"] = { unit: "ms" }
         obj["wifi_channel"] = {}
-        obj["wifi_rssi"] = {}
+        obj["wifi_rssi"] = { unit: "dbm" }
       } else if (net === "cellular" && netStats === "True") {
-        obj["cell_rssi"] = {}
-        obj["cell_rsrp"] = {}
-        obj["cell_rsrq"] = {}
+        obj["cell_rssi"] = { unit: "dbm" }
+        obj["cell_rsrp"] = { unit: "dbm" }
+        obj["cell_rsrq"] = { unit: "dbm" }
         obj["cell_mcc"] = {}
         obj["cell_mnc"] = {}
         obj["cell_lac"] = {}
         obj["cell_ci"] = {}
-        obj["cell_act_duration"] = {}
-        obj["cell_att_duration"] = {}
-        obj["cell_con_duration"] = {}
+        obj["cell_act_duration"] = { unit: "ms" }
+        obj["cell_att_duration"] = { unit: "ms" }
+        obj["cell_con_duration"] = { unit: "ms" }
       }
 
       if (this.$cookies.get("meas-gps-enabled") === "True") {
@@ -231,7 +270,7 @@ export default {
       }
 
       obj["reset_cause"] = {}
-      obj["uptime"] = {}
+      obj["uptime"] = { unit: "ms" }
     },
     clearCookies() {
       this.$cookies.remove("meas-name-mapping")
@@ -268,11 +307,11 @@ export default {
     getAliasUnitPairs() {
       const aliasUnitPairs = {}
       this.measurements.forEach((measurement) => {
-        if (measurement.alias && measurement.unit) {
-          aliasUnitPairs[measurement.name] = {
-            alias: measurement.alias,
-            unit: measurement.unit
-          }
+        if (measurement.alias || measurement.unit) {
+          aliasUnitPairs[measurement.name] = {}
+
+          if (measurement.alias) aliasUnitPairs[measurement.name].alias = measurement.alias
+          if (measurement.unit) aliasUnitPairs[measurement.name].unit = measurement.unit
         }
       })
       return aliasUnitPairs

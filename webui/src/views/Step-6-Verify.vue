@@ -75,8 +75,7 @@ export default {
 
       this.configToStoreOdd = this.configToStore.filter((_, index) => index % 2 === 0)
       this.configToStoreEven = this.configToStore.filter((_, index) => index % 2 !== 0)
-    },
-    storeAndReboot() {}
+    }
   }
 }
 </script>

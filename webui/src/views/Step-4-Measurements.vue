@@ -291,7 +291,6 @@ export default {
     },
     openMeasurementNamingDialog() {
       this.isMeasurementNamingDialogOpen = true
-      this.initializeMeasurementNaming()
     },
     closeAndStay() {
       this.isMeasurementNamingDialogOpen = false

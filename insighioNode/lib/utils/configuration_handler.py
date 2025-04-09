@@ -319,7 +319,7 @@ def get_file_config(fileName, keyValuePairs):
     logging.debug("Getting file config: {}".format(fileName))
     contents = utils.readFromFile(fileName)
     for param in keyValuePairs:
-        contents = contents.replace("<" + param + ">", keyValuePairs[param])
+        contents = contents.replace("<" + param + ">", keyValuePairs[param] if keyValuePairs[param] else "None")
     return ure.sub(r"\"?<[a-z\-0-9]+>\"?", "None", contents)
 
 
@@ -347,7 +347,7 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
     utils.copyFile(config_file_explicit, config_file_explicit + ".prev")
 
     # fix naming of keys to use '-' instead of '_'
-    # unfortunatelly it is technical burden from old implementations, to be fixed in future release
+    # unfortunately it is technical burden from old implementations, to be fixed in future release
     for param in keyValuePairDictionary:
         val = keyValuePairDictionary[param]
         key = param

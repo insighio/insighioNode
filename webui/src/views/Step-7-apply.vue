@@ -41,11 +41,13 @@ export default {
       this.$cookies.keys().forEach((key) => {
         const value = this.$cookies.get(key)
         isConfigValid = true
-        config[key] =
-          (key === "wifi-ssid" || key === "wifi-pass") && value
-            ? value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
-            : value
-        encodedParams[key] = encodeURIComponent(value)
+        if (key === "wifi-ssid" || key === "wifi-pass") {
+          encodedParams[key] = encodeURIComponent(config[key])
+          config[key] = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
+        } else if (key === "meas-name-mapping" || key === "meas-name-ext-mapping" || key === "meas-keyvalue") {
+          encodedParams[key] = encodeURIComponent(config[key])
+          config[key] = value
+        } else config[key] = value
       })
 
       if (!isConfigValid) {
@@ -53,7 +55,7 @@ export default {
         return
       }
 
-      fetch("/save-config", {
+      fetch("http://192.168.4.1" + "/save-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ queryParams: config, encodedParams })
@@ -67,7 +69,7 @@ export default {
     requestReboot() {
       this.isLoading = false
 
-      fetch("/reboot", {
+      fetch("http://192.168.4.1" + "/reboot", {
         method: "POST",
         headers: {
           Accept: "application/json, text/plain, */*",
