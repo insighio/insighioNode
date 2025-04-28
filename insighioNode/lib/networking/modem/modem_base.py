@@ -100,7 +100,7 @@ class Modem:
 
         if technology.lower() == "nbiot":
             expected_configuration = "1"  # operator locking
-            command = "AT+COPS=1,2,20201,9"
+            command = "AT+COPS=4,2,20201"
         else:
             expected_configuration = "0"  # operator automatic selection
             command = "AT+COPS=0"
