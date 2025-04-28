@@ -82,7 +82,9 @@ export default {
       lora_confirmed: true
     }
   },
-
+  mounted() {
+    this.initializeValues()
+  },
   methods: {
     initializeValues() {
       this.lora_adr = this.strToJSValue(this.$cookies.get("lora-adr"), true)

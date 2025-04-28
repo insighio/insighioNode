@@ -92,6 +92,9 @@ export default {
       ]
     }
   },
+  mounted() {
+    this.initializeValues()
+  },
   methods: {
     initializeValues() {
       this.protocol = this.getValueWithDefaults(this.$cookies.get("protocol"), "mqtt")

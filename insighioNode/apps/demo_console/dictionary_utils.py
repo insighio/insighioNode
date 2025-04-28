@@ -14,6 +14,9 @@ if _name_mapping is None and cfg.has("_MEAS_NAME_MAPPING"):
 
 
 def get_meas_name(or_name):
+    if cfg.is_temp():
+        return or_name
+
     if _name_mapping is None or or_name not in _name_mapping or "alias" not in _name_mapping[or_name]:
         return or_name
     try:
@@ -23,6 +26,9 @@ def get_meas_name(or_name):
 
 
 def get_meas_unit(or_name, or_unit):
+    if cfg.is_temp():
+        return or_unit
+
     if _name_mapping is None or or_name not in _name_mapping or "unit" not in _name_mapping[or_name]:
         return or_unit
     try:

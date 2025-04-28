@@ -32,10 +32,9 @@ export default {
       dev_enable: false
     }
   },
-  computed: {
-    // Add your computed properties here
+  mounted() {
+    this.initializeValues()
   },
-
   methods: {
     initializeValues() {
       this.dev_ssid = this.$cookies.get("sat-astro-devkit-ssid")

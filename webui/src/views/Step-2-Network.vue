@@ -14,16 +14,16 @@
             <button class="btn" :disabled="disableButtons" @click="operationSelected('LoRa')">LoRa</button>
             <button class="btn" :disabled="disableButtons" @click="operationSelected('Satellite')">Satellite</button>
           </div>
-          <div v-show="activeNetwork === 'WiFi'">
+          <div v-if="activeNetwork === 'WiFi'">
             <NetworkWifi @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-show="activeNetwork === 'Cellular'">
+          <div v-else-if="activeNetwork === 'Cellular'">
             <NetworkCellular @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-show="activeNetwork === 'LoRa'">
+          <div v-else-if="activeNetwork === 'LoRa'">
             <NetworkLoRa @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-show="activeNetwork === 'Satellite'">
+          <div v-else-if="activeNetwork === 'Satellite'">
             <NetworkSatAstro @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
         </div>
@@ -61,6 +61,9 @@ export default {
       settingsAcquired: false
     }
   },
+  mounted() {
+    this.initializeValues()
+  },
   methods: {
     initializeValues() {
       if (this.settingsAcquired) return
@@ -76,6 +79,8 @@ export default {
           this.enableButtonsLocal()
           this.localLoading = false
           this.settingsAcquired = true
+
+          this.activeNetwork = this.$cookies.get("network")
         })
         .catch((err) => {
           console.log("error completing request", err)

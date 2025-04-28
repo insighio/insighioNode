@@ -85,7 +85,8 @@ export default {
       measurements: [],
       unitOptions: [],
       isSaveButtonVisible: false,
-      isLoading: false
+      isLoading: false,
+      rawMeasurementsRetrieved: undefined
     }
   },
   mounted() {
@@ -188,10 +189,6 @@ export default {
 
       if (!configString) return
 
-      const storedMappingToArray = Object.keys(this.storedMapping).map((key) => {
-        return { name: key, alias: this.storedMapping[key].alias, unit: this.storedMapping[key].unit }
-      })
-
       fetch("http://192.168.4.1" + "/save-config-temp", {
         method: "POST",
         headers: {
@@ -205,6 +202,9 @@ export default {
             .then((measurementNaming) => {
               this.addStaticValuesForNetwork(measurementNaming)
               console.log("measurements: ", measurementNaming)
+
+              this.rawMeasurementsRetrieved = { ...measurementNaming }
+
               this.measurements = []
               Object.keys(measurementNaming).forEach((measurementName) => {
                 const tmpObj = measurementNaming[measurementName]
@@ -215,14 +215,11 @@ export default {
                   value: tmpObj.value
                 }
 
-                //if alias is stored, the device will use the alias as measurement name
-                let storedInfo = storedMappingToArray.find((obj) => obj.alias === measurementName)
+                let storedInfo = this.storedMapping[measurementName]
                 if (storedInfo) {
-                  measurement.name = storedInfo.name
-                  measurement.alias = storedInfo.alias
-                } else storedInfo = this.storedMapping[measurementName]
-
-                if (storedInfo && storedInfo.unit) measurement.unit = this.storedMapping[measurementName].unit
+                  if (storedInfo.alias) measurement.alias = storedInfo.alias
+                  if (storedInfo.unit) measurement.unit = storedInfo.unit
+                }
 
                 this.measurements.push(measurement)
               })
@@ -306,12 +303,22 @@ export default {
     },
     getAliasUnitPairs() {
       const aliasUnitPairs = {}
+
       this.measurements.forEach((measurement) => {
         if (measurement.alias || measurement.unit) {
-          aliasUnitPairs[measurement.name] = {}
+          let newConfigObj = {}
 
-          if (measurement.alias) aliasUnitPairs[measurement.name].alias = measurement.alias
-          if (measurement.unit) aliasUnitPairs[measurement.name].unit = measurement.unit
+          const storedUnit = this.rawMeasurementsRetrieved[measurement.name]
+            ? this.rawMeasurementsRetrieved[measurement.name].unit
+            : undefined
+
+          if (measurement.alias) newConfigObj.alias = measurement.alias
+          if (measurement.unit !== storedUnit) newConfigObj.unit = measurement.unit
+
+          //new config
+          if (Object.keys(newConfigObj).length > 0) {
+            aliasUnitPairs[measurement.name] = newConfigObj
+          }
         }
       })
       return aliasUnitPairs

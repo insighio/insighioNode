@@ -95,10 +95,9 @@ export default {
       ]
     }
   },
-  computed: {
-    // Add your computed properties here
+  mounted() {
+    this.initializeValues()
   },
-
   methods: {
     // Add your component methods here
     clearCookies() {
