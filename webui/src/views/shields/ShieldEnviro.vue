@@ -57,6 +57,7 @@
             <th>Slave Addr</th>
             <th>Register</th>
             <th>Type</th>
+            <th>Format</th>
             <th>Factor</th>
             <th>Decimal Digits</th>
             <th>MSW First</th>
@@ -70,17 +71,26 @@
         </thead>
         <tbody>
           <tr v-for="(row, index) in modbusConfig" :key="index">
-            <td><input :type="number" class="form-input" v-model="row.slaveAddress" /></td>
-            <td><input :type="number" class="form-input" v-model="row.register" /></td>
+            <td><input type="number" class="form-input" v-model="row.slaveAddress" /></td>
+            <td><input type="number" class="form-input" v-model="row.register" /></td>
             <td>
               <select class="form-select" v-model="row.type">
-                <option v-for="opt in modbusSupportedTypes" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                <option v-for="opt in modbusSupportedTypes" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </td>
+            <td>
+              <select class="form-select" v-model="row.format">
+                <option v-for="opt in modbusSupportedFormats" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
               </select>
             </td>
 
-            <td><input :type="number" class="form-input" v-model="row.factor" /></td>
+            <td><input type="number" class="form-input" step="0.000001" v-model="row.factor" /></td>
             <td>
-              <select :disabled="row.type !== 'float'" class="form-select" v-model="row.decimalDigits">
+              <select :disabled="row.format !== 'float'" class="form-select" v-model="row.decimalDigits">
                 <option v-for="opt in modbusDecimalDigits" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </td>
@@ -101,7 +111,7 @@
     </div>
     <SDivider label="ADC" />
     <div class="col-12 columns" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
-      <div class="col-12 columns" v-for="adc in adcConfig" :key="adc.id">
+      <div class="container" v-for="adc in adcConfig" :key="adc.id">
         <SSwitch :label="'Analog Sensor' + adc.id" v-model:value="adc.enabled" />
 
         <div v-if="adc.enabled" class="col-12">
@@ -122,20 +132,22 @@
     </div>
     <SDivider label="Pulse Counter" />
     <div class="col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
-      <SSwitch label="Pulse Counter enable" v-model:value="pulseCounterEnable" />
-      <div v-if="pulseCounterEnable" class="col-12">
-        <div class="form-group columns">
-          <div class="column col-1 col-mr-auto"></div>
-          <div class="column col-9 col-mr-auto">
-            <SSwitch label="High Frequency" v-model:value="pulseCounterHighFreq" :colsLabel="4" :colsInput="8" />
-            <SInput
-              label="Pulse Counter formula"
-              v-model:value="pulseCounterFormula"
-              @update:value="pulseCounterFormula = $event"
-              :tooltip="tooltip"
-            />
+      <div class="container">
+        <SSwitch label="Pulse Counter enable" v-model:value="pulseCounterEnable" />
+        <div v-if="pulseCounterEnable" class="col-12">
+          <div class="form-group columns">
+            <div class="column col-1 col-mr-auto"></div>
+            <div class="column col-9 col-mr-auto">
+              <SSwitch label="High Frequency" v-model:value="pulseCounterHighFreq" :colsLabel="4" :colsInput="8" />
+              <SInput
+                label="Pulse Counter formula"
+                v-model:value="pulseCounterFormula"
+                @update:value="pulseCounterFormula = $event"
+                :tooltip="tooltip"
+              />
+            </div>
+            <div class="column col-2 col-mr-auto"></div>
           </div>
-          <div class="column col-2 col-mr-auto"></div>
         </div>
       </div>
     </div>
@@ -200,14 +212,21 @@ export default {
       modbusDefaultRow: {
         slaveAddress: 0,
         register: 0,
-        type: "int",
+        type: 3,
+        format: "uint16",
         factor: 1,
         decimalDigits: 0,
         mswFirst: true,
         littleEndian: false
       },
       modbusSupportedTypes: [
-        { value: "bit", label: "Boolean (1b)" },
+        // { value: 1, label: "Coil" },
+        // { value: 2, label: "Discrete Input" },
+        { value: 3, label: "Holding Register" },
+        { value: 4, label: "Input Register" }
+      ],
+      modbusSupportedFormats: [
+        // { value: "bit", label: "Boolean (1b)" },
         { value: "int16", label: "Signed Int (16b)" },
         { value: "uint16", label: "Unsigned Int (16b)" },
         { value: "int32", label: "Signed Int (32b)" },
