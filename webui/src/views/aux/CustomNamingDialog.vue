@@ -47,10 +47,14 @@
       </div>
       <div class="toast">Accepted Characters: a-z, A-z, 0-9, -, _, /, .</div>
       <div class="modal-footer">
-        <button class="btn btn-primary" @click="executeMeasurements">Update</button>
-        <button v-if="isSaveButtonVisible" class="btn btn-primary" @click="validateMyForm">Save</button>
-        <button v-else class="btn btn-primary" @click="doSkip">Skip</button>
-        <button class="btn btn-secondary" @click="$emit('close')">Close</button>
+        <div class="float-left"><button class="btn btn-primary" @click="executeMeasurements">Fetch</button></div>
+        <div class="float-right">
+          <button v-if="isSaveButtonVisible" class="btn btn-primary" @click="validateMyForm">Save</button>
+          <button v-else class="btn btn-primary" @click="doSkip">Next</button>
+        </div>
+        <div class="float-right">
+          <button class="btn btn-secondary" @click="$emit('close')">Close</button>
+        </div>
       </div>
     </div>
   </div>

@@ -32,7 +32,7 @@
 
               <SDivider label="Explicit key-values" />
               <div class="accordion">
-                <input type="checkbox" name="accordion-checkbox" hidden />
+                <input type="checkbox" id="accordion-1" name="accordion-checkbox" hidden />
                 <label class="accordion-header" for="accordion-1">
                   <i class="icon icon-arrow-right mr-1"></i>
                   Explicit key-values

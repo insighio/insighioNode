@@ -14,7 +14,7 @@ sys.modules["ubinascii"] = binascii
 # import sys
 # module = type(sys)("my_module_name")
 # module.submodule = type(sys)("my_submodule_name")
-# module.submodule.something = sommething
+# module.submodule.something = something
 # sys.modules["my_module_name"] = module
 # sys.modules["my_module_name.my_submodule_name"] = module.submodule
 
