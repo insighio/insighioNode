@@ -15,9 +15,9 @@ def populateSDI12SensorSwitchList():
     _sdi12_sensor_switch_list = [None] * 11
 
     for i in range(1, 11):
-        pwr_on = cfg.get("_UC_IO_PWR_SDI_SNSR_" + str(i) + "_ΟΝ")
+        pwr_on = cfg.get("_UC_IO_PWR_SDI_SNSR_" + str(i) + "_ON")
         if pwr_on is None:
-            pwr_on = cfg.get("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ΟΝ")
+            pwr_on = cfg.get("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ON")
         _sdi12_sensor_switch_list[i] = pwr_on
 
 
@@ -60,7 +60,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
         set_sensor_power_on(_sdi12_sensor_switch_list[location])
     powerOffAllSwitchExcept(location)
     sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
-    read_sdi12_sensor(sdi12, address, measurements,location)
+    read_sdi12_sensor(sdi12, address, measurements, location)
     powerOffAllSwitchExcept()
 
 
@@ -130,16 +130,22 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         responseArrayMoisture = sdi12.get_measurement(address, "C")  # moisture with salinity
         responseArraySalinity = sdi12.get_measurement(address, "C1")  # salinity
 
-        parse_generic_sdi12(address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location)
+        parse_generic_sdi12(
+            address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location
+        )
         parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_ec", "uS/cm", "", location)  # dS/m
 
         cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
         if cfg_is_celsius:
             responseArrayTemperature = sdi12.get_measurement(address, "C2")
-            parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location)
+            parse_generic_sdi12(
+                address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location
+            )
         else:
             responseArrayTemperature = sdi12.get_measurement(address, "C5")
-            parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location)
+            parse_generic_sdi12(
+                address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location
+            )
     elif "li-cor" in manufacturer:
         responseArray = sdi12.get_measurement(address, "M0")
         parse_sensor_licor(address, responseArray, measurements, location)
@@ -152,7 +158,7 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
 
 
-def parse_sensor_meter(model ,address, responseArray, measurements, location=None):
+def parse_sensor_meter(model, address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 3:
             logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
@@ -165,12 +171,17 @@ def parse_sensor_meter(model ,address, responseArray, measurements, location=Non
         set_value_float(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
         set_value_float(measurements, variable_prefix + "_soil_ec", responseArray[2], "uS/cm")
 
-        if model == 'ter12': #apply functions
+        if model == "ter12":  # apply functions
             from math import pow
+
             calibratedCountsVWC = float(responseArray[0])
-            VWCmineral = 3.879E-4 * calibratedCountsVWC - 0.6956 #mineral soil calibration
-            VWCsoilless = 6.771E-10 * pow(calibratedCountsVWC, 3) - 5.105E-6 * pow(calibratedCountsVWC, 2) + 1.302E-2 * calibratedCountsVWC - 10.848 #soilless substrate calibration
-            VWCdielectric = pow(2.887E-9 * pow(calibratedCountsVWC, 3) - 2.08E-5 * pow(calibratedCountsVWC, 2) + 5.276E-2 * calibratedCountsVWC - 43.39, 2)
+            VWCmineral = 3.879e-4 * calibratedCountsVWC - 0.6956  # mineral soil calibration
+            VWCsoilless = (
+                6.771e-10 * pow(calibratedCountsVWC, 3) - 5.105e-6 * pow(calibratedCountsVWC, 2) + 1.302e-2 * calibratedCountsVWC - 10.848
+            )  # soilless substrate calibration
+            VWCdielectric = pow(
+                2.887e-9 * pow(calibratedCountsVWC, 3) - 2.08e-5 * pow(calibratedCountsVWC, 2) + 5.276e-2 * calibratedCountsVWC - 43.39, 2
+            )
 
             set_value_float(measurements, variable_prefix + "_vwc_mineral", VWCmineral * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
             set_value_float(measurements, variable_prefix + "_vwc_soilless", VWCsoilless * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
@@ -246,6 +257,7 @@ def parse_sensor_licor(address, responseArray, measurements, location=None):
     except Exception as e:
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
+
 def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit=None, postfix="", location=None):
     try:
         if not responseArray or len(responseArray) == 0:
@@ -285,11 +297,11 @@ def measure_4_20_mA_on_port(measurements, port_id):
         sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ON".format(port_id))
         if not sensor_on_pin:
             # in folllowing label, ON is written in greek...
-            sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ΟΝ".format(port_id))
+            sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ON".format(port_id))
 
         sensor_out_pin = cfg.get("_CUR_SNSR_OUT_{}".format(port_id))
 
-        _CURRENT_OFFSET_MA = 0.6 # fix for the deviation of values
+        _CURRENT_OFFSET_MA = 0.6  # fix for the deviation of values
 
         try:
             gpio_handler.set_pin_value(cfg.get("_UC_IO_CUR_SNS_ON"), 1)
@@ -298,7 +310,7 @@ def measure_4_20_mA_on_port(measurements, port_id):
             raw_mV = analog_generic.get_reading(sensor_out_pin)
             current_mA = round((raw_mV / (cfg.get("_SHUNT_OHMS") * cfg.get("_INA_GAIN"))) * 100) / 100
 
-            if current_mA > 3: # do apply offset
+            if current_mA > 3:  # do apply offset
                 current_mA += _CURRENT_OFFSET_MA
 
                 # if current_mA < 4:

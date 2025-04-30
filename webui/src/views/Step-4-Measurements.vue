@@ -120,6 +120,7 @@ import SSelect from "@/components/SSelect.vue"
 import ShieldScale from "./shields/ShieldScale.vue"
 import ShieldDigitalAnalog from "./shields/ShieldDigitalAnalog.vue"
 import ShieldAdvind from "./shields/ShieldAdvind.vue"
+import ShieldEnviro from "./shields/ShieldEnviro.vue"
 import CustomNamingDialog from "@/views/aux/CustomNamingDialog.vue"
 
 export default {
@@ -133,6 +134,7 @@ export default {
     ShieldScale,
     ShieldDigitalAnalog,
     ShieldAdvind,
+    ShieldEnviro,
     CustomNamingDialog
   },
   data() {
@@ -160,9 +162,10 @@ export default {
         { value: false, label: "Fahrenheit (F)" }
       ],
       tabs: [
-        { id: "scale", label: "Shield Digital/Scale", component: "ShieldScale" },
-        { id: "dig_analog", label: "Shield I2C/Analog", component: "ShieldDigitalAnalog" },
-        { id: "advind", label: "Shield SDI-12", component: "ShieldAdvind" }
+        { id: "scale", label: "Digital/Scale", component: "ShieldScale" },
+        { id: "dig_analog", label: "I2C/Analog", component: "ShieldDigitalAnalog" },
+        { id: "advind", label: "SDI-12", component: "ShieldAdvind" },
+        { id: "enviro", label: "SDI-12/Modbus/ADC", component: "ShieldEnviro" }
         //{ id: "accel", label: "Shield Accelerometer", component: "ShieldAccelerometer" }
       ],
       activeTab: "scale",
