@@ -4,7 +4,7 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
 
-from .dictionary_utils import set_value
+from .dictionary_utils import set_value, _get, _has
 
 from sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
 
@@ -80,7 +80,29 @@ def initialize_configurations():
         logging.exception(e, "Error loading Pulse Counter config")
 
 
-def executeSDI12Measurements(measurements):
+def shield_measurements(measurements):
+    io_expander_init()
+
+    initialize_configurations()
+
+    enable_regulator()
+
+    execute_sdi12_measurements(measurements)
+
+    execute_modbus_measurements(measurements)
+
+    execute_adc_measurements(measurements)
+
+    execute_pulse_counter_measurements(measurements)
+
+    # power off SDI12 regulator
+    disable_regulator()
+
+
+##### SDI12 functions #####
+
+
+def execute_sdi12_measurements(measurements):
     io_expander_power_on_sdi12_sensors()
 
     if _has(_sdi12_config, "warmupTime"):
@@ -108,25 +130,6 @@ def executeSDI12Measurements(measurements):
         sdi12.close()
 
     io_expander_power_off_sdi12_sensors()
-
-
-def shield_measurements(measurements):
-    io_expander_init()
-
-    initialize_configurations()
-
-    enable_regulator()
-
-    executeSDI12Measurements(measurements)
-
-    # get 4-20mA measurements
-    # try:
-    #     current_sense_4_20mA(measurements)
-    # except Exception as e:
-    #     logging.exception(e, "Exception while reading 4_20mA data")
-
-    # power off SDI12 regulator
-    disable_regulator()
 
 
 def read_sdi12_sensor(sdi12, measurements, sensor):
@@ -194,6 +197,21 @@ def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_e
         parse_sensor_licor(address, responseArray, measurements, location)
     else:
         parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "_" + command_to_execute.lower(), location)
+
+
+#### Modbus functions #####
+def execute_modbus_measurements(measurements):
+    pass
+
+
+#### ADC functions #####
+def execute_adc_measurements(measurements):
+    pass
+
+
+#### Pulse Counter functions #####
+def execute_pulse_counter_measurements(measurements):
+    pass
 
 
 def execute_transformation(measurements, name, raw_value, transformator):
