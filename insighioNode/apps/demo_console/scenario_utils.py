@@ -124,6 +124,10 @@ def get_measurements(cfg_dummy=None):
             from . import scenario_advind_utils
 
             scenario_advind_utils.shield_measurements(measurements)
+        elif shield_name == cfg.get("_CONST_SHIELD_ENVIRO"):
+            from . import scenario_enviro_utils
+
+            scenario_enviro_utils.shield_measurements(measurements)
         elif shield_name == cfg.get("_CONST_SHIELD_ACCELEROMETER"):
             shield_accel_measurements(measurements)
         else:  # if shield_name == cfg.get("_CONST_SHIELD_DIG_ANALOG"):
@@ -481,16 +485,19 @@ def storeMeasurement(measurements, force_store=False):
     message_buffer.timestamp_measurements(measurements)
     return message_buffer.store_measurement(measurements, force_store)
 
+
 def shield_accel_measurements(measurements):
     read_accelerometer(measurements, True)
 
+
 def calculate_baseline(asm330Obj):
     from . import running_stats
+
     statsX = running_stats.RunningStats()
     statsY = running_stats.RunningStats()
     statsZ = running_stats.RunningStats()
 
-    for i in range(0,1000):
+    for i in range(0, 1000):
         (asm330_accX, asm330_accY, asm330_accZ) = asm330Obj.get_reading(True)
         if asm330_accX is None or asm330_accY is None or asm330_accZ is None:
             continue
@@ -503,6 +510,7 @@ def calculate_baseline(asm330Obj):
 
     return (statsX.mean(), statsY.mean(), statsZ.mean())
 
+
 def storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total, do_store_measurement=True):
     set_value_float(measurement, "asm330_accX", statsX.mean(), SenmlUnits.SENML_UNIT_ACCELERATION)
     set_value_float(measurement, "asm330_accY", statsY.mean(), SenmlUnits.SENML_UNIT_ACCELERATION)
@@ -512,6 +520,7 @@ def storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_o
 
     if do_store_measurement:
         storeMeasurement(measurement, True)
+
 
 def read_accelerometer(measurements=None, single_measurement=False):
     logging.info("starting [read_accelerometer] thread")
@@ -533,6 +542,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
     from math import fabs, pow, sqrt
 
     from . import running_stats
+
     statsX = running_stats.RunningStats()
     statsY = running_stats.RunningStats()
     statsZ = running_stats.RunningStats()
@@ -563,8 +573,8 @@ def read_accelerometer(measurements=None, single_measurement=False):
 
     previous_reported_total = []
     dev_is_operating = -1
-    idle_value = 100000 # intentionally big value to drop exclude it in the iteration of min calculation
-    (baseX, baseY, baseZ) =  calculate_baseline(asm330)
+    idle_value = 100000  # intentionally big value to drop exclude it in the iteration of min calculation
+    (baseX, baseY, baseZ) = calculate_baseline(asm330)
 
     while 1:
 
@@ -598,41 +608,44 @@ def read_accelerometer(measurements=None, single_measurement=False):
                 storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
 
             elif previous_reported_total[0] != 0:
-                 previous_reported_total.reverse()
-                 two_values_ago = previous_reported_total.pop()
-                 total_diff = (current_total - two_values_ago) / min(two_values_ago, current_total)
-                 previous_reported_total.append(current_total)
+                previous_reported_total.reverse()
+                two_values_ago = previous_reported_total.pop()
+                total_diff = (current_total - two_values_ago) / min(two_values_ago, current_total)
+                previous_reported_total.append(current_total)
 
-                 if fabs(total_diff) > 1: # big vibration, so report it.
+                if fabs(total_diff) > 1:  # big vibration, so report it.
                     dev_is_operating_updated = 1 if total_diff > 0 else 0
-                    if dev_is_operating == 1 and dev_is_operating_updated == 0: # if dropping check if going to idle
+                    if dev_is_operating == 1 and dev_is_operating_updated == 0:  # if dropping check if going to idle
                         drop_diff_from_idle = (current_total - idle_value) / min(idle_value, current_total)
 
                         # if current vibraation has diff over 100% from the min idle, consider it non idle
                         if drop_diff_from_idle > 1:
-                            dev_is_operating_updated = 1 # do not consider that dev has dropped to idle.
+                            dev_is_operating_updated = 1  # do not consider that dev has dropped to idle.
 
                     dev_is_operating = dev_is_operating_updated
 
                     storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
-                 else:
+                else:
                     logging.debug("Ignoring low intensity vibration: diff: {}".format(total_diff))
 
-            idle_value = min(idle_value, max(current_total, 5)) # set minimum vibration to value 5
+            idle_value = min(idle_value, max(current_total, 5))  # set minimum vibration to value 5
 
             statsX.clear()
             statsY.clear()
             statsZ.clear()
 
-            (baseX, baseY, baseZ) =  calculate_baseline(asm330)
+            (baseX, baseY, baseZ) = calculate_baseline(asm330)
 
             next_report = now + REPORT_PERIOD_MS
 
         sleep_ms(1)
 
+
 def executePostConnectionOperations():
     pass
 
+
 def executeStartAccelerometerReading():
     import _thread
+
     _thread.start_new_thread(read_accelerometer, ())

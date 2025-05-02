@@ -20,7 +20,7 @@
           <tr v-for="(row, index) in sdi12Config" :key="index">
             <td>{{ "SDI-12 n." + (index + 1) }}</td>
             <td>
-              <select class="form-select" v-model="row.sensorAddress">
+              <select class="form-select" v-model="row.address">
                 <option v-for="opt in sdi12sensorAddressOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </option>
@@ -183,12 +183,13 @@ export default {
       sdi12CommandOptions: [
         { value: "M", label: "M" },
         { value: "C", label: "C" },
+        { value: "R", label: "R" },
         { value: "V", label: "V" },
         { value: "X", label: "X" }
       ],
       sdi12Config: [],
       sdi12DefaultRow: {
-        sensorAddress: 1,
+        address: 1,
         measCmd: "M",
         measSubCmd: ""
       },
@@ -327,7 +328,7 @@ export default {
   },
   mounted() {
     this.sdi12sensorAddressOptions = []
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 0; i <= 9; i++) {
       this.sdi12sensorAddressOptions.push({ value: i, label: i.toString() })
     }
     // Add your mounted logic here

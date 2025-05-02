@@ -67,3 +67,21 @@ def set_value_float(measurements, key, value, unit=None, precision=2, multiplier
             )
         except Exception as e:
             logging.exception(e, "set_value_float error: [{}]".format(value))
+
+
+def _has(obj, key):
+    if not obj or not key:
+        return False
+    try:
+        return key in obj
+    except:
+        return False
+
+
+def _get(obj, key):
+    if not obj or not key:
+        return None
+    try:
+        return obj[key]
+    except:
+        return None

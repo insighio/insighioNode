@@ -10,6 +10,8 @@ _UC_IO_RCV_ON = 42
 _UC_IO_DRV_IN = 41
 _UC_IO_SNSR_REG_ON = 8
 
+_UC_IO_EXPANDER_ADDR = 0x20
+
 # needs revisiting
 
 _UC_IO_PWR_SDI_SNSR_1_ON = 42
@@ -32,9 +34,9 @@ UC_IO_DGTL_SNSR_READ = 2
 _I2C_CHIP_ID_ADDRESS = 0x54
 
 # prettier-ignore
-_MEAS_SDI12 = '<meas-sdi12>'
-_MEAS_MODBUS = '<meas-modbus>'
-_MEAS_ADC = '<meas-adc>'
-_MEAS_PULSECOUNTER = '<meas-pulseCounter>'
+_MEAS_SDI12 = "<meas-sdi12>"
+_MEAS_MODBUS = "<meas-modbus>"
+_MEAS_ADC = "<meas-adc>"
+_MEAS_PULSECOUNTER = "<meas-pulseCounter>"
 
 # prettier-ignore-end
