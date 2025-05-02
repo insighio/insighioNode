@@ -77,10 +77,6 @@ def initialize_configurations():
         logging.exception(e, "Error loading Pulse Counter config")
 
 
-def executeSDI12Measurement(sdi12, measurements, sensor):
-    read_sdi12_sensor(sdi12, address, measurements, location)
-
-
 def executeSDI12Measurements(measurements):
     io_expander_power_on_sdi12_sensors()
 
@@ -102,7 +98,7 @@ def executeSDI12Measurements(measurements):
         sdi12.wait_after_each_send(500)
 
         for sensor in _get(_sdi12_config, "sensors"):
-            executeSDI12Measurement(sdi12, measurements, sensor)
+            read_sdi12_sensor(sdi12, measurements, sensor)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
     if sdi12:
@@ -153,6 +149,7 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
         if not responseArray:
             logging.error("read_sdi12_sensor - No response from sensor in address: [" + str(address) + "]")
             return
+
         parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements)
 
         # post-parse actions
