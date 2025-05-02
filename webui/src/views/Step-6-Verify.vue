@@ -72,6 +72,9 @@ export default {
       this.configToStoreEven = []
       this.$cookies.keys().forEach((key, index) => {
         const item = { key: key, value: this.$cookies.get(key) }
+
+        if (item.value === undefined || item.value === null || item.value === "null") return
+
         this.configToStore.push(item)
         if (index % 2 === 0) {
           this.configToStoreOdd.push(item)
