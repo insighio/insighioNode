@@ -1,9 +1,12 @@
 from utime import sleep_ms
-from .dictionary_utils import set_value_float, set_value_int, set_value, _has, _get
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
+
+from .dictionary_utils import set_value
+
+from sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
 
 from . import cfg
 
@@ -191,124 +194,6 @@ def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_e
         parse_sensor_licor(address, responseArray, measurements, location)
     else:
         parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "_" + command_to_execute.lower(), location)
-
-
-def parse_sensor_meter(model, address, responseArray, measurements, location=None):
-    try:
-        if not responseArray or len(responseArray) < 3:
-            logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
-            return
-
-        location_info = ("_" + str(location)) if location else ""
-        variable_prefix = "meter_" + address + location_info
-
-        set_value_float(measurements, variable_prefix + "_count_vwc", responseArray[0], SenmlUnits.SENML_UNIT_COUNTER)
-        set_value_float(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-        set_value_float(measurements, variable_prefix + "_soil_ec", responseArray[2], "uS/cm")
-
-        if model == "ter12":  # apply functions
-            from math import pow
-
-            calibratedCountsVWC = float(responseArray[0])
-            VWCmineral = 3.879e-4 * calibratedCountsVWC - 0.6956  # mineral soil calibration
-            VWCsoilless = (
-                6.771e-10 * pow(calibratedCountsVWC, 3) - 5.105e-6 * pow(calibratedCountsVWC, 2) + 1.302e-2 * calibratedCountsVWC - 10.848
-            )  # soilless substrate calibration
-            VWCdielectric = pow(
-                2.887e-9 * pow(calibratedCountsVWC, 3) - 2.08e-5 * pow(calibratedCountsVWC, 2) + 5.276e-2 * calibratedCountsVWC - 43.39, 2
-            )
-
-            set_value_float(measurements, variable_prefix + "_vwc_mineral", VWCmineral * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
-            set_value_float(measurements, variable_prefix + "_vwc_soilless", VWCsoilless * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
-            set_value_float(measurements, variable_prefix + "_vwc_dielectric", VWCdielectric, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
-    except Exception as e:
-        logging.exception(e, "Error processing meter sdi responseArray: [{}]".format(responseArray))
-
-
-def parse_sensor_acclima(address, responseArray, measurements, location=None):
-    try:
-        if not responseArray or len(responseArray) < 5:
-            logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
-            return
-
-        location_info = ("_" + str(location)) if location else ""
-        variable_prefix = "acclima_" + address + location_info
-
-        set_value_float(measurements, variable_prefix + "_vwc", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
-        set_value_float(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-        set_value_float(measurements, variable_prefix + "_rel_perm", responseArray[2])
-        set_value_float(measurements, variable_prefix + "_soil_ec", responseArray[3], "uS/cm")
-        set_value_float(measurements, variable_prefix + "_pore_water_ec", responseArray[4], "uS/cm")
-    except Exception as e:
-        logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
-
-
-def parse_sensor_implexx(address, responseArray, measurements, location=None):
-    try:
-        if not responseArray or len(responseArray) < 5:
-            logging.error("parse_sensor_implexx: unrecognized responseArray: {}".format(responseArray))
-            return
-
-        location_info = ("_" + str(location)) if location else ""
-        variable_prefix = "implexx_" + address + location_info
-
-        set_value_float(measurements, variable_prefix + "_sap_flow", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_LITER_PER_HOUR)
-        set_value_float(
-            measurements, variable_prefix + "_hv_outer", responseArray[1], SenmlSecondaryUnits.SENML_SEC_UNIT_CENTIMETRE_PER_HOUR
-        )
-        set_value_float(
-            measurements, variable_prefix + "_hv_inner", responseArray[2], SenmlSecondaryUnits.SENML_SEC_UNIT_CENTIMETRE_PER_HOUR
-        )
-        set_value_float(measurements, variable_prefix + "_log_rt_a_outer", responseArray[3], None, 5)
-        set_value_float(measurements, variable_prefix + "_log_rt_a_inner", responseArray[4], None, 5)
-    except Exception as e:
-        logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
-
-
-def parse_sensor_licor(address, responseArray, measurements, location=None):
-    try:
-        if not responseArray or len(responseArray) < 5:
-            logging.error("parse_sensor_licor: unrecognized responseArray: {}".format(responseArray))
-            return
-
-        location_info = ("_" + str(location)) if location else ""
-        variable_prefix = "licor_" + address + location_info
-
-        set_value_float(measurements, variable_prefix + "_et", responseArray[0], SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIMETER, 3)
-        set_value_float(measurements, variable_prefix + "_le", responseArray[1], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
-        set_value_float(measurements, variable_prefix + "_h", responseArray[2], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER, 1)
-        set_value_float(measurements, variable_prefix + "_vpd", responseArray[3], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
-        set_value_float(measurements, variable_prefix + "_pa", responseArray[4], SenmlSecondaryUnits.SENML_SEC_UNIT_HECTOPASCAL, 1, 10)
-        cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
-        if cfg_is_celsius:
-            set_value_float(measurements, variable_prefix + "_ta", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, 2)
-        else:
-            set_value_float(measurements, variable_prefix + "_taf", responseArray[5], None, 2, 9 / 5)
-            calculated_value = measurements[variable_prefix + "_taf"]["value"] + 32
-            set_value_float(measurements, variable_prefix + "_taf", calculated_value, SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, 2)
-        set_value_float(measurements, variable_prefix + "_rh", responseArray[6], SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY, 2)
-        set_value_int(measurements, variable_prefix + "_seq", responseArray[7], None)
-        set_value_int(measurements, variable_prefix + "_diag", responseArray[8], None)
-    except Exception as e:
-        logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
-
-
-def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit=None, postfix="", location=None):
-    try:
-        if not responseArray or len(responseArray) == 0:
-            logging.error("Unrecognized responseArray: {}".format(responseArray))
-            return
-
-        location_info = ("_" + str(location)) if location else ""
-        variable_prefix = prefix + "_" + address + location_info + postfix
-
-        for i, val in enumerate(responseArray):
-            try:
-                set_value_float(measurements, variable_prefix + "_" + str(i), val, unit)
-            except Exception as e:
-                logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(val))
-    except Exception as e:
-        logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(responseArray))
 
 
 def execute_transformation(measurements, name, raw_value, transformator):
