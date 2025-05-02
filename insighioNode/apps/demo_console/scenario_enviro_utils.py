@@ -93,7 +93,7 @@ def executeSDI12Measurements(measurements):
 
     try:
         sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
-        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
+        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 0, 1)
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
