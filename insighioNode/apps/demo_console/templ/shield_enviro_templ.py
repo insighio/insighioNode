@@ -1,3 +1,5 @@
+# prettier-ignore-start
+
 _SELECTED_SHIELD = _CONST_SHIELD_ENVIRO
 
 """ SDI-12 """
@@ -29,7 +31,10 @@ UC_IO_DGTL_SNSR_READ = 2
 """ Chip ID """
 _I2C_CHIP_ID_ADDRESS = 0x54
 
-_MEAS_SDI12 = "<meas-sdi12>"
-_MEAS_MODBUS = "<meas-modbus>"
-_MEAS_ADC = "<meas-adc>"
-_MEAS_PULSECOUNTER = "<meas-pulseCounter>"
+# prettier-ignore
+_MEAS_SDI12 = '<meas-sdi12>'
+_MEAS_MODBUS = '<meas-modbus>'
+_MEAS_ADC = '<meas-adc>'
+_MEAS_PULSECOUNTER = '<meas-pulseCounter>'
+
+# prettier-ignore-end

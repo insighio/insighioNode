@@ -176,7 +176,8 @@ export default {
         ins_gen_s3: "dig_analog",
         advind: "advind",
         scale: "scale",
-        dig_analog: "dig_analog"
+        dig_analog: "dig_analog",
+        enviro: "enviro"
       },
       transitionDirection: "slide-left", // Default transition direction
       isMeasurementNamingDialogOpen: false,

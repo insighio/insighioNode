@@ -14,16 +14,16 @@
             <button class="btn" :disabled="disableButtons" @click="operationSelected('LoRa')">LoRa</button>
             <button class="btn" :disabled="disableButtons" @click="operationSelected('Satellite')">Satellite</button>
           </div>
-          <div v-if="activeNetwork === 'WiFi'">
+          <div v-if="evaluatedNetwork === 'wifi'">
             <NetworkWifi @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-else-if="activeNetwork === 'Cellular'">
+          <div v-else-if="evaluatedNetwork === 'cellular'">
             <NetworkCellular @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-else-if="activeNetwork === 'LoRa'">
+          <div v-else-if="evaluatedNetwork === 'lora'">
             <NetworkLoRa @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
-          <div v-else-if="activeNetwork === 'Satellite'">
+          <div v-else-if="evaluatedNetwork === 'satellite'">
             <NetworkSatAstro @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
           </div>
         </div>
@@ -54,6 +54,12 @@ export default {
     NetworkLoRa,
     NetworkSatAstro
   },
+  computed: {
+    evaluatedNetwork() {
+      if (this.activeNetwork) return this.activeNetwork.toLowerCase()
+      else return undefined
+    }
+  },
   data() {
     return {
       activeNetwork: undefined,
@@ -66,10 +72,12 @@ export default {
   },
   methods: {
     initializeValues() {
-      if (this.settingsAcquired) return
+      if (this.settingsAcquired || this.localLoading) return
 
       this.localLoading = true
       this.disableButtonsLocal()
+
+      console.log("in here.....")
 
       fetchInternal("/settings")
         .then((data) => {

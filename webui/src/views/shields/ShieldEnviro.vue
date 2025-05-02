@@ -8,6 +8,7 @@
             <th>Index</th>
             <th>Sensor ID</th>
             <th>Command</th>
+            <th>Sub Command</th>
             <th>
               <button :disabled="sdi12Config.length >= 10" class="btn btn-primary" @click="addSdi12Row">
                 <i class="icon icon-plus"></i>
@@ -29,6 +30,9 @@
               <select class="form-select" v-model="row.measCmd">
                 <option v-for="opt in sdi12CommandOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
+            </td>
+            <td>
+              <input type="text" class="form-input" maxlength="5" v-model="row.measSubCmd" />
             </td>
             <td>
               <button class="btn btn-primary" @click="sdi12Config.splice(index, 1)">
@@ -178,12 +182,15 @@ export default {
       ],
       sdi12CommandOptions: [
         { value: "M", label: "M" },
-        { value: "C", label: "C" }
+        { value: "C", label: "C" },
+        { value: "V", label: "V" },
+        { value: "X", label: "X" }
       ],
       sdi12Config: [],
       sdi12DefaultRow: {
         sensorAddress: 1,
-        measCmd: "M"
+        measCmd: "M",
+        measSubCmd: ""
       },
       sdi12WarmupTimeMs: 1000,
       adcDefaultConfig: [
@@ -262,31 +269,33 @@ export default {
   methods: {
     getJsonObjectFromCookies(cookieName) {
       const cookieValue = this.$cookies.get(cookieName)
+
+      // console.log("Cookie: " + cookieName + ", value: " + cookieValue + ", type: " + typeof cookieValue)
       if (cookieValue) {
         try {
           return JSON.parse(cookieValue)
         } catch (e) {
-          console.error("Error parsing JSON from cookie:", e)
+          //  console.error("Error parsing JSON from cookie:", e)
         }
       }
-      return null
+      return cookieValue
     },
     initializeValues() {
-      this.sdi12Config = this.getJsonObjectFromCookies("meas_sdi12")
-        ? this.getJsonObjectFromCookies("meas_sdi12").sensors
+      this.sdi12Config = this.getJsonObjectFromCookies("meas-sdi12")
+        ? this.getJsonObjectFromCookies("meas-sdi12").sensors
         : []
-      this.sdi12WarmupTimeMs = this.getJsonObjectFromCookies("meas_sdi12")
-        ? this.getJsonObjectFromCookies("meas_sdi12").warmupTime
+      this.sdi12WarmupTimeMs = this.getJsonObjectFromCookies("meas-sdi12")
+        ? this.getJsonObjectFromCookies("meas-sdi12").warmupTime
         : 1000
 
-      this.modbusConfig = this.getJsonObjectFromCookies("meas_modbus")
-        ? this.getJsonObjectFromCookies("meas_modbus")
+      this.modbusConfig = this.getJsonObjectFromCookies("meas-modbus")
+        ? this.getJsonObjectFromCookies("meas-modbus")
         : []
-      this.adcConfig = this.getJsonObjectFromCookies("meas_adc")
-        ? this.getJsonObjectFromCookies("meas_adc")
+      this.adcConfig = this.getJsonObjectFromCookies("meas-adc")
+        ? this.getJsonObjectFromCookies("meas-adc")
         : this.adcDefaultConfig
-      this.pulseCounterConfig = this.getJsonObjectFromCookies("meas_pulseCounter")
-        ? this.getJsonObjectFromCookies("meas_pulseCounter")
+      this.pulseCounterConfig = this.getJsonObjectFromCookies("meas-pulseCounter")
+        ? this.getJsonObjectFromCookies("meas-pulseCounter")
         : this.pulseCounterDefaultConfig
     },
     addSdi12Row() {
@@ -299,19 +308,19 @@ export default {
       this.storeData()
     },
     clearCookies() {
-      this.$cookies.remove("meas_sdi12")
-      this.$cookies.remove("meas_modbus")
-      this.$cookies.remove("meas_adc")
-      this.$cookies.remove("meas_pulseCounter")
+      this.$cookies.remove("meas-sdi12")
+      this.$cookies.remove("meas-modbus")
+      this.$cookies.remove("meas-adc")
+      this.$cookies.remove("meas-pulseCounter")
     },
 
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas_sdi12", JSON.stringify({ sensors: this.sdi12Config, warmupTime: this.sdi12WarmupTimeMs }))
-      this.$cookies.set("meas_modbus", JSON.stringify(this.modbusConfig))
-      this.$cookies.set("meas_adc", JSON.stringify(this.adcConfig))
-      this.$cookies.set("meas_pulseCounter", JSON.stringify(this.pulseCounterConfig))
+      this.$cookies.set("meas-sdi12", JSON.stringify({ sensors: this.sdi12Config, warmupTime: this.sdi12WarmupTimeMs }))
+      this.$cookies.set("meas-modbus", JSON.stringify(this.modbusConfig))
+      this.$cookies.set("meas-adc", JSON.stringify(this.adcConfig))
+      this.$cookies.set("meas-pulseCounter", JSON.stringify(this.pulseCounterConfig))
 
       this.requestGoNext()
     }

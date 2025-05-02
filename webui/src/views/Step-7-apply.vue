@@ -51,7 +51,9 @@ export default {
           config[key] = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
         } else if (
           (key === "meas-name-mapping" || key === "meas-name-ext-mapping" || key === "meas-keyvalue") &&
-          value
+          value &&
+          value !== "null" &&
+          value !== null
         ) {
           encodedParams[key] = encodeURIComponent(value)
           config[key] = value

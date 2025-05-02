@@ -67,14 +67,18 @@ export default {
   methods: {
     // Add your component methods here
     initializeValues() {
-      // Initialize values or perform any setup needed when the component is mounted
-
-      this.$cookies.keys().forEach((key) => {
-        this.configToStore.push({ key: key, value: this.$cookies.get(key) })
+      this.configToStore = []
+      this.configToStoreOdd = []
+      this.configToStoreEven = []
+      this.$cookies.keys().forEach((key, index) => {
+        const item = { key: key, value: this.$cookies.get(key) }
+        this.configToStore.push(item)
+        if (index % 2 === 0) {
+          this.configToStoreOdd.push(item)
+        } else {
+          this.configToStoreEven.push(item)
+        }
       })
-
-      this.configToStoreOdd = this.configToStore.filter((_, index) => index % 2 === 0)
-      this.configToStoreEven = this.configToStore.filter((_, index) => index % 2 !== 0)
     }
   }
 }

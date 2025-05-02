@@ -3,3 +3,4 @@ node_modules
 src/assets
 public
 dist
+insighioNode/apps/demo_console/templ/*
