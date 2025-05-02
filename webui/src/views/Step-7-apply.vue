@@ -39,13 +39,21 @@ export default {
       let isConfigValid = false
 
       this.$cookies.keys().forEach((key) => {
-        const value = this.$cookies.get(key)
+        let value = this.$cookies.get(key)
+
+        if (typeof value === "object") {
+          value = JSON.stringify(value)
+        }
+
         isConfigValid = true
         if (key === "wifi-ssid" || key === "wifi-pass") {
-          encodedParams[key] = encodeURIComponent(config[key])
+          encodedParams[key] = encodeURIComponent(value)
           config[key] = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
-        } else if (key === "meas-name-mapping" || key === "meas-name-ext-mapping" || key === "meas-keyvalue") {
-          encodedParams[key] = encodeURIComponent(config[key])
+        } else if (
+          (key === "meas-name-mapping" || key === "meas-name-ext-mapping" || key === "meas-keyvalue") &&
+          value
+        ) {
+          encodedParams[key] = encodeURIComponent(value)
           config[key] = value
         } else config[key] = value
       })

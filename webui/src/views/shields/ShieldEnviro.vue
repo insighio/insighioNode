@@ -9,14 +9,14 @@
             <th>Sensor ID</th>
             <th>Command</th>
             <th>
-              <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">
+              <button :disabled="sdi12Config.length >= 10" class="btn btn-primary" @click="addSdi12Row">
                 <i class="icon icon-plus"></i>
               </button>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in sdi12Rows" :key="index">
+          <tr v-for="(row, index) in sdi12Config" :key="index">
             <td>{{ "SDI-12 n." + (index + 1) }}</td>
             <td>
               <select class="form-select" v-model="row.sensorAddress">
@@ -31,7 +31,7 @@
               </select>
             </td>
             <td>
-              <button class="btn btn-primary" @click="sdi12Rows.splice(index, 1)">
+              <button class="btn btn-primary" @click="sdi12Config.splice(index, 1)">
                 <i class="icon icon-delete"></i>
               </button>
             </td>
@@ -132,17 +132,17 @@
     </div>
     <SDivider label="Pulse Counter" />
     <div class="col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
-      <div class="container">
-        <SSwitch label="Pulse Counter enable" v-model:value="pulseCounterEnable" />
-        <div v-if="pulseCounterEnable" class="col-12">
+      <div class="container" v-for="pc in pulseCounterConfig" :key="pc.id">
+        <SSwitch :label="'Pulse Counter ' + pc.id" v-model:value="pc.enable" />
+        <div v-if="pc.enable" class="col-12">
           <div class="form-group columns">
             <div class="column col-1 col-mr-auto"></div>
             <div class="column col-9 col-mr-auto">
-              <SSwitch label="High Frequency" v-model:value="pulseCounterHighFreq" :colsLabel="4" :colsInput="8" />
+              <SSwitch label="High Frequency" v-model:value="pc.highFreq" :colsLabel="4" :colsInput="8" />
               <SInput
                 label="Pulse Counter formula"
-                v-model:value="pulseCounterFormula"
-                @update:value="pulseCounterFormula = $event"
+                v-model:value="pc.formula"
+                @update:value="pc.formula = $event"
                 :tooltip="tooltip"
               />
             </div>
@@ -180,13 +180,13 @@ export default {
         { value: "M", label: "M" },
         { value: "C", label: "C" }
       ],
-      sdi12Rows: [],
+      sdi12Config: [],
       sdi12DefaultRow: {
         sensorAddress: 1,
         measCmd: "M"
       },
       sdi12WarmupTimeMs: 1000,
-      adcConfig: [
+      adcDefaultConfig: [
         {
           id: 1,
           enabled: false,
@@ -208,6 +208,7 @@ export default {
           formula: "v"
         }
       ],
+      adcConfig: [],
       modbusConfig: [],
       modbusDefaultRow: {
         slaveAddress: 0,
@@ -237,63 +238,59 @@ export default {
         { value: 0, label: "-" },
         { value: 1, label: ".0" },
         { value: 2, label: ".00" },
-        { value: 3, label: ".000" }
+        { value: 3, label: ".000" },
+        { value: 4, label: ".0000" }
       ],
-
-      sens_4_20_num1_enable: false,
-      sens_4_20_num1_formula: "v",
-      sens_4_20_num2_enable: false,
-      sens_4_20_num2_formula: "v",
-      pulseCounterEnable: false,
-      pulseCounterHighFreq: false,
-      pulseCounterFormula: "v",
+      pulseCounterDefaultConfig: [
+        {
+          id: 1,
+          enabled: false,
+          formula: "v",
+          highFreq: false
+        },
+        {
+          id: 2,
+          enabled: false,
+          formula: "v",
+          highFreq: false
+        }
+      ],
+      pulseCounterConfig: [],
       tooltip: "python script to\ntransform raw value (v)\nfrom millivolt\nto meaningful value\nex: 2*v + v**2"
     }
   },
   methods: {
-    initializeValues() {
-      this.sdi12Rows = []
-      for (let i = 1; i <= 10; ++i) {
-        const rowEnabled = this.strToJSValue(this.$cookies.get("meas-sdi-" + i + "-enabled"))
-        const rowLoc = this.$cookies.get("meas-sdi-" + i + "-loc")
-        const rowAddress = this.$cookies.get("meas-sdi-" + i + "-address")
-
-        if (
-          rowEnabled === undefined ||
-          rowEnabled === null ||
-          !rowLoc ||
-          rowAddress === undefined ||
-          rowAddress === null
-        ) {
-          continue
+    getJsonObjectFromCookies(cookieName) {
+      const cookieValue = this.$cookies.get(cookieName)
+      if (cookieValue) {
+        try {
+          return JSON.parse(cookieValue)
+        } catch (e) {
+          console.error("Error parsing JSON from cookie:", e)
         }
-        this.sdi12Rows.push({ sensorAddress: rowAddress, active: rowEnabled })
       }
-
-      // if (this.sdi12Rows.length === 0) {
-      //   this.sdi12Rows.push({ sensorAddress: 1, boardLocation: "1", measCmd: "M" })
-      // }
-
-      this.sdi12WarmupTimeMs = this.$cookies.get("meas-sdi-warmup-time")
-        ? this.$cookies.get("meas-sdi-warmup-time")
+      return null
+    },
+    initializeValues() {
+      this.sdi12Config = this.getJsonObjectFromCookies("meas_sdi12")
+        ? this.getJsonObjectFromCookies("meas_sdi12").sensors
+        : []
+      this.sdi12WarmupTimeMs = this.getJsonObjectFromCookies("meas_sdi12")
+        ? this.getJsonObjectFromCookies("meas_sdi12").warmupTime
         : 1000
-      this.sens_4_20_num1_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-1-enable"), false)
-      this.sens_4_20_num2_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-2-enable"), false)
-      this.sens_4_20_num1_formula = this.$cookies.get("meas-4-20-snsr-1-formula")
-        ? this.$cookies.get("meas-4-20-snsr-1-formula")
-        : "v"
-      this.sens_4_20_num2_formula = this.$cookies.get("meas-4-20-snsr-2-formula")
-        ? this.$cookies.get("meas-4-20-snsr-2-formula")
-        : "v"
 
-      this.pulseCounterEnable = this.strToJSValue(this.$cookies.get("meas-pcnt-1-enable"), false)
-      this.pulseCounterHighFreq = this.strToJSValue(this.$cookies.get("meas-pcnt-1-high-freq"), false)
-      this.pulseCounterFormula = this.$cookies.get("meas-pcnt-1-formula")
-        ? this.$cookies.get("meas-pcnt-1-formula")
-        : "1"
+      this.modbusConfig = this.getJsonObjectFromCookies("meas_modbus")
+        ? this.getJsonObjectFromCookies("meas_modbus")
+        : []
+      this.adcConfig = this.getJsonObjectFromCookies("meas_adc")
+        ? this.getJsonObjectFromCookies("meas_adc")
+        : this.adcDefaultConfig
+      this.pulseCounterConfig = this.getJsonObjectFromCookies("meas_pulseCounter")
+        ? this.getJsonObjectFromCookies("meas_pulseCounter")
+        : this.pulseCounterDefaultConfig
     },
     addSdi12Row() {
-      if (this.sdi12Rows.length < 10) this.sdi12Rows.push({ ...this.sdi12DefaultRow })
+      if (this.sdi12Config.length < 10) this.sdi12Config.push({ ...this.sdi12DefaultRow })
     },
     addModbusRow() {
       this.modbusConfig.push({ ...this.modbusDefaultRow })
@@ -302,44 +299,19 @@ export default {
       this.storeData()
     },
     clearCookies() {
-      this.$cookies.remove("meas-4-20-snsr-1-enable")
-      this.$cookies.remove("meas-4-20-snsr-2-enable")
-      this.$cookies.remove("meas-4-20-snsr-1-formula")
-      this.$cookies.remove("meas-4-20-snsr-2-formula")
-      this.$cookies.remove("meas-pcnt-1-enable")
-      this.$cookies.remove("meas-pcnt-1-cnt-on-rising")
-      this.$cookies.remove("meas-pcnt-1-formula")
-      this.$cookies.remove("meas-pcnt-1-high-freq")
-
-      this.$cookies.remove("meas-sdi-warmup-time")
-
-      for (let i = 1; i < 11; ++i) {
-        this.$cookies.remove("meas-sdi-" + i + "-enabled")
-        this.$cookies.remove("meas-sdi-" + i + "-address")
-        this.$cookies.remove("meas-sdi-" + i + "-loc")
-      }
+      this.$cookies.remove("meas_sdi12")
+      this.$cookies.remove("meas_modbus")
+      this.$cookies.remove("meas_adc")
+      this.$cookies.remove("meas_pulseCounter")
     },
 
     storeData() {
       this.clearCookies()
 
-      for (let i = 0; i < this.sdi12Rows.length; ++i) {
-        const config_index = i + 1
-        this.$cookies.set("meas-sdi-" + config_index + "-enabled", this.boolToPyStr(this.sdi12Rows[i].active))
-        this.$cookies.set("meas-sdi-" + config_index + "-address", this.sdi12Rows[i].sensorAddress)
-        this.$cookies.set("meas-sdi-" + config_index + "-loc", this.sdi12Rows[i].boardLocation)
-      }
-
-      this.$cookies.set("meas-4-20-snsr-1-enable", this.boolToPyStr(this.sens_4_20_num1_enable))
-      this.$cookies.set("meas-4-20-snsr-2-enable", this.boolToPyStr(this.sens_4_20_num2_enable))
-      this.$cookies.set("meas-4-20-snsr-1-formula", this.sens_4_20_num1_formula)
-      this.$cookies.set("meas-4-20-snsr-2-formula", this.sens_4_20_num2_formula)
-
-      this.$cookies.set("meas-sdi-warmup-time", this.sdi12WarmupTimeMs)
-
-      this.$cookies.set("meas-pcnt-1-enable", this.boolToPyStr(this.pulseCounterEnable))
-      this.$cookies.set("meas-pcnt-1-formula", this.pulseCounterFormula)
-      this.$cookies.set("meas-pcnt-1-high-freq", this.boolToPyStr(this.pulseCounterHighFreq))
+      this.$cookies.set("meas_sdi12", JSON.stringify({ sensors: this.sdi12Config, warmupTime: this.sdi12WarmupTimeMs }))
+      this.$cookies.set("meas_modbus", JSON.stringify(this.modbusConfig))
+      this.$cookies.set("meas_adc", JSON.stringify(this.adcConfig))
+      this.$cookies.set("meas_pulseCounter", JSON.stringify(this.pulseCounterConfig))
 
       this.requestGoNext()
     }

@@ -29,7 +29,7 @@ try:
 
     demo_config_exists = True
 except Exception as e:
-    logging.info("Device never configured.")
+    logging.exception(e, "Device never configured.")
     pass
 
 rstCause = device_info.get_reset_cause()

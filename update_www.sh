@@ -1,6 +1,13 @@
 #!/bin/sh
 
 cd ./webui
+
+# get git commit hash and update package.json version
+GIT_COMMIT=$(git rev-parse --short HEAD)
+echo "Updating package.json with commit hash $GIT_COMMIT"
+jq --arg GIT_COMMIT "$GIT_COMMIT" '.version = $GIT_COMMIT' package.json > tmp.json && mv tmp.json package.json
+echo "Building webui"
+
 npm run build
 cd ./dist
 FILES_TO_COPY=`find . | grep "gz$\|ico$\|png$"`

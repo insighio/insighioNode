@@ -155,6 +155,10 @@ configDict = {
     "_WIFI_SSID": "wifi_ssid",
     "_WIFI_PASS": "wifi_pass",
     "_MEAS_GPS_ONLY_ON_BOOT": "meas_gps_only_on_boot",
+    "_MEAS_SDI12": "meas_sdi12",
+    "_MEAS_MODBUS": "meas_modbus",
+    "_MEAS_ADC": "meas_adc",
+    "_MEAS_PULSECOUNTER": "meas_pulseCounter",
 }
 
 NoneType = type(None)
@@ -387,6 +391,9 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         contents += get_file_config(app_path + "/templ/device_advind_config_templ.py", keyValuePairDictionary)
     elif shield == "dig_analog":
         contents += get_file_config(app_path + "/templ/shield_i2c_dig_analog_templ.py", keyValuePairDictionary)
+    elif shield == "enviro":
+        contents += get_file_config(app_path + "/templ/shield_enviro_templ.py", keyValuePairDictionary)
+    #   contents += get_file_config(app_path + "/templ/device_enviro_config.py", keyValuePairDictionary)
     elif shield == "scale":
         if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
             contents += get_file_config(app_path + "/templ/shield_esp32_scale.py", keyValuePairDictionary)
