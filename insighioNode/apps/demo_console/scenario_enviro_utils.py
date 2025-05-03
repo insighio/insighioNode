@@ -4,14 +4,18 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
 
-from .dictionary_utils import set_value, _get, _has
+from .dictionary_utils import set_value, set_value_float, _get, _has
 
 from sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
 
 from . import cfg
 
-_io_expander = None
+_i2c = None
 _io_expander_addr = None
+
+_ads_addr = None
+_ads_gain = None
+_ads_rate = None
 
 _sdi12_config = {}
 _modbus_config = {}
@@ -19,26 +23,49 @@ _adc_config = {}
 _pulse_counter_config = {}
 
 
-def io_expander_init():
-    global _io_expander
-    global _io_expander_addr
-    if _io_expander is None:
+def _initialize_i2c():
+    global _i2c
+    if _i2c is None:
         from machine import SoftI2C, Pin
 
         I2C_SCL = cfg.get("_UC_IO_I2C_SCL")
         I2C_SDA = cfg.get("_UC_IO_I2C_SDA")
-        _io_expander = SoftI2C(scl=Pin(I2C_SCL), sda=Pin(I2C_SDA), freq=400000)
-        _io_expander_addr = cfg.get("_UC_IO_EXPANDER_ADDR")
+        _i2c = SoftI2C(scl=Pin(I2C_SCL), sda=Pin(I2C_SDA), freq=400000)
 
-    return _io_expander
+    return _i2c
+
+
+def io_expander_init():
+    global _io_expander_addr
+    _io_expander_addr = cfg.get("_UC_IO_EXPANDER_ADDR")
+
+    return _initialize_i2c()
+
+
+def ads_init():
+    global _ads_addr
+    global _ads_gain
+    global _ads_rate
+    _ads_addr = cfg.get("_UC_IO_ADS_ADDR")
+    _ads_gain = cfg.get("_ADS_GAIN")
+    _ads_rate = cfg.get("_ADS_RATE")
+    return _initialize_i2c()
 
 
 def io_expander_power_on_sdi12_sensors():
-    _io_expander.writeto_mem(_io_expander_addr, 3, b"\xfd")
+    _i2c.writeto_mem(_io_expander_addr, 3, b"\xfd")
 
 
 def io_expander_power_off_sdi12_sensors():
-    _io_expander.writeto_mem(_io_expander_addr, 1, b"\xfd")
+    _i2c.writeto_mem(_io_expander_addr, 1, b"\xfd")
+
+
+def io_expander_power_on_ads_sensors():
+    _i2c.writeto_mem(_io_expander_addr, 3, b"\xfb")
+
+
+def io_expander_power_off_adc_sensors():
+    _i2c.writeto_mem(_io_expander_addr, 1, b"\xfb")
 
 
 def enable_regulator():
@@ -102,7 +129,14 @@ def shield_measurements(measurements):
 ##### SDI12 functions #####
 
 
+# {"sensors":[{"sensorAddress":1,"measCmd":"M","measSubCmd":""}],"warmupTime":1000}
 def execute_sdi12_measurements(measurements):
+    sensor_list = _get(_sdi12_config, "sensors")
+
+    if not sensor_list or len(sensor_list) == 0:
+        logging.error("No sensors found in SDI12 config")
+        return
+
     io_expander_power_on_sdi12_sensors()
 
     if _has(_sdi12_config, "warmupTime"):
@@ -112,17 +146,13 @@ def execute_sdi12_measurements(measurements):
 
     sdi12 = None
 
-    if not _has(_sdi12_config, "sensors"):
-        logging.error("No sensors found in SDI12 config")
-        return
-
     try:
         sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
         sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 0, 1)
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
-        for sensor in _get(_sdi12_config, "sensors"):
+        for sensor in sensor_list:
             read_sdi12_sensor(sdi12, measurements, sensor)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
@@ -200,20 +230,88 @@ def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_e
 
 
 #### Modbus functions #####
+
+
+# [{"slaveAddress":0,"register":0,"type":3,"format":"uint16","factor":1,"decimalDigits":0,"mswFirst":true,"littleEndian":false}]
 def execute_modbus_measurements(measurements):
     pass
 
 
 #### ADC functions #####
+
+
+# [{"id":1,"enabled":false,"formula":"v"},{"id":2,"enabled":false,"formula":"v"},{"id":3,"enabled":true,"formula":"v"},{"id":4,"enabled":false,"formula":"v"}]
 def execute_adc_measurements(measurements):
-    pass
+    if not _adc_config or len(_adc_config) == 0:
+        logging.error("No sensors found in ADS config")
+        return
+
+    has_enabled_sensor = False
+    for sensor in _adc_config:
+        if sensor.get("enabled") == 1:
+            has_enabled_sensor = True
+            break
+
+    if not has_enabled_sensor:
+        logging.error("No enabled sensors found in ADS config")
+        return
+
+    ads_init()
+
+    io_expander_power_on_ads_sensors()
+
+    sleep_ms(500)
+
+    from external.ads1x15.ads1x15 import ADS1115
+
+    adc = None
+
+    try:
+        adc = ADS1115(_i2c, address=_ads_addr, gain=_ads_gain)
+
+        for sensor in _adc_config:
+            read_adc_sensor(adc, measurements, sensor)
+    except Exception as e:
+        logging.exception(e, "Exception while reading SDI-12 data")
+
+    io_expander_power_off_adc_sensors()
+
+
+def read_adc_sensor(adc, measurements, sensor):
+    channel = _get(sensor, "id")
+    enabled = _get(sensor, "enabled")
+    formula = _get(sensor, "formula")
+
+    if not enabled:
+        return
+
+    if channel is None or channel < 1 or channel > 4:
+        logging.error("read_adc_sensor - Invalid channel: {}".format(channel))
+        return
+
+    volt_analog = 1000 * adc.raw_to_v(adc.read(_ads_rate, channel - 1))
+    meas_name = "adc_" + channel + "_raw"
+    set_value_float(
+        measurements,
+        meas_name,
+        volt_analog,
+        SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
+    )
+
+    default_formula = "v"
+    if formula is not None and formula != default_formula:
+        execute_transformation(measurements, meas_name, volt_analog, formula)
 
 
 #### Pulse Counter functions #####
+
+
+# [{"id":1,"enabled":false,"formula":"v","highFreq":false,"enable":true},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
 def execute_pulse_counter_measurements(measurements):
     pass
 
 
+### Auxiliary functions ###
 def execute_transformation(measurements, name, raw_value, transformator):
     try:
         transformator = transformator.replace("v", str(raw_value))
@@ -223,5 +321,5 @@ def execute_transformation(measurements, name, raw_value, transformator):
         print("namespace: " + str(namespace))
         set_value(measurements, name + "_formula", namespace["v_transformed"])
     except Exception as e:
-        logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
+        logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass

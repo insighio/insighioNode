@@ -12,6 +12,11 @@ _UC_IO_SNSR_REG_ON = 8
 
 _UC_IO_EXPANDER_ADDR = 0x20
 
+""" ADS """
+_UC_IO_ADS_ADDR = 0x48
+_ADS_GAIN = 2  # 0 : 6.144V # 2/3x | 1 : 4.096V # 1x | 2 : 2.048V # 2x | 3 : 1.024V # 4x | 4 : 0.512V # 8x | 5 : 0.256V # 16x
+_ADS_RATE = 1  # 0 :  128/8 | 1 :  250/16 | 2 :  490/32 | 3 :  920/64 | 4 :  1600/128 | 5 :  2400/250 | 6 :  3300/475 | 7 :  - /860
+
 # needs revisiting
 
 _UC_IO_PWR_SDI_SNSR_1_ON = 42
