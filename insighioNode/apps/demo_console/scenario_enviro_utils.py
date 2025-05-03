@@ -274,42 +274,27 @@ def execute_modbus_measurements(measurements):
         )
 
         for sensor in _modbus_config:
-            slave_address = _get(sensor, "slaveAddress")
-            register = _get(sensor, "register")
-            type = _get(sensor, "type")
-            format = _get(sensor, "format")
-            factor = _get(sensor, "factor")
-            decimal_digits = _get(sensor, "decimalDigits")
-            msw_first = _get(sensor, "mswFirst")
-            little_endian = _get(sensor, "littleEndian")
-
-            if slave_address is None or register is None or not type or not format:
-                logging.error("Invalid modbus sensor configuration: {}".format(sensor))
-                continue
-
-            read_modbus_sensor(
-                modbus, measurements, slave_address, register, type, format, factor, decimal_digits, msw_first, little_endian
-            )
+            read_modbus_sensor(modbus, measurements, sensor)
     except Exception as e:
         logging.exception(e, "Exception while reading MODBUS data")
-
-    # try:
-    #     sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
-    #     sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 0, 1)
-    #     sdi12.set_wait_after_uart_write(True)
-    #     sdi12.wait_after_each_send(500)
-
-    #     for sensor in sensor_list:
-    #         read_sdi12_sensor(sdi12, measurements, sensor)
-    # except Exception as e:
-    #     logging.exception(e, "Exception while reading SDI-12 data")
-    # if sdi12:
-    #     sdi12.close()
 
     io_expander_power_off_modbus()
 
 
-def read_modbus_sensor(modbus, measurements, slave_address, register, type, format, factor, decimal_digits, msw_first, little_endian):
+def read_modbus_sensor(modbus, measurements, sensor):
+    slave_address = _get(sensor, "slaveAddress")
+    register = _get(sensor, "register")
+    type = _get(sensor, "type")
+    format = _get(sensor, "format")
+    factor = _get(sensor, "factor")
+    decimal_digits = _get(sensor, "decimalDigits")
+    msw_first = _get(sensor, "mswFirst")
+    little_endian = _get(sensor, "littleEndian")
+
+    if slave_address is None or register is None or not type or not format:
+        logging.error("Invalid modbus sensor configuration: {}".format(sensor))
+        return
+
     try:
         if not modbus.is_active(slave_address):
             logging.error("read_modbus_sensor - No sensor found in address: [" + str(slave_address) + "]")
