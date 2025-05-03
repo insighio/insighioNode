@@ -19,3 +19,6 @@
 [submodule "lib-external/micropython-esp32-ulp"]
 	path = lib-external/micropython-esp32-ulp
 	url = https://github.com/micropython/micropython-esp32-ulp.git
+[submodule "lib-external/ads1x15"]
+	path = lib-external/ads1x15
+	url = https://github.com/robert-hh/ads1x15
