@@ -22,3 +22,6 @@
 [submodule "lib-external/ads1x15"]
 	path = lib-external/ads1x15
 	url = https://github.com/robert-hh/ads1x15
+[submodule "lib-external/micropython-modbus"]
+	path = lib-external/micropython-modbus
+	url = https://github.com/brainelectronics/micropython-modbus.git

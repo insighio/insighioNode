@@ -54,14 +54,25 @@ def ads_init():
 
 def io_expander_power_on_sdi12_sensors():
     _i2c.writeto_mem(_io_expander_addr, 3, b"\xfd")
+    sleep_ms(500)
 
 
 def io_expander_power_off_sdi12_sensors():
     _i2c.writeto_mem(_io_expander_addr, 1, b"\xfd")
 
 
+def io_expander_power_on_modbus():
+    _i2c.writeto_mem(_io_expander_addr, 3, b"\xfe")
+    sleep_ms(500)
+
+
+def io_expander_power_off_modbus():
+    _i2c.writeto_mem(_io_expander_addr, 1, b"\xfe")
+
+
 def io_expander_power_on_ads_sensors():
     _i2c.writeto_mem(_io_expander_addr, 3, b"\xfb")
+    sleep_ms(500)
 
 
 def io_expander_power_off_adc_sensors():
@@ -234,7 +245,111 @@ def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_e
 
 # [{"slaveAddress":0,"register":0,"type":3,"format":"uint16","factor":1,"decimalDigits":0,"mswFirst":true,"littleEndian":false}]
 def execute_modbus_measurements(measurements):
-    pass
+    if not _modbus_config or len(_modbus_config) == 0:
+        logging.error("No sensors found in modbus config")
+        return
+
+    from machine import Pin
+
+    # need to set the SHDN pin to HIGH for not shutdown
+    pin_SHDN = Pin(cfg.get("_UC_IO_MODBUS_DRV_ON"), Pin.OUT)
+    pin_SHDN.value(1)
+
+    io_expander_power_on_modbus()
+
+    modbus = None
+
+    try:
+        from external.umodbus.serial import Serial as ModbusRTUMaster
+
+        rtu_pins = (cfg.get("_UC_IO_MODBUS_DRV_IN"), cfg.get("_UC_IO_MODBUS_RCV_OUT"))  # (TX, RX)
+        modbus = ModbusRTUMaster(
+            pins=rtu_pins,  # given as tuple (TX, RX)
+            baudrate=115200,  # optional, default 9600
+            # data_bits=8,          # optional, default 8
+            # stop_bits=1,          # optional, default 1``
+            # parity=None,          # optional, default None
+            # ctrl_pin=12,          # optional, control DE/RE
+            # uart_id= 1              # optional, default 1, see port specific documentation
+        )
+
+        for sensor in _modbus_config:
+            slave_address = _get(sensor, "slaveAddress")
+            register = _get(sensor, "register")
+            type = _get(sensor, "type")
+            format = _get(sensor, "format")
+            factor = _get(sensor, "factor")
+            decimal_digits = _get(sensor, "decimalDigits")
+            msw_first = _get(sensor, "mswFirst")
+            little_endian = _get(sensor, "littleEndian")
+
+            if slave_address is None or register is None or not type or not format:
+                logging.error("Invalid modbus sensor configuration: {}".format(sensor))
+                continue
+
+            read_modbus_sensor(
+                modbus, measurements, slave_address, register, type, format, factor, decimal_digits, msw_first, little_endian
+            )
+    except Exception as e:
+        logging.exception(e, "Exception while reading MODBUS data")
+
+    # try:
+    #     sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
+    #     sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 0, 1)
+    #     sdi12.set_wait_after_uart_write(True)
+    #     sdi12.wait_after_each_send(500)
+
+    #     for sensor in sensor_list:
+    #         read_sdi12_sensor(sdi12, measurements, sensor)
+    # except Exception as e:
+    #     logging.exception(e, "Exception while reading SDI-12 data")
+    # if sdi12:
+    #     sdi12.close()
+
+    io_expander_power_off_modbus()
+
+
+def read_modbus_sensor(modbus, measurements, slave_address, register, type, format, factor, decimal_digits, msw_first, little_endian):
+    try:
+        if not modbus.is_active(slave_address):
+            logging.error("read_modbus_sensor - No sensor found in address: [" + str(slave_address) + "]")
+            return
+
+        response = modbus.read_holding_registers(slave_address, register, 1)
+        if not response:
+            logging.error("read_modbus_sensor - No response from sensor in address: [" + str(slave_address) + "]")
+            return
+
+        # Parse the response based on the type and format
+        value = parse_modbus_response(response, type, format, factor, decimal_digits, msw_first, little_endian)
+
+        # Set the value in the measurements dictionary
+        set_value(measurements, "modbus_{}_{}".format(slave_address, register), value)
+
+    except Exception as e:
+        logging.exception(e, "Exception while reading MODBUS data for address: {}".format(slave_address))
+        return
+
+
+def parse_modbus_response(response, type, format, factor, decimal_digits, msw_first, little_endian):
+    # Implement the parsing logic based on the type and format
+    # This is a placeholder implementation, you need to adjust it based on your requirements
+    if type == 3:  # Holding register
+        if format == "uint16":
+            value = response[0] * (256 if msw_first else 1) + response[1] * (1 if msw_first else 256)
+        elif format == "int16":
+            value = (response[0] * (256 if msw_first else 1) + response[1] * (1 if msw_first else 256)) - (
+                2**16 if response[0] & 0x8000 else 0
+            )
+        # Add more formats as needed
+
+        # Apply factor and decimal digits
+        value = value * factor / (10**decimal_digits)
+
+        return value
+    else:
+        logging.error("Unsupported MODBUS type: {}".format(type))
+        return None
 
 
 #### ADC functions #####
@@ -259,8 +374,6 @@ def execute_adc_measurements(measurements):
     ads_init()
 
     io_expander_power_on_ads_sensors()
-
-    sleep_ms(500)
 
     from external.ads1x15.ads1x15 import ADS1115
 
