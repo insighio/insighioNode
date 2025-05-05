@@ -35,6 +35,14 @@ def _initialize_i2c():
     return _i2c
 
 
+def _deinitialize_i2c():
+    global _i2c
+    if _i2c is not None:
+        _i2c = None
+
+    return _i2c
+
+
 def io_expander_init():
     global _io_expander_addr
     _io_expander_addr = cfg.get("_UC_IO_EXPANDER_ADDR")
@@ -136,6 +144,8 @@ def shield_measurements(measurements):
     # power off SDI12 regulator
     disable_regulator()
 
+    _deinitialize_i2c()
+
 
 ##### SDI12 functions #####
 
@@ -174,6 +184,7 @@ def execute_sdi12_measurements(measurements):
             read_sdi12_sensor(sdi12, measurements, sensor)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
+
     if sdi12:
         sdi12.close()
 
