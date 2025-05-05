@@ -51,7 +51,15 @@ export default {
         if (key === "wifi-ssid" || key === "wifi-pass") {
           encodedParams[key] = encodeURIComponent(value)
           config[key] = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
-        } else if (key === "meas-name-mapping" || key === "meas-name-ext-mapping" || key === "meas-keyvalue") {
+        } else if (
+          key === "meas-name-mapping" ||
+          key === "meas-name-ext-mapping" ||
+          key === "meas-keyvalue" ||
+          key === "meas-sdi12" ||
+          key === "meas-modbus" ||
+          key === "meas-adc" ||
+          key === "meas-pulseCounter"
+        ) {
           encodedParams[key] = encodeURIComponent(value)
           config[key] = value
         } else config[key] = value

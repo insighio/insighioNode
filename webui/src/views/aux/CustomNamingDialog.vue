@@ -179,15 +179,17 @@ export default {
         console.log("cookie: ", key, " value: ", value)
         configString += key + "=" + value + "&"
 
-        if (key === "meas-keyvalue" || key === "meas-name-ext-mapping") {
-          try {
-            value = JSON.stringify(value)
-          } catch (e) {
-            console.log("failed parsing: ", key, ", error:", e)
-          }
-        }
-
-        if (key === "wifi-ssid" || key === "wifi-pass" || key === "meas-keyvalue" || key === "meas-name-ext-mapping") {
+        if (
+          key === "wifi-ssid" ||
+          key === "wifi-pass" ||
+          key === "meas-name-mapping" ||
+          key === "meas-name-ext-mapping" ||
+          key === "meas-keyvalue" ||
+          key === "meas-sdi12" ||
+          key === "meas-modbus" ||
+          key === "meas-adc" ||
+          key === "meas-pulseCounter"
+        ) {
           value = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
         }
         config[key] = value
@@ -291,7 +293,7 @@ export default {
       this.$emit("save")
     },
     validateMyForm() {
-      const validAliasRe = new RegExp("^[a-zA-Z-_/.]+$")
+      const validAliasRe = new RegExp("^[a-zA-Z\-_\/\.]+$")
       var hasIssue = false
 
       this.measurements.forEach((measurement) => {
@@ -302,7 +304,13 @@ export default {
       })
 
       if (hasIssue) {
-        window.alert("Please use only accepted characters for alias: a-z, A-z, -, _, /, .")
+        let errorMessage = "Please use only accepted characters for alias: a-z, A-z, -, _, /, ."
+        this.measurements.forEach((measurement) => {
+          if (measurement.hasIssue) {
+            errorMessage += "\n" + measurement.name
+          }
+        })
+        window.alert(errorMessage)
         return false
       }
 
