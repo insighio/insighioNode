@@ -17,6 +17,7 @@
               <SSelect
                 label="Temperature unit"
                 v-model:value="temperatureUnitIsCelsius"
+                @update:value="temperatureUnitIsCelsius = $event"
                 :valueOptions="temperatureUnitOptions"
               />
               <SSwitch label="GPS enabled" v-model:value="gpsEnabled" />

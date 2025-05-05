@@ -174,6 +174,8 @@ export default {
           value = JSON.stringify(value)
         }
 
+        if (value === undefined || value === null || value === "null") return
+
         console.log("cookie: ", key, " value: ", value)
         configString += key + "=" + value + "&"
 
