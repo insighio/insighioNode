@@ -1,1 +1,0 @@
-../../../../lib-external/micropython-modbus/umodbus/serial.py

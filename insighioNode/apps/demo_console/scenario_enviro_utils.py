@@ -6,7 +6,7 @@ from sensors import set_sensor_power_on, set_sensor_power_off
 
 from .dictionary_utils import set_value, set_value_float, _get, _has
 
-from sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
+from .sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
 
 from . import cfg
 
@@ -159,7 +159,7 @@ def execute_sdi12_measurements(measurements):
 
     try:
         sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
-        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 0, 1)
+        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 0)
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
@@ -174,9 +174,9 @@ def execute_sdi12_measurements(measurements):
 
 
 def read_sdi12_sensor(sdi12, measurements, sensor):
-    address = sensor._get("address")
-    command = sensor._get("measCmd")
-    sub_cmd = sensor._get("measSubCmd")
+    address = str(_get(sensor, "address"))
+    command = _get(sensor, "measCmd")
+    sub_cmd = _get(sensor, "measSubCmd")
 
     logging.debug("read_sdi12_sensor - address: {}, command: {}, sub_cmd: {}".format(address, command, sub_cmd))
 
@@ -296,10 +296,6 @@ def read_modbus_sensor(modbus, measurements, sensor):
         return
 
     try:
-        if not modbus.is_active(slave_address):
-            logging.error("read_modbus_sensor - No sensor found in address: [" + str(slave_address) + "]")
-            return
-
         response = modbus.read_holding_registers(slave_address, register, 1)
         if not response:
             logging.error("read_modbus_sensor - No response from sensor in address: [" + str(slave_address) + "]")
@@ -370,7 +366,7 @@ def execute_adc_measurements(measurements):
         for sensor in _adc_config:
             read_adc_sensor(adc, measurements, sensor)
     except Exception as e:
-        logging.exception(e, "Exception while reading SDI-12 data")
+        logging.exception(e, "Exception while reading ADS data")
 
     io_expander_power_off_adc_sensors()
 
@@ -388,10 +384,10 @@ def read_adc_sensor(adc, measurements, sensor):
         return
 
     volt_analog = 1000 * adc.raw_to_v(adc.read(_ads_rate, channel - 1))
-    meas_name = "adc_" + channel + "_raw"
+    meas_name = "adc_{}".format(channel)
     set_value_float(
         measurements,
-        meas_name,
+        meas_name + "_raw",
         volt_analog,
         SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
     )

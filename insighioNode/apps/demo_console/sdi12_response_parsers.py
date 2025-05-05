@@ -1,5 +1,6 @@
 from .dictionary_utils import set_value_float, set_value_int
-from .senml_units import SenmlUnits, SenmlSecondaryUnits
+from external.kpn_senml.senml_unit import SenmlUnits
+from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 
 
