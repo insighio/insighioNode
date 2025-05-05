@@ -152,8 +152,13 @@ def execute_sdi12_measurements(measurements):
 
     logging.info("Starting SDI12 measurements")
 
-    if _has(_sdi12_config, "warmupTime"):
-        sleep_ms(_get(_sdi12_config, "warmupTime"))
+    config = _get(_sdi12_config, "config")
+    if not config:
+        logging.error("No config found in SDI12 config")
+        return
+
+    if _has(config, "warmupTime"):
+        sleep_ms(_get(config, "warmupTime"))
 
     from external.microsdi12.microsdi12 import SDI12
 
@@ -247,9 +252,18 @@ def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_e
 
 # [{"slaveAddress":0,"register":0,"type":3,"format":"uint16","factor":1,"decimalDigits":0,"mswFirst":true,"littleEndian":false}]
 def execute_modbus_measurements(measurements):
-    if not _modbus_config or len(_modbus_config) == 0:
+
+    if not _modbus_config:
+        logging.error("No modbus config")
+        return
+
+    sensor_list = _get(_modbus_config, "sensors")
+    if not sensor_list or len(sensor_list) == 0:
         logging.error("No sensors found in modbus config")
         return
+
+    connectionSettings = _get(_modbus_config, "config")
+
     logging.info("Starting modbus measurements")
 
     from machine import Pin
@@ -266,17 +280,22 @@ def execute_modbus_measurements(measurements):
         from external.umodbus.serial import Serial as ModbusRTUMaster
 
         rtu_pins = (cfg.get("_UC_IO_MODBUS_DRV_IN"), cfg.get("_UC_IO_MODBUS_RCV_OUT"))  # (TX, RX)
+
+        config_parity = _get(connectionSettings, "parity")
+        if not config_parity:
+            config_parity = None
+
         modbus = ModbusRTUMaster(
             pins=rtu_pins,  # given as tuple (TX, RX)
-            baudrate=115200,  # optional, default 9600
-            # data_bits=8,          # optional, default 8
-            # stop_bits=1,          # optional, default 1``
-            # parity=None,          # optional, default None
+            baudrate=_get(connectionSettings, "baudRate"),  # optional, default 9600
+            data_bits=_get(connectionSettings, "dataBits"),  # optional, default 8
+            stop_bits=_get(connectionSettings, "stopBits"),  # optional, default 1``
+            parity=config_parity,  # optional, default None
             # ctrl_pin=12,          # optional, control DE/RE
             # uart_id= 1              # optional, default 1, see port specific documentation
         )
 
-        for sensor in _modbus_config:
+        for sensor in sensor_list:
             read_modbus_sensor(modbus, measurements, sensor)
     except Exception as e:
         logging.exception(e, "Exception while reading MODBUS data")

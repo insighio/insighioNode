@@ -2,6 +2,15 @@
   <div class="form-group columns">
     <SDivider label="SDI12" />
     <div class="col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+      <SDivider label="General Settings" />
+      <SInput
+        label="Warmup time (ms)"
+        type="number"
+        v-model:value="sdi12Config.warmupTimeMs"
+        @update:value="sdi12Config.warmupTimeMs = $event"
+      />
+      <br />
+      <SDivider label="Sensors" />
       <table class="table table-striped table-hover">
         <thead>
           <tr>
@@ -10,14 +19,14 @@
             <th>Command</th>
             <th>Sub Command</th>
             <th>
-              <button :disabled="sdi12Config.length >= 10" class="btn btn-primary" @click="addSdi12Row">
+              <button :disabled="sdi12Sensors.length >= 10" class="btn btn-primary" @click="addSdi12Row">
                 <i class="icon icon-plus"></i>
               </button>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in sdi12Config" :key="index">
+          <tr v-for="(row, index) in sdi12Sensors" :key="index">
             <td>{{ "SDI-12 n." + (index + 1) }}</td>
             <td>
               <select class="form-select" v-model="row.address">
@@ -35,26 +44,43 @@
               <input type="text" class="form-input" maxlength="5" v-model="row.measSubCmd" />
             </td>
             <td>
-              <button class="btn btn-primary" @click="sdi12Config.splice(index, 1)">
+              <button class="btn btn-primary" @click="sdi12Sensors.splice(index, 1)">
                 <i class="icon icon-delete"></i>
               </button>
             </td>
           </tr>
         </tbody>
       </table>
-
-      <br />
-      <br />
-
-      <SInput
-        label="Warmup time (ms)"
-        type="number"
-        v-model:value="sdi12WarmupTimeMs"
-        @update:value="sdi12WarmupTimeMs = $event"
-      />
     </div>
     <SDivider label="MODBUS" />
     <div class="col-12 columns" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+      <SDivider label="General Settings" />
+      <SSelect
+        label="Baud Rate"
+        v-model:value="modbusConfig.baudRate"
+        @update:value="modbusConfig.baudRate = $event"
+        :valueOptions="modbusBaudRateOptions"
+      />
+      <SSelect
+        label="Data Bits"
+        v-model:value="modbusConfig.dataBits"
+        @update:value="modbusConfig.dataBits = $event"
+        :valueOptions="modbusDataBitsOptions"
+      />
+      <SSelect
+        label="Stop Bits"
+        v-model:value="modbusConfig.stopBits"
+        @update:value="modbusConfig.stopBits = $event"
+        :valueOptions="modbusStopBitsOptions"
+      />
+      <SSelect
+        label="Parity"
+        v-model:value="modbusConfig.parity"
+        @update:value="modbusConfig.parity = $event"
+        :valueOptions="modbusParityOptions"
+      />
+      <br />
+      <SDivider label="Sensors" />
       <table class="table table-striped table-hover">
         <thead>
           <tr>
@@ -74,7 +100,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in modbusConfig" :key="index">
+          <tr v-for="(row, index) in modbusSensors" :key="index">
             <td><input type="number" class="form-input" v-model="row.slaveAddress" /></td>
             <td><input type="number" class="form-input" v-model="row.register" /></td>
             <td>
@@ -102,7 +128,7 @@
             <td><SSwitch v-model:value="row.mswFirst" /></td>
             <td><SSwitch v-model:value="row.littleEndian" /></td>
             <td>
-              <button class="btn btn-primary" @click="modbusConfig.splice(index, 1)">
+              <button class="btn btn-primary" @click="modbusSensors.splice(index, 1)">
                 <i class="icon icon-delete"></i>
               </button>
             </td>
@@ -167,11 +193,12 @@ import WebuiFooter from "@/components/WebuiFooter.vue"
 import SInput from "@/components/SInput.vue"
 import SDivider from "@/components/SDivider.vue"
 import SSwitch from "@/components/SSwitch.vue"
+import SSelect from "@/components/SSelect.vue"
 
 export default {
   name: "ShieldEnviro",
   mixins: [CommonTools],
-  components: { WebuiFooter, SInput, SDivider, SSwitch },
+  components: { WebuiFooter, SInput, SDivider, SSwitch, SSelect },
   data() {
     return {
       // Add your component data here
@@ -187,13 +214,18 @@ export default {
         { value: "V", label: "V" },
         { value: "X", label: "X" }
       ],
-      sdi12Config: [],
+      sdi12Sensors: [],
       sdi12DefaultRow: {
         address: 1,
         measCmd: "M",
         measSubCmd: ""
       },
-      sdi12WarmupTimeMs: 1000,
+      sdi12ConfigDefault: {
+        warmupTimeMs: 1000
+      },
+      sdi12Config: {
+        warmupTimeMs: 1000
+      },
       adcDefaultConfig: [
         {
           id: 1,
@@ -217,7 +249,34 @@ export default {
         }
       ],
       adcConfig: [],
-      modbusConfig: [],
+      modbusSensors: [],
+      modbusBaudRateOptions: [
+        { value: 9600, label: "9600" },
+        { value: 19200, label: "19200" },
+        { value: 38400, label: "38400" },
+        { value: 57600, label: "57600" },
+        { value: 115200, label: "115200" }
+      ],
+      modbusDataBitsOptions: [
+        { value: 7, label: "7" },
+        { value: 8, label: "8" }
+      ],
+      modbusStopBitsOptions: [
+        { value: 1, label: "1" },
+        { value: 2, label: "2" }
+      ],
+      modbusParityOptions: [
+        { value: null, label: "None" },
+        { value: 2, label: "Even" },
+        { value: 1, label: "Odd" }
+      ],
+      modbusConfigDefault: {
+        baudRate: 9600,
+        dataBits: 8,
+        stopBits: 1,
+        parity: null
+      },
+      modbusConfig: {},
       modbusDefaultRow: {
         slaveAddress: 0,
         register: 0,
@@ -282,16 +341,26 @@ export default {
       return cookieValue
     },
     initializeValues() {
-      this.sdi12Config = this.getJsonObjectFromCookies("meas-sdi12")
-        ? this.getJsonObjectFromCookies("meas-sdi12").sensors
-        : []
-      this.sdi12WarmupTimeMs = this.getJsonObjectFromCookies("meas-sdi12")
-        ? this.getJsonObjectFromCookies("meas-sdi12").warmupTime
-        : 1000
+      this.sdi12Sensors =
+        this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").sensors
+          ? this.getJsonObjectFromCookies("meas-sdi12").sensors
+          : []
 
-      this.modbusConfig = this.getJsonObjectFromCookies("meas-modbus")
-        ? this.getJsonObjectFromCookies("meas-modbus")
-        : []
+      this.sdi12Config =
+        this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").config
+          ? this.getJsonObjectFromCookies("meas-sdi12").config
+          : this.sdi12ConfigDefault
+
+      this.modbusSensors =
+        this.getJsonObjectFromCookies("meas-modbus") && this.getJsonObjectFromCookies("meas-modbus").sensors
+          ? this.getJsonObjectFromCookies("meas-modbus").sensors
+          : []
+
+      this.modbusConfig =
+        this.getJsonObjectFromCookies("meas-modbus") && this.getJsonObjectFromCookies("meas-modbus").config
+          ? this.getJsonObjectFromCookies("meas-modbus").config
+          : this.modbusConfigDefault
+
       this.adcConfig = this.getJsonObjectFromCookies("meas-adc")
         ? this.getJsonObjectFromCookies("meas-adc")
         : this.adcDefaultConfig
@@ -300,10 +369,10 @@ export default {
         : this.pulseCounterDefaultConfig
     },
     addSdi12Row() {
-      if (this.sdi12Config.length < 10) this.sdi12Config.push({ ...this.sdi12DefaultRow })
+      this.sdi12Sensors.push({ ...this.sdi12DefaultRow })
     },
     addModbusRow() {
-      this.modbusConfig.push({ ...this.modbusDefaultRow })
+      this.modbusSensors.push({ ...this.modbusDefaultRow })
     },
     validateMyForm() {
       this.storeData()
@@ -318,8 +387,8 @@ export default {
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas-sdi12", JSON.stringify({ sensors: this.sdi12Config, warmupTime: this.sdi12WarmupTimeMs }))
-      this.$cookies.set("meas-modbus", JSON.stringify(this.modbusConfig))
+      this.$cookies.set("meas-sdi12", JSON.stringify({ sensors: this.sdi12Sensors, config: this.sdi12Config }))
+      this.$cookies.set("meas-modbus", JSON.stringify({ sensors: this.modbusSensors, config: this.modbusConfig }))
       this.$cookies.set("meas-adc", JSON.stringify(this.adcConfig))
       this.$cookies.set("meas-pulseCounter", JSON.stringify(this.pulseCounterConfig))
 
