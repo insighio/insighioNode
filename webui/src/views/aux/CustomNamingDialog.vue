@@ -45,7 +45,7 @@
           </tbody>
         </table>
       </div>
-      <div class="toast">Accepted Characters: a-z, A-z, 0-9, -, _, /, .</div>
+      <div class="toast">Accepted Characters: a-z, A-Z, 0-9, -, _, /, .</div>
       <div class="modal-footer">
         <div class="float-left"><button class="btn btn-primary" @click="executeMeasurements">Fetch</button></div>
         <div class="float-right">
@@ -293,7 +293,7 @@ export default {
       this.$emit("save")
     },
     validateMyForm() {
-      const validAliasRe = new RegExp("^[a-zA-Z\-_\/\.]+$")
+      const validAliasRe = new RegExp("^[a-zA-Z0-9\-_\/\.]+$")
       var hasIssue = false
 
       this.measurements.forEach((measurement) => {
@@ -304,7 +304,7 @@ export default {
       })
 
       if (hasIssue) {
-        let errorMessage = "Please use only accepted characters for alias: a-z, A-z, -, _, /, ."
+        let errorMessage = "Please use only accepted characters for alias: a-z, A-Z, -, _, /, ."
         this.measurements.forEach((measurement) => {
           if (measurement.hasIssue) {
             errorMessage += "\n" + measurement.name
