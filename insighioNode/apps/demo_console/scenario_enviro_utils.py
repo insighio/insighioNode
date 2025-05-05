@@ -22,6 +22,22 @@ _modbus_config = {}
 _adc_config = {}
 _pulse_counter_config = {}
 
+_modbus_reg_quantity_per_format = {
+    "uint16": 1,
+    "int16": 1,
+    "uint32": 2,
+    "int32": 2,
+    "float": 2,
+}
+
+_modbus_struct_format_options = {
+    "uint16": "H",
+    "int16": "h",
+    "uint32": "I",
+    "int32": "i",
+    "float": "f",
+}
+
 
 def _initialize_i2c():
     global _i2c
@@ -330,10 +346,21 @@ def read_modbus_sensor(modbus, measurements, sensor):
 
     try:
         response = []
+
+        number_of_registers = _modbus_reg_quantity_per_format.get(format)
+        if number_of_registers is None:
+            logging.error("Unsupported MODBUS format: {}".format(format))
+            number_of_registers = 1
+
         if type == 3:
-            response = modbus.read_holding_registers(slave_address, register, 1)
+            logging.debug("[read_modbus_sensor]-[read_holding_registers]: id: {}, register_addr: {}".format(slave_address, register))
+            response = modbus.read_holding_registers(slave_address, register, number_of_registers)
+            logging.debug("  <= {}".format(response))
+
         elif type == 4:
-            response = modbus.read_input_registers(slave_address, register, 1)
+            logging.debug("[read_modbus_sensor]-[read_input_registers]: id: {}, register_addr: {}".format(slave_address, register))
+            response = modbus.read_input_registers(slave_address, register, number_of_registers)
+            logging.debug("  <= {}".format(response))
         else:
             logging.error("Unsupported MODBUS type: {}".format(type))
             return
@@ -369,15 +396,8 @@ def parse_modbus_response(response, format, factor, decimal_digits, msw_first, l
     import struct
 
     struct_endianess = "<" if little_endian else ">"
-    struct_format_options = {
-        "uint16": "H",
-        "int16": "h",
-        "uint32": "I",
-        "int32": "i",
-        "float": "f",
-    }
 
-    struct_format = struct_format_options.get(format)
+    struct_format = _modbus_struct_format_options.get(format)
 
     if struct_format is None:
         logging.error("Unsupported MODBUS format: {}".format(format))
