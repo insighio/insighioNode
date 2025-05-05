@@ -169,6 +169,11 @@ export default {
 
       cookieKeys.forEach((key) => {
         let value = this.$cookies.get(key)
+
+        if (typeof value === "object") {
+          value = JSON.stringify(value)
+        }
+
         console.log("cookie: ", key, " value: ", value)
         configString += key + "=" + value + "&"
 

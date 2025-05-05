@@ -150,6 +150,8 @@ def execute_sdi12_measurements(measurements):
 
     io_expander_power_on_sdi12_sensors()
 
+    logging.info("Starting SDI12 measurements")
+
     if _has(_sdi12_config, "warmupTime"):
         sleep_ms(_get(_sdi12_config, "warmupTime"))
 
@@ -248,6 +250,7 @@ def execute_modbus_measurements(measurements):
     if not _modbus_config or len(_modbus_config) == 0:
         logging.error("No sensors found in modbus config")
         return
+    logging.info("Starting modbus measurements")
 
     from machine import Pin
 
@@ -296,13 +299,21 @@ def read_modbus_sensor(modbus, measurements, sensor):
         return
 
     try:
-        response = modbus.read_holding_registers(slave_address, register, 1)
+        response = []
+        if type == 3:
+            response = modbus.read_holding_registers(slave_address, register, 1)
+        elif type == 4:
+            response = modbus.read_input_registers(slave_address, register, 1)
+        else:
+            logging.error("Unsupported MODBUS type: {}".format(type))
+            return
+
         if not response:
             logging.error("read_modbus_sensor - No response from sensor in address: [" + str(slave_address) + "]")
             return
 
         # Parse the response based on the type and format
-        value = parse_modbus_response(response, type, format, factor, decimal_digits, msw_first, little_endian)
+        value = parse_modbus_response(response, format, factor, decimal_digits, msw_first, little_endian)
 
         # Set the value in the measurements dictionary
         set_value(measurements, "modbus_{}_{}".format(slave_address, register), value)
@@ -312,25 +323,51 @@ def read_modbus_sensor(modbus, measurements, sensor):
         return
 
 
-def parse_modbus_response(response, type, format, factor, decimal_digits, msw_first, little_endian):
+def parse_modbus_response(response, format, factor, decimal_digits, msw_first, little_endian):
     # Implement the parsing logic based on the type and format
     # This is a placeholder implementation, you need to adjust it based on your requirements
-    if type == 3:  # Holding register
-        if format == "uint16":
-            value = response[0] * (256 if msw_first else 1) + response[1] * (1 if msw_first else 256)
-        elif format == "int16":
-            value = (response[0] * (256 if msw_first else 1) + response[1] * (1 if msw_first else 256)) - (
-                2**16 if response[0] & 0x8000 else 0
-            )
-        # Add more formats as needed
 
-        # Apply factor and decimal digits
-        value = value * factor / (10**decimal_digits)
+    if not msw_first and len(response) > 1:
+        response = [response[1], response[0]]
 
-        return value
-    else:
-        logging.error("Unsupported MODBUS type: {}".format(type))
+    # response array elements contain a 16-bit value, split each element into 2 bytes
+    response_bytes = bytearray()
+    for value in response:
+        response_bytes.append((value >> 8) & 0xFF)
+        response_bytes.append(value & 0xFF)
+
+    import struct
+
+    struct_endianess = "<" if little_endian else ">"
+    struct_format_options = {
+        "uint16": "H",
+        "int16": "h",
+        "uint32": "I",
+        "int32": "i",
+        "float": "f",
+    }
+
+    struct_format = struct_format_options.get(format)
+
+    if struct_format is None:
+        logging.error("Unsupported MODBUS format: {}".format(format))
         return None
+
+    value = struct.unpack(struct_endianess + struct_format, response_bytes)[0]
+
+    # Apply factor and decimal digits
+    if factor is not None:
+        value = value * factor
+
+    if decimal_digits is not None:
+        if decimal_digits < 0:
+            logging.error("Invalid decimal digits: {}".format(decimal_digits))
+            return None
+        if decimal_digits > 0:
+            value = round(value, decimal_digits)
+        else:
+            value = int(value)
+    return value
 
 
 #### ADC functions #####
@@ -341,6 +378,8 @@ def execute_adc_measurements(measurements):
     if not _adc_config or len(_adc_config) == 0:
         logging.error("No sensors found in ADS config")
         return
+
+    logging.info("Starting ADC measurements")
 
     has_enabled_sensor = False
     for sensor in _adc_config:
@@ -402,6 +441,7 @@ def read_adc_sensor(adc, measurements, sensor):
 
 # [{"id":1,"enabled":false,"formula":"v","highFreq":false,"enable":true},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
 def execute_pulse_counter_measurements(measurements):
+    logging.info("Starting Pulse Counter measurements")
     pass
 
 

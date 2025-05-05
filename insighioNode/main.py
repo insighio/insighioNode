@@ -54,7 +54,7 @@ if rstCause == 0 or rstCause == 1 or not demo_config_exists:
         pass
     gc.collect()
 
-# in case a temp config has been generated and webserver timesout before
+# in case a temp config has been generated and webserver timeout occurs before
 # deleting it
 try:
     import uos
