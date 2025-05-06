@@ -148,11 +148,22 @@
           <div class="form-group columns">
             <div class="column col-1 col-mr-auto"></div>
             <div class="column col-9 col-mr-auto">
+              <SSelect
+                label="gain"
+                v-model:value="adc.gain"
+                @update:value="adc.gain = $event"
+                :valueOptions="adsGainOptions"
+                :tooltip="gain_tooltip"
+              />
+            </div>
+            <div class="column col-2 col-mr-auto"></div>
+            <div class="column col-1 col-mr-auto"></div>
+            <div class="column col-9 col-mr-auto">
               <SInput
                 label="formula"
                 v-model:value="adc.formula"
                 @update:value="adc.formula = $event"
-                :tooltip="tooltip"
+                :tooltip="formula_tooltip"
               />
             </div>
             <div class="column col-2 col-mr-auto"></div>
@@ -173,7 +184,7 @@
                 label="Pulse Counter formula"
                 v-model:value="pc.formula"
                 @update:value="pc.formula = $event"
-                :tooltip="tooltip"
+                :tooltip="formula_tooltip"
               />
             </div>
             <div class="column col-2 col-mr-auto"></div>
@@ -216,7 +227,7 @@ export default {
       ],
       sdi12Sensors: [],
       sdi12DefaultRow: {
-        address: 1,
+        address: 0,
         measCmd: "M",
         measSubCmd: ""
       },
@@ -230,21 +241,25 @@ export default {
         {
           id: 1,
           enabled: false,
+          gain: 2,
           formula: "v"
         },
         {
           id: 2,
           enabled: false,
+          gain: 2,
           formula: "v"
         },
         {
           id: 3,
           enabled: false,
+          gain: 2,
           formula: "v"
         },
         {
           id: 4,
           enabled: false,
+          gain: 2,
           formula: "v"
         }
       ],
@@ -308,6 +323,14 @@ export default {
         { value: 3, label: ".000" },
         { value: 4, label: ".0000" }
       ],
+      //1 : 4.096V # 1x | 2 : 2.048V # 2x | 3 : 1.024V # 4x | 4 : 0.512V # 8x | 5 : 0.256V # 16x
+      adsGainOptions: [
+        { value: 1, label: "3.6V   # 1x" },
+        { value: 2, label: "2.048V # 2x" },
+        { value: 3, label: "1.024V # 4x" },
+        { value: 4, label: "0.512V # 8x" },
+        { value: 5, label: "0.256V # 16x" }
+      ],
       pulseCounterDefaultConfig: [
         {
           id: 1,
@@ -323,7 +346,9 @@ export default {
         }
       ],
       pulseCounterConfig: [],
-      tooltip: "python script to\ntransform raw value (v)\nfrom millivolt\nto meaningful value\nex: 2*v + v**2"
+      gain_tooltip:
+        "defines the voltage range\nof the ADC input\nthe lower the voltage range\n the higher the precision",
+      formula_tooltip: "python script to\ntransform raw value (v)\nfrom millivolt\nto meaningful value\nex: 2*v + v**2"
     }
   },
   methods: {

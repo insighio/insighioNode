@@ -14,7 +14,6 @@ _i2c = None
 _io_expander_addr = None
 
 _ads_addr = None
-_ads_gain = None
 _ads_rate = None
 
 _sdi12_config = {}
@@ -68,10 +67,8 @@ def io_expander_init():
 
 def ads_init():
     global _ads_addr
-    global _ads_gain
     global _ads_rate
     _ads_addr = cfg.get("_UC_IO_ADS_ADDR")
-    _ads_gain = cfg.get("_ADS_GAIN")
     _ads_rate = cfg.get("_ADS_RATE")
     return _initialize_i2c()
 
@@ -473,25 +470,20 @@ def execute_adc_measurements(measurements):
 
     io_expander_power_on_ads_sensors()
 
-    from external.ads1x15.ads1x15 import ADS1115
-
-    adc = None
-
     try:
-        adc = ADS1115(_i2c, address=_ads_addr, gain=_ads_gain)
-
         for sensor in _adc_config:
-            read_adc_sensor(adc, measurements, sensor)
+            read_adc_sensor(measurements, sensor)
     except Exception as e:
         logging.exception(e, "Exception while reading ADS data")
 
     io_expander_power_off_adc_sensors()
 
 
-def read_adc_sensor(adc, measurements, sensor):
+def read_adc_sensor(measurements, sensor):
     channel = _get(sensor, "id")
     enabled = _get(sensor, "enabled")
     formula = _get(sensor, "formula")
+    gain = _get(sensor, "gain")
 
     if not enabled:
         return
@@ -499,6 +491,10 @@ def read_adc_sensor(adc, measurements, sensor):
     if channel is None or channel < 1 or channel > 4:
         logging.error("read_adc_sensor - Invalid channel: {}".format(channel))
         return
+
+    from external.ads1x15.ads1x15 import ADS1115
+
+    adc = ADS1115(_i2c, address=_ads_addr, gain=gain)
 
     volt_analog = 1000 * adc.raw_to_v(adc.read(_ads_rate, channel - 1))
     meas_name = "adc_{}".format(channel)
