@@ -130,7 +130,6 @@ export default {
       timing_light_sleep_on: false,
       timing_light_sleep_network_active: false,
       timing_light_sleep_deactivate_on_battery: false,
-      timing_batch_upload_enable: false,
       timing_batch_upload_buffer_size: 1,
       timing_batch_enabled: false,
       timing_period: 300,
@@ -155,8 +154,8 @@ export default {
     },
     initializeValues() {
       this.timing_batch_upload_buffer_size = this.getValueWithDefaults(this.$cookies.get("batch-upload-buffer-size"), 1)
-      let timeA = this.$cookies.get("scheduled-time-a")
-      let timeB = this.$cookies.get("scheduled-time-b")
+      let timeA = this.strToJSValue(this.$cookies.get("scheduled-time-a"))
+      let timeB = this.strToJSValue(this.$cookies.get("scheduled-time-b"))
 
       if (timeA && timeB) {
         this.timingChanged("scheduled")
@@ -235,13 +234,17 @@ export default {
         this.$cookies.set("scheduled-time-b", this.stringTimeToSeconds(this.timing_scheduled_time_b))
       }
 
-      if (this.timing_batch_upload_enabled && this.timing_batch_upload_buffer_size >= 1)
+      console.log("this.timing_batch_enabled: ", this.timing_batch_enabled)
+      console.log("this.timing_batch_upload_buffer_size: ", this.timing_batch_upload_buffer_size)
+
+      if (this.timing_batch_enabled && this.timing_batch_upload_buffer_size >= 1)
         this.$cookies.set("batch-upload-buffer-size", this.timing_batch_upload_buffer_size)
       else this.$cookies.set("batch-upload-buffer-size", "1")
 
       this.requestGoNext()
     },
     timingChanged(boardDivId) {
+      console.log("timingChanged: ", boardDivId)
       this.timing_type = boardDivId
       this.timing_batch_enabled = boardDivId !== "scheduled"
     },
