@@ -373,11 +373,39 @@ def read_modbus_sensor(modbus, measurements, sensor):
         value = parse_modbus_response(response, format, factor, decimal_digits, msw_first, little_endian)
 
         # Set the value in the measurements dictionary
-        set_value(measurements, "modbus_{}_{}".format(slave_address, register), value)
+        set_value(
+            measurements,
+            "modbus_{}_{}{}".format(
+                slave_address, register, get_modbus_naming_postfix(format, factor, decimal_digits, msw_first, little_endian)
+            ),
+            value,
+        )
 
     except Exception as e:
         logging.exception(e, "Exception while reading MODBUS data for address: {}".format(slave_address))
         return
+
+
+def get_modbus_naming_postfix(format, factor, decimal_digits, msw_first, little_endian):
+    # Generate a unique naming postfix based on the parameters
+    postfix = ""
+
+    if format:
+        postfix += "_{}".format(format)
+
+    if factor is not None:
+        postfix += "_f{}".format(factor)
+
+    if decimal_digits is not None:
+        postfix += "_d{}".format(decimal_digits)
+
+    if msw_first is not None:
+        postfix += "_msw{}".format(1 if msw_first else 0)
+
+    if little_endian is not None:
+        postfix += "_le{}".format(1 if little_endian else 0)
+
+    return postfix
 
 
 def parse_modbus_response(response, format, factor, decimal_digits, msw_first, little_endian):
