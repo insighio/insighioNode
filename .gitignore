@@ -4,3 +4,5 @@ webui/dist/*
 webui/node_modules/*
 webui/.vite/*
 insighioNode/www/*
+tests/__pycache__
+insighioNode/apps/demo_console/__pycache__
