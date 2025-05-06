@@ -77,7 +77,11 @@ class HttpClient:
         if proto == "http:":
             port = 80
         elif proto == "https:":
-            import ussl
+            try:
+                import ussl
+            except:
+                import ssl as ussl
+
 
             port = 443
         else:

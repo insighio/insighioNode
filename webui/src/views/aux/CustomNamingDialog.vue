@@ -254,22 +254,24 @@ export default {
       var net = this.$cookies.get("network")
       var netStats = this.$cookies.get("meas-network-stat")
 
-      if (net === "wifi" && netStats === "True") {
-        obj["wifi_conn_duration"] = { unit: "ms" }
-        obj["wifi_scan_duration"] = { unit: "ms" }
-        obj["wifi_channel"] = {}
-        obj["wifi_rssi"] = { unit: "dbm" }
-      } else if (net === "cellular" && netStats === "True") {
-        obj["cell_rssi"] = { unit: "dbm" }
-        obj["cell_rsrp"] = { unit: "dbm" }
-        obj["cell_rsrq"] = { unit: "dbm" }
-        obj["cell_mcc"] = {}
-        obj["cell_mnc"] = {}
-        obj["cell_lac"] = {}
-        obj["cell_ci"] = {}
-        obj["cell_act_duration"] = { unit: "ms" }
-        obj["cell_att_duration"] = { unit: "ms" }
-        obj["cell_con_duration"] = { unit: "ms" }
+      if (netStats === "True") {
+        if (net === "wifi") {
+          obj["wifi_conn_duration"] = { unit: "ms" }
+          obj["wifi_scan_duration"] = { unit: "ms" }
+          obj["wifi_channel"] = {}
+          obj["wifi_rssi"] = { unit: "dBm" }
+        } else if (net === "cellular") {
+          obj["cell_rssi"] = { unit: "dBm" }
+          obj["cell_rsrp"] = { unit: "dBm" }
+          obj["cell_rsrq"] = { unit: "dBm" }
+          obj["cell_mcc"] = {}
+          obj["cell_mnc"] = {}
+          obj["cell_lac"] = {}
+          obj["cell_ci"] = {}
+          obj["cell_act_duration"] = { unit: "ms" }
+          obj["cell_att_duration"] = { unit: "ms" }
+          obj["cell_con_duration"] = { unit: "ms" }
+        }
       }
 
       if (this.$cookies.get("meas-gps-enabled") === "True") {
