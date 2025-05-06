@@ -120,7 +120,7 @@
 
             <td><input type="number" class="form-input" step="0.000001" v-model="row.factor" /></td>
             <td>
-              <select :disabled="row.format !== 'float'" class="form-select" v-model="row.decimalDigits">
+              <select class="form-select" v-model="row.decimalDigits">
                 <option v-for="opt in modbusDecimalDigits" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </td>
