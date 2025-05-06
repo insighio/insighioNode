@@ -1,10 +1,12 @@
 <script setup>
 import MainPage from "@/views/MainPage.vue"
+const appVersion = import.meta.env.VITE_APP_VERSION || "unknown version"
 </script>
 
 <template>
   <div id="app">
     <MainPage />
+    <div class="watermark">Version: {{ appVersion }}</div>
   </div>
 </template>
 
@@ -34,5 +36,14 @@ header {
     place-items: flex-start;
     flex-wrap: wrap;
   }
+}
+
+.watermark {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 0.8rem;
+  color: #888;
+  opacity: 0.7;
 }
 </style>

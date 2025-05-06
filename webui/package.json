@@ -1,9 +1,9 @@
 {
   "name": "insighioNode-webui",
-  "version": "8a46db7",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && echo VITE_APP_VERSION=$(node -p \"require('./package.json').version\") > .env",
     "lint": "eslint . --fix",
     "dev": "vite",
     "format": "prettier --write src/",
