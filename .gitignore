@@ -3,6 +3,7 @@ insighioNode/apps/local_demos
 webui/dist/*
 webui/node_modules/*
 webui/.vite/*
+webui/.env
 insighioNode/www/*
 tests/__pycache__
 insighioNode/apps/demo_console/__pycache__

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "vite build && echo VITE_APP_VERSION=$(node -p \"require('./package.json').version\") > .env",
+    "build": "echo VITE_APP_VERSION=$(node -p \"require('./package.json').version\") > .env && vite build",
     "lint": "eslint . --fix",
     "dev": "vite",
     "format": "prettier --write src/",
