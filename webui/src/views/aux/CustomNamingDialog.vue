@@ -327,9 +327,10 @@ export default {
         if (measurement.alias || measurement.unit) {
           let newConfigObj = {}
 
-          const storedUnit = this.rawMeasurementsRetrieved[measurement.name]
-            ? this.rawMeasurementsRetrieved[measurement.name].unit
-            : undefined
+          const storedUnit =
+            this.rawMeasurementsRetrieved && this.rawMeasurementsRetrieved[measurement.name]
+              ? this.rawMeasurementsRetrieved[measurement.name].unit
+              : undefined
 
           if (measurement.alias) newConfigObj.alias = measurement.alias
           if (measurement.unit !== storedUnit) newConfigObj.unit = measurement.unit
