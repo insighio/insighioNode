@@ -356,6 +356,7 @@ export default {
   background: white;
   border-radius: 5px;
   width: 90%;
+  max-width: 1000px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
