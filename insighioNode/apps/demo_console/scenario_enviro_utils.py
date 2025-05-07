@@ -62,7 +62,14 @@ def io_expander_init():
     global _io_expander_addr
     _io_expander_addr = cfg.get("_UC_IO_EXPANDER_ADDR")
 
-    return _initialize_i2c()
+    _initialize_i2c()
+
+    # set all output pins to LOW
+    power_off_all_sensors()
+
+    # set all ports as output except P3 which is input
+    # and has UC_IO_XTNDR_ADC_ALERT_RDY
+    _i2c.writeto_mem(_io_expander_addr, 3, b"\xf8")
 
 
 def ads_init():
@@ -74,39 +81,51 @@ def ads_init():
 
 
 def io_expander_power_on_sdi12_sensors():
-    _i2c.writeto_mem(_io_expander_addr, 3, b"\xfd")
+    logging.debug("io_expander_power_on_sdi12_sensors - power on SDI12 sensors")
+    _i2c.writeto_mem(_io_expander_addr, 1, b"\x02")
     sleep_ms(500)
 
 
 def io_expander_power_off_sdi12_sensors():
-    _i2c.writeto_mem(_io_expander_addr, 1, b"\xfd")
+    logging.debug("io_expander_power_off_sdi12_sensors - power off SDI12 sensors")
+    power_off_all_sensors()
 
 
 def io_expander_power_on_modbus():
-    _i2c.writeto_mem(_io_expander_addr, 3, b"\xfe")
+    logging.debug("io_expander_power_on_modbus - power on MODBUS sensors")
+    _i2c.writeto_mem(_io_expander_addr, 1, b"\x01")
     sleep_ms(500)
 
 
 def io_expander_power_off_modbus():
-    _i2c.writeto_mem(_io_expander_addr, 1, b"\xfe")
+    logging.debug("io_expander_power_off_modbus - power off MODBUS sensors")
+    power_off_all_sensors()
 
 
 def io_expander_power_on_ads_sensors():
-    _i2c.writeto_mem(_io_expander_addr, 3, b"\xfb")
+    logging.debug("io_expander_power_on_ads_sensors - power on ADS sensors")
+    _i2c.writeto_mem(_io_expander_addr, 1, b"\x04")
     sleep_ms(500)
 
 
 def io_expander_power_off_adc_sensors():
-    _i2c.writeto_mem(_io_expander_addr, 1, b"\xfb")
+    logging.debug("io_expander_power_off_adc_sensors - power off ADS sensors")
+    power_off_all_sensors()
+
+
+def power_off_all_sensors():
+    _i2c.writeto_mem(_io_expander_addr, 1, b"\x00")
 
 
 def enable_regulator():
     # power on SDI12 regulator
+    logging.debug("enable_regulator - power on regulator")
     set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
 
 
 def disable_regulator():
     # power off SDI12 regulator
+    logging.debug("disable_regulator - power off regulator")
     set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
 
 
@@ -180,8 +199,10 @@ def execute_sdi12_measurements(measurements):
         logging.error("No config found in SDI12 config")
         return
 
-    if _has(config, "warmupTime"):
-        sleep_ms(_get(config, "warmupTime"))
+    if _has(config, "warmupTimeMs"):
+        t = _get(config, "warmupTimeMs")
+        logging.debug("SDI12 warmup time: {}".format(t))
+        sleep_ms(t)
 
     from external.microsdi12.microsdi12 import SDI12
 
