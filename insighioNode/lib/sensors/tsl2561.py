@@ -200,9 +200,9 @@ class TSL2561CS(TSL2561):
 def get_reading(sda_pin, scl_pin, vcc_pin=None):
     sensors.set_sensor_power_on(vcc_pin)
 
-    from machine import I2C
+    from machine import SoftI2C
 
-    i2c = I2C(0, pins=(sda_pin, scl_pin))
+    i2c = SoftI2C(pins=(sda_pin, scl_pin))
     light = None
     try:
         # i2c.readfrom(0x40,1)
@@ -212,7 +212,7 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
     except Exception as e:
         logging.exception(e, "Exception reading luminocity")
 
-    i2c.deinit()
+    # i2c.deinit()
 
     sensors.set_sensor_power_off(vcc_pin)
 

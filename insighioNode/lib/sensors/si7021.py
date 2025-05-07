@@ -11,11 +11,13 @@ import logging
 
 class CRCError(Exception):
     "Data failed a CRC check."
+
     pass
 
 
 class Si7021(object):
     "Driver for the Si7021 temperature sensor."
+
     SI7021_DEFAULT_ADDRESS = 0x40
     SI7021_MEASTEMP_NOHOLD_CMD = bytearray([0xF3])
     SI7021_MEASRH_NOHOLD_CMD = bytearray([0xF5])
@@ -158,12 +160,12 @@ def convert_celcius_to_fahrenheit(celcius):
 
 def get_reading(sda_pin, scl_pin, vcc_pin=None):
     """Returns temperature/humidity/serial reading, for given I2C SCL/SDA and VCC pins"""
-    from machine import I2C
+    from machine import SoftI2C
 
     sensors.set_sensor_power_on(vcc_pin)
 
     # initialization & measurement
-    i2c = I2C(0, pins=(sda_pin, scl_pin))
+    i2c = SoftI2C(pins=(sda_pin, scl_pin))
     # check for i2c scan
     # method 1: run scan and wait for non-empty list: this seems to hang for more than 500 secs if power supply is not right
     i2c_scan = i2c.scan()
@@ -183,7 +185,7 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
         logging.exception(e, "Exception raised in I2C {}")
 
     # disable sensor and supply to sensor
-    i2c.deinit()
+    # i2c.deinit()
 
     sensors.set_sensor_power_off(vcc_pin)
 

@@ -1,7 +1,7 @@
 import utime
 import sensors
 import logging
-from machine import Pin, I2C
+from machine import Pin, SoftI2C
 
 
 def get_reading(sda_pin, scl_pin, vcc_pin=None):
@@ -9,7 +9,7 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
     sensors.set_sensor_power_on(vcc_pin)
 
     # initialization & measurement
-    i2c = I2C(0, scl=Pin(scl_pin), sda=Pin(sda_pin))
+    i2c = SoftI2C(scl=Pin(scl_pin), sda=Pin(sda_pin))
 
     # # could be removed
     # i2c_scan = i2c.scan()
@@ -19,7 +19,7 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
     hum = None
 
     try:
-        i2c.writeto(0x44, b"\xFD")
+        i2c.writeto(0x44, b"\xfd")
         utime.sleep_ms(20)
         rx_bytes = i2c.readfrom(0x44, 6)
         if len(rx_bytes) > 4:
@@ -32,11 +32,11 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
     except Exception as e:
         logging.exception(e, "Exception raised in I2C {}")
 
-    # disable sensor and supply to sensor
-    try:
-        i2c.deinit()
-    except Exception as e:
-        pass
+    # # disable sensor and supply to sensor
+    # try:
+    #     i2c.deinit()
+    # except Exception as e:
+    #     pass
 
     sensors.set_sensor_power_off(vcc_pin)
 

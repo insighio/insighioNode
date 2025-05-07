@@ -419,12 +419,12 @@ class SCD30:
 
 def get_reading(sda_pin, scl_pin, vcc_pin=None):
     """Returns temperature/humidity/serial reading, for given I2C SCL/SDA and VCC pins"""
-    from machine import I2C
+    from machine import SoftI2C
 
     sensors.set_sensor_power_on(vcc_pin)
 
     # initialization & measurement
-    i2c = I2C(0, pins=(sda_pin, scl_pin))
+    i2c = SoftI2C(pins=(sda_pin, scl_pin))
 
     co2 = None
     temp = None
@@ -437,8 +437,8 @@ def get_reading(sda_pin, scl_pin, vcc_pin=None):
     except Exception as e:
         logging.exception(e, "Exception raised in I2C")
 
-    # disable sensor and supply to sensor
-    i2c.deinit()
+    # # disable sensor and supply to sensor
+    # i2c.deinit()
 
     sensors.set_sensor_power_off(vcc_pin)
 
