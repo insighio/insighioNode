@@ -6,7 +6,11 @@
         <button class="btn btn-clear float-right" @click="$emit('close')"></button>
       </div>
       <div class="modal-body">
-        <div v-if="isLoading" class="loading loading-lg"></div>
+        <div v-if="isLoading" class="empty-subtitle">
+          <div class="loading loading-lg"></div>
+          <progress class="progress" :value="progressValue" max="60" style="margin: auto; width: 100%"></progress>
+        </div>
+
         <table class="table">
           <thead>
             <tr>
@@ -90,7 +94,8 @@ export default {
       unitOptions: [],
       isSaveButtonVisible: false,
       isLoading: false,
-      rawMeasurementsRetrieved: undefined
+      rawMeasurementsRetrieved: undefined,
+      progressValue: 0
     }
   },
   mounted() {
@@ -160,7 +165,24 @@ export default {
         //populateTable(editedMapping)
       }
     },
+    startProgress() {
+      this.progressValue = 0
+
+      const interval = setInterval(() => {
+        if (this.progressValue >= 60) {
+          clearInterval(interval)
+          this.isLoading = false
+        } else {
+          this.progressValue += 1
+        }
+      }, 1000)
+    },
+    stopProgress() {
+      this.isLoading = false
+      this.progressValue = 0
+    },
     executeMeasurements() {
+      this.progressValue = 0
       this.isLoading = true
 
       var cookieKeys = this.$cookies.keys()
@@ -211,8 +233,10 @@ export default {
         body: JSON.stringify(objToSend)
       })
         .then((res) => {
-          fetchInternal("/device_measurements")
+          this.startProgress()
+          fetchInternal("/device_measurements", 60000)
             .then((measurementNaming) => {
+              this.stopProgress()
               this.addStaticValuesForNetwork(measurementNaming)
               console.log("measurements: ", measurementNaming)
 
@@ -242,6 +266,7 @@ export default {
               this.isLoading = false
             })
             .catch((err) => {
+              this.stopProgress()
               this.isLoading = false
               console.log("error fetching measurements: ", err)
             })
