@@ -32,6 +32,25 @@ except Exception as e:
     logging.exception(e, "Device never configured.")
     pass
 
+if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
+    try:
+        import json
+
+        _system_settings = {}
+        _system_settings = json.loads(cfg._SYSTEM_SETTINGS)
+
+        if _system_settings and "loggingLevel" in _system_settings:
+            try:
+                logging.setLevelByName = _system_settings["loggingLevel"]
+            except Exception as e:
+                logging.exception(e, "Error setting logging level")
+                pass
+    except Exception as e:
+        logging.exception(e, "Error loading system settings")
+
+
+
+
 rstCause = device_info.get_reset_cause()
 logging.info("Reset cause: " + str(rstCause))
 

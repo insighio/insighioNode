@@ -346,7 +346,7 @@ def stringParamsToDict(configurationParameters):
     return keyValueDict
 
 
-def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file):
+def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file, request_file_system_optimization=True):
     gc.collect()
 
     utils.copyFile(config_file_explicit, config_file_explicit + ".prev")
@@ -420,5 +420,8 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
     utils.writeToFile(config_file_explicit, contents)
 
     utils.clearCachedStates()
+
+    if request_file_system_optimization:
+        utils.requestFileSystemOptimization()
 
     gc.collect()

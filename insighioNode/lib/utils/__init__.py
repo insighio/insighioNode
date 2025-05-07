@@ -27,8 +27,10 @@ def update_USE_DATA_DIR():
     else:
         print("Using /data directory.")
 
+
 def data_partition_in_use():
     return _USE_DATA_DIR
+
 
 def copyFile(source, destination):
     try:
@@ -186,6 +188,9 @@ def eraseKeyValue(key):
 
 def clearCachedStates():
     eraseKeyValue("tz_sec_offset")
+
+
+def requestFileSystemOptimization():
     deleteFile("/perfOk")
 
 

@@ -53,3 +53,5 @@ _NOTIFICATION_LED_ENABLED = <meas-led-enabled>
 _WD_PERIOD = 120 # watchdog time for rebooting in seconds
 
 _STORE_MEASUREMENT_IF_FAILED_CONNECTION=<store-meas-if-failed-conn>
+
+_SYSTEM_SETTINGS = '<system-settings>'

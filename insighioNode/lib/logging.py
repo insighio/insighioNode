@@ -99,3 +99,19 @@ def exception(e, msg, *args):
 def setLevel(level):
     global _level
     _level = level
+
+
+def setLevelByName(level_name):
+    global _level
+    if level_name == "DEBUG":
+        _level = DEBUG
+    elif level_name == "INFO":
+        _level = INFO
+    elif level_name == "WARNING":
+        _level = WARNING
+    elif level_name == "ERROR":
+        _level = ERROR
+    elif level_name == "CRITICAL":
+        _level = CRITICAL
+    else:
+        raise ValueError("Invalid logging level name: {}".format(level_name))

@@ -210,7 +210,8 @@ export default {
           key === "meas-sdi12" ||
           key === "meas-modbus" ||
           key === "meas-adc" ||
-          key === "meas-pulseCounter"
+          key === "meas-pulseCounter" ||
+          key === "system-settings"
         ) {
           value = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
         }

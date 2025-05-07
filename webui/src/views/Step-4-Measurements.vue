@@ -32,7 +32,7 @@
               <br />
 
               <SDivider label="Explicit key-values" />
-              <div class="accordion">
+              <div class="accordion col-12">
                 <input type="checkbox" id="accordion-1" name="accordion-checkbox" hidden />
                 <label class="accordion-header" for="accordion-1">
                   <i class="icon icon-arrow-right mr-1"></i>
@@ -74,7 +74,30 @@
                   <br />
                 </div>
               </div>
-              <!--SDivider label="Explicit key-values" /-->
+
+              <SDivider label="Advanced System Settings" />
+              <div class="accordion col-12">
+                <input type="checkbox" id="accordion-2" name="accordion-checkbox" hidden />
+                <label class="accordion-header" for="accordion-2">
+                  <i class="icon icon-arrow-right mr-1"></i>
+                  System
+                </label>
+                <div class="accordion-body">
+                  <div class="columns col-12" style="margin: 10px">
+                    <SSelect
+                      label="Logging Level"
+                      v-model:value="systemSettings.loggingLevel"
+                      @update:value="systemSettings.loggingLevel = $event"
+                      :valueOptions="loggingLevels"
+                    />
+                    <SSwitch
+                      label="File System Optimization"
+                      v-model:value="systemSettings.enableFileSystemOptimization"
+                    />
+                  </div>
+                  <br />
+                </div>
+              </div>
 
               <SDivider label="Shield Selection" />
 
@@ -180,6 +203,20 @@ export default {
         dig_analog: "dig_analog",
         enviro: "enviro"
       },
+      loggingLevels: [
+        { value: "DEBUG", label: "Debug" },
+        { value: "INFO", label: "Info" },
+        { value: "WARNING", label: "Warning" },
+        { value: "ERROR", label: "Error" }
+      ],
+      systemDefaultSettings: {
+        loggingLevel: "DEBUG",
+        enableFileSystemOptimization: true
+      },
+      systemSettings: {
+        loggingLevel: "DEBUG",
+        enableFileSystemOptimization: true
+      },
       transitionDirection: "slide-left", // Default transition direction
       isMeasurementNamingDialogOpen: false,
       measurements: [],
@@ -219,6 +256,10 @@ export default {
 
       this.storeMeasIfFailedConn = this.strToJSValue(this.$cookies.get("store-meas-if-failed-conn"), false)
 
+      this.systemSettings = this.getJsonObjectFromCookies("system-settings")
+        ? this.getJsonObjectFromCookies("system-settings")
+        : this.systemDefaultSettings
+
       //fillKeyValuePairsFromDictionary(this.$cookies.get("meas-keyvalue"))
     },
     changeTab(tabId) {
@@ -255,6 +296,8 @@ export default {
       this.$cookies.remove("system-enable-ota")
       this.$cookies.remove("meas-keyvalue")
       this.$cookies.remove("store-meas-if-failed-conn")
+      this.$cookies.remove("system-settings")
+      this.$cookies.remove("request_fs_optimization")
     },
 
     storeData() {
@@ -279,6 +322,9 @@ export default {
       this.$cookies.set("meas-keyvalue", this.getKeyValuePairs())
 
       this.$cookies.set("selected-shield", this.activeTab)
+
+      this.$cookies.set("system-settings", JSON.stringify(this.systemSettings))
+      this.$cookies.set("request_fs_optimization", this.systemSettings.enableFileSystemOptimization)
 
       //this.requestGoNext()
       this.openMeasurementNamingDialog()

@@ -37,6 +37,7 @@ export default {
       const encodedParams = {}
       const config = {}
       let isConfigValid = false
+      let requestFileSystemOptimization = this.$cookies.get("request_fs_optimization")
 
       this.$cookies.keys().forEach((key) => {
         let value = this.$cookies.get(key)
@@ -58,7 +59,8 @@ export default {
           key === "meas-sdi12" ||
           key === "meas-modbus" ||
           key === "meas-adc" ||
-          key === "meas-pulseCounter"
+          key === "meas-pulseCounter" ||
+          key === "system-settings"
         ) {
           encodedParams[key] = encodeURIComponent(value)
           config[key] = value
@@ -73,7 +75,7 @@ export default {
       fetch("http://192.168.4.1" + "/save-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ queryParams: config, encodedParams })
+        body: JSON.stringify({ queryParams: config, encodedParams, requestFileSystemOptimization })
       })
         .then(() => {
           this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))

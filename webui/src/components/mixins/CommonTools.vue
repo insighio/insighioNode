@@ -69,6 +69,19 @@ export default {
     },
     boolToPyStr(val) {
       return val ? "True" : "False"
+    },
+    getJsonObjectFromCookies(cookieName) {
+      const cookieValue = this.$cookies.get(cookieName)
+
+      // console.log("Cookie: " + cookieName + ", value: " + cookieValue + ", type: " + typeof cookieValue)
+      if (cookieValue) {
+        try {
+          return JSON.parse(cookieValue)
+        } catch (e) {
+          //  console.error("Error parsing JSON from cookie:", e)
+        }
+      }
+      return cookieValue
     }
   }
 }

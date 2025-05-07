@@ -147,7 +147,11 @@ class Config:
         try:
             from utils import configuration_handler
 
-            configuration_handler.apply_configuration(data["queryParams"])
+            logging.debug("applying configuration: {}, type: {}".format(data["queryParams"], type(data["requestFileSystemOptimization"])))
+
+            configuration_handler.apply_configuration(
+                data["queryParams"], configuration_handler.config_file, data["requestFileSystemOptimization"]
+            )
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")
@@ -158,12 +162,10 @@ class ConfigTemp:
     def post(self, data):
         print("[temp] received config data: {}".format(data))
 
-        import utils
-
         try:
             from utils import configuration_handler
 
-            configuration_handler.apply_configuration(data["queryParams"], "/apps/demo_temp_config.py")
+            configuration_handler.apply_configuration(data["queryParams"], "/apps/demo_temp_config.py", False)
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")
@@ -171,6 +173,8 @@ class ConfigTemp:
 
 
 class DeviceMeasurements:
+    # global wlan
+
     def get(self, data):
         try:
             from sensors import hx711
@@ -224,7 +228,12 @@ class DeviceMeasurements:
 
             from apps.demo_console import scenario_utils
 
+            # wlan.active(False)
             res = scenario_utils.get_measurements()
+            # wlan.active(True)
+            # timeout_at = ticks_ms() + 15000
+            # while not wlan.isconnected() and ticks_ms() < timeout_at:
+            #     uasyncio.sleep_ms(100)
 
             # in case a temp config has been generated and webserver timesout before
             # deleting it
@@ -368,7 +377,7 @@ def start(timeoutMs=120000):
         # Just send file
         logging.debug("[web-server]: /{}".format(fn))
         file_path = "www/{}".format(fn)
-        file_path_compressed = file_path + '.gz'
+        file_path_compressed = file_path + ".gz"
         if utils.existsFile(file_path_compressed):
             await resp.send_file(file_path_compressed, content_type=get_content_type(fn), content_encoding="gzip")
         else:
@@ -379,7 +388,7 @@ def start(timeoutMs=120000):
         # Just send file
         logging.debug("[web-server]: /assets/{}".format(fn))
         file_path = "www/assets/{}".format(fn)
-        file_path_compressed = file_path + '.gz'
+        file_path_compressed = file_path + ".gz"
 
         if utils.existsFile(file_path_compressed):
             await resp.send_file(file_path_compressed, content_type=get_content_type(fn), content_encoding="gzip")
