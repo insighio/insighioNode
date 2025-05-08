@@ -8,11 +8,9 @@
           <div class="container">
             <div class="columns">
               <SDivider label="Available measurements" />
-              <SSwitch label="LED notifications" v-model:value="ledEnabled" />
               <SSwitch label="Battery statistics" v-model:value="batteryStats" />
               <SSwitch label="Board humidity/temperature" v-model:value="boardSense" />
               <SSwitch label="Network statistics" v-model:value="networkStat" />
-              <SSwitch label="OTA enabled" v-model:value="otaEnabled" />
               <SSwitch label="Store measurements if failed connection" v-model:value="storeMeasIfFailedConn" />
               <SSelect
                 label="Temperature unit"
@@ -84,6 +82,8 @@
                 </label>
                 <div class="accordion-body">
                   <div class="columns col-12" style="margin: 10px">
+                    <SSwitch label="LED notifications" v-model:value="ledEnabled" />
+                    <SSwitch label="OTA enabled" v-model:value="otaEnabled" />
                     <SSelect
                       label="Logging Level"
                       v-model:value="systemSettings.loggingLevel"
@@ -323,7 +323,7 @@ export default {
 
       this.$cookies.set("selected-shield", this.activeTab)
 
-      this.$cookies.set("system-settings", JSON.stringify(this.systemSettings))
+      this.$cookies.set("system-settings", this.systemSettings)
       this.$cookies.set("request_fs_optimization", this.systemSettings.enableFileSystemOptimization)
 
       //this.requestGoNext()

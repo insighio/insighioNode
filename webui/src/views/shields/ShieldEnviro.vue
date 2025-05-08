@@ -399,10 +399,10 @@ export default {
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas-sdi12", JSON.stringify({ sensors: this.sdi12Sensors, config: this.sdi12Config }))
-      this.$cookies.set("meas-modbus", JSON.stringify({ sensors: this.modbusSensors, config: this.modbusConfig }))
-      this.$cookies.set("meas-adc", JSON.stringify(this.adcConfig))
-      this.$cookies.set("meas-pulseCounter", JSON.stringify(this.pulseCounterConfig))
+      this.$cookies.set("meas-sdi12", { sensors: this.sdi12Sensors, config: this.sdi12Config })
+      this.$cookies.set("meas-modbus", { sensors: this.modbusSensors, config: this.modbusConfig })
+      this.$cookies.set("meas-adc", this.adcConfig)
+      this.$cookies.set("meas-pulseCounter", this.pulseCounterConfig)
 
       this.requestGoNext()
     }
