@@ -333,7 +333,12 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
     elif selected_network == "satellite":
         from . import satellite as network
 
-    network.init(cfg)
+    try:
+        network.init(cfg)
+    except:
+        logging.error("Unsupported network selection: [{}]".format(selected_network))
+        return
+        
     logging.debug("Network modules loaded")
 
     if selected_network == "cellular":
