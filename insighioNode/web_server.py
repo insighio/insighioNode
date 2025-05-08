@@ -3,7 +3,7 @@ import network
 import sys
 from external import tinyweb
 
-from device_info import get_hw_module_version, get_device_id, get_hw_module_version, set_led_color, wdt_reset
+from device_info import get_hw_module_version, get_device_id, get_hw_module_version, set_led_enabled, set_led_color, wdt_reset
 from utime import ticks_ms
 import logging
 import uasyncio
@@ -282,6 +282,8 @@ async def server_loop(server_instance, timeoutMs):
     logging.info("Web UI started")
 
     purple = 0x4C004C
+
+    set_led_enabled(True)
     set_led_color(purple)
 
     wdt_reset()
