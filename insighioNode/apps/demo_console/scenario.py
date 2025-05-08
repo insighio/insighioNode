@@ -9,9 +9,8 @@ import logging
 from . import cfg
 from . import message_buffer
 from . import scenario_utils
-from .dictionary_utils import set_value_int, set_value
+from .dictionary_utils import set_value_int
 import device_info
-from device_info import set_led_color, wdt_reset
 import gc
 import machine
 import utils
@@ -38,9 +37,13 @@ def isLightSleepScenario():
     backward_compatibility_on = cfg.get("_ALWAYS_ON_CONNECTION") is not None and cfg.get("_FORCE_ALWAYS_ON_CONNECTION") is not None
 
     if backward_compatibility_on:
-        return (cfg.get("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)) or cfg.get("_FORCE_ALWAYS_ON_CONNECTION")
+        return (cfg.get("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)) or cfg.get(
+            "_FORCE_ALWAYS_ON_CONNECTION"
+        )
     else:
-        return cfg.get("_LIGHT_SLEEP_ON") and (not cfg.get("_LIGHT_SLEEP_DEACTIVATE_ON_BATTERY") or device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power))
+        return cfg.get("_LIGHT_SLEEP_ON") and (
+            not cfg.get("_LIGHT_SLEEP_DEACTIVATE_ON_BATTERY") or device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)
+        )
 
 
 def execute():
@@ -53,19 +56,21 @@ def execute():
     logging.debug("-> executeTimingConfiguration...")
     executeTimingConfiguration()
 
+
 def executeBootstrap(useExistingConfiguration=False):
     logging.info("Executing bootstrap procedure, expecting wifi: ")
 
     if not useExistingConfiguration:
         executeDeviceInitialization()
-        cfg.set("_CONF_NETS", {'deviceHotspot': {'pwd': '12345678'}})
+        cfg.set("_CONF_NETS", {"deviceHotspot": {"pwd": "12345678"}})
 
-        cfg.set("_MAX_CONNECTION_ATTEMPT_TIME_SEC",  20)
+        cfg.set("_MAX_CONNECTION_ATTEMPT_TIME_SEC", 20)
         cfg.set("_MEAS_NETWORK_STAT_ENABLE", False)
         cfg.set("protocol", None)
 
     from . import wifi as network
-    network.init(cfg) #?
+
+    network.init(cfg)  # ?
     logging.debug("Network modules loaded")
 
     connection_results = network.connect(cfg)
@@ -75,20 +80,14 @@ def executeBootstrap(useExistingConfiguration=False):
     cfg.set("device_id", _DEVICE_ID)
     cfg.set("_SECRET_KEY", "000000000000000000000")
 
-    headers = {
-        "Authorization" : cfg.get("_SECRET_KEY"),
-        "accept": "application/json"
-    }
+    headers = {"Authorization": cfg.get("_SECRET_KEY"), "accept": "application/json"}
     URL_base = "console.insigh.io"
-    URL_PATH = '/things/bootstrap/{}'.format(_DEVICE_ID)
-    url = '{}://{}{}'.format(
-        "http" if device_info.get_hw_module_verison() == "esp32wroom" else "https",
-        URL_base,
-        URL_PATH
-    )
+    URL_PATH = "/things/bootstrap/{}".format(_DEVICE_ID)
+    url = "{}://{}{}".format("http" if device_info.get_hw_module_verison() == "esp32wroom" else "https", URL_base, URL_PATH)
 
     try:
         from utils import httpclient
+
         client = httpclient.HttpClient(headers)
         response = client.get(url)
         if response and response.status_code == 200:
@@ -98,48 +97,62 @@ def executeBootstrap(useExistingConfiguration=False):
                     resp = resp[1:-1]
                 logging.debug("new configuration: " + resp)
                 import json
+
                 obj = json.loads(resp)
                 logging.debug("loaded object: {}".format(obj))
                 iid = obj["mainflux_id"]
                 ikey = obj["mainflux_key"]
-                iData = obj["mainflux_channels"][0]["id"] if obj["mainflux_channels"][0]['name'] == 'data' else obj["mainflux_channels"][1]["id"]
-                iControl = obj["mainflux_channels"][1]["id"] if obj["mainflux_channels"][1]['name'] == 'control' else obj["mainflux_channels"][0]["id"]
+                iData = (
+                    obj["mainflux_channels"][0]["id"]
+                    if obj["mainflux_channels"][0]["name"] == "data"
+                    else obj["mainflux_channels"][1]["id"]
+                )
+                iControl = (
+                    obj["mainflux_channels"][1]["id"]
+                    if obj["mainflux_channels"][1]["name"] == "control"
+                    else obj["mainflux_channels"][0]["id"]
+                )
 
                 keyValueDict = dict()
                 if useExistingConfiguration:
-                    #check if configuration needs change
+                    # check if configuration needs change
                     try:
                         protocol_config = cfg.get_protocol_config()
-                        if protocol_config.message_channel_id == iData and \
-                           protocol_config.control_channel_id == iControl and \
-                           protocol_config.thing_id == iid and \
-                           protocol_config.thing_token == ikey:
-                           logging.info("Bootstrap: no change")
-                           return False
+                        if (
+                            protocol_config.message_channel_id == iData
+                            and protocol_config.control_channel_id == iControl
+                            and protocol_config.thing_id == iid
+                            and protocol_config.thing_token == ikey
+                        ):
+                            logging.info("Bootstrap: no change")
+                            return False
                         logging.info("New device keys detected, about to apply configuration")
                         from www import stored_config_utils
+
                         keyValueDict = stored_config_utils.get_config_values(False, True)
                         logging.debug("loaded keys: {}".format(keyValueDict))
                     except Exception as e:
                         logging.exception(e, "error while processing bootstrap data")
                         return False
                 else:
-                    keyValueDict['selected-board'] = "old_esp_abb_panel" if device_info.get_hw_module_verison() == "esp32wroom" else "ins_esp_abb_panel"
-                    keyValueDict['network'] = "wifi"
-                    keyValueDict['wifi-ssid'] = list(frozenset([key for key in cfg.get("_CONF_NETS")]))[0]
-                    keyValueDict['wifi-pass'] = cfg.get("_CONF_NETS")[keyValueDict['wifi-ssid']]['pwd']
-                    keyValueDict['protocol'] = "mqtt"
-                    keyValueDict['system-enable-ota'] = "True"
+                    keyValueDict["selected-board"] = (
+                        "old_esp_abb_panel" if device_info.get_hw_module_verison() == "esp32wroom" else "ins_esp_abb_panel"
+                    )
+                    keyValueDict["network"] = "wifi"
+                    keyValueDict["wifi-ssid"] = list(frozenset([key for key in cfg.get("_CONF_NETS")]))[0]
+                    keyValueDict["wifi-pass"] = cfg.get("_CONF_NETS")[keyValueDict["wifi-ssid"]]["pwd"]
+                    keyValueDict["protocol"] = "mqtt"
+                    keyValueDict["system-enable-ota"] = "True"
 
-                keyValueDict['insighio-id'] = iid
-                keyValueDict['insighio-key'] = ikey
-                keyValueDict['insighio-channel'] = iData
-                keyValueDict['insighio-control-channel'] = iControl
+                keyValueDict["insighio-id"] = iid
+                keyValueDict["insighio-key"] = ikey
+                keyValueDict["insighio-channel"] = iData
+                keyValueDict["insighio-control-channel"] = iControl
 
                 from utils import configuration_handler
 
                 if "content" in obj:
-                    keyValueDictContent = configuration_handler.stringParamsToDict(obj['content'])
+                    keyValueDictContent = configuration_handler.stringParamsToDict(obj["content"])
                     if keyValueDictContent is not None:
                         keyValueDict.update(keyValueDictContent)
 
@@ -158,10 +171,11 @@ def executeBootstrap(useExistingConfiguration=False):
 
     network.deinit()
 
-    utils.deleteModule('utils.httpclient')
+    utils.deleteModule("utils.httpclient")
 
     logging.error("failed to execute bootstrap")
     return False
+
 
 def executeDeviceInitialization():
     # The demo_config.py is autogenerated by webui
@@ -181,13 +195,14 @@ def executeDeviceInitialization():
         wdt_on_boot_timeout_sec=cfg.get("_WD_PERIOD"),
         bt_on_boot=False,
     )
-    set_led_color("blue")
+
+    device_info.set_led_color("blue")
     _DEVICE_ID = device_info.get_device_id()[0]
     cfg.set("device_id", _DEVICE_ID)
     logging.info("Device ID in readable form: {}".format(_DEVICE_ID))
 
     # wachdog reset
-    wdt_reset()
+    device_info.wdt_reset()
 
 
 def determine_message_buffering_and_network_connection_necessity():
@@ -198,6 +213,7 @@ def determine_message_buffering_and_network_connection_necessity():
     if buffered_upload_enabled and gmtime()[0] < 2021:
         execute_connection_procedure = True
     return (buffered_upload_enabled, execute_connection_procedure)
+
 
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
@@ -233,7 +249,7 @@ def executeMeasureAndUploadLoop():
 
     while 1:
         logging.info("Light sleep activated: " + str(light_sleep_on))
-        wdt_reset()
+        device_info.wdt_reset()
         measurement_run_start_timestamp = ticks_ms()
 
         # get measurements
@@ -275,22 +291,27 @@ def executeMeasureAndUploadLoop():
             scenario_utils.executePostConnectionOperations()
         is_first_run = False
 
-
         # if not connectAndUploadCompletedWithoutErrors or not light_sleep_on or not light_sleep_on_period:
         if not light_sleep_on or not light_sleep_on_period:
             # abort measurement while loop
-            logging.info("exiting measurement loop, light_sleep_on: {}, light_sleep_on_period: {}".format(light_sleep_on, light_sleep_on_period))
+            logging.info(
+                "exiting measurement loop, light_sleep_on: {}, light_sleep_on_period: {}".format(light_sleep_on, light_sleep_on_period)
+            )
             break
 
         logging.debug("[light sleep]: continuing execution")
         time_to_sleep = 1
 
         # if connection procedure was executed
-        logging.debug("[light sleep]: active: {}, connected: {}".format(cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors))
+        logging.debug(
+            "[light sleep]: active: {}, connected: {}".format(
+                cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors
+            )
+        )
         if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and connectAndUploadCompletedWithoutErrors:
             logging.debug("[light sleep]: disconnecting")
             executeNetworkDisconnect()
-            set_led_color("black")
+            device_info.set_led_color("black")
         else:
             logging.debug("[light sleep]: ignoring disconnection")
 
@@ -302,10 +323,9 @@ def executeMeasureAndUploadLoop():
         start_sleep_time = ticks_ms()
         end_sleep_time = start_sleep_time + time_to_sleep
         while ticks_ms() < end_sleep_time:
-            wdt_reset()
+            device_info.wdt_reset()
             sleep_ms(100)
         light_sleep_on = isLightSleepScenario()
-
 
     # if connection procedure was executed
     if connectAndUploadCompletedWithoutErrors is not None:
@@ -314,6 +334,7 @@ def executeMeasureAndUploadLoop():
 
 def executeGetGPSPosition(measurements, light_sleep_on):
     from . import gps
+
     return gps.get_gps_position(cfg, measurements, light_sleep_on)
 
 
@@ -338,7 +359,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
     except:
         logging.error("Unsupported network selection: [{}]".format(selected_network))
         return
-        
+
     logging.debug("Network modules loaded")
 
     if selected_network == "cellular":
@@ -352,7 +373,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
             is_connected = True
         else:
             if not is_first_run:
-                set_led_color("red")
+                device_info.set_led_color("red")
                 network.disconnect()
             logging.info("Connecting to network over: " + selected_network)
             connection_results = network.connect(cfg)
@@ -391,7 +412,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
             logging.debug("Network [" + selected_network + "] connected: " + str(is_connected))
 
         if is_connected:
-            set_led_color("green")
+            device_info.set_led_color("green")
 
             if is_first_run:
                 executeDeviceConfigurationUpload(cfg, network)
@@ -405,10 +426,10 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
                 network.check_and_apply_ota(cfg)
         else:
             logging.debug("Network [" + selected_network + "] connected: False")
-            set_led_color("red")
+            device_info.set_led_color("red")
 
     except Exception as e:
-        set_led_color("red")
+        device_info.set_led_color("red")
         logging.exception(e, "Exception while sending data:")
         return False
 
@@ -427,7 +448,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         try:
             notifyDisconnected(network)
             network.disconnect()
-            set_led_color("red")
+            device_info.set_led_color("red")
         except Exception as e:
             logging.exception(e, "Exception during disconnection:")
     return message_sent
@@ -466,7 +487,7 @@ def executeDeviceStatisticsUpload(cfg, network):
     stats["fw_v_patch"] = patch
     stats["fw_v_commit"] = commit
     stats["free_flash"] = device_info.get_free_flash()
-    stats["free_data_flash"] = device_info.get_free_flash('/data')
+    stats["free_data_flash"] = device_info.get_free_flash("/data")
     stats["serial"] = device_info.get_device_id()[0]
     try:
         import platform
@@ -485,9 +506,9 @@ def executeDeviceConfigurationUpload(cfg, network):
     logging.debug("configUploadFileContent: {}".format(configUploadFileContent))
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
-        #from utils import configuration_handler
+        # from utils import configuration_handler
 
-        #configuration_handler.notifyServerWithNewConfig()
+        # configuration_handler.notifyServerWithNewConfig()
 
         message_sent = network.send_control_message(
             cfg,

@@ -1,4 +1,5 @@
-""" Module for getting various type of information from device """
+"""Module for getting various type of information from device"""
+
 import gc
 import machine
 import uos
@@ -140,46 +141,41 @@ def set_defaults(
         wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
         wdt_timeout = wdt_on_boot_timeout_sec
 
-    initialize_led()
-
 
 def initialize_led():
     if get_hw_module_verison() == "esp32s3":
         set_led_enabled(True, 47, 21)
-    elif get_hw_module_verison() == "esp32s2":
-        set_led_enabled(True, 37, 36)
     else:
         set_led_enabled(False)
 
 
-def set_led_enabled(led_enabled, led_pin_vdd=37, led_pin_din=36):
+def set_led_enabled(led_enabled, led_pin_vdd=47, led_pin_din=21):
     global _led_pin_pwr
     global _led_neopixel
 
+    if not led_enabled:
+        if _led_pin_pwr:
+            _led_pin_pwr.off()
+            _led_pin_pwr = None
+        return
+
     try:
         _led_pin_pwr = machine.Pin(led_pin_vdd, machine.Pin.OUT)
-
-        if not led_enabled:
-            _led_pin_pwr.off()
-            return
     except Exception as e:
-        pass
+        logging.exception(e, "error setting up _led_pin_pwr")
 
-    if not led_enabled:
+    try:
+        from neopixel import NeoPixel
+
+        pin_din = machine.Pin(led_pin_din, machine.Pin.OUT)
+        _led_neopixel = NeoPixel(pin_din, 1)
+    except Exception as e:
         _led_neopixel = None
-    else:
-        try:
-            from neopixel import NeoPixel
-
-            pin_din = machine.Pin(led_pin_din, machine.Pin.OUT)
-            _led_neopixel = NeoPixel(pin_din, 1)
-        except Exception as e:
-            _led_neopixel = None
-            pass
+        logging.exception(e, "error setting up _led_neopixel")
 
 
 def set_led_color(color):
-    if not _led_neopixel:
+    if not _led_neopixel or not _led_pin_pwr:
         return
 
     """ Sets led color """
@@ -198,6 +194,7 @@ def set_led_color(color):
         if color == 0:
             _led_pin_pwr.off()
             return
+
         _led_pin_pwr.on()
     except Exception as e:
         pass
@@ -244,7 +241,7 @@ def get_cpu_temp(unit_in_celsius=True):
         return temp
 
 
-def get_free_flash(partition_path='/'):
+def get_free_flash(partition_path="/"):
     import uos
 
     (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(partition_path)
@@ -270,11 +267,11 @@ def bq_charger_setup(i2c, bq_addr):
 
 
 def bq_charger_set_charging_on(i2c, bq_addr):
-    i2c.writeto_mem(bq_addr, 1, b"\x1B")
+    i2c.writeto_mem(bq_addr, 1, b"\x1b")
 
 
 def bq_charger_set_charging_off(i2c, bq_addr):
-    i2c.writeto_mem(bq_addr, 1, b"\x0B")
+    i2c.writeto_mem(bq_addr, 1, b"\x0b")
 
 
 def bq_charger_is_on_external_power(i2c, bq_addr):

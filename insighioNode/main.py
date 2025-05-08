@@ -48,8 +48,11 @@ if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
     except Exception as e:
         logging.exception(e, "Error loading system settings")
 
-
-
+if demo_config_exists and hasattr(cfg, "_NOTIFICATION_LED_ENABLED"):
+    try:
+        device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED)
+    except:
+        pass
 
 rstCause = device_info.get_reset_cause()
 logging.info("Reset cause: " + str(rstCause))

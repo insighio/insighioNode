@@ -2,30 +2,39 @@
 # check performance
 
 # # boot.py -- run on boot-up
-from machine import Pin
-from neopixel import NeoPixel
-
-Pin(47, Pin.OUT).on()
-_led_neopixel = NeoPixel(Pin(21, Pin.OUT), 1)
-
 from utime import time_ns
+import uos
 
 test_load_start = time_ns()
 import utils
 
 loadtime = time_ns() - test_load_start
 
-color = loadtime << 8
-_led_neopixel[0] = (
-    (color & 0xFF0000) >> 16,
-    (color & 0x00FF00) >> 8,
-    (color & 0x0000FF),
-)
-_led_neopixel.write()
-
 # use normal files (not flags) to check file system performance
 
-if not utils.existsFile("/perfOk"):
+if not utils.existsFile("/perfOk") and 'esp32s3' in uos.uname().machine.lower().split(" ")[0]:
+    from machine import Pin
+    from neopixel import NeoPixel
+
+    Pin(47, Pin.OUT).on()
+    _led_neopixel = NeoPixel(Pin(21, Pin.OUT), 1)
+
+    color_index = loadtime % 3
+    color = 0x252525
+    if color_index == 0:
+        color = 0x250000
+    elif color_index == 1:
+        color = 0x002500
+    elif color_index == 2:
+        color = 0x000025
+
+    _led_neopixel[0] = (
+        (color & 0xFF0000) >> 16,
+        (color & 0x00FF00) >> 8,
+        (color & 0x0000FF),
+    )
+    _led_neopixel.write()
+
     print("Module load duration {}ms".format(loadtime))
     prevtime = utils.readFromFile("/loadtesting")
     try:
@@ -39,13 +48,14 @@ if not utils.existsFile("/perfOk"):
         utils.deleteFile("/loadtesting")
     else:
         utils.writeToFile("/loadtesting", "{}".format(loadtime))
+
+    Pin(47, Pin.OUT).off()
+
     from machine import deepsleep
 
     deepsleep(1)
 else:
     print("[boot]: performance ok")
-
-Pin(47, Pin.OUT).off()
 
 
 ##################################################################
