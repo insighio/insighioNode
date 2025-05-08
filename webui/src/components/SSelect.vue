@@ -10,7 +10,7 @@
         </label>
       </div>
       <div :class="'col-' + colsInput + ' col-sm-12'">
-        <select class="form-select" v-model="internalValue">
+        <select :disabled="disabled" class="form-select" v-model="internalValue">
           <option v-for="opt in valueOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
       </div>
@@ -21,8 +21,11 @@
 </template>
 
 <script>
+import SElementCommon from "./mixins/SElementCommon.vue"
+
 export default {
   name: "SSelect",
+  mixins: [SElementCommon],
   props: {
     value: {
       type: [String, Number, Boolean],
@@ -31,37 +34,6 @@ export default {
     valueOptions: {
       type: Array,
       required: true
-    },
-    label: {
-      type: String,
-      required: true
-    },
-    colsSum: {
-      type: Number,
-      default: 12
-    },
-    colsLabel: {
-      type: Number,
-      default: 4
-    },
-    colsInput: {
-      type: Number,
-      default: 8
-    },
-    tooltip: {
-      type: String,
-      default: undefined
-    }
-  },
-  emits: ["update:value"],
-  computed: {
-    internalValue: {
-      get() {
-        return this.value
-      },
-      set(val) {
-        this.$emit("update:value", val)
-      }
     }
   }
 }

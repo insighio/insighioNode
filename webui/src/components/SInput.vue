@@ -12,6 +12,7 @@
       <div :class="'col-' + colsInput + ' col-sm-12'">
         <input
           id="inputField"
+          :disabled="disabled"
           :type="inputType"
           class="form-input constr-field"
           v-model="internalValue"
@@ -25,48 +26,20 @@
 </template>
 
 <script>
+import SElementCommon from "./mixins/SElementCommon.vue"
+
 export default {
   name: "SInput",
+  mixins: [SElementCommon],
   props: {
     value: {
       type: [String, Number],
       default: "",
       required: true
     },
-    label: {
-      type: String,
-      required: true
-    },
     inputType: {
       type: String,
       default: "text"
-    },
-    colsSum: {
-      type: Number,
-      default: 12
-    },
-    colsLabel: {
-      type: Number,
-      default: 4
-    },
-    colsInput: {
-      type: Number,
-      default: 8
-    },
-    tooltip: {
-      type: String,
-      default: undefined
-    }
-  },
-  emits: ["update:value"],
-  computed: {
-    internalValue: {
-      get() {
-        return this.value
-      },
-      set(val) {
-        this.$emit("update:value", val)
-      }
     }
   },
   methods: {
