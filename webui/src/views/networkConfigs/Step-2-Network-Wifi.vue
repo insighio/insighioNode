@@ -82,11 +82,7 @@ export default {
       wifi_ssid: undefined,
       wifi_pass: undefined,
       protocol: undefined,
-      wifiAvailableNets: [
-        { ssid: "SSID 1", rssi: -50 },
-        { ssid: "SSID 2", rssi: -70 },
-        { ssid: "SSID 3", rssi: -80 }
-      ],
+      wifiAvailableNets: [],
       localLoading: false,
       protocol_options: [
         {
