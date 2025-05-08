@@ -192,6 +192,11 @@ class DeviceMeasurements:
                 pass
 
             try:
+                del sys.modules["apps.demo_console.cfg"]
+            except:
+                pass
+
+            try:
                 del sys.modules["apps.demo_console.scenario_utils"]
             except:
                 pass
