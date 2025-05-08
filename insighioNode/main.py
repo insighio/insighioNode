@@ -54,7 +54,7 @@ if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
 rstCause = device_info.get_reset_cause()
 logging.info("Reset cause: " + str(rstCause))
 
-ENABLE_BOOTSTRAP = True
+ENABLE_BOOTSTRAP = False
 if rstCause == 0 or rstCause == 1 or not demo_config_exists:
     if ENABLE_BOOTSTRAP and not demo_config_exists:
         logging.info("Trying to get device auth from bootstrap")
