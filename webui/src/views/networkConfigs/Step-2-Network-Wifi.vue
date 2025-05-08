@@ -10,6 +10,7 @@
         @update:value="wifi_pass = $event"
         :colsLabel="3"
         :colsInput="9"
+        ref="passwordInput"
       />
       <SDivider label="Generic Configuration" />
       <SRadioGroup
@@ -35,9 +36,9 @@
         </thead>
         <tbody>
           <tr v-for="network in wifiAvailableNets" :key="network.ssid" @click="ssidSelected(network)">
-            <td>{{ network.ssid }}</td>
-            <td>{{ network.rssi }}</td>
-            <td>
+            <td class="pointer">{{ network.ssid }}</td>
+            <td class="pointer">{{ network.rssi }}</td>
+            <td class="pointer">
               <span
                 :style="
                   'color:' +
@@ -81,7 +82,11 @@ export default {
       wifi_ssid: undefined,
       wifi_pass: undefined,
       protocol: undefined,
-      wifiAvailableNets: [],
+      wifiAvailableNets: [
+        { ssid: "SSID 1", rssi: -50 },
+        { ssid: "SSID 2", rssi: -70 },
+        { ssid: "SSID 3", rssi: -80 }
+      ],
       localLoading: false,
       protocol_options: [
         {
@@ -137,6 +142,9 @@ export default {
     },
     ssidSelected(network) {
       this.wifi_ssid = network.ssid
+      this.$nextTick(() => {
+        this.$refs.passwordInput.focusInput()
+      })
     },
     validateMyForm() {
       if (!this.wifi_ssid) {

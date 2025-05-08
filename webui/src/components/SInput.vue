@@ -10,7 +10,13 @@
         </label>
       </div>
       <div :class="'col-' + colsInput + ' col-sm-12'">
-        <input :type="inputType" class="form-input constr-field" v-model="internalValue" />
+        <input
+          id="inputField"
+          :type="inputType"
+          class="form-input constr-field"
+          v-model="internalValue"
+          ref="inputField"
+        />
       </div>
       <br />
       <br />
@@ -61,6 +67,11 @@ export default {
       set(val) {
         this.$emit("update:value", val)
       }
+    }
+  },
+  methods: {
+    focusInput() {
+      this.$refs.inputField.focus()
     }
   }
 }
