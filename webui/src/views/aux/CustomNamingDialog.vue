@@ -95,7 +95,8 @@ export default {
       isSaveButtonVisible: false,
       isLoading: false,
       rawMeasurementsRetrieved: undefined,
-      progressValue: 0
+      progressValue: 0,
+      progressTimer: undefined
     }
   },
   mounted() {
@@ -168,9 +169,9 @@ export default {
     startProgress() {
       this.progressValue = 0
 
-      const interval = setInterval(() => {
+      this.progressTimer = setInterval(() => {
         if (this.progressValue >= 60) {
-          clearInterval(interval)
+          clearInterval(this.progressTimer)
           this.isLoading = false
         } else {
           this.progressValue += 1
@@ -180,6 +181,7 @@ export default {
     stopProgress() {
       this.isLoading = false
       this.progressValue = 0
+      clearInterval(this.progressTimer)
     },
     executeMeasurements() {
       this.progressValue = 0
