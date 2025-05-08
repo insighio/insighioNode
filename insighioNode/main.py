@@ -41,7 +41,7 @@ if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
 
         if _system_settings and "loggingLevel" in _system_settings:
             try:
-                logging.setLevelByName = _system_settings["loggingLevel"]
+                logging.setLevelByName(_system_settings["loggingLevel"])
             except Exception as e:
                 logging.exception(e, "Error setting logging level")
                 pass

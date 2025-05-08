@@ -147,10 +147,8 @@ class Config:
         try:
             from utils import configuration_handler
 
-            logging.debug("applying configuration: {}, type: {}".format(data["queryParams"], type(data["requestFileSystemOptimization"])))
-
             configuration_handler.apply_configuration(
-                data["queryParams"], configuration_handler.config_file, data["requestFileSystemOptimization"]
+                data["queryParams"], configuration_handler.config_file, data["requestFileSystemOptimization"] == "true"
             )
             return {}, 200
         except Exception as e:

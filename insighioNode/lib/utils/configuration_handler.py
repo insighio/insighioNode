@@ -159,6 +159,7 @@ configDict = {
     "_MEAS_MODBUS": "meas_modbus",
     "_MEAS_ADC": "meas_adc",
     "_MEAS_PULSECOUNTER": "meas_pulseCounter",
+    "_SYSTEM_SETTINGS": "system_settings",
 }
 
 NoneType = type(None)
