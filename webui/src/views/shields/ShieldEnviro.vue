@@ -174,7 +174,7 @@
     <SDivider label="Pulse Counter" />
     <div class="col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
       <div class="container" v-for="pc in pulseCounterConfig" :key="pc.id">
-        <SSwitch :label="'Pulse Counter ' + pc.id" v-model:value="pc.enable" />
+        <SSwitch disabled :label="'Pulse Counter ' + pc.id" v-model:value="pc.enable" />
         <div v-if="pc.enable" class="col-12">
           <div class="form-group columns">
             <div class="column col-1 col-mr-auto"></div>
