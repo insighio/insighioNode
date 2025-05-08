@@ -45,6 +45,10 @@ def _initialize_i2c():
 
         I2C_SCL = cfg.get("_UC_IO_I2C_SCL")
         I2C_SDA = cfg.get("_UC_IO_I2C_SDA")
+
+        if I2C_SCL is None or I2C_SDA is None:
+            return None
+
         _i2c = SoftI2C(scl=Pin(I2C_SCL), sda=Pin(I2C_SDA), freq=400000)
 
     return _i2c
@@ -62,7 +66,9 @@ def io_expander_init():
     global _io_expander_addr
     _io_expander_addr = cfg.get("_UC_IO_EXPANDER_ADDR")
 
-    _initialize_i2c()
+    initialized = _initialize_i2c()
+    if not initialized:
+        return False
 
     # set all output pins to LOW
     power_off_all_sensors()
@@ -70,6 +76,8 @@ def io_expander_init():
     # set all ports as output except P3 which is input
     # and has UC_IO_XTNDR_ADC_ALERT_RDY
     _i2c.writeto_mem(_io_expander_addr, 3, b"\xf8")
+
+    return True
 
 
 def ads_init():
@@ -159,11 +167,13 @@ def initialize_configurations():
 
 
 def shield_measurements(measurements):
-    io_expander_init()
-
     initialize_configurations()
 
     enable_regulator()
+
+    if not io_expander_init():
+        logging.debug("io expander can not be initialized, aborting shiled measurements")
+        return
 
     execute_sdi12_measurements(measurements)
 
@@ -173,10 +183,10 @@ def shield_measurements(measurements):
 
     execute_pulse_counter_measurements(measurements)
 
+    _deinitialize_i2c()
+
     # power off SDI12 regulator
     disable_regulator()
-
-    _deinitialize_i2c()
 
 
 ##### SDI12 functions #####
