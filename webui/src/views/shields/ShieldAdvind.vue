@@ -7,7 +7,7 @@
             <th>Index</th>
             <th>Sensor ID</th>
             <th>Board Location</th>
-            <th>Active</th>
+            <!--th>Active</th-->
             <th>
               <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">
                 <i class="icon icon-plus"></i>
@@ -28,12 +28,12 @@
                 <option v-for="opt in sdi12LocationOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </td>
-            <td>
+            <!--td>
               <label class="form-switch">
                 <input type="checkbox" v-model="row.active" />
                 <i class="form-icon"></i>
               </label>
-            </td>
+            </td-->
             <td>
               <button class="btn btn-primary" @click="sdi12Rows.splice(index, 1)">
                 <i class="icon icon-delete"></i>
@@ -162,12 +162,12 @@ export default {
         ) {
           continue
         }
-        this.sdi12Rows.push({ sensorId: rowAddress, boardLocation: rowLoc, active: rowEnabled })
+        this.sdi12Rows.push({ sensorId: rowAddress, boardLocation: rowLoc, active: true })
       }
 
-      if (this.sdi12Rows.length === 0) {
-        this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: false })
-      }
+      // if (this.sdi12Rows.length === 0) {
+      //   this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: false })
+      // }
 
       this.sdi12WarmupTimeMs = this.$cookies.get("meas-sdi-warmup-time")
         ? this.$cookies.get("meas-sdi-warmup-time")
@@ -188,7 +188,7 @@ export default {
         : "1"
     },
     addSdi12Row() {
-      if (this.sdi12Rows.length < 10) this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: false })
+      if (this.sdi12Rows.length < 10) this.sdi12Rows.push({ sensorId: 0, boardLocation: "1", active: true })
     },
     validateMyForm() {
       this.storeData()
@@ -238,7 +238,7 @@ export default {
   },
   mounted() {
     this.sdi12SensorIdOptions = []
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 0; i < 10; i++) {
       this.sdi12SensorIdOptions.push({ value: i, label: i.toString() })
     }
     // Add your mounted logic here

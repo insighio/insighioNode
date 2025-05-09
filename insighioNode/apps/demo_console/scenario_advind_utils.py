@@ -5,9 +5,9 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
 
-from .dictionary_utils import set_value
+from .dictionary_utils import set_value, set_value_float
 
-from sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
+from .sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
 
 
 from . import cfg
@@ -221,7 +221,7 @@ def execute_transformation(measurements, name, raw_value, transformator):
         namespace = {}
         exec(to_execute, namespace)
         print("namespace: " + str(namespace))
-        set_value(measurements, name + "_formula", namespace["v_transformed"])
+        set_value_float(measurements, name + "_formula", namespace["v_transformed"])
     except Exception as e:
         logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass

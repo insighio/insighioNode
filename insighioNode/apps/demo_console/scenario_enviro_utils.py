@@ -558,7 +558,7 @@ def execute_transformation(measurements, name, raw_value, transformator):
         namespace = {}
         exec(to_execute, namespace)
         print("namespace: " + str(namespace))
-        set_value(measurements, name + "_formula", namespace["v_transformed"])
+        set_value_float(measurements, name + "_formula", namespace["v_transformed"])
     except Exception as e:
         logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass
