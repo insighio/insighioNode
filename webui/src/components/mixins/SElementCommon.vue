@@ -24,6 +24,10 @@ export default {
     disabled: {
       type: Boolean,
       default: false
+    },
+    tooltip: {
+      type: String,
+      default: undefined
     }
   },
   emits: ["update:value"],
