@@ -18,8 +18,8 @@ _ads_rate = None
 
 _sdi12_config = {}
 _modbus_config = {}
-_adc_config = {}
-_pulse_counter_config = {}
+_adc_config = []
+_pulse_counter_config = []
 
 _modbus_reg_quantity_per_format = {
     "uint16": 1,
@@ -170,6 +170,12 @@ def shield_measurements(measurements):
     initialize_configurations()
 
     enable_regulator()
+
+    ## testing
+    execute_pulse_counter_measurements(measurements)
+
+    disable_regulator()
+    return
 
     if not io_expander_init():
         logging.debug("io expander can not be initialized, aborting shiled measurements")
@@ -375,7 +381,7 @@ def read_modbus_sensor(modbus, measurements, sensor):
     try:
         response = []
 
-        number_of_registers = _modbus_reg_quantity_per_format.get(format)
+        number_of_registers = _get(_modbus_reg_quantity_per_format, format)
         if number_of_registers is None:
             logging.error("Unsupported MODBUS format: {}".format(format))
             number_of_registers = 1
@@ -453,7 +459,7 @@ def parse_modbus_response(response, format, factor, decimal_digits, msw_first, l
 
     struct_endianess = "<" if little_endian else ">"
 
-    struct_format = _modbus_struct_format_options.get(format)
+    struct_format = _get(_modbus_struct_format_options, format)
 
     if struct_format is None:
         logging.error("Unsupported MODBUS format: {}".format(format))
@@ -489,7 +495,7 @@ def execute_adc_measurements(measurements):
 
     has_enabled_sensor = False
     for sensor in _adc_config:
-        if sensor.get("enabled") == 1:
+        if _get(sensor, "enabled"):
             has_enabled_sensor = True
             break
 
@@ -544,10 +550,37 @@ def read_adc_sensor(measurements, sensor):
 #### Pulse Counter functions #####
 
 
-# [{"id":1,"enabled":false,"formula":"v","highFreq":false,"enable":true},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
+# [{"id":1,"enabled":false,"formula":"v","highFreq":false},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
 def execute_pulse_counter_measurements(measurements):
     logging.info("Starting Pulse Counter measurements")
-    pass
+
+    if not _pulse_counter_config or len(_pulse_counter_config) == 0:
+        logging.error("No sensors found in ADS config")
+        return
+
+    has_enabled_sensor = False
+    for sensor in _pulse_counter_config:
+        if _get(sensor, "enabled"):
+            has_enabled_sensor = True
+            break
+
+    if not has_enabled_sensor:
+        logging.error("No enabled sensors found in Pulse Counter config")
+        logging.debug("cfg: {}".format(cfg.get("_MEAS_PULSECOUNTER")))
+        logging.debug("cfg: {}".format(_pulse_counter_config))
+
+        import utils
+
+        TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
+        utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
+        return
+
+    from . import scenario_pcnt_ulp
+
+    for sensor in _pulse_counter_config:
+        sensor["gpio"] = cfg.get("UC_IO_DGTL_SNSR_{}_READ".format(_get(sensor, "id")))
+
+    scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
 
 
 ### Auxiliary functions ###

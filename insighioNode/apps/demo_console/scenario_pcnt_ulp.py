@@ -1,42 +1,19 @@
-from math import floor
 import machine
 import utils
 import utime
 import logging
-from external.kpn_senml.senml_unit import SenmlUnits, SenmlSecondaryUnits
-from .dictionary_utils import set_value, set_value_int, set_value_float
+from external.kpn_senml.senml_unit import SenmlUnits
+from .dictionary_utils import set_value_int, set_value_float
 
 _is_first_run = True
 _is_after_initialization = False
 
-def setup_assembly(is_high_freq, port_number):
-    _edge_not_detected_script = "halt" if not is_high_freq else "SLEEP 100\njump entry"
-    _loop_counting = (
-        "halt"
-        if not is_high_freq
-        else """\
-	/* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
-	ld r0, r3, 0
-	jumpr loop_detected, 0, EQ
 
-	SLEEP 100
-	jump entry
-
-	.global loop_detected
-loop_detected:
-	move r3, edge_count_loops
-	ld r2, r3, 0
-	add r2, r2, 1
-	st r2, r3, 0
-
-	SLEEP 100
-	jump entry
-"""
-    )
-    return """\
-
+def generate_assembly(
+    pcnt_1_enabled=False, pcnt_1_gpio=4, pcnt_1_high_freq=False, pcnt_2_enabled=False, pcnt_2_gpio=5, pcnt_2_high_freq=False
+):
+    base_template = """\
 #define DR_REG_RTCIO_BASE            0x60008400
-#define RTC_IO_TOUCH_PADX_REG        (DR_REG_RTCIO_BASE + 0x84 + ({}*0x4))
 #define RTC_IO_TOUCH_PADX_MUX_SEL_M  (BIT(19))
 #define RTC_IO_TOUCH_PADX_FUN_IE_M   (BIT(13))
 #define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
@@ -45,66 +22,127 @@ loop_detected:
 #define SENS_SAR_PERI_CLK_GATE_CONF_REG  (DR_REG_SENS_BASE + 0x104)
 #define SENS_IOMUX_CLK_EN            (BIT(31))
 
-  /* Define variables, which go into .bss section (zero-initialized data) */
+/* Define variables, which go into .bss section (zero-initialized data) */
+"""
 
-next_edge: .long 0
-edge_count: .long 0
-edge_count_loops: .long 0
-debounce_counter: .long 1
-debounce_max_count: .long 1
-io_number: .long {}
+    pcnt_template = """\
 
-	/* Code goes into .text section */
-	.text
-	.global entry
+/* pcnt {pcnt_num} */
+#define RTC_IO_TOUCH_PADX_{gpio}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio}*0x4))
+next_edge_{gpio}: .long 0
+edge_count_{gpio}: .long 0
+edge_count_loops_{gpio}: .long 0
+debounce_counter_{gpio}: .long 1
+debounce_max_count_{gpio}: .long 1
+io_number_{gpio}: .long {gpio}
+
+"""
+
+    code_template = """\
+    /* Code goes into .text section */
+    .text
+    .global entry
 entry:
-	/* Load io_number */
-	move r3, io_number
-	ld r3, r3, 0
+{pcnt_checks}
+{pcnt_functions}
+"""
+
+    pcnt_check_template = """\
+    jump check_pcnt_{gpio}
+"""
+
+    pcnt_function_template = """\
+    .global check_pcnt_{gpio}
+check_pcnt_{gpio}:
+    /* Load io_number_{gpio} */
+    move r3, io_number_{gpio}
+    ld r3, r3, 0
 
     # enable IOMUX clock
     WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1)
 
     # connect GPIO to the RTC subsystem so the ULP can read it
-    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 1)
+    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 1)
 
     # switch the GPIO into input mode
-    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 1)
+    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 1)
 
-	/* Read the value of lower 16 RTC IOs into R0 */
-	READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
+    /* Read the value of lower 16 RTC IOs into R0 */
+    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
 
-	rsh r0, r0, r3
-	and r0, r0, 1
-	/* State of input changed? */
-	move r3, next_edge
-	ld r3, r3, 0
-	add r3, r0, r3
-	and r3, r3, 1
-	jump edge_detected, eq
-	/* End program */
-	{}
+    rsh r0, r0, r3
+    and r0, r0, 1
+    /* State of input changed? */
+    move r3, next_edge_{gpio}
+    ld r3, r3, 0
+    add r3, r0, r3
+    and r3, r3, 1
+    jump edge_detected_{gpio}, eq
+    {sleep_or_halt}
 
-	.global edge_detected
-edge_detected:
-	/* Flip next_edge */
-	move r3, next_edge
-	ld r2, r3, 0
-	add r2, r2, 1
-	and r2, r2, 1
-	st r2, r3, 0
-	/* Increment edge_count */
-	move r3, edge_count
-	ld r2, r3, 0
-	add r2, r2, 1
-	st r2, r3, 0
-	{}
-""".format(
-        port_number,
-        port_number,
-        _edge_not_detected_script,
-        _loop_counting,
-    )
+    .global edge_detected_{gpio}
+edge_detected_{gpio}:
+    /* Flip next_edge_{gpio} */
+    move r3, next_edge_{gpio}
+    ld r2, r3, 0
+    add r2, r2, 1
+    and r2, r2, 1
+    st r2, r3, 0
+    /* Increment edge_count_{gpio} */
+    move r3, edge_count_{gpio}
+    ld r2, r3, 0
+    add r2, r2, 1
+    st r2, r3, 0
+{loop_detection}
+    {sleep_or_halt}
+
+"""
+
+    loop_detection_template = """\
+    /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
+    ld r0, r3, 0
+    jumpr loop_detected_{gpio}, 0, EQ
+    {sleep_or_halt}
+
+    .global loop_detected_{gpio}
+loop_detected_{gpio}:
+    move r3, edge_count_loops_{gpio}
+    ld r2, r3, 0
+    add r2, r2, 1
+    st r2, r3, 0
+"""
+
+    pcnt_checks = ""
+    pcnt_functions = ""
+
+    if pcnt_1_enabled:
+        pcnt_checks += pcnt_check_template.format(gpio=pcnt_1_gpio)
+
+        sleep_or_halt = (
+            "jump check_pcnt_{}".format(pcnt_2_gpio) if pcnt_2_enabled else "SLEEP 100\n    jump entry" if pcnt_1_high_freq else "halt"
+        )
+
+        pcnt_functions += pcnt_function_template.format(
+            gpio=pcnt_1_gpio,
+            sleep_or_halt=sleep_or_halt,
+            loop_detection=loop_detection_template.format(gpio=pcnt_1_gpio, sleep_or_halt=sleep_or_halt) if pcnt_1_high_freq else "",
+        )
+        base_template += pcnt_template.format(pcnt_num=1, gpio=pcnt_1_gpio)
+
+    if pcnt_2_enabled:
+        pcnt_checks += pcnt_check_template.format(gpio=pcnt_2_gpio)
+        pcnt_functions += pcnt_function_template.format(
+            gpio=pcnt_2_gpio,
+            sleep_or_halt="SLEEP 100\n    jump entry" if pcnt_2_high_freq else "halt",
+            loop_detection=(
+                loop_detection_template.format(gpio=pcnt_2_gpio, sleep_or_halt="SLEEP 100\n    jump entry" if pcnt_2_high_freq else "halt")
+                if pcnt_2_high_freq
+                else ""
+            ),
+        )
+        base_template += pcnt_template.format(pcnt_num=2, gpio=pcnt_2_gpio)
+
+    return base_template + code_template.format(pcnt_checks=pcnt_checks, pcnt_functions=pcnt_functions)
 
 
 ULP_MEM_BASE = 0x50000000
@@ -112,22 +150,64 @@ ULP_DATA_MASK = 0xFFFF  # ULP data is only in lower 16 bits
 TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
 
 
-def init_ulp(port_number, is_high_freq):
+def get_number_of_pulse_counters(pcnt_cfg):
+    """
+    Function to get the number of pulse counters
+    """
+    num_pulse_counters = 0
+    first_enabled = None
+    for pcnt, index in pcnt_cfg:
+        if pcnt.get("enabled"):
+            num_pulse_counters += 1
+            if first_enabled is None:
+                first_enabled = index
+
+    return num_pulse_counters, index
+
+
+def get_pulse_counters_are_high_frequency(pcnt_cfg):
+    for pcnt in pcnt_cfg:
+        if pcnt.get("highFreq"):
+            return True
+    return False
+
+
+def init_ulp(pcnt_cfg):
     from esp32 import ULP
     from external.esp32_ulp import src_to_binary
 
-    logging.info("Starting ULP for pulse counting...")
+    load_addr = 0
 
-    load_addr, entry_addr = 0, 6 * 4
+    (number_of_pulse_counters, _) = get_number_of_pulse_counters(pcnt_cfg)
+    if number_of_pulse_counters == 0 or number_of_pulse_counters > 2:
+        logging.error("No pulse counters enabled")
+        return
 
-    script_to_run = setup_assembly(is_high_freq, port_number)
+    entry_addr = 6 * 4  # if one pulse counter is enabled
+    if number_of_pulse_counters > 1:
+        entry_addr = 12 * 4
+
+    if number_of_pulse_counters == 1 and len(pcnt_cfg) == 1:
+        pcnt_cfg.append({"enabled": False})
+
+    script_to_run = generate_assembly(
+        pcnt_1_enabled=pcnt_cfg[0].get("enabled"),
+        pcnt_1_gpio=pcnt_cfg[0].get("gpio"),
+        pcnt_1_high_freq=pcnt_cfg[0].get("highFreq"),
+        pcnt_2_enabled=pcnt_cfg[1].get("enabled"),
+        pcnt_2_gpio=pcnt_cfg[1].get("gpio"),
+        pcnt_2_high_freq=pcnt_cfg[1].get("highFreq"),
+    )
     binary = src_to_binary(script_to_run, cpu="esp32s2")
     ulp = ULP()
 
     ulp.load_binary(load_addr, binary)
 
-    init_gpio(port_number, ulp)
-    ulp.set_wakeup_period(0, 0 if is_high_freq else 1000)
+    for pcnt in pcnt_cfg:
+        if pcnt.get("enabled"):
+            init_gpio(pcnt.get("gpio"), ulp)
+
+    ulp.set_wakeup_period(0, 0 if get_pulse_counters_are_high_frequency(pcnt_cfg) else 1000)
 
     ulp.run(entry_addr)
     logging.info("Pulse counting read")
@@ -157,24 +237,12 @@ def setval(start=0, value=0x0):
     machine.mem32[ULP_MEM_BASE + start * 4] = value
 
 
-def read_ulp_values(measurements, multiplier, label=None):
+def read_ulp_values(measurements, pcnt_cfg):
     logging.info("Reading pulse counters from ULP...")
-
-    # read registers
-    if _is_after_initialization:
-        edge_cnt_16bit = 0
-        loops = 0
-    else:
-        edge_cnt_16bit = value(1)
-        loops = value(2)
 
     # read last pcnt saved timestamp
     last_timestamp_str = utils.readFromFlagFile(TIMESTAMP_FLAG_FILE)
     now_timestamp = utime.time_ns()
-
-    # reset registers
-    setval(1, 0x0)
-    setval(2, 0x0)
 
     utils.writeToFlagFile(TIMESTAMP_FLAG_FILE, "{}".format(now_timestamp))
 
@@ -192,20 +260,23 @@ def read_ulp_values(measurements, multiplier, label=None):
     logging.debug("ULP timing: now_timestamp: {}, last_timestamp: {}".format(now_timestamp, last_timestamp))
 
     if last_timestamp == 0:
-            set_value_float(measurements, "pcnt_count", 0, SenmlUnits.SENML_UNIT_COUNTER)
-            set_value_int(measurements, "pcnt_edge_count", 0, SenmlUnits.SENML_UNIT_COUNTER)
-            set_value_float(measurements, "pcnt_period_s", 0, SenmlUnits.SENML_UNIT_SECOND)
-            set_value_float(measurements, "pcnt_count_formula", 0)
-            logging.debug("================ {} =======================".format(label))
-            logging.debug("========= pcnt_count: ----------------")
-            logging.debug("=============================================")
-            return
+        for pcnt in pcnt_cfg:
+            if pcnt.get("enabled"):
+                id = pcnt.get("id")
+                set_value_float(measurements, "pcnt_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
+                set_value_int(measurements, "pcnt_edge_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
+                set_value_float(measurements, "pcnt_period_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
+                set_value_float(measurements, "pcnt_count_formula_{}".format(id), 0)
+                logging.debug("================ {} =======================".format(id))
+                logging.debug("========= pcnt_count: ----------------")
+                logging.debug("=============================================")
+        return
 
     # execute calculations
     time_diff_from_prev = 0
     try:
         time_diff_from_prev = now_timestamp - last_timestamp
-        time_diff_from_prev = time_diff_from_prev / 1E9
+        time_diff_from_prev = time_diff_from_prev / 1e9
         if time_diff_from_prev <= 0:
             time_diff_from_prev = 0
         elif time_diff_from_prev > 86400:  # if bigger than one day
@@ -224,13 +295,42 @@ def read_ulp_values(measurements, multiplier, label=None):
     except:
         pass
 
+    (number_of_pulse_counters, first_enabled_index) = get_number_of_pulse_counters(pcnt_cfg)
+
+    for pcnt, index in pcnt_cfg:
+        if pcnt.get("enabled"):
+            id = pcnt.get("id")
+            multiplier = pcnt.get("formula")
+
+            if number_of_pulse_counters == 1:
+                reg_edge_cnt_16bit = 1  # 0x84 + (first_enabled_index * 4)
+                reg_loops = 2  # 0x88 + (first_enabled_index * 4)
+            else:
+                reg_edge_cnt_16bit = 1 + (index * 6)
+                reg_loops = 2 + (index * 6)
+
+            read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, multiplier, time_diff_from_prev, id)
+
+
+def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, multiplier, time_diff_from_prev, id):
+    # read registers
+    if _is_after_initialization:
+        edge_cnt_16bit = 0
+        loops = 0
+    else:
+        edge_cnt_16bit = value(reg_edge_cnt_16bit)
+        loops = value(reg_loops)
+
+    # reset registers
+    setval(reg_edge_cnt_16bit, 0x0)
+    setval(reg_loops, 0x0)
 
     edge_cnt = 65536 * loops + edge_cnt_16bit
     pulse_cnt = edge_cnt / 2
 
-    set_value_float(measurements, "pcnt_count", pulse_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-    set_value_int(measurements, "pcnt_edge_count", edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-    set_value_float(measurements, "pcnt_period_s", time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
+    set_value_float(measurements, "pcnt_count_{}".format(id), pulse_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
 
     pcnt_multiplier = 1
     try:
@@ -238,20 +338,24 @@ def read_ulp_values(measurements, multiplier, label=None):
     except:
         pass
 
-    calculated_value = (edge_cnt / 2)*pcnt_multiplier
+    calculated_value = (edge_cnt / 2) * pcnt_multiplier
     set_value_float(measurements, "pcnt_count_formula", calculated_value)
 
     logging.debug("   ")
-    logging.debug("================ {} =======================".format(label))
-    logging.debug("========= pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}".format(pulse_cnt, edge_cnt, time_diff_from_prev, calculated_value) )
+    logging.debug("================ pcnt {} =======================".format(id))
+    logging.debug(
+        "========= pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}".format(
+            pulse_cnt, edge_cnt, time_diff_from_prev, calculated_value
+        )
+    )
     logging.debug("=============================================")
 
 
-def execute(measurements, port_number, is_high_freq, formula, label=""):
+def execute(measurements, pcnt_cfg):
     global _is_first_run
     global _is_after_initialization
     if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
-        init_ulp(port_number, is_high_freq)
+        init_ulp(pcnt_cfg)
         _is_after_initialization = True
-    read_ulp_values(measurements, formula, label)
+    read_ulp_values(measurements, pcnt_cfg)
     _is_first_run = False

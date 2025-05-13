@@ -99,6 +99,8 @@ def shield_measurements(measurements):
     except Exception as e:
         logging.exception(e, "Exception while reading 4_20mA data")
 
+    read_pulse_counter(measurements)
+
     # power off SDI12 regulator
     set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
 
@@ -164,8 +166,6 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
 
 
 def current_sense_4_20mA(measurements):
-    import utime
-
     for i in range(1, 3):
         measure_4_20_mA_on_port(measurements, i)
 
@@ -173,7 +173,6 @@ def current_sense_4_20mA(measurements):
 
 
 def measure_4_20_mA_on_port(measurements, port_id):
-    from machine import Pin
     import gpio_handler
     from sensors import analog_generic
 
@@ -225,3 +224,27 @@ def execute_transformation(measurements, name, raw_value, transformator):
     except Exception as e:
         logging.exception(e, "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
         pass
+
+
+def read_pulse_counter(measurements):
+    pcnt_1_enabled = cfg.get("_PCNT_1_ENABLE")
+    if pcnt_1_enabled:
+        from . import scenario_pcnt_ulp
+
+        pcnt_cfg = [
+            {
+                "id": 1,
+                "enabled": pcnt_1_enabled,
+                "formula": cfg.get("_PCNT_1_FORMULA"),
+                "highFreq": cfg.get("_PCNT_1_HIGH_FREQ"),
+                "gpio": cfg.get("UC_IO_DGTL_SNSR_1_READ"),
+            },
+            {"id": 2, "enabled": False},
+        ]
+
+        scenario_pcnt_ulp.execute(measurements, pcnt_cfg)
+    else:
+        import utils
+
+        TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
+        utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)

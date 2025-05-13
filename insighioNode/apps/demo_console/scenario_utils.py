@@ -130,8 +130,10 @@ def get_measurements(cfg_dummy=None):
             scenario_enviro_utils.shield_measurements(measurements)
         elif shield_name == cfg.get("_CONST_SHIELD_ACCELEROMETER"):
             shield_accel_measurements(measurements)
+            delete_pulse_counter_state()
         else:  # if shield_name == cfg.get("_CONST_SHIELD_DIG_ANALOG"):
             default_board_measurements(measurements)
+            delete_pulse_counter_state()
 
         if cfg.get("_MEAS_KEYVALUE"):
             add_explicit_key_values(measurements)
@@ -142,21 +144,14 @@ def get_measurements(cfg_dummy=None):
     # enable sensors
     gpio_handler.set_pin_value(sensor_pin, 0)
 
-    read_pulse_counter(measurements)
-
     return measurements
 
 
-def read_pulse_counter(measurements):
-    if cfg.get("_PCNT_1_ENABLE"):
-        from . import scenario_pcnt_ulp
+def delete_pulse_counter_state():
+    import utils
 
-        scenario_pcnt_ulp.execute(measurements, cfg.get("UC_IO_DGTL_SNSR_READ"), cfg.get("_PCNT_1_HIGH_FREQ"), cfg.get("_PCNT_1_FORMULA"))
-    else:
-        import utils
-
-        TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
-        utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
+    TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
+    utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
 
 
 def read_battery_voltage():

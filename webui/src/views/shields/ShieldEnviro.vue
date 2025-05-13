@@ -174,7 +174,7 @@
     <SDivider label="Pulse Counter" />
     <div class="col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
       <div class="container" v-for="pc in pulseCounterConfig" :key="pc.id">
-        <SSwitch disabled :label="'Pulse Counter ' + pc.id" v-model:value="pc.enable" />
+        <SSwitch :label="'Pulse Counter ' + pc.id" v-model:value="pc.enable" />
         <div v-if="pc.enable" class="col-12">
           <div class="form-group columns">
             <div class="column col-1 col-mr-auto"></div>
@@ -325,7 +325,7 @@ export default {
       ],
       //1 : 4.096V # 1x | 2 : 2.048V # 2x | 3 : 1.024V # 4x | 4 : 0.512V # 8x | 5 : 0.256V # 16x
       adsGainOptions: [
-        { value: 1, label: "3.6V   # 1x" },
+        { value: 1, label: "3.3V   # 1x" },
         { value: 2, label: "2.048V # 2x" },
         { value: 3, label: "1.024V # 4x" },
         { value: 4, label: "0.512V # 8x" },
