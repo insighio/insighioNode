@@ -155,14 +155,10 @@ def get_number_of_pulse_counters(pcnt_cfg):
     Function to get the number of pulse counters
     """
     num_pulse_counters = 0
-    first_enabled = None
-    for pcnt, index in pcnt_cfg:
+    for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
             num_pulse_counters += 1
-            if first_enabled is None:
-                first_enabled = index
-
-    return num_pulse_counters, index
+    return num_pulse_counters
 
 
 def get_pulse_counters_are_high_frequency(pcnt_cfg):
@@ -178,7 +174,7 @@ def init_ulp(pcnt_cfg):
 
     load_addr = 0
 
-    (number_of_pulse_counters, _) = get_number_of_pulse_counters(pcnt_cfg)
+    number_of_pulse_counters = get_number_of_pulse_counters(pcnt_cfg)
     if number_of_pulse_counters == 0 or number_of_pulse_counters > 2:
         logging.error("No pulse counters enabled")
         return
@@ -257,9 +253,12 @@ def read_ulp_values(measurements, pcnt_cfg):
         last_timestamp = 0
         now_timestamp = 0
 
+    number_of_pulse_counters = get_number_of_pulse_counters(pcnt_cfg)
+
     logging.debug("ULP timing: now_timestamp: {}, last_timestamp: {}".format(now_timestamp, last_timestamp))
 
     if last_timestamp == 0:
+        reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters)
         for pcnt in pcnt_cfg:
             if pcnt.get("enabled"):
                 id = pcnt.get("id")
@@ -295,24 +294,31 @@ def read_ulp_values(measurements, pcnt_cfg):
     except:
         pass
 
-    (number_of_pulse_counters, first_enabled_index) = get_number_of_pulse_counters(pcnt_cfg)
-
-    for pcnt, index in pcnt_cfg:
+    cnt = 0
+    for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
             id = pcnt.get("id")
-            multiplier = pcnt.get("formula")
+            formula = pcnt.get("formula")
+            reg_edge_cnt_16bit = 1 + (cnt * 6)
+            reg_loops = 2 + (cnt * 6)
+            cnt += 1
 
-            if number_of_pulse_counters == 1:
-                reg_edge_cnt_16bit = 1  # 0x84 + (first_enabled_index * 4)
-                reg_loops = 2  # 0x88 + (first_enabled_index * 4)
-            else:
-                reg_edge_cnt_16bit = 1 + (index * 6)
-                reg_loops = 2 + (index * 6)
-
-            read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, multiplier, time_diff_from_prev, id)
+            read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formula, time_diff_from_prev, id)
 
 
-def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, multiplier, time_diff_from_prev, id):
+def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
+    cnt = 0
+    for pcnt in pcnt_cfg:
+        if pcnt.get("enabled"):
+            reg_edge_cnt_16bit = 1 + (cnt * 6)
+            reg_loops = 2 + (cnt * 6)
+
+            setval(reg_edge_cnt_16bit, 0x0)
+            setval(reg_loops, 0x0)
+            cnt += 1
+
+
+def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formula, time_diff_from_prev, id):
     # read registers
     if _is_after_initialization:
         edge_cnt_16bit = 0
@@ -332,14 +338,28 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, multip
     set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
 
-    pcnt_multiplier = 1
-    try:
-        pcnt_multiplier = float(multiplier)
-    except:
-        pass
+    calculated_value = 0
 
-    calculated_value = (edge_cnt / 2) * pcnt_multiplier
-    set_value_float(measurements, "pcnt_count_formula", calculated_value)
+    # check if formula is just a number as multiplier
+    if type(formula) == int or type(formula) == float:
+        formula = "v*{}".format(formula)
+    elif type(formula) == str:  # check if formula is a number stored as string
+        try:
+            formula = float(formula)
+        except:
+            pass
+
+    try:
+        raw_value = edge_cnt / 2
+        formula = formula.replace("v", str(raw_value))
+        to_execute = "v_transformed=({})".format(formula)
+        namespace = {}
+        exec(to_execute, namespace)
+        calculated_value = namespace["v_transformed"]
+        set_value_float(measurements, "pcnt_count_formula_{}".format(id), calculated_value)
+    except Exception as e:
+        logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(id, raw_value, formula))
+        pass
 
     logging.debug("   ")
     logging.debug("================ pcnt {} =======================".format(id))
