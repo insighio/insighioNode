@@ -544,7 +544,7 @@ def read_adc_sensor(measurements, sensor):
 
     default_formula = "v"
     if formula is not None and formula != default_formula:
-        execute_transformation(measurements, meas_name, volt_analog, formula)
+        execute_formula(measurements, meas_name, volt_analog, formula)
 
 
 #### Pulse Counter functions #####
@@ -584,14 +584,14 @@ def execute_pulse_counter_measurements(measurements):
 
 
 ### Auxiliary functions ###
-def execute_transformation(measurements, name, raw_value, transformator):
+def execute_formula(measurements, name, raw_value, formula):
     try:
-        transformator = transformator.replace("v", str(raw_value))
-        to_execute = "v_transformed=({})".format(transformator)
+        formula = formula.replace("v", str(raw_value))
+        to_execute = "v_transformed=({})".format(formula)
         namespace = {}
         exec(to_execute, namespace)
         print("namespace: " + str(namespace))
         set_value_float(measurements, name + "_formula", namespace["v_transformed"])
     except Exception as e:
-        logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator))
+        logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(name, raw_value, formula))
         pass

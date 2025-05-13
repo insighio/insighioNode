@@ -406,7 +406,7 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
         logging.error("read_i2c_sensor - Sensor not supported: [" + sensor_name + "]")
 
 
-def read_analog_digital_sensor(data_pin, sensor_name, measurements, position, transformator=None):
+def read_analog_digital_sensor(data_pin, sensor_name, measurements, position, formula=None):
     logging.info("read_analog_digital_sensor - Reading Sensor [{}] at pin [{}]".format(sensor_name, data_pin))
     sensor_name = sensor_name.split("-")[0].strip()
     if sensor_name == "analog" or sensor_name == "generic analog":  # generic analog is kept for backward compatibility
@@ -420,9 +420,9 @@ def read_analog_digital_sensor(data_pin, sensor_name, measurements, position, tr
             volt_analog,
             SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
         )
-        default_transformator = "v"
-        if transformator is not None and transformator != default_transformator:
-            execute_transformation(measurements, meas_name, volt_analog, transformator)
+        default_formula = "v"
+        if formula is not None and formula != default_formula:
+            execute_formula(measurements, meas_name, volt_analog, formula)
 
     elif sensor_name == "dht11" or sensor_name == "dht22":
         from sensors import dht
@@ -456,10 +456,10 @@ def read_analog_digital_sensor(data_pin, sensor_name, measurements, position, tr
         logging.error("read_analog_digital_sensor - Sensor not supported: [" + sensor_name + "]")
 
 
-def execute_transformation(measurements, name, raw_value, transformator):
+def execute_formula(measurements, name, raw_value, formula):
     try:
-        transformator = transformator.replace("v", str(raw_value))
-        to_execute = "v_transformed=({})".format(transformator)
+        formula = formula.replace("v", str(raw_value))
+        to_execute = "v_transformed=({})".format(formula)
         namespace = {}
         exec(to_execute, namespace)
         print("namespace: " + str(namespace))
@@ -467,7 +467,7 @@ def execute_transformation(measurements, name, raw_value, transformator):
     except Exception as e:
         logging.exception(
             e,
-            "transformator name:{}, raw_value:{}, code:{}".format(name, raw_value, transformator),
+            "formula name:{}, raw_value:{}, code:{}".format(name, raw_value, formula),
         )
         pass
 
