@@ -237,7 +237,7 @@ def read_pulse_counter(measurements):
                 "enabled": pcnt_1_enabled,
                 "formula": cfg.get("_PCNT_1_FORMULA"),
                 "highFreq": cfg.get("_PCNT_1_HIGH_FREQ"),
-                "gpio": cfg.get("UC_IO_DGTL_SNSR_1_READ"),
+                "gpio": cfg.get("UC_IO_DGTL_SNSR_READ"),
             },
             {"id": 2, "enabled": False},
         ]
