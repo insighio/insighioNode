@@ -101,8 +101,8 @@
         </thead>
         <tbody>
           <tr v-for="(row, index) in modbusSensors" :key="index">
-            <td><input type="number" class="form-input" v-model="row.slaveAddress" /></td>
-            <td><input type="number" class="form-input" v-model="row.register" /></td>
+            <td><input type="number" class="form-input" min="1" max="255" v-model="row.slaveAddress" /></td>
+            <td><input type="number" class="form-input" min="0" max="65535" v-model="row.register" /></td>
             <td>
               <select class="form-select" v-model="row.type">
                 <option v-for="opt in modbusSupportedTypes" :key="opt.value" :value="opt.value">
@@ -293,7 +293,7 @@ export default {
       },
       modbusConfig: {},
       modbusDefaultRow: {
-        slaveAddress: 0,
+        slaveAddress: 1,
         register: 0,
         type: 3,
         format: "uint16",
