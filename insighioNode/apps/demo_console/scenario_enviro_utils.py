@@ -171,12 +171,6 @@ def shield_measurements(measurements):
 
     enable_regulator()
 
-    ## testing
-    execute_pulse_counter_measurements(measurements)
-
-    disable_regulator()
-    return
-
     if not io_expander_init():
         logging.debug("io expander can not be initialized, aborting shiled measurements")
         return
