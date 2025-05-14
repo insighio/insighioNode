@@ -374,8 +374,11 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
 def execute(measurements, pcnt_cfg):
     global _is_first_run
     global _is_after_initialization
-    if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
-        init_ulp(pcnt_cfg)
-        _is_after_initialization = True
-    read_ulp_values(measurements, pcnt_cfg)
+    try:
+        if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
+            init_ulp(pcnt_cfg)
+            _is_after_initialization = True
+        read_ulp_values(measurements, pcnt_cfg)
+    except Exception as e:
+        logging.exception(e, "Error reading pulse counter")
     _is_first_run = False
