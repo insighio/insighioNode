@@ -12,7 +12,7 @@ loadtime = time_ns() - test_load_start
 
 # use normal files (not flags) to check file system performance
 
-if not utils.existsFile("/perfOk") and 'esp32s3' in uos.uname().machine.lower().split(" ")[0]:
+if not utils.existsFile("/perfOk") and "esp32s3" in uos.uname().machine.lower().split(" ")[0]:
     from machine import Pin
     from neopixel import NeoPixel
 
@@ -51,9 +51,9 @@ if not utils.existsFile("/perfOk") and 'esp32s3' in uos.uname().machine.lower().
 
     Pin(47, Pin.OUT).off()
 
-    from machine import deepsleep
+    from machine import reset
 
-    deepsleep(1)
+    reset()
 else:
     print("[boot]: performance ok")
 

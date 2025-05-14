@@ -188,6 +188,8 @@ def eraseKeyValue(key):
 
 def clearCachedStates():
     eraseKeyValue("tz_sec_offset")
+    ULP_TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
+    deleteFlagFile(ULP_TIMESTAMP_FLAG_FILE)
 
 
 def requestFileSystemOptimization():
