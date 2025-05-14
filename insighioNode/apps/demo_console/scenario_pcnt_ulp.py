@@ -336,7 +336,7 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
 
     set_value_float(measurements, "pcnt_count_{}".format(id), pulse_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-    set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND)
+    set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND, 3)
 
     calculated_value = 0
 
@@ -356,7 +356,7 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
         namespace = {}
         exec(to_execute, namespace)
         calculated_value = namespace["v_transformed"]
-        set_value_float(measurements, "pcnt_count_formula_{}".format(id), calculated_value)
+        set_value_float(measurements, "pcnt_count_formula_{}".format(id), calculated_value, None, 4)
     except Exception as e:
         logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(id, raw_value, formula))
         pass

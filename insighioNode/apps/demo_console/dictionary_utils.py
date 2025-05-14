@@ -58,6 +58,9 @@ def set_value_float(measurements, key, value, unit=None, precision=2, multiplier
     if value is not None:
         if isinstance(value, str):
             value = float(value) * multiplier
+        elif isinstance(value, int) or isinstance(value, float):
+            value = value * multiplier
+
         try:
             set_value(
                 measurements,
