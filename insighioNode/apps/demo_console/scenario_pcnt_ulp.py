@@ -345,7 +345,8 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
         formula = "v*{}".format(formula)
     elif type(formula) == str:  # check if formula is a number stored as string
         try:
-            formula = float(formula)
+            float(formula)
+            formula = "v*{}".format(formula)
         except:
             pass
 
