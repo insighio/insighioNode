@@ -275,14 +275,14 @@ def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_e
     set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
     set_value(measurements, "sdi12_{}_m".format(address), model, None)
 
-    if manufacturer == "meter" and "at41g2" not in model and command_to_execute == "M":
-        parse_sensor_meter(model, address, responseArray, measurements, location)
+    if manufacturer == "meter":
+        parse_sensor_meter(model, command_to_execute, address, responseArray, measurements, location)
     elif manufacturer == "in-situ" and (model == "at500" or model == "at400") and command_to_execute == "M":
-        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
+        parse_generic_sdi12(model, command_to_execute, address, responseArray, measurements, "sdi12", None, "", location)
     elif manufacturer == "acclima" and command_to_execute == "M":
-        parse_sensor_acclima(address, responseArray, measurements, location)
+        parse_sensor_acclima(model, command_to_execute, address, responseArray, measurements, location)
     elif manufacturer == "implexx" and command_to_execute == "M":
-        parse_sensor_implexx(address, responseArray, measurements, location)
+        parse_sensor_implexx(model, command_to_execute, address, responseArray, measurements, location)
     elif manufacturer == "ep100g":
         if command_to_execute == "C":  # EnviroPro
             parse_generic_sdi12(address, responseArray, measurements, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location)
@@ -297,7 +297,7 @@ def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_e
             )
 
     elif "li-cor" in manufacturer and command_to_execute == "M0":
-        parse_sensor_licor(address, responseArray, measurements, location)
+        parse_sensor_licor(model, command_to_execute, address, responseArray, measurements, location)
     else:
         parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "_" + command_to_execute.lower(), location)
 

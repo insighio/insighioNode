@@ -123,16 +123,16 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
 
     if manufacturer == "meter" and "at41g2" not in model:
         responseArray = sdi12.get_measurement(address)
-        parse_sensor_meter(model, address, responseArray, measurements, location)
+        parse_sensor_meter(model, "M", address, responseArray, measurements, location)
     elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
         responseArray = sdi12.get_measurement(address, "M", 1, True)
-        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
+        parse_generic_sdi12(model, "M", address, responseArray, measurements, "sdi12", None, "", location)
     elif manufacturer == "acclima":
         responseArray = sdi12.get_measurement(address)
-        parse_sensor_acclima(address, responseArray, measurements, location)
+        parse_sensor_acclima(model, "M", address, responseArray, measurements, location)
     elif manufacturer == "implexx":
         responseArray = sdi12.get_measurement(address)
-        parse_sensor_implexx(address, responseArray, measurements, location)
+        parse_sensor_implexx(model, "M", address, responseArray, measurements, location)
     elif manufacturer == "ep100g":  # EnviroPro
         responseArrayMoisture = sdi12.get_measurement(address, "C")  # moisture with salinity
         responseArraySalinity = sdi12.get_measurement(address, "C1")  # salinity
@@ -155,7 +155,7 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
             )
     elif "li-cor" in manufacturer:
         responseArray = sdi12.get_measurement(address, "M0")
-        parse_sensor_licor(address, responseArray, measurements, location)
+        parse_sensor_licor(model, "M0", address, responseArray, measurements, location)
         responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
     else:
         set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)

@@ -4,20 +4,21 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 
 
-def parse_sensor_meter(model, address, responseArray, measurements, location=None):
+def parse_sensor_meter(model, command_to_execute, address, responseArray, measurements, location=None):
     try:
-        if not responseArray or len(responseArray) < 3:
-            logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
-            return
-
         location_info = ("_" + str(location)) if location else ""
         variable_prefix = "meter_" + address + location_info
 
-        set_value(measurements, variable_prefix + "_count_vwc", responseArray[0], SenmlUnits.SENML_UNIT_COUNTER)
-        set_value(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
-        set_value(measurements, variable_prefix + "_soil_ec", responseArray[2], "uS/cm")
+        if model == "ter12" and command_to_execute == "M":  # apply functions
+            if not responseArray or len(responseArray) < 3:
+                logging.error("parse_sensor_meter: unrecognized responseArray: {}".format(responseArray))
+                return
 
-        if model == "ter12":  # apply functions
+            set_value(measurements, variable_prefix + "_count_vwc", responseArray[0], SenmlUnits.SENML_UNIT_COUNTER)
+            set_value(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+
+            set_value(measurements, variable_prefix + "_soil_ec", responseArray[2], "uS/cm")
+
             from math import pow
 
             calibratedCountsVWC = float(responseArray[0])
@@ -32,11 +33,38 @@ def parse_sensor_meter(model, address, responseArray, measurements, location=Non
             set_value(measurements, variable_prefix + "_vwc_mineral", VWCmineral * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
             set_value(measurements, variable_prefix + "_vwc_soilless", VWCsoilless * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
             set_value(measurements, variable_prefix + "_vwc_dielectric", VWCdielectric, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
+        elif model == "atm14" and command_to_execute == "M":
+            if not responseArray or len(responseArray) < 4:
+                logging.error("parse_sensor_meter: unrecognized responseArray: {}".format(responseArray))
+                return
+            try:
+                set_value(measurements, variable_prefix + "_vapor_pressure", float(responseArray[0]) * 1000, SenmlUnits.SENML_UNIT_PASCAL)
+            except Exception as e:
+                pass
+            set_value(measurements, variable_prefix + "_temp", responseArray[1], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
+            try:
+                set_value(
+                    measurements,
+                    variable_prefix + "_relative_humidity",
+                    float(responseArray[2]) * 100,
+                    SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT,
+                )
+            except Exception as e:
+                pass
+            try:
+                set_value(
+                    measurements, variable_prefix + "_atmospheric_pressure", float(responseArray[3]) * 1000, SenmlUnits.SENML_UNIT_PASCAL
+                )
+            except Exception as e:
+                pass
+        else:
+            parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "_" + command_to_execute.lower(), location)
+
     except Exception as e:
         logging.exception(e, "Error processing meter sdi responseArray: [{}]".format(responseArray))
 
 
-def parse_sensor_acclima(address, responseArray, measurements, location=None):
+def parse_sensor_acclima(model, address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 5:
             logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
@@ -54,7 +82,7 @@ def parse_sensor_acclima(address, responseArray, measurements, location=None):
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
 
-def parse_sensor_implexx(address, responseArray, measurements, location=None):
+def parse_sensor_implexx(model, command_to_execute, address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 5:
             logging.error("parse_sensor_implexx: unrecognized responseArray: {}".format(responseArray))
@@ -72,7 +100,7 @@ def parse_sensor_implexx(address, responseArray, measurements, location=None):
         logging.exception(e, "Error processing acclima sdi responseArray: [{}]".format(responseArray))
 
 
-def parse_sensor_licor(address, responseArray, measurements, location=None):
+def parse_sensor_licor(model, command_to_execute, address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 5:
             logging.error("parse_sensor_licor: unrecognized responseArray: {}".format(responseArray))
