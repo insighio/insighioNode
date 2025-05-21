@@ -278,7 +278,7 @@ def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_e
     if manufacturer == "meter":
         parse_sensor_meter(model, command_to_execute, address, responseArray, measurements, location)
     elif manufacturer == "in-situ" and (model == "at500" or model == "at400") and command_to_execute == "M":
-        parse_generic_sdi12(model, command_to_execute, address, responseArray, measurements, "sdi12", None, "", location)
+        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
     elif manufacturer == "acclima" and command_to_execute == "M":
         parse_sensor_acclima(model, command_to_execute, address, responseArray, measurements, location)
     elif manufacturer == "implexx" and command_to_execute == "M":

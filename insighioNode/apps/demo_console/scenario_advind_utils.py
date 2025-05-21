@@ -126,7 +126,7 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         parse_sensor_meter(model, "M", address, responseArray, measurements, location)
     elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
         responseArray = sdi12.get_measurement(address, "M", 1, True)
-        parse_generic_sdi12(model, "M", address, responseArray, measurements, "sdi12", None, "", location)
+        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
     elif manufacturer == "acclima":
         responseArray = sdi12.get_measurement(address)
         parse_sensor_acclima(model, "M", address, responseArray, measurements, location)
@@ -138,20 +138,20 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         responseArraySalinity = sdi12.get_measurement(address, "C1")  # salinity
 
         parse_generic_sdi12(
-            address, responseArray, responseArrayMoisture, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location
+            address, responseArrayMoisture, measurements, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location
         )
-        parse_generic_sdi12(address, responseArray, responseArraySalinity, "ep_ec", "uS/cm", "", location)  # dS/m
+        parse_generic_sdi12(address, responseArraySalinity, measurements, "ep_ec", "uS/cm", "", location)  # dS/m
 
         cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
         if cfg_is_celsius:
             responseArrayTemperature = sdi12.get_measurement(address, "C2")
             parse_generic_sdi12(
-                address, responseArray, responseArraySalinity, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location
+                address, responseArrayTemperature, measurements, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location
             )
         else:
             responseArrayTemperature = sdi12.get_measurement(address, "C5")
             parse_generic_sdi12(
-                address, responseArray, responseArraySalinity, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location
+                address, responseArrayTemperature, measurements, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location
             )
     elif "li-cor" in manufacturer:
         responseArray = sdi12.get_measurement(address, "M0")
