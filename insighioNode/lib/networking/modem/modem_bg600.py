@@ -423,7 +423,10 @@ class ModemBG600(modem_base.Modem):
         logging.debug("File opened with handle: " + file_handle)
 
         data_read = 0
-        CHUNKSIZE = 256
+        #CHUNKSIZE = 256
+        #CHUNKSIZE = 384 good
+        CHUNKSIZE = 448
+        #CHUNKSIZE = 470 no
 
         fw = open(destination, "wb")
         logging.debug("reading file contents")
