@@ -121,11 +121,11 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
         return
 
-    if manufacturer == "meter" and "at41g2" not in model:
+    if manufacturer == "meter":
         responseArray = sdi12.get_measurement(address)
         parse_sensor_meter(model, "M", address, responseArray, measurements, location)
     elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
-        responseArray = sdi12.get_measurement(address, "M", 1, True)
+        responseArray = sdi12.get_measurement(address, "C", 1, True)
         parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
     elif manufacturer == "acclima":
         responseArray = sdi12.get_measurement(address)
