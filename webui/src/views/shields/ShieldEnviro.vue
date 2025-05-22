@@ -325,11 +325,11 @@ export default {
       ],
       //1 : 4.096V # 1x | 2 : 2.048V # 2x | 3 : 1.024V # 4x | 4 : 0.512V # 8x | 5 : 0.256V # 16x
       adsGainOptions: [
-        { value: 1, label: "3.3V   # 1x" },
-        { value: 2, label: "2.048V # 2x" },
-        { value: 3, label: "1.024V # 4x" },
-        { value: 4, label: "0.512V # 8x" },
-        { value: 5, label: "0.256V # 16x" }
+        { value: 1, label: "3.3V" },
+        { value: 2, label: "2.048V" },
+        { value: 3, label: "1.024V" },
+        { value: 4, label: "0.512V" },
+        { value: 5, label: "0.256V" }
       ],
       pulseCounterDefaultConfig: [
         {
