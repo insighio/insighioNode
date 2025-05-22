@@ -11,7 +11,6 @@
       </div>
       <div :class="'col-' + colsInput + ' col-sm-12'">
         <input
-          id="inputField"
           :disabled="disabled"
           :type="inputType"
           class="form-input constr-field"

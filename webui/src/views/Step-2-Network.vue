@@ -9,10 +9,23 @@
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="btn-group btn-group-block img-center">
-            <button class="btn" :disabled="disableButtons" @click="operationSelected('WiFi')">WiFi</button>
-            <button class="btn" :disabled="disableButtons" @click="operationSelected('Cellular')">Cellular</button>
-            <button class="btn" :disabled="disableButtons" @click="operationSelected('LoRa')">LoRa</button>
-            <button class="btn" :disabled="disableButtons" @click="operationSelected('Satellite')">Satellite</button>
+            <button ref="button-wifi" class="btn" :disabled="disableButtons" @click="operationSelected('WiFi')">
+              WiFi
+            </button>
+            <button ref="button-cellular" class="btn" :disabled="disableButtons" @click="operationSelected('Cellular')">
+              Cellular
+            </button>
+            <button ref="button-lora" class="btn" :disabled="disableButtons" @click="operationSelected('LoRa')">
+              LoRa
+            </button>
+            <button
+              ref="button-satellite"
+              class="btn"
+              :disabled="disableButtons"
+              @click="operationSelected('Satellite')"
+            >
+              Satellite
+            </button>
           </div>
           <div v-if="evaluatedNetwork === 'wifi'">
             <NetworkWifi @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
@@ -89,6 +102,16 @@ export default {
           this.settingsAcquired = true
 
           this.activeNetwork = this.$cookies.get("network")
+
+          this.$nextTick(() => {
+            if (this.$refs["button-" + this.activeNetwork.toLowerCase()]) {
+              this.$refs["button-" + this.activeNetwork.toLowerCase()].focus()
+              //this.$refs["button-" + this.activeNetwork.toLowerCase()].click()
+              console.log("focusing button", this.activeNetwork)
+            } else {
+              console.log("button not found", "button-" + this.activeNetwork.toLowerCase(), ", refs: ", this.$refs)
+            }
+          })
         })
         .catch((err) => {
           console.log("error completing request", err)
