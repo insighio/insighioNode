@@ -40,7 +40,7 @@ class ModemBG600(modem_base.Modem):
             nwscanseq_expected = "010203"
             nwscanmode_expected = "1"
         else:
-            nwscanseq_expected = "00"
+            nwscanseq_expected = "030102"
             nwscanmode_expected = "0"
 
         (nwscanseq_status, nwscanseq_lines) = self.send_at_cmd('AT+QCFG="nwscanseq"')
