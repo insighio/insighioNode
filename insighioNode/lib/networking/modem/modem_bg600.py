@@ -40,13 +40,16 @@ class ModemBG600(modem_base.Modem):
             nwscanseq_expected = "010203"
             nwscanmode_expected = "1"
         else:
-            nwscanseq_expected = "00"
+            nwscanseq_expected = "030102"
             nwscanmode_expected = "0"
 
         (nwscanseq_status, nwscanseq_lines) = self.send_at_cmd('AT+QCFG="nwscanseq"')
         nwscanseq_lines = "\n".join(nwscanseq_lines)
 
-        if nwscanseq_expected not in nwscanseq_lines:
+        (nwscanmode_status, nwscanmode_lines) = self.send_at_cmd('AT+QCFG="nwscanmode"')
+        nwscanmode_lines = "\n".join(nwscanmode_lines)
+
+        if nwscanseq_expected not in nwscanseq_lines or nwscanmode_expected not in nwscanmode_lines:
             self.send_at_cmd('AT+QCFG="nwscanseq",{},0'.format(nwscanseq_expected))
             self.send_at_cmd('AT+QCFG="nwscanmode",{},0'.format(nwscanmode_expected))
             self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
