@@ -181,53 +181,15 @@ class DeviceMeasurements:
 
             import sys
 
-            try:
-                del sys.modules["apps.demo_console.demo_config"]
-            except:
-                pass
+            for s in sys.modules:
+                if s.startswith("apps.demo_console."):
+                    logging.debug("removing module: {}".format(s))
+                    del sys.modules[s]
 
-            try:
-                del sys.modules["apps.demo_temp_config"]
-            except:
-                pass
-
-            try:
-                del sys.modules["apps.demo_console.cfg"]
-            except:
-                pass
-
-            try:
-                del sys.modules["apps.demo_console.scenario_utils"]
-            except:
-                pass
-
-            try:
-                del sys.modules["apps.demo_console.scenario_advind_utils"]
-            except:
-                pass
-
-            try:
-                del sys.modules["apps.demo_console.message_buffer"]
-            except:
-                pass
-
-            try:
-                del sys.modules["apps.demo_console.dictionary_utils"]
-            except:
-                pass
-
-            try:
-                del sys.modules["apps.demo_console"]
-            except:
-                pass
-
-            try:
-                del sys.modules["apps"]
-            except:
-                pass
-
-            # logging.debug("modules: {}".format(sys.modules))
-            # logging.debug("globals: {}".format(globals()))
+            for s in sys.modules:
+                if s.startswith("apps"):
+                    logging.debug("removing module: {}".format(s))
+                    del sys.modules[s]
 
             from apps.demo_console import scenario_utils
 
