@@ -168,7 +168,7 @@ def get_pulse_counters_are_high_frequency(pcnt_cfg):
     return False
 
 
-def init_ulp(pcnt_cfg):
+def initialize_ulp(pcnt_cfg):
     from esp32 import ULP
     from external.esp32_ulp import src_to_binary
 
@@ -377,7 +377,7 @@ def execute(measurements, pcnt_cfg):
     global _is_after_initialization
     try:
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
-            init_ulp(pcnt_cfg)
+            initialize_ulp(pcnt_cfg)
             _is_after_initialization = True
         read_ulp_values(measurements, pcnt_cfg)
     except Exception as e:

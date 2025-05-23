@@ -5,93 +5,102 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
 
-from .dictionary_utils import set_value, set_value_float
+from .dictionary_utils import set_value, set_value_float, _get, _has
 
-from .sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
+from . import hw_proto_sdi12
 
 
 from . import cfg
 
-_sdi12_sensor_switch_list = []
+_sdi12_supported_board_locations = [1, 2]
+_sdi12_board_location_last_power_on = 0
 
 
-def populateSDI12SensorSwitchList():
-    global _sdi12_sensor_switch_list
-    _sdi12_sensor_switch_list = [None] * 11
+def get_board_location_pin(board_location):
+    if board_location is None or board_location < 1 or board_location > 2:
+        board_location = 1
 
-    for i in range(1, 11):
-        pwr_on = cfg.get("_UC_IO_PWR_SDI_SNSR_" + str(i) + "_ON")
-        if pwr_on is None:
-            pwr_on = cfg.get("_UC_IO_SNSR_GND_SDI_SNSR_" + str(i) + "_ON")
-        _sdi12_sensor_switch_list[i] = pwr_on
-
-
-populateSDI12SensorSwitchList()
+    pwr_on_pin = cfg.get("_UC_IO_PWR_SDI_SNSR_" + str(board_location) + "_ON")
+    if pwr_on_pin is None:
+        pwr_on_pin = cfg.get("_UC_IO_SNSR_GND_SDI_SNSR_" + str(board_location) + "_ON")
+    return pwr_on_pin
 
 
-def powerOnAllSwitchExcept(excludedIndex=None):
-    for i in range(1, 11):
-        if excludedIndex == i or _sdi12_sensor_switch_list[i] is None:
+def powerOnBoardLocation(board_location, warmup_time):
+    global _sdi12_board_location_last_power_on
+    has_found = False
+    for loc in _sdi12_supported_board_locations:
+        pwr_on_pin = get_board_location_pin(loc)
+        if pwr_on_pin is None:
             continue
-        set_sensor_power_on(_sdi12_sensor_switch_list[i])
+
+        if loc == board_location:
+            has_found = True
+            if loc != _sdi12_board_location_last_power_on:
+                set_sensor_power_on(pwr_on_pin)
+                _sdi12_board_location_last_power_on = loc
+                sleep_ms(warmup_time)
+        else:
+            set_sensor_power_off(pwr_on_pin)
+
+    if not has_found:
+        _sdi12_board_location_last_power_on = 0
 
 
-def powerOffAllSwitchExcept(excludedIndex=None):
-    for i in range(1, 11):
-        if excludedIndex == i or _sdi12_sensor_switch_list[i] is None:
+def powerOffAllBoardLocations():
+    for loc in _sdi12_supported_board_locations:
+        pwr_on_pin = get_board_location_pin(loc)
+        if pwr_on_pin is None:
             continue
-        set_sensor_power_off(_sdi12_sensor_switch_list[i])
+        set_sensor_power_off(pwr_on_pin)
 
 
-def executeSDI12Measurement(sdi12, measurements, index):
-    enabled = cfg.get("_SDI12_SENSOR_" + str(index) + "_ENABLED")
-    address = cfg.get("_SDI12_SENSOR_" + str(index) + "_ADDRESS")
-    location = cfg.get("_SDI12_SENSOR_" + str(index) + "_LOCATION")
+def execute_sdi12_measurements(measurements):
+    _sdi12_config = hw_proto_sdi12.initialize_config(cfg.get("_MEAS_SDI12"), cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS"))
 
-    if not enabled:
-        logging.debug("sdi12 sensor [{}] enabled: {}".format(index, enabled))
+    sensor_list = _get(_sdi12_config, "sensors")
+
+    if not sensor_list or len(sensor_list) == 0:
+        logging.error("No sensors found in SDI12 config")
         return
 
-    if location is None:
-        if index == 1 or index == 2:  # backward compatibility
-            location = index
-    else:
-        try:
-            location = int(location)
-        except:
-            pass
+    logging.info("Starting SDI12 measurements")
 
-    if _sdi12_sensor_switch_list[location] is not None:
-        set_sensor_power_on(_sdi12_sensor_switch_list[location])
-    powerOffAllSwitchExcept(location)
-    sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
-    read_sdi12_sensor(sdi12, address, measurements, location)
-    powerOffAllSwitchExcept()
+    config = _get(_sdi12_config, "config")
+    if not config:
+        logging.error("No config found in SDI12 config")
+        return
+
+    sdi12 = hw_proto_sdi12.initialize_sdi12_connection(
+        cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 0
+    )
+
+    if not sdi12:
+        logging.error("Failed to initialize SDI12")
+        return
+
+    # sort sensor list by board_location
+    sensor_list.sort(key=lambda x: x.get("board_location", 0))
+
+    warmup_time_ms = 1000
+    if _has(config, "warmupTimeMs"):
+        warmup_time_ms = _get(config, "warmupTimeMs")
+        logging.debug("SDI12 warmup time: {}".format(warmup_time_ms))
+
+    for sensor in sensor_list:
+        loc = sensor.get("board_location")
+        powerOnBoardLocation(loc, warmup_time_ms)
+        hw_proto_sdi12.read_sdi12_sensor(sdi12, measurements, sensor, _sdi12_board_location_last_power_on)
+
+    powerOffAllBoardLocations()
+    hw_proto_sdi12.close_sdi12_connection()
 
 
 def shield_measurements(measurements):
     # power on SDI12 regulator
     set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
 
-    # get SDI12 measurements
-    sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
-
-    from external.microsdi12.microsdi12 import SDI12
-
-    sdi12 = None
-
-    try:
-        sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
-        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
-        sdi12.set_wait_after_uart_write(True)
-        sdi12.wait_after_each_send(500)
-
-        for i in range(1, 11):
-            executeSDI12Measurement(sdi12, measurements, i)
-    except Exception as e:
-        logging.exception(e, "Exception while reading SDI-12 data")
-    if sdi12:
-        sdi12.close()
+    execute_sdi12_measurements(measurements)
 
     # get 4-20mA measurements
     try:
@@ -105,64 +114,64 @@ def shield_measurements(measurements):
     set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
 
 
-def read_sdi12_sensor(sdi12, address, measurements, location=None):
-    manufacturer = None
-    model = None
-    responseArray = None
-    if sdi12.is_active(address):
-        manufacturer, model = sdi12.get_sensor_info(address)
-        manufacturer = manufacturer.lower()
-        model = model.lower()
-        logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
-        # set_value(measurements, "sdi12_{}_model".format(address), model)
-        # set_value(measurements, "sdi12_{}_manufacturer".format(address), manufacturer)
+# def read_sdi12_sensor(sdi12, address, measurements, location=None):
+#     manufacturer = None
+#     model = None
+#     responseArray = None
+#     if sdi12.is_active(address):
+#         manufacturer, model = sdi12.get_sensor_info(address)
+#         manufacturer = manufacturer.lower()
+#         model = model.lower()
+#         logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
+#         set_value(measurements, "sdi12_{}_{}_model".format(address, location), model)
+#         set_value(measurements, "sdi12_{}_{}_manufacturer".format(address, location), manufacturer)
 
-    if not manufacturer:
-        logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
-        return
+#     if not manufacturer:
+#         logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
+#         return
 
-    if manufacturer == "meter":
-        responseArray = sdi12.get_measurement(address)
-        parse_sensor_meter(model, "M", address, responseArray, measurements, location)
-    elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
-        responseArray = sdi12.get_measurement(address, "C", 1, True)
-        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
-    elif manufacturer == "acclima":
-        responseArray = sdi12.get_measurement(address)
-        parse_sensor_acclima(model, "M", address, responseArray, measurements, location)
-    elif manufacturer == "implexx":
-        responseArray = sdi12.get_measurement(address)
-        parse_sensor_implexx(model, "M", address, responseArray, measurements, location)
-    elif manufacturer == "ep100g":  # EnviroPro
-        responseArrayMoisture = sdi12.get_measurement(address, "C")  # moisture with salinity
-        responseArraySalinity = sdi12.get_measurement(address, "C1")  # salinity
+#     if manufacturer == "meter":
+#         responseArray = sdi12.get_measurement(address)
+#         parse_sensor_meter(model, "M", address, responseArray, measurements, location)
+#     elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
+#         responseArray = sdi12.get_measurement(address, "C", 1, True)
+#         parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
+#     elif manufacturer == "acclima":
+#         responseArray = sdi12.get_measurement(address)
+#         parse_sensor_acclima(model, "M", address, responseArray, measurements, location)
+#     elif manufacturer == "implexx":
+#         responseArray = sdi12.get_measurement(address)
+#         parse_sensor_implexx(model, "M", address, responseArray, measurements, location)
+#     elif manufacturer == "ep100g":  # EnviroPro
+#         responseArrayMoisture = sdi12.get_measurement(address, "C")  # moisture with salinity
+#         responseArraySalinity = sdi12.get_measurement(address, "C1")  # salinity
 
-        parse_generic_sdi12(
-            address, responseArrayMoisture, measurements, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location
-        )
-        parse_generic_sdi12(address, responseArraySalinity, measurements, "ep_ec", "uS/cm", "", location)  # dS/m
+#         parse_generic_sdi12(
+#             address, responseArrayMoisture, measurements, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location
+#         )
+#         parse_generic_sdi12(address, responseArraySalinity, measurements, "ep_ec", "uS/cm", "", location)  # dS/m
 
-        cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
-        if cfg_is_celsius:
-            responseArrayTemperature = sdi12.get_measurement(address, "C2")
-            parse_generic_sdi12(
-                address, responseArrayTemperature, measurements, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location
-            )
-        else:
-            responseArrayTemperature = sdi12.get_measurement(address, "C5")
-            parse_generic_sdi12(
-                address, responseArrayTemperature, measurements, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location
-            )
-    elif "li-cor" in manufacturer:
-        responseArray = sdi12.get_measurement(address, "M0")
-        parse_sensor_licor(model, "M0", address, responseArray, measurements, location)
-        responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
-    else:
-        set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
-        responseArrayC = sdi12.get_measurement(address, "C", 2)
-        responseArrayM = sdi12.get_measurement(address, "M", 1)
-        parse_generic_sdi12(address, responseArrayC, measurements, "sdi12", None, "_c", location)
-        parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
+#         cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
+#         if cfg_is_celsius:
+#             responseArrayTemperature = sdi12.get_measurement(address, "C2")
+#             parse_generic_sdi12(
+#                 address, responseArrayTemperature, measurements, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location
+#             )
+#         else:
+#             responseArrayTemperature = sdi12.get_measurement(address, "C5")
+#             parse_generic_sdi12(
+#                 address, responseArrayTemperature, measurements, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location
+#             )
+#     elif "li-cor" in manufacturer:
+#         responseArray = sdi12.get_measurement(address, "M0")
+#         parse_sensor_licor(model, "M0", address, responseArray, measurements, location)
+#         responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
+#     else:
+#         set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
+#         responseArrayC = sdi12.get_measurement(address, "C", 2)
+#         responseArrayM = sdi12.get_measurement(address, "M", 1)
+#         parse_generic_sdi12(address, responseArrayC, measurements, "sdi12", None, "_c", location)
+#         parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
 
 
 def current_sense_4_20mA(measurements):
@@ -229,7 +238,7 @@ def execute_formula(measurements, name, raw_value, formula):
 def read_pulse_counter(measurements):
     pcnt_1_enabled = cfg.get("_PCNT_1_ENABLE")
     if pcnt_1_enabled:
-        from . import scenario_pcnt_ulp
+        from . import hw_pcnt_ulp
 
         pcnt_cfg = [
             {
@@ -242,7 +251,7 @@ def read_pulse_counter(measurements):
             {"id": 2, "enabled": False},
         ]
 
-        scenario_pcnt_ulp.execute(measurements, pcnt_cfg)
+        hw_pcnt_ulp.execute(measurements, pcnt_cfg)
     else:
         import utils
 

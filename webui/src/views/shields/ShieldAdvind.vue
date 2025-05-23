@@ -1,62 +1,63 @@
 <template>
   <div class="form-group columns">
-    <div class="col-12">
+    <SDivider label="SDI12" />
+    <div class="col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+      <SDivider label="General Settings" />
+      <SInput
+        label="Warmup time (ms)"
+        type="number"
+        v-model:value="sdi12Config.warmupTimeMs"
+        @update:value="sdi12Config.warmupTimeMs = $event"
+      />
+      <br />
+      <SDivider label="Sensors" />
       <table class="table table-striped table-hover">
         <thead>
           <tr>
             <th>Index</th>
             <th>Sensor ID</th>
+            <th>Command</th>
+            <th>Sub Command</th>
             <th>Board Location</th>
-            <!--th>Active</th-->
             <th>
-              <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">
+              <button :disabled="sdi12Sensors.length >= 10" class="btn btn-primary" @click="addSdi12Row">
                 <i class="icon icon-plus"></i>
               </button>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in sdi12Rows" :key="index">
+          <tr v-for="(row, index) in sdi12Sensors" :key="index">
             <td>{{ "SDI-12 n." + (index + 1) }}</td>
             <td>
-              <select class="form-select" v-model="row.sensorId">
-                <option v-for="opt in sdi12SensorIdOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              <select class="form-select" v-model="row.address">
+                <option v-for="opt in sdi12sensorAddressOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
               </select>
             </td>
             <td>
-              <select class="form-select" v-model="row.boardLocation">
-                <option v-for="opt in sdi12LocationOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              <select class="form-select" v-model="row.measCmd">
+                <option v-for="opt in sdi12CommandOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </td>
-            <!--td>
-              <label class="form-switch">
-                <input type="checkbox" v-model="row.active" />
-                <i class="form-icon"></i>
-              </label>
-            </td-->
             <td>
-              <button class="btn btn-primary" @click="sdi12Rows.splice(index, 1)">
+              <input type="text" class="form-input" maxlength="5" v-model="row.measSubCmd" />
+            </td>
+            <td>
+              <button class="btn btn-primary" @click="sdi12Sensors.splice(index, 1)">
                 <i class="icon icon-delete"></i>
               </button>
             </td>
           </tr>
         </tbody>
       </table>
-
-      <br />
-
-      <SInput
-        label="Warmup time (ms)"
-        type="number"
-        v-model:value="sdi12WarmupTimeMs"
-        @update:value="sdi12WarmupTimeMs = $event"
-      />
     </div>
     <!--div class="col-12">
       <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">Add SDI-12 sensor</button>
     </div-->
+    <SDivider label="4-20mA sensing" />
     <div class="col-12 columns">
-      <SDivider label="4-20mA sensing" />
       <SSwitch label="Sensor 1 enable" v-model:value="sens_4_20_num1_enable" />
 
       <div v-if="sens_4_20_num1_enable" class="col-12">
@@ -89,8 +90,8 @@
         </div>
       </div>
     </div>
+    <SDivider label="Pulse Counter" />
     <div class="col-12">
-      <SDivider label="Pulse Counter" />
       <SSwitch label="Pulse Counter enable" v-model:value="pulseCounterEnable" />
       <div v-if="pulseCounterEnable" class="col-12">
         <div class="form-group columns">
@@ -128,13 +129,31 @@ export default {
   data() {
     return {
       // Add your component data here
-      sdi12SensorIdOptions: [],
+      sdi12sensorAddressOptions: [],
       sdi12LocationOptions: [
         { value: "1", label: "SDI snr 1" },
         { value: "2", label: "SDI snr 2" }
       ],
-      sdi12Rows: [],
-      sdi12WarmupTimeMs: 1000,
+      sdi12CommandOptions: [
+        { value: "M", label: "M" },
+        { value: "C", label: "C" },
+        { value: "R", label: "R" },
+        { value: "V", label: "V" },
+        { value: "X", label: "X" }
+      ],
+      sdi12Sensors: [],
+      sdi12DefaultRow: {
+        address: 0,
+        measCmd: "C",
+        measSubCmd: "",
+        boardLocation: "1"
+      },
+      sdi12ConfigDefault: {
+        warmupTimeMs: 1000
+      },
+      sdi12Config: {
+        warmupTimeMs: 1000
+      },
       sens_4_20_num1_enable: false,
       sens_4_20_num1_formula: "v",
       sens_4_20_num2_enable: false,
@@ -147,31 +166,16 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.sdi12Rows = []
-      for (let i = 1; i <= 10; ++i) {
-        const rowEnabled = this.strToJSValue(this.$cookies.get("meas-sdi-" + i + "-enabled"))
-        const rowLoc = this.$cookies.get("meas-sdi-" + i + "-loc")
-        const rowAddress = this.$cookies.get("meas-sdi-" + i + "-address")
+      this.sdi12Sensors =
+        this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").sensors
+          ? this.getJsonObjectFromCookies("meas-sdi12").sensors
+          : []
 
-        if (
-          rowEnabled === undefined ||
-          rowEnabled === null ||
-          !rowLoc ||
-          rowAddress === undefined ||
-          rowAddress === null
-        ) {
-          continue
-        }
-        this.sdi12Rows.push({ sensorId: rowAddress, boardLocation: rowLoc, active: true })
-      }
+      this.sdi12Config =
+        this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").config
+          ? this.getJsonObjectFromCookies("meas-sdi12").config
+          : this.sdi12ConfigDefault
 
-      // if (this.sdi12Rows.length === 0) {
-      //   this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: false })
-      // }
-
-      this.sdi12WarmupTimeMs = this.$cookies.get("meas-sdi-warmup-time")
-        ? this.$cookies.get("meas-sdi-warmup-time")
-        : 1000
       this.sens_4_20_num1_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-1-enable"), false)
       this.sens_4_20_num2_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-2-enable"), false)
       this.sens_4_20_num1_formula = this.$cookies.get("meas-4-20-snsr-1-formula")
@@ -188,12 +192,13 @@ export default {
         : "1"
     },
     addSdi12Row() {
-      if (this.sdi12Rows.length < 10) this.sdi12Rows.push({ sensorId: 0, boardLocation: "1", active: true })
+      this.sdi12Sensors.push({ ...this.sdi12DefaultRow })
     },
     validateMyForm() {
       this.storeData()
     },
     clearCookies() {
+      this.$cookies.remove("meas-sdi12")
       this.$cookies.remove("meas-4-20-snsr-1-enable")
       this.$cookies.remove("meas-4-20-snsr-2-enable")
       this.$cookies.remove("meas-4-20-snsr-1-formula")
@@ -215,19 +220,12 @@ export default {
     storeData() {
       this.clearCookies()
 
-      for (let i = 0; i < this.sdi12Rows.length; ++i) {
-        const config_index = i + 1
-        this.$cookies.set("meas-sdi-" + config_index + "-enabled", this.boolToPyStr(this.sdi12Rows[i].active))
-        this.$cookies.set("meas-sdi-" + config_index + "-address", this.sdi12Rows[i].sensorId)
-        this.$cookies.set("meas-sdi-" + config_index + "-loc", this.sdi12Rows[i].boardLocation)
-      }
+      this.$cookies.set("meas-sdi12", { sensors: this.sdi12Sensors, config: this.sdi12Config })
 
       this.$cookies.set("meas-4-20-snsr-1-enable", this.boolToPyStr(this.sens_4_20_num1_enable))
       this.$cookies.set("meas-4-20-snsr-2-enable", this.boolToPyStr(this.sens_4_20_num2_enable))
       this.$cookies.set("meas-4-20-snsr-1-formula", this.sens_4_20_num1_formula)
       this.$cookies.set("meas-4-20-snsr-2-formula", this.sens_4_20_num2_formula)
-
-      this.$cookies.set("meas-sdi-warmup-time", this.sdi12WarmupTimeMs)
 
       this.$cookies.set("meas-pcnt-1-enable", this.boolToPyStr(this.pulseCounterEnable))
       this.$cookies.set("meas-pcnt-1-formula", this.pulseCounterFormula)
@@ -237,9 +235,9 @@ export default {
     }
   },
   mounted() {
-    this.sdi12SensorIdOptions = []
-    for (let i = 0; i < 10; i++) {
-      this.sdi12SensorIdOptions.push({ value: i, label: i.toString() })
+    this.sdi12sensorAddressOptions = []
+    for (let i = 0; i <= 9; i++) {
+      this.sdi12sensorAddressOptions.push({ value: i, label: i.toString() })
     }
     // Add your mounted logic here
     this.initializeValues()
