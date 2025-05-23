@@ -19,7 +19,7 @@
             <th>Command</th>
             <th>Sub Command</th>
             <th>
-              <button :disabled="sdi12Sensors.length >= 10" class="btn btn-primary" @click="addSdi12Row">
+              <button class="btn btn-primary" @click="addSdi12Row">
                 <i class="icon icon-plus"></i>
               </button>
             </th>
