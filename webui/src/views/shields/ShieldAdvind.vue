@@ -20,7 +20,7 @@
             <th>Sub Command</th>
             <th>Board Location</th>
             <th>
-              <button :disabled="sdi12Sensors.length >= 10" class="btn btn-primary" @click="addSdi12Row">
+              <button class="btn btn-primary" @click="addSdi12Row">
                 <i class="icon icon-plus"></i>
               </button>
             </th>
@@ -43,6 +43,11 @@
             </td>
             <td>
               <input type="text" class="form-input" maxlength="5" v-model="row.measSubCmd" />
+            </td>
+            <td>
+              <select class="form-select" v-model="row.boardLocation">
+                <option v-for="opt in sdi12LocationOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              </select>
             </td>
             <td>
               <button class="btn btn-primary" @click="sdi12Sensors.splice(index, 1)">
@@ -131,8 +136,8 @@ export default {
       // Add your component data here
       sdi12sensorAddressOptions: [],
       sdi12LocationOptions: [
-        { value: "1", label: "SDI snr 1" },
-        { value: "2", label: "SDI snr 2" }
+        { value: 1, label: "SDI snr 1" },
+        { value: 2, label: "SDI snr 2" }
       ],
       sdi12CommandOptions: [
         { value: "M", label: "M" },
@@ -146,7 +151,7 @@ export default {
         address: 0,
         measCmd: "C",
         measSubCmd: "",
-        boardLocation: "1"
+        boardLocation: 1
       },
       sdi12ConfigDefault: {
         warmupTimeMs: 1000
@@ -166,15 +171,14 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.sdi12Sensors =
-        this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").sensors
-          ? this.getJsonObjectFromCookies("meas-sdi12").sensors
-          : []
+      let sdi12JSON = this.getJsonObjectFromCookies("meas-sdi12")
 
-      this.sdi12Config =
-        this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").config
-          ? this.getJsonObjectFromCookies("meas-sdi12").config
-          : this.sdi12ConfigDefault
+      if (!sdi12JSON) {
+        this.sdi12ReadConfigBackwardCompatibility()
+      } else {
+        this.sdi12Sensors = sdi12JSON && sdi12JSON.sensors ? sdi12JSON.sensors : []
+        this.sdi12Config = sdi12JSON && sdi12JSON.config ? sdi12JSON.config : this.sdi12ConfigDefault
+      }
 
       this.sens_4_20_num1_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-1-enable"), false)
       this.sens_4_20_num2_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-2-enable"), false)
@@ -190,6 +194,27 @@ export default {
       this.pulseCounterFormula = this.$cookies.get("meas-pcnt-1-formula")
         ? this.$cookies.get("meas-pcnt-1-formula")
         : "1"
+    },
+    sdi12ReadConfigBackwardCompatibility() {
+      this.sdi12Sensors = []
+      for (let i = 1; i <= 10; ++i) {
+        const rowEnabled = this.strToJSValue(this.$cookies.get("meas-sdi-" + i + "-enabled"))
+        const rowLoc = parseInt(this.$cookies.get("meas-sdi-" + i + "-loc"))
+        const rowAddress = parseInt(this.$cookies.get("meas-sdi-" + i + "-address"))
+
+        if (!rowEnabled || !rowLoc || rowAddress === undefined || rowAddress === null) continue
+
+        this.sdi12Sensors.push({
+          address: rowAddress,
+          measCmd: "C",
+          measSubCmd: "",
+          boardLocation: rowLoc
+        })
+      }
+
+      this.sdi12Config.warmupTimeMs = this.$cookies.get("meas-sdi-warmup-time")
+        ? parseInt(this.$cookies.get("meas-sdi-warmup-time"))
+        : 1000
     },
     addSdi12Row() {
       this.sdi12Sensors.push({ ...this.sdi12DefaultRow })

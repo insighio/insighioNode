@@ -84,11 +84,14 @@ def execute_sdi12_measurements(measurements):
 
     warmup_time_ms = 1000
     if _has(config, "warmupTimeMs"):
-        warmup_time_ms = _get(config, "warmupTimeMs")
+        try:
+            warmup_time_ms = int(_get(config, "warmupTimeMs"))
+        except:
+            pass
         logging.debug("SDI12 warmup time: {}".format(warmup_time_ms))
 
     for sensor in sensor_list:
-        loc = sensor.get("board_location")
+        loc = sensor.get("boardLocation")
         powerOnBoardLocation(loc, warmup_time_ms)
         hw_proto_sdi12.read_sdi12_sensor(sdi12, measurements, sensor, _sdi12_board_location_last_power_on)
 
