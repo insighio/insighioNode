@@ -54,7 +54,7 @@ def set_value_int(measurements, key, value, unit=None):
             logging.exception(e, "set_value_int error: [{}]".format(value))
 
 
-def set_value_float(measurements, key, value, unit=None, precision=2, multiplier=1):
+def set_value_float(measurements, key, value, unit=None, precision=3, multiplier=1):
     if value is not None:
         if isinstance(value, str):
             value = float(value) * multiplier
