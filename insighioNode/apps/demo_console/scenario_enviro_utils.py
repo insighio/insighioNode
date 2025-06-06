@@ -212,7 +212,11 @@ def execute_sdi12_measurements(measurements):
     if _has(config, "warmupTimeMs"):
         t = _get(config, "warmupTimeMs")
         logging.debug("SDI12 warmup time: {}".format(t))
-        sleep_ms(t)
+        try:
+            t = int(t)
+            sleep_ms(t)
+        except Exception as e:
+            logging.exception(e, "Error during SDI12 warmup time")
 
     from external.microsdi12.microsdi12 import SDI12
 
