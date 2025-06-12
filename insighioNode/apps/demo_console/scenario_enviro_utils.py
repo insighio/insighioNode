@@ -211,7 +211,11 @@ def execute_sdi12_measurements(measurements):
     if _has(config, "warmupTimeMs"):
         t = _get(config, "warmupTimeMs")
         logging.debug("SDI12 warmup time: {}".format(t))
-        sleep_ms(t)
+        try:
+            t = int(t)
+            sleep_ms(t)
+        except Exception as e:
+            logging.exception(e, "Error during SDI12 warmup time")
 
     sdi12 = hw_proto_sdi12.initialize_sdi12_connection(
         cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1

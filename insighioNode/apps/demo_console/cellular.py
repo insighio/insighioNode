@@ -5,7 +5,7 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from utime import sleep_ms, ticks_ms
-from .dictionary_utils import set_value
+from .dictionary_utils import set_value, set_value_float, set_value_int
 
 transfer_client = None
 mqtt_connected = False
@@ -52,14 +52,28 @@ def updateSignalQuality(cfg, measurements):
     (mcc, mnc) = modem_instance.get_registered_mcc_mnc()
     (lac, ci) = modem_instance.get_lac_n_cell_id()
 
-    set_value(measurements, "cell_rssi", rssi, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
-    set_value(measurements, "cell_rsrp", rsrp, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
-    set_value(measurements, "cell_rsrq", rsrq, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
+    set_value_float(measurements, "cell_rssi", rssi, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
+    set_value_float(measurements, "cell_rsrp", rsrp, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
+    set_value_float(measurements, "cell_rsrq", rsrq, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
 
-    set_value(measurements, "cell_mcc", mcc)
-    set_value(measurements, "cell_mnc", mnc)
-    set_value(measurements, "cell_lac", lac)
-    set_value(measurements, "cell_ci", ci)
+    set_value_int(measurements, "cell_mcc", mcc)
+    set_value_int(measurements, "cell_mnc", mnc)
+    set_value_int(measurements, "cell_lac", lac)
+    set_value_int(measurements, "cell_ci", ci)
+
+def update_hw_ids(measurements, is_senml=True, is_json=False):
+    modem_instance = cellular.get_modem_instance()
+    if modem_instance is None:
+        return
+
+    (imsi, iccid) = modem_instance.get_sim_card_ids()
+
+    if is_senml:
+        set_value_int(measurements, "cell_imsi", imsi)
+        set_value_int(measurements, "cell_iccid", iccid)
+    elif is_json:
+        measurements["cell_imsi"] = imsi
+        measurements["cell_iccid"] = iccid
 
 
 # network connection

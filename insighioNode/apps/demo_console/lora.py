@@ -20,6 +20,8 @@ def updateSignalQuality(cfg, measurements):
         return
     pass
 
+def update_hw_ids(measurements, is_senml=True, is_json=False):
+    pass
 
 def connect(cfg):
     # network connectivity & transmission

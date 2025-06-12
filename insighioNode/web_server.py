@@ -265,7 +265,6 @@ async def server_loop(server_instance, timeoutMs):
         )
 
         is_connected = False
-        keep_active_after_connection = False
         now = 0
         cnt = 0
         while 1:
@@ -275,15 +274,11 @@ async def server_loop(server_instance, timeoutMs):
             # else:
             #     print(".", end='')
 
-            if is_connected:
-                keep_active_after_connection = True
+            # if is_connected:
+            #     keep_active_after_connection = True
 
             now = ticks_ms()
-            if (
-                timeoutMs <= 0
-                or (not keep_active_after_connection and now < end_time)
-                or (keep_active_after_connection and now < end_time_when_connected)
-            ):
+            if timeoutMs <= 0 or (not is_connected and now < end_time) or is_connected:
                 pass
             else:
                 break

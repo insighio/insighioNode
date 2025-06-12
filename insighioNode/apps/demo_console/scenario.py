@@ -496,6 +496,8 @@ def executeDeviceStatisticsUpload(cfg, network):
     except:
         logging.info("Skipping platform info.")
 
+    network.update_hw_ids(stats, False, True)
+
     logging.info("Uploading device statistics.")
     return network.send_control_message(cfg, network.create_message(None, stats), "/stat")
 
@@ -519,7 +521,7 @@ def executeDeviceConfigurationUpload(cfg, network):
             utils.deleteFlagFile("/configLog")
 
         # whenever a new config log is uplaoded, upload also statistics for the device
-    if configUploadFileContent or utils.existsFlagFile("/ota_applied_flag") or utils.existsFile("/ota_applied_flag"):
+    if configUploadFileContent or utils.existsFlagFile("/ota_applied_flag") or utils.existsFile("/ota_applied_flag") or device_info.get_reset_cause() < 2:
         message_sent = executeDeviceStatisticsUpload(cfg, network)
         if message_sent:
             utils.deleteFlagFile("/ota_applied_flag")

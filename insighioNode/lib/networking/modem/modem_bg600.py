@@ -56,6 +56,17 @@ class ModemBG600(modem_base.Modem):
             self.send_at_cmd("ATE0")
             sleep_ms(1000)
 
+    def get_sim_card_ids(self):
+        (self.sim_imsi, self.sim_iccid) = super().get_sim_card_ids()
+
+        (status, lines)= self.send_at_cmd("AT+QCCID")
+        if status:
+            match_res = self._match_regex(r"\+QCCID:\s+(\d+)", lines)
+            if match_res is not None:
+                self.sim_iccid = match_res.group(1)
+
+        return (self.sim_imsi, self.sim_iccid)
+
     def wait_for_modem_power_off(self):
         self.send_at_cmd("", 5000, "NORMAL POWER DOWN")
 
