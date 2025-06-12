@@ -496,6 +496,8 @@ def executeDeviceStatisticsUpload(cfg, network):
     except:
         logging.info("Skipping platform info.")
 
+    network.update_hw_ids(stats, False, True)
+
     logging.info("Uploading device statistics.")
     return network.send_control_message(cfg, network.create_message(None, stats), "/stat")
 

@@ -310,23 +310,40 @@ class Modem:
                         break
         return (self.lac, self.ci)
 
+    def _match_regex(self, regex, lines):
+        import ure
+        for line in lines:
+            match_res = ure.search(regex, line)
+            if match_res is not None:
+                return match_res
+        return None
+
     def get_registered_mcc_mnc(self):
         if self.ppp is None:
-            regex_cops = r"\+COPS:\s+\d,2,\"(\d+)"
             self.mcc = None
             self.mnc = None
             (status, lines) = self.send_at_cmd("AT+COPS?")
             if status:
-                for line in lines:
-                    match_res = ure.search(regex_cops, line)
-                    if match_res is not None:
-                        try:
-                            self.mcc = int(match_res.group(1)[0:3])
-                            self.mnc = int(match_res.group(1)[3:5])
-                        except:
-                            pass
-                        break
+                match_res = self._match_regex(r"\+COPS:\s+\d,2,\"(\d+)", lines)
+                if match_res is not None:
+                    try:
+                        self.mcc = int(match_res.group(1)[0:3])
+                        self.mnc = int(match_res.group(1)[3:5])
+                    except:
+                        pass
         return (self.mcc, self.mnc)
+
+    def get_sim_card_ids(self):
+        self.sim_imsi = None
+        self.sim_iccid = None
+
+        (status, lines)= self.send_at_cmd("at+cimi")
+        if status:
+            match_res = self._match_regex(r"(\d+)", lines)
+            if match_res is not None:
+                self.sim_imsi = match_res.group(1)
+
+        return (self.sim_imsi, self.sim_iccid)
 
     # to be overriden by children
     def set_gps_state(self, poweron=True):
