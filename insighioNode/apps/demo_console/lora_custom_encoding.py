@@ -1,6 +1,7 @@
 import struct
 import device_info
 import logging
+import ure
 
 # encoding protocol: https://docs.insigh.io/firmwareapi/lora/encodingprotocol/
 # decoder: https://docs.insigh.io/firmwareapi/lora/decoder/
@@ -10,10 +11,8 @@ LOCATION_DEFAULT = 0x00
 LOCATION_INTERNAL_BOARD = 0x10
 LOCATION_INTERNAL_CPU = 0x11
 LOCATION_I2C = 0x20
-LOCATION_A_P1 = 0x30
-LOCATION_A_P2 = 0x31
-LOCATION_AD_P1 = 0x40
-LOCATION_AD_P2 = 0x41
+LOCATION_A_P = 0x30
+LOCATION_AD_P = 0x40
 LOCATION_SDI12 = 0x50
 LOCATION_4_20 = 0x60
 LOCATION_MODEM = 0x70
@@ -116,7 +115,7 @@ def get_location_by_key(key):
         elif loc_name == "4-20" and position[0] >= "0" and position[0] <= "9":
             return LOCATION_4_20 + int(position[0])
         elif loc_name == "sdi12" and position[0] >= "0" and position[0] <= "9":
-            if len(parts) >= 3: # format: sdi12_0_2 -> location_address_port
+            if len(parts) >= 3:  # format: sdi12_0_2 -> location_address_port
                 port = None
                 try:
                     port = int(parts[-1])
@@ -133,16 +132,12 @@ def get_location_by_key(key):
             position_int = int(position[0])
             return LOCATION_SDI12 + position_int
         elif len(parts) > 2:
-            if position == "ap1":
-                return LOCATION_A_P1
-            elif position == "ap2":
-                return LOCATION_A_P2
-            elif position == "adp1":
-                return LOCATION_AD_P1
-            elif position == "adp2":
-                return LOCATION_AD_P2
+            if ure.search(r"ap\d", position):
+                return LOCATION_A_P + (int(position[2]) - 1)
+            elif ure.search(r"adp\d", position):
+                return LOCATION_AD_P + (int(position[3]) - 1)
             elif position[0] >= "0" and position[0] <= "9":
-                if len(parts) >= 3: # format: sdi12_0_2 -> location_address_port
+                if len(parts) >= 3:  # format: sdi12_0_2 -> location_address_port
                     port = None
                     try:
                         port = int(parts[-1])
@@ -185,6 +180,7 @@ def create_message(device_id, measurements):
                 value = measurements[key]
             keyparts = key.split("_")
             measurement_index = None
+            data_to_add = None
             if len(keyparts) > 1:
                 try:
                     # check if value key has index value at the end of the name: ex. gen_vwc_1 instead of gen_vwc
@@ -196,108 +192,111 @@ def create_message(device_id, measurements):
                     pass
             logging.debug("key testing: " + key)
             if key == "vbatt":
-                binary_data += struct.pack(">BBH", TYPE_VBAT, LOCATION_INTERNAL_BOARD, value)
+                data_to_add =  struct.pack(">BBH", TYPE_VBAT, LOCATION_INTERNAL_BOARD, value)
             elif key == "reset_cause":
-                binary_data += struct.pack(">BBB", TYPE_RESET_CAUSE, LOCATION_INTERNAL_BOARD, value)
+                data_to_add =  struct.pack(">BBB", TYPE_RESET_CAUSE, LOCATION_INTERNAL_BOARD, value)
             elif key == "uptime":
-                binary_data += struct.pack(">BBI", TYPE_UPTIME, LOCATION_INTERNAL_BOARD, value)
+                data_to_add =  struct.pack(">BBI", TYPE_UPTIME, LOCATION_INTERNAL_BOARD, value)
             elif key == "mem_alloc":
-                binary_data += struct.pack(">BBI", TYPE_MEM_ALLOC, LOCATION_INTERNAL_BOARD, value)
+                data_to_add =  struct.pack(">BBI", TYPE_MEM_ALLOC, LOCATION_INTERNAL_BOARD, value)
             elif key == "mem_free":
-                binary_data += struct.pack(">BBI", TYPE_MEM_FREE, LOCATION_INTERNAL_BOARD, value)
+                data_to_add =  struct.pack(">BBI", TYPE_MEM_FREE, LOCATION_INTERNAL_BOARD, value)
             elif key == "lora_join_duration":
-                binary_data += struct.pack(">BBH", TYPE_LORA_JOIN_DUR, LOCATION_MODEM, value)
+                data_to_add =  struct.pack(">BBH", TYPE_LORA_JOIN_DUR, LOCATION_MODEM, value)
 
             elif key == "gps_hdop":
-                binary_data += struct.pack(">BBB", TYPE_GPS_HDOP, LOCATION_GPS, round(value * 10))
+                data_to_add =  struct.pack(">BBB", TYPE_GPS_HDOP, LOCATION_GPS, round(value * 10))
             elif key == "gps_lat":
-                binary_data += struct.pack(">BBI", TYPE_GPS_LAT, LOCATION_GPS, round(value * 100000))
+                data_to_add =  struct.pack(">BBI", TYPE_GPS_LAT, LOCATION_GPS, round(value * 100000))
             elif key == "gps_lon":
-                binary_data += struct.pack(">BBI", TYPE_GPS_LON, LOCATION_GPS, round(value * 100000))
+                data_to_add =  struct.pack(">BBI", TYPE_GPS_LON, LOCATION_GPS, round(value * 100000))
             elif key == "gps_dur":
-                binary_data += struct.pack(">BBI", TYPE_UPTIME, LOCATION_GPS, value)
+                data_to_add =  struct.pack(">BBI", TYPE_UPTIME, LOCATION_GPS, value)
 
             elif key.endswith("_deviation"):
-                binary_data += struct.pack(">BBh", TYPE_DEVIATION, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBh", TYPE_DEVIATION, get_location_by_key(key), round(value * 100))
             elif key.endswith("_radiation"):
-                binary_data += struct.pack(">BBH", TYPE_RADIATION, get_location_by_key(key), value)
+                data_to_add =  struct.pack(">BBH", TYPE_RADIATION, get_location_by_key(key), value)
             elif key.endswith("_count"):
-                binary_data += struct.pack(">BBH", TYPE_COUNT, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_COUNT, get_location_by_key(key), round(value * 10))
             elif key.endswith("_height"):
-                binary_data += struct.pack(">BBH", TYPE_HEIGHT, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_HEIGHT, get_location_by_key(key), round(value * 10))
             elif key.endswith("_period"):
-                binary_data += struct.pack(">BBH", TYPE_PERIOD, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_PERIOD, get_location_by_key(key), round(value * 10))
             elif key.endswith("_noise"):
-                binary_data += struct.pack(">BBH", TYPE_NOISE, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_NOISE, get_location_by_key(key), round(value * 10))
             elif key.endswith("_d"):
-                binary_data += struct.pack(">BBH", TYPE_DIRECTION_DEG, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_DIRECTION_DEG, get_location_by_key(key), round(value * 10))
             elif key.endswith("_direction"):
-                binary_data += struct.pack(">BBB", TYPE_DIRECTION_ID, get_location_by_key(key), value)
+                data_to_add =  struct.pack(">BBB", TYPE_DIRECTION_ID, get_location_by_key(key), value)
             elif key.endswith("_speed"):
-                binary_data += struct.pack(">BBh", TYPE_SPEED, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBh", TYPE_SPEED, get_location_by_key(key), round(value * 100))
 
             # explicit cases should be added here
             # elif key == "new_explicit_value"
             #    do_stuff()
             elif key.endswith("_light"):
-                binary_data += struct.pack(">BBH", TYPE_LIGHT_LUX, get_location_by_key(key), value)
+                data_to_add =  struct.pack(">BBH", TYPE_LIGHT_LUX, get_location_by_key(key), value)
             elif key.endswith("_temp"):
-                binary_data += struct.pack(">BBh", TYPE_TEMPERATURE_CEL, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBh", TYPE_TEMPERATURE_CEL, get_location_by_key(key), round(value * 100))
             elif key.endswith("_humidity") or key.endswith("_hum"):
-                binary_data += struct.pack(">BBH", TYPE_HUMIDITY, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_HUMIDITY, get_location_by_key(key), round(value * 100))
             elif key.endswith("_co2"):
-                binary_data += struct.pack(">BBH", TYPE_CO2, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_CO2, get_location_by_key(key), round(value * 100))
             elif key.endswith("_pressure"):
-                binary_data += struct.pack(">BBi", TYPE_PRESSURE, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBi", TYPE_PRESSURE, get_location_by_key(key), round(value * 100))
             elif key.endswith("_gas"):
-                binary_data += struct.pack(">BBH", TYPE_GAS, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_GAS, get_location_by_key(key), round(value * 100))
             elif key.endswith("_volt"):
-                binary_data += struct.pack(">BBH", TYPE_VOLTAGE, get_location_by_key(key), value)
+                data_to_add =  struct.pack(">BBH", TYPE_VOLTAGE, get_location_by_key(key), value)
             elif key.endswith("_vwc"):
-                binary_data += struct.pack(">BBH", TYPE_VWC, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_VWC, get_location_by_key(key), round(value * 100))
             elif key.endswith("_rel_perm"):
-                binary_data += struct.pack(">BBH", TYPE_REL_PERM, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_REL_PERM, get_location_by_key(key), round(value * 100))
             elif key.endswith("_soil_ec"):
-                binary_data += struct.pack(">BBH", TYPE_SOIL_EC, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_SOIL_EC, get_location_by_key(key), round(value * 100))
             elif key.endswith("_pore_water_ec"):
-                binary_data += struct.pack(">BBH", TYPE_GAS, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_GAS, get_location_by_key(key), round(value * 100))
             elif key.endswith("_sap_flow"):
-                binary_data += struct.pack(">BBH", TYPE_SAP_FLOW, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_SAP_FLOW, get_location_by_key(key), round(value * 100))
             elif key.endswith("_hv_outer") or key.endswith("_hv_inner"):
-                binary_data += struct.pack(">BBH", TYPE_HEAT_VELOCITY, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_HEAT_VELOCITY, get_location_by_key(key), round(value * 100))
             elif key.endswith("_log_rt_a_outer") or key.endswith("_log_rt_a_inner"):
-                binary_data += struct.pack(">BBI", TYPE_LOG_RATIO, get_location_by_key(key), round(value * 100000))
+                data_to_add =  struct.pack(">BBI", TYPE_LOG_RATIO, get_location_by_key(key), round(value * 100000))
             elif key.endswith("_current"):
-                binary_data += struct.pack(">BBH", TYPE_CURRENT, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_CURRENT, get_location_by_key(key), round(value * 100))
             elif key.endswith("_formula"):
-                binary_data += struct.pack(">BBI", TYPE_FORMULA, get_location_by_key(key), round(value * 100000))
+                data_to_add =  struct.pack(">BBI", TYPE_FORMULA, get_location_by_key(key), round(value * 100000))
 
             elif key.endswith("_et"):
-                binary_data += struct.pack(">BBH", TYPE_ACTUAL_EVAPOTRANSPIRATION_MM, get_location_by_key(key), round(value * 1000))
+                data_to_add =  struct.pack(">BBH", TYPE_ACTUAL_EVAPOTRANSPIRATION_MM, get_location_by_key(key), round(value * 1000))
             elif key.endswith("_le"):
-                binary_data += struct.pack(">BBH", TYPE_LATENT_ENERGY_FLUX, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_LATENT_ENERGY_FLUX, get_location_by_key(key), round(value * 10))
             elif key.endswith("_h"):
-                binary_data += struct.pack(">BBH", TYPE_HEAT_FLUX, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_HEAT_FLUX, get_location_by_key(key), round(value * 10))
             elif key.endswith("_vpd"):
-                binary_data += struct.pack(">BBH", TYPE_VAPOR_PRESSURE_DEFICIT, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_VAPOR_PRESSURE_DEFICIT, get_location_by_key(key), round(value * 10))
             elif key.endswith("_pa"):
-                binary_data += struct.pack(">BBH", TYPE_ATMOSPHERIC_PRESSURE, get_location_by_key(key), round(value * 10))
+                data_to_add =  struct.pack(">BBH", TYPE_ATMOSPHERIC_PRESSURE, get_location_by_key(key), round(value * 10))
             elif key.endswith("_taf"):
-                binary_data += struct.pack(">BBH", TYPE_TEMPERATURE_FAH, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_TEMPERATURE_FAH, get_location_by_key(key), round(value * 100))
             elif key.endswith("_rh"):
-                binary_data += struct.pack(">BBH", TYPE_HUMIDITY, get_location_by_key(key), round(value * 100))
+                data_to_add =  struct.pack(">BBH", TYPE_HUMIDITY, get_location_by_key(key), round(value * 100))
             elif key.endswith("_seq"):
-                binary_data += struct.pack(">BBH", TYPE_GENERIC, get_location_by_key(key), value)
+                data_to_add =  struct.pack(">BBH", TYPE_GENERIC, get_location_by_key(key), value)
             elif key.endswith("_diag"):
-                binary_data += struct.pack(">BBH", TYPE_GENERIC | 0x01, get_location_by_key(key), value)
+                data_to_add =  struct.pack(">BBH", TYPE_GENERIC | 0x01, get_location_by_key(key), value)
 
             else:
                 index = measurement_index if measurement_index is not None else 0
 
                 if type(value) == int or type(value) == float:
-                    binary_data += struct.pack(">BBi", TYPE_GENERIC + index, get_location_by_key(key), round(value * 100))
+                    data_to_add = struct.pack(">BBi", TYPE_GENERIC + index, get_location_by_key(key), round(value * 100))
                 else:
                     logging.error("Unidentified or unaccepted measurement: key: {}, value: {}, type: {}".format(key, value, type(value)))
+            if data_to_add:
+                logging.info("  >bytes: [{}]".format(ubinascii.hexlify(data_to_add).decode("utf-8")))
+                binary_data += data_to_add
             logging.info("message: size[{}], data:[{}]".format(len(binary_data), ubinascii.hexlify(binary_data).decode("utf-8")))
     except Exception as e:
         logging.exception(e, "Error encoding lora message")
