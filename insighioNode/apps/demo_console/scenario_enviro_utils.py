@@ -1,12 +1,11 @@
 from utime import sleep_ms
-from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
 
 from .dictionary_utils import set_value, set_value_float, _get, _has
 
-from .sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
+from . import hw_proto_sdi12
 
 from . import cfg
 
@@ -146,7 +145,7 @@ def initialize_configurations():
     import json
 
     try:
-        _sdi12_config = json.loads(cfg.get("_MEAS_SDI12"))
+        _sdi12_config = hw_proto_sdi12.initialize_config(cfg.get("_MEAS_SDI12"), cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS"))
     except Exception as e:
         logging.exception(e, "Error loading SDI12 config")
 
@@ -218,92 +217,17 @@ def execute_sdi12_measurements(measurements):
         except Exception as e:
             logging.exception(e, "Error during SDI12 warmup time")
 
-    from external.microsdi12.microsdi12 import SDI12
-
-    sdi12 = None
-
-    try:
-        sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
-        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 0)
-        sdi12.set_wait_after_uart_write(True)
-        sdi12.wait_after_each_send(500)
-
-        for sensor in sensor_list:
-            read_sdi12_sensor(sdi12, measurements, sensor)
-    except Exception as e:
-        logging.exception(e, "Exception while reading SDI-12 data")
+    sdi12 = hw_proto_sdi12.initialize_sdi12_connection(
+        cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1
+    )
 
     if sdi12:
-        sdi12.close()
+        for sensor in sensor_list:
+            hw_proto_sdi12.read_sdi12_sensor(sdi12, measurements, sensor)
+
+    hw_proto_sdi12.close_sdi12_connection()
 
     io_expander_power_off_sdi12_sensors()
-
-
-def read_sdi12_sensor(sdi12, measurements, sensor):
-    address = str(_get(sensor, "address"))
-    command = _get(sensor, "measCmd")
-    sub_cmd = _get(sensor, "measSubCmd")
-
-    logging.debug("read_sdi12_sensor - address: {}, command: {}, sub_cmd: {}".format(address, command, sub_cmd))
-
-    try:
-        if not sdi12.is_active(address):
-            logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
-            return
-
-        manufacturer, model = sdi12.get_sensor_info(address)
-        manufacturer = manufacturer.lower()
-        model = model.lower()
-        logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
-
-        command_to_execute = command + sub_cmd
-        force_wait = True if manufacturer == "in-situ" and (model == "at500" or model == "at400") else False
-        responseArray = sdi12.get_measurement(address, command_to_execute, 1, force_wait)
-        if not responseArray:
-            logging.error("read_sdi12_sensor - No response from sensor in address: [" + str(address) + "]")
-            return
-
-        parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements)
-
-        # post-parse actions
-        if "li-cor" in manufacturer and command_to_execute == "M0":
-            sdi12._send(address + "XT!")  # trigger next round of measurements
-
-    except Exception as e:
-        logging.exception(e, "Exception while reading SDI-12 data for address: {}".format(address))
-        return
-
-
-def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements):
-    location = "1"
-    set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
-    set_value(measurements, "sdi12_{}_m".format(address), model, None)
-
-    if manufacturer == "meter":
-        parse_sensor_meter(model, command_to_execute, address, responseArray, measurements, location)
-    elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
-        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
-    elif manufacturer == "acclima" and command_to_execute == "M":
-        parse_sensor_acclima(model, command_to_execute, address, responseArray, measurements, location)
-    elif manufacturer == "implexx" and command_to_execute == "M":
-        parse_sensor_implexx(model, command_to_execute, address, responseArray, measurements, location)
-    elif manufacturer == "ep100g":
-        if command_to_execute == "C":  # EnviroPro
-            parse_generic_sdi12(address, responseArray, measurements, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location)
-        elif command_to_execute == "C1":  # EnviroPro
-            parse_generic_sdi12(address, responseArray, measurements, "ep_ec", "uS/cm", "", location)  # dS/m
-
-        elif command_to_execute == "C2":  # EnviroPro
-            parse_generic_sdi12(address, responseArray, measurements, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location)
-        elif command_to_execute == "C5":
-            parse_generic_sdi12(
-                address, responseArray, measurements, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location
-            )
-
-    elif "li-cor" in manufacturer and command_to_execute == "M0":
-        parse_sensor_licor(model, command_to_execute, address, responseArray, measurements, location)
-    else:
-        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "_" + command_to_execute.lower(), location)
 
 
 #### Modbus functions #####
@@ -573,12 +497,12 @@ def execute_pulse_counter_measurements(measurements):
         utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
         return
 
-    from . import scenario_pcnt_ulp
+    from . import hw_pcnt_ulp
 
     for sensor in _pulse_counter_config:
         sensor["gpio"] = cfg.get("UC_IO_DGTL_SNSR_{}_READ".format(_get(sensor, "id")))
 
-    scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
+    hw_pcnt_ulp.execute(measurements, _pulse_counter_config)
 
 
 ### Auxiliary functions ###
