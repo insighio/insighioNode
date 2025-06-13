@@ -195,7 +195,7 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
         logging.exception(e, "Error processing meter sdi responseArray: [{}]".format(responseArray))
 
 
-def parse_sensor_acclima(model, address, responseArray, measurements, location=None):
+def parse_sensor_acclima(model, command_to_execute, address, responseArray, measurements, location=None):
     try:
         if not responseArray or len(responseArray) < 5:
             logging.error("parse_sensor_acclima: unrecognized responseArray: {}".format(responseArray))
