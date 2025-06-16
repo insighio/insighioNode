@@ -1,0 +1,143 @@
+{
+  "_CONST_SHIELD_ACCELEROMETER": "accel",
+  "_CONST_SHIELD_ADVIND": "advind",
+  "_CONST_SHIELD_DIG_ANALOG": "dig_analog",
+  "_CONST_SHIELD_SCALE": "scale",
+  "_CONST_SHIELD_ENVIRO": "enviro",
+  "_CONST_RADIO_SHIELD_LORA": "hoperf",
+  "_CONST_RADIO_SHIELD_ASTROCAST": "astrocast",
+  "_CONST_SENSOR_SI7021": "si7021",
+  "_CONST_SENSOR_SHT40": "sht40",
+  "_CONST_MEAS_DISABLED": "disabled",
+  "board": {
+    "esp32": {
+      "_BAT_ATT": 3,
+      "_BAT_VDIV": 2,
+      "_I2C_BQ_ADDRESS": 107,
+      "_SENSAIR_EN_PIN_NUM": 33,
+      "_SENSAIR_nRDY_PIN_NUM": 4,
+      "_UC_INTERNAL_TEMP_HUM_SENSOR": "sht40",
+      "_UC_IO_ANALOG_DIGITAL_P1": 32,
+      "_UC_IO_BAT_MEAS_ON": 27,
+      "_UC_IO_BAT_READ": 36,
+      "_UC_IO_I2C_SCL": 22,
+      "_UC_IO_I2C_SDA": 21,
+      "_UC_IO_LOAD_PWR_SAVE_OFF": "",
+      "_UC_IO_PWRKEY": 23,
+      "_UC_IO_RADIO_ON": 26,
+      "_UC_IO_SENSOR_SWITCH_ON": 25,
+      "_UC_UART_GPS_RX": 14,
+      "_UC_UART_GPS_TX": 13,
+      "_UC_UART_MODEM_RX": 18,
+      "_UC_UART_MODEM_TX": 19
+    },
+    "esp32s3": {
+      "_BAT_ATT": 3,
+      "_BAT_VDIV": 2,
+      "_I2C_BQ_ADDRESS": 107,
+      "_I2C_GPS_ADDRESS": 16,
+      "_UC_GPS_RESET": 36,
+      "_UC_INTERNAL_TEMP_HUM_SENSOR": "sht40",
+      "_UC_IO_BAT_MEAS_ON": 14,
+      "_UC_IO_BAT_READ": 3,
+      "_UC_IO_I2C_SCL": 38,
+      "_UC_IO_I2C_SDA": 39,
+      "_UC_IO_PWRKEY": 10,
+      "_UC_IO_RADIO_GPS_ON": 35,
+      "_UC_IO_RADIO_ON": 13,
+      "_UC_IO_RGB_DIN": 21,
+      "_UC_IO_SENSOR_GND_ON": 12,
+      "_UC_RGB_VDD": 47,
+      "_UC_UART_MODEM_RX": 16,
+      "_UC_UART_MODEM_TX": 15
+    }
+  },
+  "protocol": {
+    "coap": {
+      "server-port": 5683,
+      "use-custom-socket": false,
+      "server-ipv4": "2001:41d0:701:1100:0:0:0:2060",
+      "server-ipv6": "console.insigh.io"
+    },
+    "mqtt": {
+      "server-port": 1884,
+      "use-custom-socket": false,
+      "server-ipv4": "2001:41d0:701:1100:0:0:0:2060",
+      "server-ipv6": "console.insigh.io"
+    }
+  },
+  "shield-sensor": {
+    "accel": {},
+    "advind": {
+      "_CUR_SNSR_OUT_1": 4,
+      "_CUR_SNSR_OUT_2": 5,
+      "_I2C_CHIP_ID_ADDRESS": 84,
+      "_INA_GAIN": 100,
+      "_SHUNT_OHMS": 0.47,
+      "_UC_IO_CUR_SNS_ON": 9,
+      "_UC_IO_DRV_IN": 17,
+      "_UC_IO_DRV_ON": 11,
+      "_UC_IO_PWR_SDI_SNSR_1_ON": 42,
+      "_UC_IO_PWR_SDI_SNSR_2_ON": 48,
+      "_UC_IO_RCV_ON": 1,
+      "_UC_IO_RCV_OUT": 41,
+      "_UC_IO_SNSR_GND_4_20_SNSR_1_ON": 7,
+      "_UC_IO_SNSR_GND_4_20_SNSR_2_ON": 8,
+      "_UC_IO_SNSR_REG_ON": 37,
+      "UC_IO_DGTL_SNSR_READ": 2
+    },
+    "dig_analog": {
+      "_UC_IO_ANALOG_DIGITAL_P1": 9,
+      "_UC_IO_ANALOG_DIGITAL_P2": 7,
+      "_UC_IO_ANALOG_DIGITAL_P3": 5
+    },
+    "enviro": {
+      "_ADS_RATE": 1,
+      "_I2C_CHIP_ID_ADDRESS": 84,
+      "_UC_IO_ADS_ADDR": 72,
+      "_UC_IO_DRV_IN": 41,
+      "_UC_IO_DRV_ON": 11,
+      "_UC_IO_EXPANDER_ADDR": 32,
+      "_UC_IO_MODBUS_DRV_IN": 1,
+      "_UC_IO_MODBUS_DRV_ON": 37,
+      "_UC_IO_MODBUS_RCV_ON": 2,
+      "_UC_IO_MODBUS_RCV_OUT": 17,
+      "_UC_IO_RCV_ON": 42,
+      "_UC_IO_RCV_OUT": 9,
+      "_UC_IO_SNSR_REG_ON": 8,
+      "UC_IO_DGTL_SNSR_1_READ": 4,
+      "UC_IO_DGTL_SNSR_2_READ": 5
+    },
+    "scale": {
+      "_UC_IO_BUZZER_ON": 1,
+      "_UC_IO_LED_1_ON": 11,
+      "_UC_IO_LED_2_ON": 17,
+      "_UC_IO_RFID_READER_RX": 42,
+      "_UC_IO_RFID_READER_TX": 41,
+      "_UC_IO_SCALE_CLOCK_PIN": 4,
+      "_UC_IO_SCALE_DATA_PIN": 5,
+      "_UC_IO_SCALE_SPI_PIN": 8,
+      "_UC_IO_TARE_BTN": 2,
+      "_UC_IO_TEMP_SENSOR": 7,
+      "_UC_IO_WEIGHT_ON": 6
+    }
+  },
+  "radio": {
+    "cellular": {
+      "_MAX_ATTACHMENT_ATTEMPT_TIME_SEC": 90,
+      "_MAX_CONNECTION_ATTEMPT_TIME_SEC": 600
+    },
+    "lora": {
+      "_LISTEN_DL_MSG": false,
+      "_LORA_SOCKET_BUFFER_SIZE": 128,
+      "_LORA_SOCKET_TIMEOUT": 30,
+      "_MAX_CONNECTION_ATTEMPT_TIME_SEC": 60,
+      "_UC_LORA_RESET": 18,
+      "_UC_UART_MODEM_RX": 16,
+      "_UC_UART_MODEM_TX": 15
+    },
+    "wifi": {
+      "_MAX_CONNECTION_ATTEMPT_TIME_SEC": 20
+    }
+  }
+}
