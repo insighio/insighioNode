@@ -230,14 +230,14 @@ export default {
     initializeValues() {
       const getCookieValue = (key, defaultValue) => this.$cookies.get(key) ?? defaultValue
 
-      this.gpsEnabled = this.strToJSValue(getCookieValue("meas-gps-enabled", true))
-      this.ledEnabled = this.strToJSValue(getCookieValue("meas-led-enabled", true))
-      this.batteryStats = this.strToJSValue(getCookieValue("meas-battery-stat", true))
-      this.boardSense = this.strToJSValue(getCookieValue("meas-board-sense", true))
-      this.boardStat = this.strToJSValue(getCookieValue("meas-board-stat", false))
-      this.networkStat = this.strToJSValue(getCookieValue("meas-network-stat", true))
-      this.otaEnabled = this.strToJSValue(getCookieValue("system-enable-ota", true))
-      this.temperatureUnitIsCelsius = this.strToJSValue(getCookieValue("meas-temp-unit", true))
+      this.gpsEnabled = this.getValueWithDefaults(getCookieValue("meas-gps-enabled", true))
+      this.ledEnabled = this.getValueWithDefaults(getCookieValue("meas-led-enabled", true))
+      this.batteryStats = this.getValueWithDefaults(getCookieValue("meas-battery-stat", true))
+      this.boardSense = this.getValueWithDefaults(getCookieValue("meas-board-sense", true))
+      this.boardStat = this.getValueWithDefaults(getCookieValue("meas-board-stat", false))
+      this.networkStat = this.getValueWithDefaults(getCookieValue("meas-network-stat", true))
+      this.otaEnabled = this.getValueWithDefaults(getCookieValue("system-enable-ota", true))
+      this.temperatureUnitIsCelsius = this.getValueWithDefaults(getCookieValue("meas-temp-unit", true))
 
       var selectedShield = this.$cookies.get("selected-shield")
         ? this.$cookies.get("selected-shield")
@@ -251,10 +251,10 @@ export default {
 
       this.gpsTimeout = this.$cookies.get("meas-gps-timeout") ? this.$cookies.get("meas-gps-timeout") : 120
       this.gpsSatNum = this.$cookies.get("meas-gps-sat-num") ? this.$cookies.get("meas-gps-sat-num") : 4
-      this.gpsNoFixNoUpload = this.strToJSValue(this.$cookies.get("meas-gps-no-fix-no-upload"), false)
-      this.gpsOnlyOnBoot = this.strToJSValue(this.$cookies.get("meas-gps-only-on-boot"), false)
+      this.gpsNoFixNoUpload = this.getValueWithDefaults(this.$cookies.get("meas-gps-no-fix-no-upload"), false)
+      this.gpsOnlyOnBoot = this.getValueWithDefaults(this.$cookies.get("meas-gps-only-on-boot"), false)
 
-      this.storeMeasIfFailedConn = this.strToJSValue(this.$cookies.get("store-meas-if-failed-conn"), false)
+      this.storeMeasIfFailedConn = this.getValueWithDefaults(this.$cookies.get("store-meas-if-failed-conn"), false)
 
       this.systemSettings = this.getJsonObjectFromCookies("system-settings")
         ? this.getJsonObjectFromCookies("system-settings")
@@ -303,21 +303,21 @@ export default {
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas-led-enabled", this.boolToPyStr(this.ledEnabled))
-      this.$cookies.set("meas-battery-stat", this.boolToPyStr(this.batteryStats))
-      this.$cookies.set("meas-board-sense", this.boolToPyStr(this.boardSense))
-      this.$cookies.set("meas-board-stat", this.boolToPyStr(this.boardStat))
-      this.$cookies.set("meas-network-stat", this.boolToPyStr(this.networkStat))
-      this.$cookies.set("system-enable-ota", this.boolToPyStr(this.otaEnabled))
-      this.$cookies.set("meas-gps-enabled", this.boolToPyStr(this.gpsEnabled))
-      this.$cookies.set("meas-temp-unit", this.boolToPyStr(this.temperatureUnitIsCelsius))
+      this.$cookies.set("meas-led-enabled", this.ledEnabled)
+      this.$cookies.set("meas-battery-stat", this.batteryStats)
+      this.$cookies.set("meas-board-sense", this.boardSense)
+      this.$cookies.set("meas-board-stat", this.boardStat)
+      this.$cookies.set("meas-network-stat", this.networkStat)
+      this.$cookies.set("system-enable-ota", this.otaEnabled)
+      this.$cookies.set("meas-gps-enabled", this.gpsEnabled)
+      this.$cookies.set("meas-temp-unit", this.temperatureUnitIsCelsius)
 
       this.$cookies.set("meas-gps-timeout", this.gpsTimeout)
       this.$cookies.set("meas-gps-sat-num", this.gpsSatNum)
-      this.$cookies.set("meas-gps-no-fix-no-upload", this.boolToPyStr(this.gpsNoFixNoUpload))
-      this.$cookies.set("meas-gps-only-on-boot", this.boolToPyStr(this.gpsOnlyOnBoot))
+      this.$cookies.set("meas-gps-no-fix-no-upload", this.gpsNoFixNoUpload)
+      this.$cookies.set("meas-gps-only-on-boot", this.gpsOnlyOnBoot)
 
-      this.$cookies.set("store-meas-if-failed-conn", this.boolToPyStr(this.storeMeasIfFailedConn))
+      this.$cookies.set("store-meas-if-failed-conn", this.storeMeasIfFailedConn)
 
       this.$cookies.set("meas-keyvalue", this.getKeyValuePairs())
 

@@ -64,8 +64,6 @@ def checkAndApply(client):
 
             keyValueDict = configuration_handler.stringParamsToDict(message)
 
-            from utils import configuration_handler
-
             for key in keyValueDict:
                 configuration_handler.updateConfigValue(key, keyValueDict[key])
 

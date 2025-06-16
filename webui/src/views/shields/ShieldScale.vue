@@ -233,11 +233,11 @@ export default {
   methods: {
     initializeValues() {
       // Add initialization logic here
-      this.i2c1 = this.strToJSValue(this.$cookies.get("meas-i2c-1"), "disabled")
-      this.i2c2 = this.strToJSValue(this.$cookies.get("meas-i2c-2"), "disabled")
-      this.adcP1 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p1"), "disabled")
-      this.scaleEnabled = this.strToJSValue(this.$cookies.get("meas-scale-enabled"), false)
-      this.scaleMonitoring = this.strToJSValue(this.$cookies.get("meas-scale-monitoring-enabled"), false)
+      this.i2c1 = this.getValueWithDefaults(this.$cookies.get("meas-i2c-1"), "disabled")
+      this.i2c2 = this.getValueWithDefaults(this.$cookies.get("meas-i2c-2"), "disabled")
+      this.adcP1 = this.getValueWithDefaults(this.$cookies.get("meas-sensor-a-d-p1"), "disabled")
+      this.scaleEnabled = this.getValueWithDefaults(this.$cookies.get("meas-scale-enabled"), false)
+      this.scaleMonitoring = this.getValueWithDefaults(this.$cookies.get("meas-scale-monitoring-enabled"), false)
       this.scaleOffset = this.$cookies.get("meas-scale-offset")
       this.scaleScale = this.$cookies.get("meas-scale-scale")
     },
@@ -263,8 +263,8 @@ export default {
       this.$cookies.set("meas-i2c-1", this.i2c1)
       this.$cookies.set("meas-i2c-2", this.i2c2)
       this.$cookies.set("meas-sensor-a-d-p1", this.adcP1)
-      this.$cookies.set("meas-scale-enabled", this.strToJSValue(this.scaleEnabled))
-      this.$cookies.set("meas-scale-monitoring-enabled", this.strToJSValue(this.scaleMonitoring))
+      this.$cookies.set("meas-scale-enabled", this.getValueWithDefaults(this.scaleEnabled))
+      this.$cookies.set("meas-scale-monitoring-enabled", this.getValueWithDefaults(this.scaleMonitoring))
 
       if (this.scaleEnabled) {
         this.$cookies.set("meas-scale-scale", this.scaleScale)

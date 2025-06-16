@@ -4,15 +4,14 @@ import utils
 
 from dictionary_utils import _get, _has
 
+from utils.configuration_handler import _CONFIG_FILE_PATH_USER, _CONFIG_FILE_PATH_DEVICE, _CONFIG_FILE_PATH_TMP_USER
+
 is_config_valid = False
 is_temp_config = False
 user_settings = {}
 device_settings = {}
 config_instance = None
 
-_CONFIG_FILE_PATH_TMP_USER = "/apps/tmp_user_config.json"
-_CONFIG_FILE_PATH_USER = "/apps/user_config.json"
-_CONFIG_FILE_PATH_DEVICE = "/apps/device_config.json"
 
 ################################################
 # load json files
@@ -63,8 +62,13 @@ def init():
         is_config_valid = False
 
     if is_config_valid:
+        import device_info
 
         config_instance = Config(user_settings, device_settings)
+        config_instance.set_category_setup("board", device_info.get_hw_module_version())
+        config_instance.set_category_setup("protocol", user_settings.get("protocol"))
+        config_instance.set_category_setup("shield-sensor", user_settings.get("shield-sensor"))
+        config_instance.set_category_setup("network", user_settings.get("network"))
         logging.info("[cfg] config instance created")
         return True
     return False

@@ -282,7 +282,7 @@ export default {
       var net = this.$cookies.get("network")
       var netStats = this.$cookies.get("meas-network-stat")
 
-      if (netStats === "True") {
+      if (netStats) {
         if (net === "wifi") {
           obj["wifi_conn_duration"] = { unit: "ms" }
           obj["wifi_scan_duration"] = { unit: "ms" }
@@ -302,7 +302,7 @@ export default {
         }
       }
 
-      if (this.$cookies.get("meas-gps-enabled") === "True") {
+      if (this.$cookies.get("meas-gps-enabled")) {
         obj["gps_lat"] = {}
         obj["gps_lon"] = {}
         obj["gps_num_of_sat"] = {}

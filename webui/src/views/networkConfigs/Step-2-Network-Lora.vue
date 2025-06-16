@@ -87,8 +87,8 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.lora_adr = this.strToJSValue(this.$cookies.get("lora-adr"), true)
-      this.lora_confirmed = this.strToJSValue(this.$cookies.get("lora-confirmed"), true)
+      this.lora_adr = this.getValueWithDefaults(this.$cookies.get("lora-adr"), true)
+      this.lora_confirmed = this.getValueWithDefaults(this.$cookies.get("lora-confirmed"), true)
 
       this.lora_region = this.getValueWithDefaults(this.$cookies.get("lora-region"), "EU868")
       this.lora_dr = this.getValueWithDefaults(this.$cookies.get("lora-dr"), 5)
@@ -109,8 +109,8 @@ export default {
       this.clearCookies()
       this.$cookies.set("network", "lora")
 
-      this.$cookies.set("lora-adr", this.boolToPyStr(this.lora_adr))
-      this.$cookies.set("lora-confirmed", this.boolToPyStr(this.lora_confirmed))
+      this.$cookies.set("lora-adr", this.lora_adr)
+      this.$cookies.set("lora-confirmed", this.lora_confirmed)
       this.$cookies.set("lora-dr", this.lora_dr)
       this.$cookies.set("lora-region", this.lora_region)
       this.$cookies.set("lora-retries", this.lora_retries)

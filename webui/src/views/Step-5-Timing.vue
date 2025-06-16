@@ -154,8 +154,8 @@ export default {
     },
     initializeValues() {
       this.timing_batch_upload_buffer_size = this.getValueWithDefaults(this.$cookies.get("batch-upload-buffer-size"), 1)
-      let timeA = this.strToJSValue(this.$cookies.get("scheduled-time-a"))
-      let timeB = this.strToJSValue(this.$cookies.get("scheduled-time-b"))
+      let timeA = this.getValueWithDefaults(this.$cookies.get("scheduled-time-a"))
+      let timeB = this.getValueWithDefaults(this.$cookies.get("scheduled-time-b"))
 
       if (timeA && timeB) {
         this.timingChanged("scheduled")
@@ -167,9 +167,12 @@ export default {
       this.timing_period = this.getValueWithDefaults(this.$cookies.get("period"), 300)
       this.timing_batch_enabled = this.timing_batch_upload_buffer_size && this.timing_batch_upload_buffer_size > 1
 
-      this.timing_light_sleep_on = this.strToJSValue(this.$cookies.get("light-sleep-on"), false)
-      this.timing_light_sleep_network_active = this.strToJSValue(this.$cookies.get("light-sleep-network-active"), false)
-      this.timing_light_sleep_deactivate_on_battery = this.strToJSValue(
+      this.timing_light_sleep_on = this.getValueWithDefaults(this.$cookies.get("light-sleep-on"), false)
+      this.timing_light_sleep_network_active = this.getValueWithDefaults(
+        this.$cookies.get("light-sleep-network-active"),
+        false
+      )
+      this.timing_light_sleep_deactivate_on_battery = this.getValueWithDefaults(
         this.$cookies.get("light-sleep-deactivate-on-battery"),
         false
       )
@@ -179,10 +182,10 @@ export default {
         this.timing_period = this.getValueWithDefaults(this.$cookies.get("period"), 300)
 
       if (this.$cookies.get("always-on-connection") !== undefined)
-        this.timing_light_sleep_on = this.strToJSValue(this.$cookies.get("light-sleep-on"), false)
+        this.timing_light_sleep_on = this.getValueWithDefaults(this.$cookies.get("light-sleep-on"), false)
 
       if (this.$cookies.get("force-always-on-connection") !== undefined)
-        this.timing_light_sleep_deactivate_on_battery = this.strToJSValue(
+        this.timing_light_sleep_deactivate_on_battery = this.getValueWithDefaults(
           this.$cookies.get("force-always-on-connection"),
           false
         )
@@ -222,12 +225,9 @@ export default {
         this.$cookies.set("scheduled-time-a", "None")
         this.$cookies.set("scheduled-time-b", "None")
 
-        this.$cookies.set("light-sleep-on", this.boolToPyStr(this.timing_light_sleep_on))
-        this.$cookies.set("light-sleep-network-active", this.boolToPyStr(this.timing_light_sleep_network_active))
-        this.$cookies.set(
-          "light-sleep-deactivate-on-battery",
-          this.boolToPyStr(this.timing_light_sleep_deactivate_on_battery)
-        )
+        this.$cookies.set("light-sleep-on", this.timing_light_sleep_on)
+        this.$cookies.set("light-sleep-network-active", this.timing_light_sleep_network_active)
+        this.$cookies.set("light-sleep-deactivate-on-battery", this.timing_light_sleep_deactivate_on_battery)
       } else if (this.timing_type === "scheduled") {
         this.$cookies.set("period", "None")
         this.$cookies.set("scheduled-time-a", this.stringTimeToSeconds(this.timing_scheduled_time_a))

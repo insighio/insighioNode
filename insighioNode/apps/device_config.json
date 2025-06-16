@@ -122,7 +122,7 @@
       "_UC_IO_WEIGHT_ON": 6
     }
   },
-  "radio": {
+  "network": {
     "cellular": {
       "_MAX_ATTACHMENT_ATTEMPT_TIME_SEC": 90,
       "_MAX_CONNECTION_ATTEMPT_TIME_SEC": 600

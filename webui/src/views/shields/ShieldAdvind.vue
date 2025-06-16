@@ -180,8 +180,8 @@ export default {
         this.sdi12Config = sdi12JSON && sdi12JSON.config ? sdi12JSON.config : this.sdi12ConfigDefault
       }
 
-      this.sens_4_20_num1_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-1-enable"), false)
-      this.sens_4_20_num2_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-2-enable"), false)
+      this.sens_4_20_num1_enable = this.getValueWithDefaults(this.$cookies.get("meas-4-20-snsr-1-enable"), false)
+      this.sens_4_20_num2_enable = this.getValueWithDefaults(this.$cookies.get("meas-4-20-snsr-2-enable"), false)
       this.sens_4_20_num1_formula = this.$cookies.get("meas-4-20-snsr-1-formula")
         ? this.$cookies.get("meas-4-20-snsr-1-formula")
         : "v"
@@ -189,8 +189,8 @@ export default {
         ? this.$cookies.get("meas-4-20-snsr-2-formula")
         : "v"
 
-      this.pulseCounterEnable = this.strToJSValue(this.$cookies.get("meas-pcnt-1-enable"), false)
-      this.pulseCounterHighFreq = this.strToJSValue(this.$cookies.get("meas-pcnt-1-high-freq"), false)
+      this.pulseCounterEnable = this.getValueWithDefaults(this.$cookies.get("meas-pcnt-1-enable"), false)
+      this.pulseCounterHighFreq = this.getValueWithDefaults(this.$cookies.get("meas-pcnt-1-high-freq"), false)
       this.pulseCounterFormula = this.$cookies.get("meas-pcnt-1-formula")
         ? this.$cookies.get("meas-pcnt-1-formula")
         : "1"
@@ -198,7 +198,7 @@ export default {
     sdi12ReadConfigBackwardCompatibility() {
       this.sdi12Sensors = []
       for (let i = 1; i <= 10; ++i) {
-        const rowEnabled = this.strToJSValue(this.$cookies.get("meas-sdi-" + i + "-enabled"))
+        const rowEnabled = this.getValueWithDefaults(this.$cookies.get("meas-sdi-" + i + "-enabled"))
         const rowLoc = parseInt(this.$cookies.get("meas-sdi-" + i + "-loc"))
         const rowAddress = parseInt(this.$cookies.get("meas-sdi-" + i + "-address"))
 
@@ -247,14 +247,14 @@ export default {
 
       this.$cookies.set("meas-sdi12", { sensors: this.sdi12Sensors, config: this.sdi12Config })
 
-      this.$cookies.set("meas-4-20-snsr-1-enable", this.boolToPyStr(this.sens_4_20_num1_enable))
-      this.$cookies.set("meas-4-20-snsr-2-enable", this.boolToPyStr(this.sens_4_20_num2_enable))
+      this.$cookies.set("meas-4-20-snsr-1-enable", this.sens_4_20_num1_enable)
+      this.$cookies.set("meas-4-20-snsr-2-enable", this.sens_4_20_num2_enable)
       this.$cookies.set("meas-4-20-snsr-1-formula", this.sens_4_20_num1_formula)
       this.$cookies.set("meas-4-20-snsr-2-formula", this.sens_4_20_num2_formula)
 
-      this.$cookies.set("meas-pcnt-1-enable", this.boolToPyStr(this.pulseCounterEnable))
+      this.$cookies.set("meas-pcnt-1-enable", this.pulseCounterEnable)
       this.$cookies.set("meas-pcnt-1-formula", this.pulseCounterFormula)
-      this.$cookies.set("meas-pcnt-1-high-freq", this.boolToPyStr(this.pulseCounterHighFreq))
+      this.$cookies.set("meas-pcnt-1-high-freq", this.pulseCounterHighFreq)
 
       this.requestGoNext()
     }

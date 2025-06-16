@@ -135,10 +135,10 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.i2c1 = this.strToJSValue(this.$cookies.get("meas-i2c-1"), "disabled")
-      this.analogDigitalP1 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p1"), "disabled")
-      this.analogDigitalP2 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p2"), "disabled")
-      this.analogDigitalP3 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p3"), "disabled")
+      this.i2c1 = this.getValueWithDefaults(this.$cookies.get("meas-i2c-1"), "disabled")
+      this.analogDigitalP1 = this.getValueWithDefaults(this.$cookies.get("meas-sensor-a-d-p1"), "disabled")
+      this.analogDigitalP2 = this.getValueWithDefaults(this.$cookies.get("meas-sensor-a-d-p2"), "disabled")
+      this.analogDigitalP3 = this.getValueWithDefaults(this.$cookies.get("meas-sensor-a-d-p3"), "disabled")
       this.analogDigitalP1Transformation = this.$cookies.get("meas-sensor-a-d-p1-t")
         ? this.$cookies.get("meas-sensor-a-d-p1-t")
         : "v"

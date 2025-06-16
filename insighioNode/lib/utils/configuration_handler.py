@@ -3,6 +3,10 @@ import utils
 import ure
 import logging
 
+_CONFIG_FILE_PATH_TMP_USER = "/apps/tmp_user_config.json"
+_CONFIG_FILE_PATH_USER = "/apps/user_config.json"
+_CONFIG_FILE_PATH_DEVICE = "/apps/device_config.json"
+
 _config_is_valid = False
 
 app_name = None
@@ -11,49 +15,49 @@ rootFolder = None
 config_file = None
 
 
-def getModulePathFromFile(file_path):
-    if file_path is None:
-        return None
-    module_path = file_path.replace(".py", "")
-    module_path = module_path.replace("/", ".")
-    if module_path.startswith("."):
-        module_path = module_path[1:]
-    return module_path
+# def getModulePathFromFile(file_path):
+#     if file_path is None:
+#         return None
+#     module_path = file_path.replace(".py", "")
+#     module_path = module_path.replace("/", ".")
+#     if module_path.startswith("."):
+#         module_path = module_path[1:]
+#     return module_path
 
 
-def setApplicationName(newName="demo_console"):
-    global app_name
-    global app_path
-    global rootFolder
-    global config_file
-    global _config_is_valid
-    app_name = newName
-    rootFolder = "/"
+# def setApplicationName(newName="demo_console"):
+#     global app_name
+#     global app_path
+#     global rootFolder
+#     global config_file
+#     global _config_is_valid
+#     app_name = newName
+#     rootFolder = "/"
 
-    prev_config_file = config_file
-    app_path = "{}apps/{}".format(rootFolder, newName)
-    config_file = "{}apps/{}/demo_config.py".format(rootFolder, app_name)
+#     prev_config_file = config_file
+#     app_path = "{}apps/{}".format(rootFolder, newName)
+#     config_file = "{}apps/{}/demo_config.py".format(rootFolder, app_name)
 
-    if prev_config_file != config_file:
-        logging.info("Reloading configuration modules")
-        import sys
+#     if prev_config_file != config_file:
+#         logging.info("Reloading configuration modules")
+#         import sys
 
-        try:
-            prev_module_path = getModulePathFromFile(prev_config_file)
-            if prev_module_path:
-                logging.info("removing old module: {}".format(prev_module_path))
-                del sys.modules[prev_module_path]
+#         try:
+#             prev_module_path = getModulePathFromFile(prev_config_file)
+#             if prev_module_path:
+#                 logging.info("removing old module: {}".format(prev_module_path))
+#                 del sys.modules[prev_module_path]
 
-            new_module_path = getModulePathFromFile(config_file)
-            logging.info("loading module: {}".format(new_module_path))
-            exec("import {} as cfg".format(new_module_path))
-            _config_is_valid = True
-        except Exception as e:
-            logging.exception(e, "error reloading configuration module")
-            _config_is_valid = False
+#             new_module_path = getModulePathFromFile(config_file)
+#             logging.info("loading module: {}".format(new_module_path))
+#             exec("import {} as cfg".format(new_module_path))
+#             _config_is_valid = True
+#         except Exception as e:
+#             logging.exception(e, "error reloading configuration module")
+#             _config_is_valid = False
 
 
-setApplicationName("demo_console")
+# setApplicationName("demo_console")
 
 configDict = {
     "_APN": "cell_apn",
@@ -347,78 +351,20 @@ def stringParamsToDict(configurationParameters):
     return keyValueDict
 
 
-def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file, request_file_system_optimization=True):
+def apply_configuration(keyValuePairDictionary, is_temp=False, request_file_system_optimization=True):
     gc.collect()
+
+    config_file_explicit = _CONFIG_FILE_PATH_TMP_USER if is_temp else _CONFIG_FILE_PATH_USER
 
     utils.copyFile(config_file_explicit, config_file_explicit + ".prev")
 
-    # fix naming of keys to use '-' instead of '_'
-    # unfortunately it is technical burden from old implementations, to be fixed in future release
-    for param in keyValuePairDictionary:
-        val = keyValuePairDictionary[param]
-        key = param
-        if "_" in param:
-            key = param.replace("_", "-")
-            print("changing key [{}] to [{}]".format(param, key))
-            del keyValuePairDictionary[param]
+    import ujson
 
-        keyValuePairDictionary[key] = fixValue(val)
-
-    gc.collect()
-
-    operation = ""
-    import device_info
-
-    board = device_info.get_hw_module_version()
-    shield = ""
-    for param in keyValuePairDictionary:
-        if param == "network":
-            operation = keyValuePairDictionary[param]
-        elif param == "selected-shield":
-            shield = keyValuePairDictionary[param]
-
-    contents = get_file_config(app_path + "/templ/common_templ.py", keyValuePairDictionary)
-
-    # set project configuration content
-    if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
-        contents += get_file_config(app_path + "/templ/device_ins_esp32_templ.py", keyValuePairDictionary)
-    elif board == device_info._CONST_ESP32S3:
-        contents += get_file_config(app_path + "/templ/device_ins_esp32s3_templ.py", keyValuePairDictionary)
-    else:
-        print("[ERROR]: device not supported: {}".format(board))
-
-    contents += get_file_config(app_path + "/templ/device_i2c_analog_config_templ.py", keyValuePairDictionary)
-    if shield == "advind":
-        contents += get_file_config(app_path + "/templ/shield_advind_templ.py", keyValuePairDictionary)
-        contents += get_file_config(app_path + "/templ/device_advind_config_templ.py", keyValuePairDictionary)
-    elif shield == "dig_analog":
-        contents += get_file_config(app_path + "/templ/shield_i2c_dig_analog_templ.py", keyValuePairDictionary)
-    elif shield == "enviro":
-        contents += get_file_config(app_path + "/templ/shield_enviro_templ.py", keyValuePairDictionary)
-    #   contents += get_file_config(app_path + "/templ/device_enviro_config.py", keyValuePairDictionary)
-    elif shield == "scale":
-        if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
-            contents += get_file_config(app_path + "/templ/shield_esp32_scale.py", keyValuePairDictionary)
-        elif board == device_info._CONST_ESP32S3:
-            contents += get_file_config(app_path + "/templ/shield_esp32s3_scale.py", keyValuePairDictionary)
-        contents += get_file_config(app_path + "/templ/device_scale_config.py", keyValuePairDictionary)
-
-    contents += "\n"
-
-    if operation == "wifi":
-        contents += "\n" + get_file_config(app_path + "/templ/wifi_config_templ.py", keyValuePairDictionary)
-        contents += "\n" + get_file_config(app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary)
-    elif operation == "cellular":
-        contents += "\n" + get_file_config(app_path + "/templ/cellular_config_templ.py", keyValuePairDictionary)
-        contents += "\n" + get_file_config(app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary)
-    elif operation == "lora":
-        contents += "\n" + get_file_config(app_path + "/templ/shield_lora_templ.py", keyValuePairDictionary)
-        contents += "\n" + get_file_config(app_path + "/templ/lora_config_templ.py", keyValuePairDictionary)
-    elif operation == "satellite":
-        contents += "\n" + get_file_config(app_path + "/templ/satellite_config_templ.py", keyValuePairDictionary)
-
-    # create new
-    utils.writeToFile(config_file_explicit, contents)
+    try:
+        utils.writeToFile(config_file_explicit, ujson.dumps(keyValuePairDictionary))
+    except Exception as e:
+        logging.exception(e, "Error writing configuration file: {}".format(config_file_explicit))
+        return
 
     utils.clearCachedStates()
 

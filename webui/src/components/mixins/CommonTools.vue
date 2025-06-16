@@ -54,26 +54,20 @@ export default {
       return true
     },
     getValueWithDefaults(val, defaultVal = undefined) {
-      return val !== undefined && val !== null ? val : defaultVal
-    },
-    strToJSValue(strVal, defaultVal = undefined) {
-      if (strVal === undefined || strVal === null) return defaultVal
+      if (val === undefined || val === null) return defaultVal
+      else if (typeof val !== "string") return val
 
       try {
-        strVal = strVal ? strVal.toLowerCase() : strVal
+        val = val ? val.toLowerCase() : val
       } catch (e) {}
-      if (strVal === "undefined" || strVal === "" || strVal === "none") return defaultVal
-      else if (strVal === "true") return true
-      else if (strVal === "false") return false
-      return strVal
-    },
-    boolToPyStr(val) {
-      return val ? "True" : "False"
+      if (val === "undefined" || val === "" || val === "none") return defaultVal
+      else if (val === "true") return true
+      else if (val === "false") return false
+      return val
     },
     getJsonObjectFromCookies(cookieName) {
       const cookieValue = this.$cookies.get(cookieName)
 
-      // console.log("Cookie: " + cookieName + ", value: " + cookieValue + ", type: " + typeof cookieValue)
       if (cookieValue) {
         try {
           return JSON.parse(cookieValue)
@@ -86,9 +80,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.network {
-  /* Add your component styles here */
-}
-</style>
