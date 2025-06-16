@@ -1,4 +1,4 @@
-from .dictionary_utils import set_value, set_value_int, _get, set_value_float
+from ..dictionary_utils import set_value, set_value_int, _get, set_value_float
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from external.microsdi12.microsdi12 import SDI12

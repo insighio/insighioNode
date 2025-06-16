@@ -41,30 +41,31 @@ export default {
 
       this.$cookies.keys().forEach((key) => {
         let value = this.$cookies.get(key)
+        config[key] = value
 
-        if (typeof value === "object") {
-          value = JSON.stringify(value)
-        }
+        // if (typeof value === "object") {
+        //   value = JSON.stringify(value)
+        // }
 
-        if (value === undefined || value === null || value === "null") return
+        // if (value === undefined || value === null || value === "null") return
 
-        isConfigValid = true
-        if (key === "wifi-ssid" || key === "wifi-pass") {
-          encodedParams[key] = encodeURIComponent(value)
-          config[key] = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
-        } else if (
-          key === "meas-name-mapping" ||
-          key === "meas-name-ext-mapping" ||
-          key === "meas-keyvalue" ||
-          key === "meas-sdi12" ||
-          key === "meas-modbus" ||
-          key === "meas-adc" ||
-          key === "meas-pulseCounter" ||
-          key === "system-settings"
-        ) {
-          encodedParams[key] = encodeURIComponent(value)
-          config[key] = value
-        } else config[key] = value
+        // isConfigValid = true
+        // if (key === "wifi-ssid" || key === "wifi-pass") {
+        //   encodedParams[key] = encodeURIComponent(value)
+        //   config[key] = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
+        // } else if (
+        //   key === "meas-name-mapping" ||
+        //   key === "meas-name-ext-mapping" ||
+        //   key === "meas-keyvalue" ||
+        //   key === "meas-sdi12" ||
+        //   key === "meas-modbus" ||
+        //   key === "meas-adc" ||
+        //   key === "meas-pulseCounter" ||
+        //   key === "system-settings"
+        // ) {
+        //   encodedParams[key] = encodeURIComponent(value)
+        //   config[key] = value
+        // } else config[key] = value
       })
 
       if (!isConfigValid) {

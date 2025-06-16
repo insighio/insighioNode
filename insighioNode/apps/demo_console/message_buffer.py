@@ -1,6 +1,6 @@
 import logging
 
-from . import cfg
+from .. import cfg
 import json
 import utils
 import utime

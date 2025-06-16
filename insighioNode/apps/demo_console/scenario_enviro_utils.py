@@ -3,11 +3,11 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
 
-from .dictionary_utils import set_value, set_value_float, _get, _has
+from ..dictionary_utils import set_value, set_value_float, _get, _has
 
 from . import hw_proto_sdi12
 
-from . import cfg
+from .. import cfg
 
 _i2c = None
 _io_expander_addr = None

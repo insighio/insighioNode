@@ -10,9 +10,9 @@ user_settings = {}
 device_settings = {}
 config_instance = None
 
-_tmp_user_config_file_path = "/apps/tmp_user_config.json"
-_user_config_file_path = "/apps/user_config.json"
-_device_config_file_path = "/apps/device_config.json"
+_CONFIG_FILE_PATH_TMP_USER = "/apps/tmp_user_config.json"
+_CONFIG_FILE_PATH_USER = "/apps/user_config.json"
+_CONFIG_FILE_PATH_DEVICE = "/apps/device_config.json"
 
 ################################################
 # load json files
@@ -32,8 +32,8 @@ def init():
     config_instance = None
 
     try:
-        if utils.existsFile(_tmp_user_config_file_path):
-            user_settings = ujson.loads(utils.readFromFile(_tmp_user_config_file_path))
+        if utils.existsFile(_CONFIG_FILE_PATH_TMP_USER):
+            user_settings = ujson.loads(utils.readFromFile(_CONFIG_FILE_PATH_TMP_USER))
             is_temp_config = True
             is_config_valid = True
             logging.info("[cfg] loaded config: [temp]")
@@ -42,8 +42,8 @@ def init():
 
     if not is_temp_config:
         try:
-            if utils.existsFile(_user_config_file_path):
-                user_settings = ujson.loads(utils.readFromFile(_user_config_file_path))
+            if utils.existsFile(_CONFIG_FILE_PATH_USER):
+                user_settings = ujson.loads(utils.readFromFile(_CONFIG_FILE_PATH_USER))
                 logging.info("[cfg] loaded config: [normal]")
                 is_config_valid = True
         except Exception as e:
@@ -55,7 +55,7 @@ def init():
         return False
 
     try:
-        device_settings = ujson.loads(utils.readFromFile(_device_config_file_path))
+        device_settings = ujson.loads(utils.readFromFile(_CONFIG_FILE_PATH_DEVICE))
         logging.info("[cfg] loaded device config")
         is_config_valid = True
     except Exception as e:
@@ -73,6 +73,13 @@ def init():
 def is_temp_config():
     # global is_temp_config
     return is_temp_config
+
+
+def get_config():
+    global config_instance
+    if config_instance is None:
+        init()
+    return config_instance
 
 
 ################################################

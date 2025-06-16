@@ -6,10 +6,10 @@ start_time = ticks_ms()
 
 import logging
 
-from . import cfg
+from .. import cfg
 from . import message_buffer
 from . import scenario_utils
-from .dictionary_utils import set_value_int
+from ..dictionary_utils import set_value_int
 import device_info
 import gc
 import machine
@@ -521,7 +521,12 @@ def executeDeviceConfigurationUpload(cfg, network):
             utils.deleteFlagFile("/configLog")
 
         # whenever a new config log is uplaoded, upload also statistics for the device
-    if configUploadFileContent or utils.existsFlagFile("/ota_applied_flag") or utils.existsFile("/ota_applied_flag") or device_info.get_reset_cause() < 2:
+    if (
+        configUploadFileContent
+        or utils.existsFlagFile("/ota_applied_flag")
+        or utils.existsFile("/ota_applied_flag")
+        or device_info.get_reset_cause() < 2
+    ):
         message_sent = executeDeviceStatisticsUpload(cfg, network)
         if message_sent:
             utils.deleteFlagFile("/ota_applied_flag")

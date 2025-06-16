@@ -5,11 +5,11 @@ import device_info
 import sensors
 import gc
 
-from . import cfg
+from .. import cfg
 
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
-from .dictionary_utils import set_value, set_value_int, set_value_float
+from ..dictionary_utils import set_value, set_value_int, set_value_float
 from . import message_buffer
 
 

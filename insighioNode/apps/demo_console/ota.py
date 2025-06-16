@@ -3,7 +3,7 @@ import device_info
 import utils
 import gc
 
-from . import cfg
+from .. import cfg
 
 
 def checkAndApply(client):

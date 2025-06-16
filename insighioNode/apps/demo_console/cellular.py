@@ -5,10 +5,11 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from utime import sleep_ms, ticks_ms
-from .dictionary_utils import set_value, set_value_float, set_value_int
+from ..dictionary_utils import set_value, set_value_float, set_value_int
 
 transfer_client = None
 mqtt_connected = False
+
 
 def init(cfg):
     cellular.set_pins(
@@ -60,6 +61,7 @@ def updateSignalQuality(cfg, measurements):
     set_value_int(measurements, "cell_mnc", mnc)
     set_value_int(measurements, "cell_lac", lac)
     set_value_int(measurements, "cell_ci", ci)
+
 
 def update_hw_ids(measurements, is_senml=True, is_json=False):
     modem_instance = cellular.get_modem_instance()

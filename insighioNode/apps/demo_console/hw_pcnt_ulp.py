@@ -3,7 +3,7 @@ import utils
 import utime
 import logging
 from external.kpn_senml.senml_unit import SenmlUnits
-from .dictionary_utils import set_value_int, set_value_float
+from ..dictionary_utils import set_value_int, set_value_float
 
 _is_first_run = True
 _is_after_initialization = False
