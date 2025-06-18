@@ -77,7 +77,9 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
             set_value_float(measurements, variable_prefix + "_strikes", responseArray[2], SenmlUnits.SENML_UNIT_COUNTER)
             set_value_float(measurements, variable_prefix + "_strike_distance", responseArray[3], SenmlUnits.SENML_UNIT_METER, 3, 1000)
             set_value_float(measurements, variable_prefix + "_wind_speed", responseArray[4], SenmlUnits.SENML_UNIT_VELOCITY)
-            set_value_float(measurements, variable_prefix + "_wind_direction", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES)
+            set_value_float(
+                measurements, variable_prefix + "_wind_direction", responseArray[5], SenmlSecondaryUnits.SENML_SEC_UNIT_DEGREES_ANGLE
+            )
             set_value_float(measurements, variable_prefix + "_gust_wind_speed", responseArray[6], SenmlUnits.SENML_UNIT_VELOCITY)
             set_value_float(measurements, variable_prefix + "_air_temperature", responseArray[7], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, variable_prefix + "_vapor_pressure", responseArray[8], SenmlUnits.SENML_UNIT_PASCAL, 3, 1000)
@@ -85,17 +87,17 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
                 measurements, variable_prefix + "_atmospheric_pressure", responseArray[9], SenmlUnits.SENML_UNIT_PASCAL, 3, 1000
             )
             set_value_float(
-                measurements,
-                variable_prefix + "_relative_humidity",
-                responseArray[10],
-                SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT,
-                1,
+                measurements, variable_prefix + "_relative_humidity", responseArray[10], SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, 1
             )
             set_value_float(
                 measurements, variable_prefix + "_humidity_sensor_temperature", responseArray[11], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS
             )
-            set_value_float(measurements, variable_prefix + "_x_orientation", responseArray[12], SenmlUnits.SENML_UNIT_DEGREES)
-            set_value_float(measurements, variable_prefix + "_y_orientation", responseArray[13], SenmlUnits.SENML_UNIT_DEGREES)
+            set_value_float(
+                measurements, variable_prefix + "_x_orientation", responseArray[12], SenmlSecondaryUnits.SENML_SEC_UNIT_DEGREES_ANGLE
+            )
+            set_value_float(
+                measurements, variable_prefix + "_y_orientation", responseArray[13], SenmlSecondaryUnits.SENML_SEC_UNIT_DEGREES_ANGLE
+            )
             set_value_float(measurements, variable_prefix + "_north_wind_speed", responseArray[15], SenmlUnits.SENML_UNIT_VELOCITY)
             set_value_float(measurements, variable_prefix + "_east_wind_speed", responseArray[16], SenmlUnits.SENML_UNIT_VELOCITY)
             set_value_float(measurements, variable_prefix + "_gust_wind_speed", responseArray[17], SenmlUnits.SENML_UNIT_VELOCITY)
