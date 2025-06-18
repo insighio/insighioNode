@@ -71,7 +71,9 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
                 return
 
             set_value_float(measurements, variable_prefix + "_solar", responseArray[0], SenmlUnits.SENML_UNIT_WATT_PER_SQUARE_METER)
-            set_value_float(measurements, variable_prefix + "_precipitation", responseArray[1], SenmlUnits.SENML_UNIT_MILLIMETER)
+            set_value_float(
+                measurements, variable_prefix + "_precipitation", responseArray[1], SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIMETER
+            )
             set_value_float(measurements, variable_prefix + "_strikes", responseArray[2], SenmlUnits.SENML_UNIT_COUNTER)
             set_value_float(measurements, variable_prefix + "_strike_distance", responseArray[3], SenmlUnits.SENML_UNIT_METER, 3, 1000)
             set_value_float(measurements, variable_prefix + "_wind_speed", responseArray[4], SenmlSecondaryUnits.SENML_UNIT_VELOCITY)
