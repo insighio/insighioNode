@@ -76,9 +76,9 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
             )
             set_value_float(measurements, variable_prefix + "_strikes", responseArray[2], SenmlUnits.SENML_UNIT_COUNTER)
             set_value_float(measurements, variable_prefix + "_strike_distance", responseArray[3], SenmlUnits.SENML_UNIT_METER, 3, 1000)
-            set_value_float(measurements, variable_prefix + "_wind_speed", responseArray[4], SenmlSecondaryUnits.SENML_UNIT_VELOCITY)
+            set_value_float(measurements, variable_prefix + "_wind_speed", responseArray[4], SenmlUnits.SENML_UNIT_VELOCITY)
             set_value_float(measurements, variable_prefix + "_wind_direction", responseArray[5], SenmlUnits.SENML_UNIT_DEGREES)
-            set_value_float(measurements, variable_prefix + "_gust_wind_speed", responseArray[6], SenmlSecondaryUnits.SENML_UNIT_VELOCITY)
+            set_value_float(measurements, variable_prefix + "_gust_wind_speed", responseArray[6], SenmlUnits.SENML_UNIT_VELOCITY)
             set_value_float(measurements, variable_prefix + "_air_temperature", responseArray[7], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS)
             set_value_float(measurements, variable_prefix + "_vapor_pressure", responseArray[8], SenmlUnits.SENML_UNIT_PASCAL, 3, 1000)
             set_value_float(
@@ -96,9 +96,9 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
             )
             set_value_float(measurements, variable_prefix + "_x_orientation", responseArray[12], SenmlUnits.SENML_UNIT_DEGREES)
             set_value_float(measurements, variable_prefix + "_y_orientation", responseArray[13], SenmlUnits.SENML_UNIT_DEGREES)
-            set_value_float(measurements, variable_prefix + "_north_wind_speed", responseArray[15], SenmlSecondaryUnits.SENML_UNIT_VELOCITY)
-            set_value_float(measurements, variable_prefix + "_east_wind_speed", responseArray[16], SenmlSecondaryUnits.SENML_UNIT_VELOCITY)
-            set_value_float(measurements, variable_prefix + "_gust_wind_speed", responseArray[17], SenmlSecondaryUnits.SENML_UNIT_VELOCITY)
+            set_value_float(measurements, variable_prefix + "_north_wind_speed", responseArray[15], SenmlUnits.SENML_UNIT_VELOCITY)
+            set_value_float(measurements, variable_prefix + "_east_wind_speed", responseArray[16], SenmlUnits.SENML_UNIT_VELOCITY)
+            set_value_float(measurements, variable_prefix + "_gust_wind_speed", responseArray[17], SenmlUnits.SENML_UNIT_VELOCITY)
         else:
             parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "_" + command_to_execute.lower(), location)
 
