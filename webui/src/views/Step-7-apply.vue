@@ -36,42 +36,25 @@ export default {
     apply() {
       const encodedParams = {}
       const config = {}
-      let isConfigValid = false
+      //let isConfigValid = false
       let requestFileSystemOptimization = this.$cookies.get("request_fs_optimization")
 
       this.$cookies.keys().forEach((key) => {
         let value = this.$cookies.get(key)
-        config[key] = value
 
-        // if (typeof value === "object") {
-        //   value = JSON.stringify(value)
-        // }
-
-        // if (value === undefined || value === null || value === "null") return
-
-        // isConfigValid = true
-        // if (key === "wifi-ssid" || key === "wifi-pass") {
-        //   encodedParams[key] = encodeURIComponent(value)
-        //   config[key] = value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")
-        // } else if (
-        //   key === "meas-name-mapping" ||
-        //   key === "meas-name-ext-mapping" ||
-        //   key === "meas-keyvalue" ||
-        //   key === "meas-sdi12" ||
-        //   key === "meas-modbus" ||
-        //   key === "meas-adc" ||
-        //   key === "meas-pulseCounter" ||
-        //   key === "system-settings"
-        // ) {
-        //   encodedParams[key] = encodeURIComponent(value)
-        //   config[key] = value
-        // } else config[key] = value
+        if (typeof value === "string") {
+          try {
+            value = JSON.parse(value)
+          } catch (e) {
+            // If parsing fails, keep the original string value
+          }
+        } else config[key] = value
       })
 
-      if (!isConfigValid) {
-        this.startOver()
-        return
-      }
+      // if (!isConfigValid) {
+      //   this.startOver()
+      //   return
+      // }
 
       fetch("http://192.168.4.1" + "/save-config", {
         method: "POST",

@@ -9,11 +9,8 @@ _CONFIG_FILE_PATH_DEVICE = "/apps/device_config.json"
 
 _config_is_valid = False
 
-app_name = None
-app_path = None
-rootFolder = None
-config_file = None
-
+rootFolder = "/"
+config_file = _CONFIG_FILE_PATH_USER
 
 # def getModulePathFromFile(file_path):
 #     if file_path is None:
@@ -319,18 +316,8 @@ def updateConfigValue(key, new_value):
 
 
 def notifyServerWithNewConfig():
-    newConfig = get_URI_param()
-    utils.writeToFlagFile("/configLog", newConfig)
-
-
-def get_file_config(fileName, keyValuePairs):
-    gc.collect()
-    logging.debug("Getting file config: {}".format(fileName))
-    contents = utils.readFromFile(fileName)
-    for param in keyValuePairs:
-        # logging.debug("Replacing <{}> with {}, type: {}".format(param, keyValuePairs[param], type(keyValuePairs[param])))
-        contents = contents.replace("<" + param + ">", keyValuePairs[param] if keyValuePairs[param] else "None")
-    return ure.sub(r"\"?<[a-z\-0-9]+>\"?", "None", contents)
+    #newConfig = get_URI_param()
+    #utils.writeToFlagFile("/configLog", newConfig)
 
 
 def stringParamsToDict(configurationParameters):
