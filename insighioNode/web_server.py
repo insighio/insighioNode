@@ -122,34 +122,20 @@ class RawWeightIdle:
 
 
 class Config:
-    # def convert_params_to_string(self, data):
-    #     queryString = ""
-    #     try:
-    #         for key in data["queryParams"].keys():
-    #             if key in data["encodedParams"]:
-    #                 queryString += "{}={}&".format(key, data["encodedParams"][key])
-    #             else:
-    #                 queryString += "{}={}&".format(key, data["queryParams"][key])
-    #         if queryString != "":
-    #             queryString = queryString[0:-1]
-    #     except Exception as e:
-    #         logging.exception(e, "convert_params_to_string")
-    #     return queryString
 
     def post(self, data):
         print("received config data: {}".format(data))
 
         # import utils
 
-        logging.debug("about to save queryParams: {}".format(data["queryParams"]))
+        logging.debug("about to save config: {}".format(data["config"]))
         # utils.writeToFlagFile("/configLog", self.convert_params_to_string(data))
 
         try:
             from utils import configuration_handler
 
-            configuration_handler.apply_configuration(
-                data["queryParams"], configuration_handler.config_file, data["requestFileSystemOptimization"] == "true"
-            )
+            configuration_handler.apply_configuration(data["config"], False, data["requestFileSystemOptimization"] == "true")
+            configuration_handler.notifyServerWithNewConfig()
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")
@@ -163,7 +149,7 @@ class ConfigTemp:
         try:
             from utils import configuration_handler
 
-            configuration_handler.apply_configuration(data["queryParams"], "/apps/demo_temp_config.py", False)
+            configuration_handler.apply_configuration(data["queryParams"], True, False)
             return {}, 200
         except Exception as e:
             logging.exception(e, "Error applying configuration")

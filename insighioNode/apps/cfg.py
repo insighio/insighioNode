@@ -2,7 +2,7 @@ import logging
 import ujson
 import utils
 
-from dictionary_utils import _get, _has
+# from .dictionary_utils import _get, _has
 
 from utils.configuration_handler import _CONFIG_FILE_PATH_USER, _CONFIG_FILE_PATH_DEVICE, _CONFIG_FILE_PATH_TMP_USER
 
@@ -15,6 +15,24 @@ config_instance = None
 
 ################################################
 # load json files
+
+
+def _has(obj, key):
+    if not obj or not key:
+        return False
+    try:
+        return key in obj
+    except:
+        return False
+
+
+def _get(obj, key):
+    if not obj or not key:
+        return None
+    try:
+        return obj[key]
+    except:
+        return None
 
 
 def init():
@@ -95,7 +113,7 @@ class Config:
         self.user_settings = user_settings
         self.device_settings = device_settings
         self.protocol_config_instance = None
-        self.category_setup = {"board": "esp32s3", "protocol": "mqtt", "shield-sensor": "", "radio": ""}
+        self.category_setup = {"board": "esp32s3", "protocol": "mqtt", "shield-sensor": "", "network": ""}
         self.protocol_config_instance = None
 
     def __str__(self):
@@ -105,7 +123,7 @@ class Config:
         if category in self.category_setup:
             self.category_setup[category] = value
         else:
-            logging.warning(f"Category '{category}' not recognized in category setup.")
+            logging.error(f"Category '{category}' not recognized in category setup.")
 
     def has(self, key, category=None):
         if category is None:

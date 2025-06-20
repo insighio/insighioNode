@@ -316,10 +316,13 @@ def updateConfigValue(key, new_value):
 
 
 def notifyServerWithNewConfig():
-    #newConfig = get_URI_param()
-    #utils.writeToFlagFile("/configLog", newConfig)
+    from external.microUrllib import parse as urlparse
+
+    configToString = utils.readFromFile(config_file)
+    utils.writeToFlagFile("/configLog", urlparse.quote(configToString))
 
 
+# to remove
 def stringParamsToDict(configurationParameters):
     # remove '?' if the string starts with it
     if configurationParameters.startswith("?"):
@@ -338,7 +341,7 @@ def stringParamsToDict(configurationParameters):
     return keyValueDict
 
 
-def apply_configuration(keyValuePairDictionary, is_temp=False, request_file_system_optimization=True):
+def apply_configuration(configObject, is_temp=False, request_file_system_optimization=True):
     gc.collect()
 
     config_file_explicit = _CONFIG_FILE_PATH_TMP_USER if is_temp else _CONFIG_FILE_PATH_USER
@@ -348,7 +351,8 @@ def apply_configuration(keyValuePairDictionary, is_temp=False, request_file_syst
     import ujson
 
     try:
-        utils.writeToFile(config_file_explicit, ujson.dumps(keyValuePairDictionary))
+        configToString = ujson.dumps(configObject)
+        utils.writeToFile(config_file_explicit, configToString)
     except Exception as e:
         logging.exception(e, "Error writing configuration file: {}".format(config_file_explicit))
         return

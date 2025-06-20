@@ -34,7 +34,6 @@ export default {
   },
   methods: {
     apply() {
-      const encodedParams = {}
       const config = {}
       //let isConfigValid = false
       let requestFileSystemOptimization = this.$cookies.get("request_fs_optimization")
@@ -45,21 +44,19 @@ export default {
         if (typeof value === "string") {
           try {
             value = JSON.parse(value)
+            config[key] = value
           } catch (e) {
             // If parsing fails, keep the original string value
           }
-        } else config[key] = value
-      })
+        }
 
-      // if (!isConfigValid) {
-      //   this.startOver()
-      //   return
-      // }
+        config[key] = value
+      })
 
       fetch("http://192.168.4.1" + "/save-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ queryParams: config, encodedParams, requestFileSystemOptimization })
+        body: JSON.stringify({ config, requestFileSystemOptimization })
       })
         .then(() => {
           this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
