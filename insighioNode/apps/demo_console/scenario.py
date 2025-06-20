@@ -6,7 +6,7 @@ start_time = ticks_ms()
 
 import logging
 
-from .. import cfg
+from apps import cfg
 from . import message_buffer
 from . import scenario_utils
 from ..dictionary_utils import set_value_int
@@ -34,15 +34,15 @@ def now():
 
 
 def isLightSleepScenario():
-    backward_compatibility_on = cfg.get("_ALWAYS_ON_CONNECTION") is not None and cfg.get("_FORCE_ALWAYS_ON_CONNECTION") is not None
+    backward_compatibility_on = cfg.get("always-on-connection") is not None and cfg.get("force-always-on-connection") is not None
 
     if backward_compatibility_on:
-        return (cfg.get("_ALWAYS_ON_CONNECTION") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)) or cfg.get(
-            "_FORCE_ALWAYS_ON_CONNECTION"
+        return (cfg.get("always-on-connection") and device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)) or cfg.get(
+            "force-always-on-connection"
         )
     else:
-        return cfg.get("_LIGHT_SLEEP_ON") and (
-            not cfg.get("_LIGHT_SLEEP_DEACTIVATE_ON_BATTERY") or device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)
+        return cfg.get("light-sleep-on") and (
+            not cfg.get("light-sleep-deactivate-on-battery") or device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power)
         )
 
 
@@ -65,7 +65,7 @@ def executeBootstrap(useExistingConfiguration=False):
         cfg.set("_CONF_NETS", {"deviceHotspot": {"pwd": "12345678"}})
 
         cfg.set("_MAX_CONNECTION_ATTEMPT_TIME_SEC", 20)
-        cfg.set("_MEAS_NETWORK_STAT_ENABLE", False)
+        cfg.set("meas-network-stat", False)
         cfg.set("protocol", None)
 
     from . import wifi as network
@@ -184,8 +184,8 @@ def executeDeviceInitialization():
 
     # Operations for compatibility with older configurations
     # default temperature unit: Celsius
-    if cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS") is None:
-        cfg.set("_MEAS_TEMP_UNIT_IS_CELSIUS", True)
+    if cfg.get("meas-temp-unit") is None:
+        cfg.set("meas-temp-unit", True)
 
     # initializations
     device_info.set_defaults(
@@ -206,7 +206,7 @@ def executeDeviceInitialization():
 
 
 def determine_message_buffering_and_network_connection_necessity():
-    buffered_upload_enabled = cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
+    buffered_upload_enabled = cfg.get("batch-upload-buffer-size") is not None
     execute_connection_procedure = not buffered_upload_enabled
 
     # if RTC is invalid, force network connection
@@ -229,9 +229,9 @@ def executeMeasureAndUploadLoop():
     connectAndUploadCompletedWithoutErrors = None
 
     light_sleep_on = isLightSleepScenario()
-    light_sleep_on_period = cfg.get("_ALWAYS_ON_PERIOD")
+    light_sleep_on_period = cfg.get("always-on-period")
     if light_sleep_on_period is None:
-        light_sleep_on_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
+        light_sleep_on_period = cfg.get("period")
 
     if light_sleep_on_period:
         try:
@@ -239,8 +239,8 @@ def executeMeasureAndUploadLoop():
             proto_cfg_instance = cfg.get_protocol_config()
             proto_cfg_instance.keepalive = int(light_sleep_on_period * 1.5) if light_sleep_on else 0
 
-            if cfg.get("_MEAS_GPS_ENABLE"):
-                proto_cfg_instance.keepalive += cfg.get("_MEAS_GPS_TIMEOUT")
+            if cfg.get("meas-gps-enabled"):
+                proto_cfg_instance.keepalive += cfg.get("meas-gps-timeout")
             logging.debug("keepalive period: " + str(proto_cfg_instance.keepalive))
         except:
             logging.debug("no protocol info, ignoring keepalive configuration")
@@ -280,7 +280,7 @@ def executeMeasureAndUploadLoop():
         # connect (if needed) and upload message
         if execute_connection_procedure:
             hasGPSFix = executeGetGPSPosition(measurements, light_sleep_on)
-            if not hasGPSFix and cfg.get("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
+            if not hasGPSFix and cfg.get("meas-gps-no-fix-no-upload"):
                 connectAndUploadCompletedWithoutErrors = False
             else:
                 connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on)
@@ -304,11 +304,9 @@ def executeMeasureAndUploadLoop():
 
         # if connection procedure was executed
         logging.debug(
-            "[light sleep]: active: {}, connected: {}".format(
-                cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors
-            )
+            "[light sleep]: active: {}, connected: {}".format(cfg.get("light-sleep-network-active"), connectAndUploadCompletedWithoutErrors)
         )
-        if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and connectAndUploadCompletedWithoutErrors:
+        if cfg.get("light-sleep-network-active") == False and connectAndUploadCompletedWithoutErrors:
             logging.debug("[light sleep]: disconnecting")
             executeNetworkDisconnect()
             device_info.set_led_color("black")
@@ -395,7 +393,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         logging.exception(e, "Exception during connection:")
 
     # update radio info
-    if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+    if cfg.get("meas-network-stat"):
         network.updateSignalQuality(cfg, measurements)
 
     uptime = getUptime(timeDiffAfterNTP)
@@ -422,7 +420,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
             logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
 
-            if cfg.get("_CHECK_FOR_OTA") and (not light_sleep_on or (light_sleep_on and is_first_run)):
+            if cfg.get("system-enable-ota") and (not light_sleep_on or (light_sleep_on and is_first_run)):
                 network.check_and_apply_ota(cfg)
         else:
             logging.debug("Network [" + selected_network + "] connected: False")
@@ -437,7 +435,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         network.prepareForGPS()
 
     if not message_sent:
-        if cfg.get("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+        if cfg.get("store-meas-if-failed-conn"):
             logging.info("Message transmission failed, storing for later")
             scenario_utils.storeMeasurement(measurements, True)
         else:
@@ -548,11 +546,11 @@ def executeDeviceDeinitialization():
 
 
 def executeTimingConfiguration():
-    if cfg.get("_DEEP_SLEEP_PERIOD_SEC") is not None:
+    if cfg.get("period") is not None:
         uptime = getUptime(timeDiffAfterNTP)
         logging.debug("end timestamp: " + str(uptime))
         logging.info("Getting into deep sleep...")
-        sleep_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
+        sleep_period = cfg.get("period")
         sleep_period = sleep_period if sleep_period is not None else 600
         if sleep_period % 60 == 0:
             now_timestamp = time()
@@ -584,19 +582,19 @@ def executeTimingConfiguration():
             )
         )
         machine.deepsleep(sleep_period)
-    elif cfg.get("_SCHEDULED_TIMESTAMP_A_SECOND") is not None and cfg.get("_SCHEDULED_TIMESTAMP_B_SECOND") is not None:
+    elif cfg.get("scheduled-time-a") is not None and cfg.get("scheduled-time-b") is not None:
         ### RTC tuple format
         ###2021, 7, 8, 3, 16, 8, 45, 890003
         ### yy, MM, dd, DD, hh, mm, ss
         time_tuple = now()
         logging.info("current time: " + str(time_tuple))
 
-        MORNING_MEAS = cfg.get("_SCHEDULED_TIMESTAMP_A_SECOND")
-        EVENING_MEAS = cfg.get("_SCHEDULED_TIMESTAMP_B_SECOND")
+        MORNING_MEAS = cfg.get("scheduled-time-a")
+        EVENING_MEAS = cfg.get("scheduled-time-b")
 
         if MORNING_MEAS > EVENING_MEAS:
-            MORNING_MEAS = cfg.get("_SCHEDULED_TIMESTAMP_B_SECOND")
-            EVENING_MEAS = cfg.get("_SCHEDULED_TIMESTAMP_A_SECOND")
+            MORNING_MEAS = cfg.get("scheduled-time-b")
+            EVENING_MEAS = cfg.get("scheduled-time-a")
 
         DAY_SECONDS = 86400
 

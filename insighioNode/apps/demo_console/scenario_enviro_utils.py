@@ -145,22 +145,22 @@ def initialize_configurations():
     import json
 
     try:
-        _sdi12_config = hw_proto_sdi12.initialize_config(cfg.get("_MEAS_SDI12"), cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS"))
+        _sdi12_config = hw_proto_sdi12.initialize_config(cfg.get("meas-sdi12"), cfg.get("meas-temp-unit"))
     except Exception as e:
         logging.exception(e, "Error loading SDI12 config")
 
     try:
-        _modbus_config = json.loads(cfg.get("_MEAS_MODBUS"))
+        _modbus_config = json.loads(cfg.get("meas-modbus"))
     except Exception as e:
         logging.exception(e, "Error loading MODBUS config")
 
     try:
-        _adc_config = json.loads(cfg.get("_MEAS_ADC"))
+        _adc_config = json.loads(cfg.get("meas-adc"))
     except Exception as e:
         logging.exception(e, "Error loading ADC config")
 
     try:
-        _pulse_counter_config = json.loads(cfg.get("_MEAS_PULSECOUNTER"))
+        _pulse_counter_config = json.loads(cfg.get("meas-pulseCounter"))
     except Exception as e:
         logging.exception(e, "Error loading Pulse Counter config")
 
@@ -488,7 +488,7 @@ def execute_pulse_counter_measurements(measurements):
 
     if not has_enabled_sensor:
         logging.error("No enabled sensors found in Pulse Counter config")
-        logging.debug("cfg: {}".format(cfg.get("_MEAS_PULSECOUNTER")))
+        logging.debug("cfg: {}".format(cfg.get("meas-pulseCounter")))
         logging.debug("cfg: {}".format(_pulse_counter_config))
 
         import utils

@@ -56,7 +56,7 @@ def powerOffAllBoardLocations():
 
 
 def execute_sdi12_measurements(measurements):
-    _sdi12_config = hw_proto_sdi12.initialize_config(cfg.get("_MEAS_SDI12"), cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS"))
+    _sdi12_config = hw_proto_sdi12.initialize_config(cfg.get("meas-sdi12"), cfg.get("meas-temp-unit"))
 
     sensor_list = _get(_sdi12_config, "sensors")
 
@@ -154,7 +154,7 @@ def shield_measurements(measurements):
 #         )
 #         parse_generic_sdi12(address, responseArraySalinity, measurements, "ep_ec", "uS/cm", "", location)  # dS/m
 
-#         cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
+#         cfg_is_celsius = cfg.get("meas-temp-unit")
 #         if cfg_is_celsius:
 #             responseArrayTemperature = sdi12.get_measurement(address, "C2")
 #             parse_generic_sdi12(
@@ -239,7 +239,7 @@ def execute_formula(measurements, name, raw_value, formula):
 
 
 def read_pulse_counter(measurements):
-    pcnt_1_enabled = cfg.get("_PCNT_1_ENABLE")
+    pcnt_1_enabled = cfg.get("meas-pcnt-1-enable")
     if pcnt_1_enabled:
         from . import hw_pcnt_ulp
 
@@ -247,8 +247,8 @@ def read_pulse_counter(measurements):
             {
                 "id": 1,
                 "enabled": pcnt_1_enabled,
-                "formula": cfg.get("_PCNT_1_FORMULA"),
-                "highFreq": cfg.get("_PCNT_1_HIGH_FREQ"),
+                "formula": cfg.get("meas-pcnt-1-formula"),
+                "highFreq": cfg.get("meas-pcnt-1-high-freq"),
                 "gpio": cfg.get("UC_IO_DGTL_SNSR_READ"),
             },
             {"id": 2, "enabled": False},

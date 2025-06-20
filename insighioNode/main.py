@@ -32,12 +32,12 @@ except Exception as e:
     logging.exception(e, "Device never configured.")
     pass
 
-if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
+if demo_config_exists and hasattr(cfg, "system-settings"):
     try:
         import json
 
         _system_settings = {}
-        _system_settings = json.loads(cfg._SYSTEM_SETTINGS)
+        _system_settings = json.loads(cfg.system-settings)
 
         if _system_settings and "loggingLevel" in _system_settings:
             try:
@@ -48,9 +48,9 @@ if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
     except Exception as e:
         logging.exception(e, "Error loading system settings")
 
-if demo_config_exists and hasattr(cfg, "_NOTIFICATION_LED_ENABLED"):
+if demo_config_exists and hasattr(cfg, "meas-led-enabled"):
     try:
-        device_info.set_led_enabled(cfg._NOTIFICATION_LED_ENABLED)
+        device_info.set_led_enabled(cfg.meas-led-enabled)
     except:
         pass
 

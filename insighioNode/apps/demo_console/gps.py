@@ -15,7 +15,7 @@ def deinit():
 
 def get_gps_position(cfg, measurements, keep_open=False):
     try:
-        if cfg.get("_MEAS_GPS_ENABLE") and (not cfg.get("_MEAS_GPS_ONLY_ON_BOOT") or (get_reset_cause() == 0 or get_reset_cause() == 1)):
+        if cfg.get("meas-gps-enabled") and (not cfg.get("meas-gps-only-on-boot") or (get_reset_cause() == 0 or get_reset_cause() == 1)):
             gps_status = False
             if cfg.get("network") == "cellular" or cfg.get("network") == "wifi":
                 return internal_modem_get_position(cfg, measurements, keep_open)
@@ -71,11 +71,11 @@ def external_modem_get_position(cfg, measurements, always_on):
 
         timeout_ms = 120000
         min_satellite_fix_num = 4
-        if cfg.has("_MEAS_GPS_TIMEOUT"):
-            timeout_ms = cfg.get("_MEAS_GPS_TIMEOUT") * 1000
+        if cfg.has("meas-gps-timeout"):
+            timeout_ms = cfg.get("meas-gps-timeout") * 1000
 
-        if cfg.has("_MEAS_GPS_SATELLITE_FIX_NUM"):
-            min_satellite_fix_num = cfg.get("_MEAS_GPS_SATELLITE_FIX_NUM")
+        if cfg.has("meas-gps-sat-num"):
+            min_satellite_fix_num = cfg.get("meas-gps-sat-num")
 
         (gps_timestamp, lat, lon, num_of_sat, hdop) = modem.get_gps_position(timeout_ms, min_satellite_fix_num)
         set_value(measurements, "gps_dur", ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)

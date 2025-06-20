@@ -1,11 +1,11 @@
 import logging
 from . import cfg
 
-_name_mapping = cfg.get("_MEAS_NAME_EXT_MAPPING")
+_name_mapping = cfg.get("meas-name-ext-mapping")
 
 # fallback for backward compatibility
-if _name_mapping is None and cfg.has("_MEAS_NAME_MAPPING"):
-    _name_mapping = cfg.get("_MEAS_NAME_MAPPING")
+if _name_mapping is None and cfg.has("meas-name-mapping"):
+    _name_mapping = cfg.get("meas-name-mapping")
     _name_mapping_extended = {}
     if _name_mapping is not None:
         for key, value in _name_mapping.items():

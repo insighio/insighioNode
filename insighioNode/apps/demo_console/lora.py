@@ -16,7 +16,7 @@ def deinit():
 
 
 def updateSignalQuality(cfg, measurements):
-    if not cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+    if not cfg.get("meas-network-stat"):
         return
     pass
 
@@ -31,7 +31,7 @@ def connect(cfg):
     results["status"] = {"value": joinOk}
 
     # if network statistics are enabled
-    if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+    if cfg.get("meas-network-stat"):
         results["lora_join_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": join_duration}
 
     return results

@@ -19,7 +19,7 @@ def deinit():
 
 
 def updateSignalQuality(cfg, measurements):
-    if not cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+    if not cfg.get("meas-network-stat"):
         return
     pass
 
@@ -35,7 +35,7 @@ def connect(cfg, explicit_protocol=None):
         results = {}
         results["status"] = {"value": connOk}
         # if network statistics are enabled
-        if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+        if cfg.get("meas-network-stat"):
             results["wifi_conn_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connDur}
             results["wifi_channel"] = {"value": wifiChannel}
             results["wifi_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": wifiRssi}
