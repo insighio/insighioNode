@@ -38,8 +38,7 @@ if cfg_is_valid and cfg_instance:
         try:
             import json
 
-            _system_settings = {}
-            _system_settings = json.loads(cfg_instance.get("system-settings"))
+            _system_settings = cfg_instance.get("system-settings")
 
             if _system_settings and "loggingLevel" in _system_settings:
                 try:

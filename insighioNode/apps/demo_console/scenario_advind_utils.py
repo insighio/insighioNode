@@ -20,9 +20,9 @@ def get_board_location_pin(board_location):
     if board_location is None or board_location < 1 or board_location > 2:
         board_location = 1
 
-    pwr_on_pin = cfg.get("_UC_IO_PWR_SDI_SNSR_" + str(board_location) + "_ON")
+    pwr_on_pin = cfg.get("_UC_IO_PWR_SDI_SNSR_" + str(board_location) + "_ON", "shield-sensor")
     if pwr_on_pin is None:
-        pwr_on_pin = cfg.get("_UC_IO_SNSR_GND_SDI_SNSR_" + str(board_location) + "_ON")
+        pwr_on_pin = cfg.get("_UC_IO_SNSR_GND_SDI_SNSR_" + str(board_location) + "_ON", "shield-sensor")
     return pwr_on_pin
 
 
@@ -72,7 +72,11 @@ def execute_sdi12_measurements(measurements):
         return
 
     sdi12 = hw_proto_sdi12.initialize_sdi12_connection(
-        cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 0
+        cfg.get("_UC_IO_DRV_IN", "shield-sensor"),
+        cfg.get("_UC_IO_RCV_OUT", "shield-sensor"),
+        cfg.get("_UC_IO_DRV_ON", "shield-sensor"),
+        cfg.get("_UC_IO_RCV_ON", "shield-sensor"),
+        0,
     )
 
     if not sdi12:
@@ -101,7 +105,7 @@ def execute_sdi12_measurements(measurements):
 
 def shield_measurements(measurements):
     # power on SDI12 regulator
-    set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
+    set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON", "shield-sensor"))
 
     execute_sdi12_measurements(measurements)
 
@@ -114,7 +118,7 @@ def shield_measurements(measurements):
     read_pulse_counter(measurements)
 
     # power off SDI12 regulator
-    set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
+    set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON", "shield-sensor"))
 
 
 # def read_sdi12_sensor(sdi12, address, measurements, location=None):
@@ -188,16 +192,16 @@ def measure_4_20_mA_on_port(measurements, port_id):
     import gpio_handler
     from sensors import analog_generic
 
-    port_enabled = cfg.get("_4_20_SNSR_{}_ENABLE".format(port_id))
-    port_formula = cfg.get("_4_20_SNSR_{}_FORMULA".format(port_id))
+    port_enabled = cfg.get("_4_20_SNSR_{}_ENABLE".format(port_id), "shield-sensor")
+    port_formula = cfg.get("_4_20_SNSR_{}_FORMULA".format(port_id), "shield-sensor")
 
     if port_enabled:
-        sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ON".format(port_id))
+        sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ON".format(port_id), "shield-sensor")
         if not sensor_on_pin:
             # in folllowing label, ON is written in greek...
-            sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ON".format(port_id))
+            sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ON".format(port_id), "shield-sensor")
 
-        sensor_out_pin = cfg.get("_CUR_SNSR_OUT_{}".format(port_id))
+        sensor_out_pin = cfg.get("_CUR_SNSR_OUT_{}".format(port_id), "shield-sensor")
 
         _CURRENT_OFFSET_MA = 0.6  # fix for the deviation of values
 
@@ -206,7 +210,7 @@ def measure_4_20_mA_on_port(measurements, port_id):
             gpio_handler.set_pin_value(sensor_on_pin, 1)
 
             raw_mV = analog_generic.get_reading(sensor_out_pin)
-            current_mA = round((raw_mV / (cfg.get("_SHUNT_OHMS") * cfg.get("_INA_GAIN"))) * 100) / 100
+            current_mA = round((raw_mV / (cfg.get("_SHUNT_OHMS", "shield-sensor") * cfg.get("_INA_GAIN", "shield-sensor"))) * 100) / 100
 
             if current_mA > 3:  # do apply offset
                 current_mA += _CURRENT_OFFSET_MA
@@ -220,7 +224,7 @@ def measure_4_20_mA_on_port(measurements, port_id):
             execute_formula(measurements, "4-20_{}_current".format(port_id), current_mA, port_formula)
 
             gpio_handler.set_pin_value(sensor_on_pin, 0)
-            gpio_handler.set_pin_value(cfg.get("_UC_IO_CUR_SNS_ON"), 0)
+            gpio_handler.set_pin_value(cfg.get("_UC_IO_CUR_SNS_ON", "shield-sensor"), 0)
         except Exception as e:
             logging.exception(e, "Error getting current sensor output: ID: {}".format(port_id))
 
@@ -249,7 +253,7 @@ def read_pulse_counter(measurements):
                 "enabled": pcnt_1_enabled,
                 "formula": cfg.get("meas-pcnt-1-formula"),
                 "highFreq": cfg.get("meas-pcnt-1-high-freq"),
-                "gpio": cfg.get("UC_IO_DGTL_SNSR_READ"),
+                "gpio": cfg.get("UC_IO_DGTL_SNSR_READ", "shield-sensor"),
             },
             {"id": 2, "enabled": False},
         ]

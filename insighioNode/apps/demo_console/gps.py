@@ -17,9 +17,10 @@ def get_gps_position(cfg, measurements, keep_open=False):
     try:
         if cfg.get("meas-gps-enabled") and (not cfg.get("meas-gps-only-on-boot") or (get_reset_cause() == 0 or get_reset_cause() == 1)):
             gps_status = False
-            if cfg.get("network") == "cellular" or cfg.get("network") == "wifi":
+            network_cfg = cfg.get("network")
+            if network_cfg == "cellular" or network_cfg == "wifi":
                 return internal_modem_get_position(cfg, measurements, keep_open)
-            elif cfg.get("network") == "lora" or cfg.get("network") == "satellite":
+            elif network_cfg == "lora" or network_cfg == "satellite":
                 return external_modem_get_position(cfg, measurements, keep_open)
     except Exception as e:
         logging.exception(e, "GPS Exception:")
@@ -56,11 +57,11 @@ def external_modem_get_position(cfg, measurements, always_on):
 
     gps_status = False
     modem = modem_gps_l76l.ModemGPSL76L(
-        cfg.get("_UC_IO_RADIO_GPS_ON"),
-        cfg.get("_UC_GPS_RESET"),
-        cfg.get("_UC_IO_I2C_SCL"),
-        cfg.get("_UC_IO_I2C_SDA"),
-        cfg.get("_I2C_GPS_ADDRESS"),
+        cfg.get("_UC_IO_RADIO_GPS_ON", "board"),
+        cfg.get("_UC_GPS_RESET", "board"),
+        cfg.get("_UC_IO_I2C_SCL", "board"),
+        cfg.get("_UC_IO_I2C_SDA", "board"),
+        cfg.get("_I2C_GPS_ADDRESS", "board"),
     )
     modem.power_on()
     modem_ready = modem.wait_for_modem_power_on()

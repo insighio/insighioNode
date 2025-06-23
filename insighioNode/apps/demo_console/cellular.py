@@ -13,10 +13,10 @@ mqtt_connected = False
 
 def init(cfg):
     cellular.set_pins(
-        cfg.get("_UC_IO_RADIO_ON"),
-        cfg.get("_UC_IO_PWRKEY"),
-        cfg.get("_UC_UART_MODEM_TX"),
-        cfg.get("_UC_UART_MODEM_RX"),
+        cfg.get("_UC_IO_RADIO_ON", "board"),
+        cfg.get("_UC_IO_PWRKEY", "board"),
+        cfg.get("_UC_UART_MODEM_TX", "board"),
+        cfg.get("_UC_UART_MODEM_RX", "board"),
     )
 
 
@@ -90,7 +90,7 @@ def connect(cfg):
     if modem_instance is None or not modem_instance.has_sim():
         return results
 
-    (status, activation_duration, attachment_duration, connection_duration) = cellular.connect(cfg.get_cfg_module())
+    (status, activation_duration, attachment_duration, connection_duration) = cellular.connect(cfg)
     set_value(results, "status", status == cellular.MODEM_CONNECTED)
 
     # if network statistics are enabled
@@ -108,9 +108,9 @@ def connect(cfg):
         modem_model = modem_instance.get_model()
         if modem_model and "bg600" in modem_model:
             transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
-        elif cfg.protocol == "coap":
+        elif cfg.get("protocol") == "coap":
             transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
-        elif cfg.protocol == "mqtt":
+        elif cfg.get("protocol") == "mqtt":
             transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
         else:
             transfer_client = None

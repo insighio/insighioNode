@@ -42,8 +42,8 @@ def _initialize_i2c():
     if _i2c is None:
         from machine import SoftI2C, Pin
 
-        I2C_SCL = cfg.get("_UC_IO_I2C_SCL")
-        I2C_SDA = cfg.get("_UC_IO_I2C_SDA")
+        I2C_SCL = cfg.get("_UC_IO_I2C_SCL", "board")
+        I2C_SDA = cfg.get("_UC_IO_I2C_SDA", "board")
 
         if I2C_SCL is None or I2C_SDA is None:
             return None
@@ -63,7 +63,7 @@ def _deinitialize_i2c():
 
 def io_expander_init():
     global _io_expander_addr
-    _io_expander_addr = cfg.get("_UC_IO_EXPANDER_ADDR")
+    _io_expander_addr = cfg.get("_UC_IO_EXPANDER_ADDR", "shield-sensor")
 
     initialized = _initialize_i2c()
     if not initialized:
@@ -82,8 +82,8 @@ def io_expander_init():
 def ads_init():
     global _ads_addr
     global _ads_rate
-    _ads_addr = cfg.get("_UC_IO_ADS_ADDR")
-    _ads_rate = cfg.get("_ADS_RATE")
+    _ads_addr = cfg.get("_UC_IO_ADS_ADDR", "shield-sensor")
+    _ads_rate = cfg.get("_ADS_RATE", "shield-sensor")
     return _initialize_i2c()
 
 
@@ -127,13 +127,13 @@ def power_off_all_sensors():
 def enable_regulator():
     # power on SDI12 regulator
     logging.debug("enable_regulator - power on regulator")
-    set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
+    set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON", "shield-sensor"))
 
 
 def disable_regulator():
     # power off SDI12 regulator
     logging.debug("disable_regulator - power off regulator")
-    set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON"))
+    set_sensor_power_off(cfg.get("_UC_IO_SNSR_REG_ON", "shield-sensor"))
 
 
 def initialize_configurations():
@@ -218,7 +218,11 @@ def execute_sdi12_measurements(measurements):
             logging.exception(e, "Error during SDI12 warmup time")
 
     sdi12 = hw_proto_sdi12.initialize_sdi12_connection(
-        cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1
+        cfg.get("_UC_IO_DRV_IN", "shield-sensor"),
+        cfg.get("_UC_IO_RCV_OUT", "shield-sensor"),
+        cfg.get("_UC_IO_DRV_ON", "shield-sensor"),
+        cfg.get("_UC_IO_RCV_ON", "shield-sensor"),
+        1,
     )
 
     if sdi12:
@@ -252,7 +256,7 @@ def execute_modbus_measurements(measurements):
     from machine import Pin
 
     # need to set the SHDN pin to HIGH for not shutdown
-    pin_SHDN = Pin(cfg.get("_UC_IO_MODBUS_DRV_ON"), Pin.OUT)
+    pin_SHDN = Pin(cfg.get("_UC_IO_MODBUS_DRV_ON", "shield-sensor"), Pin.OUT)
     pin_SHDN.value(1)
 
     io_expander_power_on_modbus()
@@ -262,7 +266,7 @@ def execute_modbus_measurements(measurements):
     try:
         from external.umodbus.serial import Serial as ModbusRTUMaster
 
-        rtu_pins = (cfg.get("_UC_IO_MODBUS_DRV_IN"), cfg.get("_UC_IO_MODBUS_RCV_OUT"))  # (TX, RX)
+        rtu_pins = (cfg.get("_UC_IO_MODBUS_DRV_IN", "shield-sensor"), cfg.get("_UC_IO_MODBUS_RCV_OUT", "shield-sensor"))  # (TX, RX)
 
         config_parity = _get(connectionSettings, "parity")
         if not config_parity:
@@ -500,7 +504,7 @@ def execute_pulse_counter_measurements(measurements):
     from . import hw_pcnt_ulp
 
     for sensor in _pulse_counter_config:
-        sensor["gpio"] = cfg.get("UC_IO_DGTL_SNSR_{}_READ".format(_get(sensor, "id")))
+        sensor["gpio"] = cfg.get("UC_IO_DGTL_SNSR_{}_READ".format(_get(sensor, "id")), "shield-sensor")
 
     hw_pcnt_ulp.execute(measurements, _pulse_counter_config)
 

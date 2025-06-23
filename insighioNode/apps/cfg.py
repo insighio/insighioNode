@@ -5,6 +5,7 @@ import utils
 # from .dictionary_utils import _get, _has
 
 from utils.configuration_handler import _CONFIG_FILE_PATH_USER, _CONFIG_FILE_PATH_DEVICE, _CONFIG_FILE_PATH_TMP_USER
+from device_info import get_device_id
 
 is_config_valid = False
 is_temp_config = False
@@ -51,6 +52,7 @@ def init():
     try:
         if utils.existsFile(_CONFIG_FILE_PATH_TMP_USER):
             user_settings = ujson.loads(utils.readFromFile(_CONFIG_FILE_PATH_TMP_USER))
+            user_settings["device_id"] = get_device_id()[0]
             is_temp_config = True
             is_config_valid = True
             logging.info("[cfg] loaded config: [temp]")
@@ -61,6 +63,7 @@ def init():
         try:
             if utils.existsFile(_CONFIG_FILE_PATH_USER):
                 user_settings = ujson.loads(utils.readFromFile(_CONFIG_FILE_PATH_USER))
+                user_settings["device_id"] = get_device_id()[0]
                 logging.info("[cfg] loaded config: [normal]")
                 is_config_valid = True
         except Exception as e:
@@ -85,16 +88,18 @@ def init():
         config_instance = Config(user_settings, device_settings)
         config_instance.set_category_setup("board", device_info.get_hw_module_version())
         config_instance.set_category_setup("protocol", user_settings.get("protocol"))
-        config_instance.set_category_setup("shield-sensor", user_settings.get("shield-sensor"))
+        config_instance.set_category_setup("shield-sensor", user_settings.get("selected-shield"))
         config_instance.set_category_setup("network", user_settings.get("network"))
         logging.info("[cfg] config instance created")
         return True
     return False
 
+
 def is_valid():
     return is_config_valid
 
-def is_temp_config():
+
+def is_temp():
     # global is_temp_config
     return is_temp_config
 
@@ -124,6 +129,7 @@ class Config:
     def set_category_setup(self, category, value):
         if category in self.category_setup:
             self.category_setup[category] = value
+            logging.debug("setting cfg category [{}] -> {}".format(category, value))
         else:
             logging.error(f"Category '{category}' not recognized in category setup.")
 
@@ -171,3 +177,32 @@ class Config:
             self.protocol_config_instance.server_ip = self.get("server-ipv6", "protocol")
         else:
             self.protocol_config_instance.server_ip = self.get("server-ipv4", "protocol")
+
+
+# Auxiliary functions
+def has(key, category=None):
+    global config_instance
+    if config_instance is None:
+        return False
+    return config_instance.has(key, category)
+
+
+def get(key, category=None):
+    global config_instance
+    if config_instance is None:
+        return None
+    return config_instance.get(key, category)
+
+
+def set(key, value):
+    global config_instance
+    if config_instance is None:
+        return False
+    return config_instance.set(key, value)
+
+
+def get_protocol_config():
+    global config_instance
+    if config_instance is None:
+        return None
+    return config_instance.get_protocol_config()

@@ -6,7 +6,7 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
 
 def init(cfg):
-    lora.set_pins(None, cfg.get("_UC_UART_MODEM_TX"), cfg.get("_UC_UART_MODEM_RX"), cfg.get("_UC_LORA_RESET"))
+    lora.set_pins(None, cfg.get("_UC_UART_MODEM_TX", "board"), cfg.get("_UC_UART_MODEM_RX", "board"), cfg.get("_UC_LORA_RESET", "network"))
     is_connected = lora.is_connected()
     logging.info("Lora is connected: {}".format(is_connected))
 
@@ -20,13 +20,15 @@ def updateSignalQuality(cfg, measurements):
         return
     pass
 
+
 def update_hw_ids(measurements, is_senml=True, is_json=False):
     pass
+
 
 def connect(cfg):
     # network connectivity & transmission
     logging.info("Joining network...")
-    (joinOk, join_duration) = lora.join(cfg.get_cfg_module(), lora.set_keys(cfg.get_cfg_module()))
+    (joinOk, join_duration) = lora.join(cfg, lora.set_keys(cfg))
     results = {}
     results["status"] = {"value": joinOk}
 
@@ -44,6 +46,7 @@ def is_connected():
 def disconnect():
     logging.info("about to power off modem")
     lora.deinit()
+
 
 ## commented out the cbor to keep it in source code and omit it to deployments
 # def create_message_cbor(device_id, measurements):
