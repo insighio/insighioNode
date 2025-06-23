@@ -5,11 +5,11 @@ import device_info
 import sensors
 import gc
 
-from .. import cfg
+from apps import cfg
 
 from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
-from ..dictionary_utils import set_value, set_value_int, set_value_float
+from apps.dictionary_utils import set_value, set_value_int, set_value_float
 from . import message_buffer
 
 
@@ -21,8 +21,8 @@ def device_init():
         device_info.bq_charger_exec(device_info.bq_charger_setup)
 
     if cfg.get("meas-led-enabled"):
-        if cfg.get("_UC_IO_RGB_DIN", "board") and cfg.get("_UC_RGB_VDD", "board"):
-            device_info.set_led_enabled(cfg.get("meas-led-enabled"), cfg.get("_UC_RGB_VDD", "board"), cfg.get("_UC_IO_RGB_DIN", "board"))
+        if cfg.get("_UC_IO_RGB_DIN") and cfg.get("_UC_RGB_VDD"):
+            device_info.set_led_enabled(cfg.get("meas-led-enabled"), cfg.get("_UC_RGB_VDD"), cfg.get("_UC_IO_RGB_DIN"))
         else:
             device_info.set_led_enabled(cfg.get("meas-led-enabled"))
     else:
@@ -34,8 +34,8 @@ def read_shield_chip_id():
 
     chip_id = None
     try:
-        i2c = SoftI2C(scl=cfg.get("_UC_IO_I2C_SCL", "board"), sda=Pin(cfg.get("_UC_IO_I2C_SDA", "board")))
-        chip_id = i2c.readfrom(cfg.get("_I2C_CHIP_ID_ADDRESS", "board"), 3)
+        i2c = SoftI2C(scl=cfg.get("_UC_IO_I2C_SCL"), sda=Pin(cfg.get("_UC_IO_I2C_SDA")))
+        chip_id = i2c.readfrom(cfg.get("_I2C_CHIP_ID_ADDRESS"), 3)
     except Exception as e:
         pass
     return chip_id
@@ -85,8 +85,8 @@ def get_measurements(cfg_dummy=None):
         logging.exception(e, "unable to measure board sensors")
 
     # enable sensors
-    new_gnd_pin = cfg.get("_UC_IO_SENSOR_GND_ON", "board")
-    old_gnd_pin = cfg.get("_UC_IO_SENSOR_SWITCH_ON", "board")
+    new_gnd_pin = cfg.get("_UC_IO_SENSOR_GND_ON")
+    old_gnd_pin = cfg.get("_UC_IO_SENSOR_SWITCH_ON")
 
     sensor_pin = new_gnd_pin if new_gnd_pin is not None else old_gnd_pin
     gpio_handler.set_pin_value(sensor_pin, 1)
@@ -94,12 +94,12 @@ def get_measurements(cfg_dummy=None):
     # read internal temperature and humidity
     try:
         if cfg.get("meas-board-sense"):
-            if cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR", "board") == cfg.get("_CONST_SENSOR_SI7021"):
+            if cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR") == cfg.get("_CONST_SENSOR_SI7021"):
                 from sensors import si7021 as sens
-            elif cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR", "board") == cfg.get("_CONST_SENSOR_SHT40"):
+            elif cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR") == cfg.get("_CONST_SENSOR_SHT40"):
                 from sensors import sht40 as sens
 
-            (board_temp, board_humidity) = sens.get_reading(cfg.get("_UC_IO_I2C_SDA", "board"), cfg.get("_UC_IO_I2C_SCL", "board"))
+            (board_temp, board_humidity) = sens.get_reading(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"))
             set_value_float(
                 measurements,
                 "board_temp",
@@ -151,16 +151,16 @@ def delete_pulse_counter_state():
 def read_battery_voltage():
     # BATT VOLTAGE
     current = None
-    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON", "board"), 1)
+    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 1)
 
     device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
     sleep_ms(50)
 
-    vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ", "board"), cfg.get("_BAT_VDIV", "board"), cfg.get("_BAT_ATT", "board"))
+    vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
 
     device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
-    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON", "board"), 0)
+    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
     return vbatt
 
 
@@ -171,14 +171,9 @@ def default_board_measurements(measurements):
     for n in range(1, 3):
         meas_key_name = "_MEAS_I2C_" + str(n)
         i2c_config = cfg.get(meas_key_name)
-        if (
-            i2c_config
-            and cfg.has("_UC_IO_I2C_SDA", "board")
-            and cfg.has("_UC_IO_I2C_SCL", "board")
-            and i2c_config != cfg.get("_CONST_MEAS_DISABLED")
-        ):
+        if i2c_config and cfg.has("_UC_IO_I2C_SDA") and cfg.has("_UC_IO_I2C_SCL") and i2c_config != cfg.get("_CONST_MEAS_DISABLED"):
             logging.debug("Getting measurement for [{}] from sensor [{}]".format(meas_key_name, i2c_config))
-            read_i2c_sensor(cfg.get("_UC_IO_I2C_SDA", "board"), cfg.get("_UC_IO_I2C_SCL", "board"), i2c_config, measurements)
+            read_i2c_sensor(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"), i2c_config, measurements)
 
     # up to 3 Digital/Analog sensors
     for n in range(1, 4):
@@ -186,7 +181,7 @@ def default_board_measurements(measurements):
         pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
         transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
         meas_key = cfg.get(meas_key_name)
-        pin = cfg.get(pin_name, "shield-sensor")
+        pin = cfg.get(pin_name)
 
         if pin is None and n == 1:  # backward compatibility towards v1.2
             pin = 32
@@ -211,7 +206,7 @@ def add_explicit_key_values(measurements):
 
 
 def read_scale(measurements):
-    weight_on_pin = cfg.get("_UC_IO_WEIGHT_ON", "shield-sensor")
+    weight_on_pin = cfg.get("_UC_IO_WEIGHT_ON")
 
     if weight_on_pin:
         sensors.set_sensor_power_on(weight_on_pin)
@@ -236,9 +231,9 @@ def read_scale(measurements):
 
     while 1:
         weight = hx711.get_reading(
-            cfg.get("_UC_IO_SCALE_DATA_PIN", "shield-sensor"),
-            cfg.get("_UC_IO_SCALE_CLOCK_PIN", "shield-sensor"),
-            cfg.get("_UC_IO_SCALE_SPI_PIN", "shield-sensor"),
+            cfg.get("_UC_IO_SCALE_DATA_PIN"),
+            cfg.get("_UC_IO_SCALE_CLOCK_PIN"),
+            cfg.get("_UC_IO_SCALE_SPI_PIN"),
             cfg.get("meas-scale-offset"),
             cfg.get("meas-scale-scale"),
         )
@@ -262,11 +257,11 @@ def read_scale(measurements):
 def read_scale_shield_temperature(measurements):
     from sensors import analog_generic
 
-    if not cfg.has("_UC_IO_TEMP_SENSOR", "shield-sensor"):
+    if not cfg.has("_UC_IO_TEMP_SENSOR"):
         return None
 
     try:
-        volt_analog = analog_generic.get_reading(cfg.get("_UC_IO_TEMP_SENSOR", "shield-sensor"))
+        volt_analog = analog_generic.get_reading(cfg.get("_UC_IO_TEMP_SENSOR"))
         if volt_analog is None:
             return None
         else:
@@ -296,7 +291,7 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
             from sensors import sht40 as temp_hum_sens
         elif sensor_name == "si7021":
             from sensors import si7021 as temp_hum_sens
-        (temp, humidity) = temp_hum_sens.get_reading(cfg.get("_UC_IO_I2C_SDA", "board"), cfg.get("_UC_IO_I2C_SCL", "board"))
+        (temp, humidity) = temp_hum_sens.get_reading(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"))
         set_value_float(
             measurements,
             sensor_name + "_temp",
@@ -313,7 +308,7 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
     elif sensor_name == "scd30":
         from sensors import scd30
 
-        co2, temp, hum = scd30.get_reading(cfg.get("_UC_IO_I2C_SDA", "board"), cfg.get("_UC_IO_I2C_SCL", "board"))
+        co2, temp, hum = scd30.get_reading(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"))
         set_value_float(
             measurements,
             sensor_name + "_co2",
@@ -336,7 +331,7 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
     elif sensor_name == "bme680":
         from sensors import bme680
 
-        (pressure, temperature, humidity, gas) = bme680.get_reading(cfg.get("_UC_IO_I2C_SDA", "board"), cfg.get("_UC_IO_I2C_SCL", "board"))
+        (pressure, temperature, humidity, gas) = bme680.get_reading(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"))
         set_value_float(
             measurements,
             sensor_name + "_pressure",
@@ -361,10 +356,10 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
         from sensors import senseair_sunrise as sens
 
         (co2, co2_temp) = sens.get_reading(
-            cfg.get("_UC_IO_I2C_SDA", "board"),
-            cfg.get("_UC_IO_I2C_SCL", "board"),
-            cfg.get("_SENSAIR_EN_PIN_NUM", "board"),
-            cfg.get("_SENSAIR_nRDY_PIN_NUM", "board"),
+            cfg.get("_UC_IO_I2C_SDA"),
+            cfg.get("_UC_IO_I2C_SCL"),
+            cfg.get("_SENSAIR_EN_PIN_NUM"),
+            cfg.get("_SENSAIR_nRDY_PIN_NUM"),
         )
         set_value_int(
             measurements,
@@ -381,7 +376,7 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
     elif sensor_name == "scd4x":
         from sensors import scd4x
 
-        scd4x.init(cfg.get("_UC_IO_I2C_SCL", "board"), cfg.get("_UC_IO_I2C_SDA", "board"))
+        scd4x.init(cfg.get("_UC_IO_I2C_SCL"), cfg.get("_UC_IO_I2C_SDA"))
         (co2, temp, rh) = scd4x.get_reading()
         set_value_int(
             measurements,
@@ -525,7 +520,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
 
         # only at setup
         # sens.get_sensor_whoami()
-        asm330.init(cfg.get("_UC_IO_I2C_SCL", "board"), cfg.get("_UC_IO_I2C_SDA", "board"))
+        asm330.init(cfg.get("_UC_IO_I2C_SCL"), cfg.get("_UC_IO_I2C_SDA"))
     except Exception as e:
         logging.info("No sensors detected")
         return

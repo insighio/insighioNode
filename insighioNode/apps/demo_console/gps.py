@@ -57,11 +57,11 @@ def external_modem_get_position(cfg, measurements, always_on):
 
     gps_status = False
     modem = modem_gps_l76l.ModemGPSL76L(
-        cfg.get("_UC_IO_RADIO_GPS_ON", "board"),
-        cfg.get("_UC_GPS_RESET", "board"),
-        cfg.get("_UC_IO_I2C_SCL", "board"),
-        cfg.get("_UC_IO_I2C_SDA", "board"),
-        cfg.get("_I2C_GPS_ADDRESS", "board"),
+        cfg.get("_UC_IO_RADIO_GPS_ON"),
+        cfg.get("_UC_GPS_RESET"),
+        cfg.get("_UC_IO_I2C_SCL"),
+        cfg.get("_UC_IO_I2C_SDA"),
+        cfg.get("_I2C_GPS_ADDRESS"),
     )
     modem.power_on()
     modem_ready = modem.wait_for_modem_power_on()

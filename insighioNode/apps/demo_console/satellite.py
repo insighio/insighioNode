@@ -4,7 +4,7 @@ from networking import satellite
 
 
 def init(cfg):
-    satellite.set_pins(cfg.get("_UC_UART_MODEM_TX", "board"), cfg.get("_UC_UART_MODEM_RX", "board"))
+    satellite.set_pins(cfg.get("_UC_UART_MODEM_TX"), cfg.get("_UC_UART_MODEM_RX"))
     is_alive = satellite.is_alive()
     logging.info("satellite modem is alive: {}".format(is_alive))
 

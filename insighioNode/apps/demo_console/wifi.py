@@ -30,8 +30,8 @@ def update_hw_ids(measurements, is_senml=True, is_json=False):
 
 def connect(cfg, explicit_protocol=None):
     with mutex:
-        (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(
-            cfg.get("_CONF_NETS"), cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC", "network"), force_no_scan=True
+        (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect_to_network(
+            cfg.get("wifi-ssid"), cfg.get("wifi-pass"), cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC")
         )
         results = {}
         results["status"] = {"value": connOk}
@@ -51,11 +51,11 @@ def connect(cfg, explicit_protocol=None):
 
             global transfer_client
             if requested_protocol == "mqtt":
-                transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
+                transfer_client = transfer_protocol.TransferProtocolMQTT(cfg.get_instance())
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
             elif requested_protocol == "coap":
-                transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
+                transfer_client = transfer_protocol.TransferProtocolCoAP(cfg.get_instance())
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
             else:

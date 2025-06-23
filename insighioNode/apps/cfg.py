@@ -90,6 +90,7 @@ def init():
         config_instance.set_category_setup("protocol", user_settings.get("protocol"))
         config_instance.set_category_setup("shield-sensor", user_settings.get("selected-shield"))
         config_instance.set_category_setup("network", user_settings.get("network"))
+        config_instance.initialize()
         logging.info("[cfg] config instance created")
         return True
     return False
@@ -120,8 +121,9 @@ class Config:
         self.user_settings = user_settings
         self.device_settings = device_settings
         self.protocol_config_instance = None
-        self.category_setup = {"board": "esp32s3", "protocol": "mqtt", "shield-sensor": "", "network": ""}
+        self.category_setup = {"board": "esp32s3", "protocol": "mqtt", "shield-sensor": "", "network": "wifi"}
         self.protocol_config_instance = None
+        self.config = {}
 
     def __str__(self):
         return ujson.dumps(self.__dict__, indent=4, ensure_ascii=False)
@@ -133,23 +135,25 @@ class Config:
         else:
             logging.error(f"Category '{category}' not recognized in category setup.")
 
-    def has(self, key, category=None):
-        if category is None:
-            return _has(self.user_settings, key) or _has(self.device_settings, key)
-        elif _has(self.category_setup, category):
-            return _has(self.device_settings, category) and _has(self.device_settings[category], key)
-        return False
+    def initialize(self):
+        self.config.update(self.user_settings)
+        self.config.update(self.device_settings["common"])
 
-    def get(self, key, category=None):
-        if category is None:
-            return _get(user_settings, key) or _get(self.device_settings, key)
-        elif self.has(key, category):
-            return _get(self.device_settings[category], key)
-        return False
+        for category_key in self.category_setup:
+            if category_key in self.device_settings:
+                subcategory = self.category_setup[category_key]
+                if subcategory in self.device_settings[category_key]:
+                    self.config.update(self.device_settings[category_key][subcategory])
+
+    def has(self, key):
+        return _has(self.config, key)
+
+    def get(self, key):
+        return _get(self.config, key)
 
     def set(self, key, value):
         global user_settings
-        user_settings[key] = value
+        self.config[key] = value
         return True
 
     def get_protocol_config(self):
@@ -168,30 +172,30 @@ class Config:
 
             self.protocol_config_instance = mqtt_config.MQTTConfig()
 
-        self.protocol_config_instance.server_port = self.get("server-port", "protocol")
+        self.protocol_config_instance.server_port = self.get("server-port")
         self.protocol_config_instance.use_custom_socket = False
 
         if ipversion == "IPV6":
-            self.protocol_config_instance.server_ip = self.get("server-ipv6", "protocol")
+            self.protocol_config_instance.server_ip = self.get("server-ipv6")
         else:
-            self.protocol_config_instance.server_ip = self.get("server-ipv4", "protocol")
+            self.protocol_config_instance.server_ip = self.get("server-ipv4")
 
 
 # Auxiliary functions
-def has(key, category=None):
+def has(key):
     global config_instance
     if config_instance is None:
         logging.error("Configuration instance is not initialized.")
         return False
-    return config_instance.has(key, category)
+    return config_instance.has(key)
 
 
-def get(key, category=None):
+def get(key):
     global config_instance
     if config_instance is None:
         logging.error("Configuration instance is not initialized.")
         return None
-    return config_instance.get(key, category)
+    return config_instance.get(key)
 
 
 def set(key, value):

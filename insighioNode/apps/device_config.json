@@ -1,14 +1,16 @@
 {
-  "_CONST_SHIELD_ACCELEROMETER": "accel",
-  "_CONST_SHIELD_ADVIND": "advind",
-  "_CONST_SHIELD_DIG_ANALOG": "dig_analog",
-  "_CONST_SHIELD_SCALE": "scale",
-  "_CONST_SHIELD_ENVIRO": "enviro",
-  "_CONST_RADIO_SHIELD_LORA": "hoperf",
-  "_CONST_RADIO_SHIELD_ASTROCAST": "astrocast",
-  "_CONST_SENSOR_SI7021": "si7021",
-  "_CONST_SENSOR_SHT40": "sht40",
-  "_CONST_MEAS_DISABLED": "disabled",
+  "common": {
+    "_CONST_SHIELD_ACCELEROMETER": "accel",
+    "_CONST_SHIELD_ADVIND": "advind",
+    "_CONST_SHIELD_DIG_ANALOG": "dig_analog",
+    "_CONST_SHIELD_SCALE": "scale",
+    "_CONST_SHIELD_ENVIRO": "enviro",
+    "_CONST_RADIO_SHIELD_LORA": "hoperf",
+    "_CONST_RADIO_SHIELD_ASTROCAST": "astrocast",
+    "_CONST_SENSOR_SI7021": "si7021",
+    "_CONST_SENSOR_SHT40": "sht40",
+    "_CONST_MEAS_DISABLED": "disabled"
+  },
   "board": {
     "esp32": {
       "_BAT_ATT": 3,

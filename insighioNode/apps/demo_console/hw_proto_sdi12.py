@@ -13,12 +13,14 @@ def initialize_config(config_json, cfg_is_celsius):
     global _sdi12_config
     global _cfg_is_celsius
 
-    import json
+    # import json
 
-    try:
-        _sdi12_config = json.loads(config_json)
-    except Exception as e:
-        logging.exception(e, "Error loading SDI12 config")
+    # try:
+    #     _sdi12_config = json.loads(config_json)
+    # except Exception as e:
+    #     logging.exception(e, "Error loading SDI12 config")
+
+    _sdi12_config = config_json
 
     _cfg_is_celsius = cfg_is_celsius
 

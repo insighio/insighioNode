@@ -13,10 +13,10 @@ mqtt_connected = False
 
 def init(cfg):
     cellular.set_pins(
-        cfg.get("_UC_IO_RADIO_ON", "board"),
-        cfg.get("_UC_IO_PWRKEY", "board"),
-        cfg.get("_UC_UART_MODEM_TX", "board"),
-        cfg.get("_UC_UART_MODEM_RX", "board"),
+        cfg.get("_UC_IO_RADIO_ON"),
+        cfg.get("_UC_IO_PWRKEY"),
+        cfg.get("_UC_UART_MODEM_TX"),
+        cfg.get("_UC_UART_MODEM_RX"),
     )
 
 
@@ -107,11 +107,11 @@ def connect(cfg):
         # AT command based implementation of communication of Quectel BG600L
         modem_model = modem_instance.get_model()
         if modem_model and "bg600" in modem_model:
-            transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
+            transfer_client = transfer_protocol.TransferProtocolModemAT(cfg.get_instance(), modem_instance)
         elif cfg.get("protocol") == "coap":
-            transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
+            transfer_client = transfer_protocol.TransferProtocolCoAP(cfg.get_instance())
         elif cfg.get("protocol") == "mqtt":
-            transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
+            transfer_client = transfer_protocol.TransferProtocolMQTT(cfg.get_instance())
         else:
             transfer_client = None
 
