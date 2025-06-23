@@ -197,6 +197,7 @@
 </template>
 
 <script>
+import { fetchInternal } from "@/js/utils.js"
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import ShieldCommonData from "@/components/mixins/ShieldCommonData.vue"
 import WebuiFooter from "@/components/WebuiFooter.vue"
@@ -312,7 +313,7 @@ export default {
     getScaleOffset() {
       // Simulate saving idle weight
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
+      fetchInternal("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
         .then((response) => {
           return response.json()
         })
@@ -327,7 +328,7 @@ export default {
     },
     calculateScaleMultiplier() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
+      fetchInternal("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
         .then((response) => {
           return response.json()
         })
@@ -350,7 +351,7 @@ export default {
     },
     requestTare() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
+      fetchInternal("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
         .then((response) => {
           return response.json()
         })
@@ -367,7 +368,7 @@ export default {
     },
     requestMeasure() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
+      fetchInternal("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
         .then((response) => {
           return response.json()
         })

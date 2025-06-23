@@ -222,8 +222,8 @@ export default {
 
       if (this.timing_type === "periodic") {
         this.$cookies.set("period", this.timing_period)
-        this.$cookies.set("scheduled-time-a", "None")
-        this.$cookies.set("scheduled-time-b", "None")
+        // this.$cookies.set("scheduled-time-a", "None")
+        // this.$cookies.set("scheduled-time-b", "None")
 
         this.$cookies.set("light-sleep-on", this.timing_light_sleep_on)
         this.$cookies.set("light-sleep-network-active", this.timing_light_sleep_network_active)

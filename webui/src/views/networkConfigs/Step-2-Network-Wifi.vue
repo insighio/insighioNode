@@ -116,7 +116,7 @@ export default {
       if (this.localLoading) return
 
       this.localLoading = true
-      fetchInternal("/update_wifi_list")
+      fetchInternal("/update_wifi_list", "GET")
         .then((data) => {
           this.wifiAvailableNets = data.wifiAvailableNets
         })

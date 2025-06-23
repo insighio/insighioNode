@@ -57,10 +57,7 @@ export default {
       if (val === undefined || val === null) return defaultVal
       else if (typeof val !== "string") return val
 
-      try {
-        val = val ? val.toLowerCase() : val
-      } catch (e) {}
-      if (val === "undefined" || val === "" || val === "none") return defaultVal
+      if (val === "undefined" || val === "" || val === "none" || val === "null") return defaultVal
       else if (val === "true") return true
       else if (val === "false") return false
       return val

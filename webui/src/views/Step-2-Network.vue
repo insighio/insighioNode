@@ -92,7 +92,7 @@ export default {
 
       console.log("in here.....")
 
-      fetchInternal("/config")
+      fetchInternal("/config", "GET", 30000) //, { "Content-Type": "application/json" })
         .then((data) => {
           Object.keys(data).forEach((key) => {
             this.$cookies.set(key.replaceAll("_", "-"), data[key])

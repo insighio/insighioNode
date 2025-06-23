@@ -22,6 +22,8 @@
 </template>
 
 <script>
+import { fetchInternal } from "@/js/utils.js"
+
 export default {
   name: "Step7Apply",
   data() {
@@ -39,6 +41,8 @@ export default {
       let requestFileSystemOptimization = this.$cookies.get("request_fs_optimization")
 
       this.$cookies.keys().forEach((key) => {
+        if (key === "activeTab" || key === "wifiAvailableNets" || key === "session") return // Skip the activeTab cookie
+
         let value = this.$cookies.get(key)
 
         if (typeof value === "string") {
@@ -53,11 +57,13 @@ export default {
         config[key] = value
       })
 
-      fetch("http://192.168.4.1" + "/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config, requestFileSystemOptimization })
-      })
+      fetchInternal(
+        "/config",
+        "POST",
+        30000,
+        { "Content-Type": "application/json" },
+        JSON.stringify({ config, requestFileSystemOptimization })
+      )
         .then(() => {
           this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
           this.requestReboot()
@@ -67,14 +73,16 @@ export default {
     requestReboot() {
       this.isLoading = false
 
-      fetch("http://192.168.4.1" + "/reboot", {
-        method: "POST",
-        headers: {
+      fetchInternal(
+        "/reboot",
+        "POST",
+        30000,
+        {
           Accept: "application/json, text/plain, */*",
           "Content-Type": "application/json"
         },
-        body: "{}"
-      })
+        "{}"
+      )
         .then((res) => console.log(res))
         .catch((err) => {
           console.log("error rebooting: ", err)

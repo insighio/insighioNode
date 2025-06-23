@@ -1,4 +1,4 @@
-export function fetchInternal(url, timeout = 30000) {
+export function fetchInternal(url, method = "GET", timeout = 30000, headers = {}, body = null) {
   return new Promise((resolve, reject) => {
     const controller = new AbortController()
     const signal = controller.signal
@@ -8,7 +8,7 @@ export function fetchInternal(url, timeout = 30000) {
       reject(new Error("Request timed out"))
     }, timeout)
 
-    fetch("http://192.168.4.1" + url, { signal })
+    fetch("http://192.168.4.1" + url, { signal, method, headers, body })
       .then((response) => {
         clearTimeout(timeoutId)
         return response.json()
