@@ -23,6 +23,7 @@ def updateSignalQuality(cfg, measurements):
         return
     pass
 
+
 def update_hw_ids(measurements, is_senml=True, is_json=False):
     pass
 
@@ -30,7 +31,7 @@ def update_hw_ids(measurements, is_senml=True, is_json=False):
 def connect(cfg, explicit_protocol=None):
     with mutex:
         (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(
-            cfg.get("_CONF_NETS"), cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC"), force_no_scan=True
+            cfg.get("_CONF_NETS"), cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC", "network"), force_no_scan=True
         )
         results = {}
         results["status"] = {"value": connOk}

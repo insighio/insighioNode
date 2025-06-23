@@ -7,7 +7,7 @@ class TransferProtocol:
     def __init__(self, cfg, modem_instance=None):
         self.connected = False
         self.protocol_config = cfg.get_protocol_config()
-        self.protocol_config.client_name = cfg.get("device_id")
+        self.protocol_config.client_name = cfg.get("device-id")
         self.protocol = cfg.get("protocol")
         self.modem_based = False
         if self.protocol_config.keepalive is None:

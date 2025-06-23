@@ -29,7 +29,8 @@
       "_UC_UART_GPS_RX": 14,
       "_UC_UART_GPS_TX": 13,
       "_UC_UART_MODEM_RX": 18,
-      "_UC_UART_MODEM_TX": 19
+      "_UC_UART_MODEM_TX": 19,
+      "_WD_PERIOD": 120
     },
     "esp32s3": {
       "_BAT_ATT": 3,
@@ -50,7 +51,8 @@
       "_UC_IO_SENSOR_GND_ON": 12,
       "_UC_RGB_VDD": 47,
       "_UC_UART_MODEM_RX": 16,
-      "_UC_UART_MODEM_TX": 15
+      "_UC_UART_MODEM_TX": 15,
+      "_WD_PERIOD": 120
     }
   },
   "protocol": {

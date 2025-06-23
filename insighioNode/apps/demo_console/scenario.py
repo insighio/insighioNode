@@ -77,7 +77,7 @@ def executeBootstrap(useExistingConfiguration=False):
     is_connected = "status" in connection_results
 
     _DEVICE_ID = device_info.get_device_id()[0]
-    cfg.set("device_id", _DEVICE_ID)
+    cfg.set("device-id", _DEVICE_ID)
     cfg.set("_SECRET_KEY", "000000000000000000000")
 
     headers = {"Authorization": cfg.get("_SECRET_KEY"), "accept": "application/json"}
@@ -198,7 +198,7 @@ def executeDeviceInitialization():
 
     device_info.set_led_color("blue")
     _DEVICE_ID = device_info.get_device_id()[0]
-    cfg.set("device_id", _DEVICE_ID)
+    cfg.set("device-id", _DEVICE_ID)
     logging.info("Device ID in readable form: {}".format(_DEVICE_ID))
 
     # wachdog reset
@@ -416,7 +416,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
                 executeDeviceConfigurationUpload(cfg, network)
 
             # create packet
-            message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
+            message_sent = network.send_message(cfg, network.create_message(cfg.get("device-id"), measurements))
             logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
 

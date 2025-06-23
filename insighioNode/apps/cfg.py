@@ -52,7 +52,7 @@ def init():
     try:
         if utils.existsFile(_CONFIG_FILE_PATH_TMP_USER):
             user_settings = ujson.loads(utils.readFromFile(_CONFIG_FILE_PATH_TMP_USER))
-            user_settings["device_id"] = get_device_id()[0]
+            user_settings["device-id"] = get_device_id()[0]
             is_temp_config = True
             is_config_valid = True
             logging.info("[cfg] loaded config: [temp]")
@@ -63,7 +63,7 @@ def init():
         try:
             if utils.existsFile(_CONFIG_FILE_PATH_USER):
                 user_settings = ujson.loads(utils.readFromFile(_CONFIG_FILE_PATH_USER))
-                user_settings["device_id"] = get_device_id()[0]
+                user_settings["device-id"] = get_device_id()[0]
                 logging.info("[cfg] loaded config: [normal]")
                 is_config_valid = True
         except Exception as e:
@@ -136,10 +136,10 @@ class Config:
     def has(self, key, category=None):
         if category is None:
             return _has(self.user_settings, key)
+        elif _has(self.category_setup, category):
+            return _has(self.device_settings, category) and _has(self.device_settings[category], key)
         else:
-            return (
-                _has(self.category_setup, category) and _has(self.device_settings, category) and _has(self.device_settings[category], key)
-            )
+            return _has(self.device_settings, key)
 
     def get(self, key, category=None):
         if category is None:
@@ -147,7 +147,7 @@ class Config:
         elif self.has(key, category):
             return _get(self.device_settings[category], key)
         else:
-            return None
+            return _get(self.device_settings, key)
 
     def set(self, key, value):
         global user_settings

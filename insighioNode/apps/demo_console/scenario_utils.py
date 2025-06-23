@@ -85,8 +85,8 @@ def get_measurements(cfg_dummy=None):
         logging.exception(e, "unable to measure board sensors")
 
     # enable sensors
-    new_gnd_pin = cfg.get("_UC_IO_SENSOR_GND_ON")
-    old_gnd_pin = cfg.get("_UC_IO_SENSOR_SWITCH_ON")
+    new_gnd_pin = cfg.get("_UC_IO_SENSOR_GND_ON", "board")
+    old_gnd_pin = cfg.get("_UC_IO_SENSOR_SWITCH_ON", "board")
 
     sensor_pin = new_gnd_pin if new_gnd_pin is not None else old_gnd_pin
     gpio_handler.set_pin_value(sensor_pin, 1)
@@ -94,9 +94,9 @@ def get_measurements(cfg_dummy=None):
     # read internal temperature and humidity
     try:
         if cfg.get("meas-board-sense"):
-            if cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR") == cfg.get("_CONST_SENSOR_SI7021"):
+            if cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR", "board") == cfg.get("_CONST_SENSOR_SI7021"):
                 from sensors import si7021 as sens
-            elif cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR") == cfg.get("_CONST_SENSOR_SHT40"):
+            elif cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR", "board") == cfg.get("_CONST_SENSOR_SHT40"):
                 from sensors import sht40 as sens
 
             (board_temp, board_humidity) = sens.get_reading(cfg.get("_UC_IO_I2C_SDA", "board"), cfg.get("_UC_IO_I2C_SCL", "board"))
@@ -114,9 +114,7 @@ def get_measurements(cfg_dummy=None):
             )
 
         shield_name = cfg.get("selected-shield")
-        if shield_name is not None and (
-            shield_name == cfg.get("_CONST_SHIELD_ADVIND") or shield_name == cfg.get("_CONSTselected-shield_ESP_GEN_SHIELD_SDI12")
-        ):
+        if shield_name is not None and (shield_name == cfg.get("_CONST_SHIELD_ADVIND")):
             from . import scenario_advind_utils
 
             scenario_advind_utils.shield_measurements(measurements)
@@ -153,16 +151,16 @@ def delete_pulse_counter_state():
 def read_battery_voltage():
     # BATT VOLTAGE
     current = None
-    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 1)
+    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON", "board"), 1)
 
     device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
     sleep_ms(50)
 
-    vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
+    vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ", "board"), cfg.get("_BAT_VDIV", "board"), cfg.get("_BAT_ATT", "board"))
 
     device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
-    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
+    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON", "board"), 0)
     return vbatt
 
 
@@ -173,7 +171,12 @@ def default_board_measurements(measurements):
     for n in range(1, 3):
         meas_key_name = "_MEAS_I2C_" + str(n)
         i2c_config = cfg.get(meas_key_name)
-        if i2c_config and cfg.has("_UC_IO_I2C_SDA") and cfg.has("_UC_IO_I2C_SCL") and i2c_config != cfg.get("_CONST_MEAS_DISABLED"):
+        if (
+            i2c_config
+            and cfg.has("_UC_IO_I2C_SDA", "board")
+            and cfg.has("_UC_IO_I2C_SCL", "board")
+            and i2c_config != cfg.get("_CONST_MEAS_DISABLED")
+        ):
             logging.debug("Getting measurement for [{}] from sensor [{}]".format(meas_key_name, i2c_config))
             read_i2c_sensor(cfg.get("_UC_IO_I2C_SDA", "board"), cfg.get("_UC_IO_I2C_SCL", "board"), i2c_config, measurements)
 
@@ -183,7 +186,7 @@ def default_board_measurements(measurements):
         pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
         transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
         meas_key = cfg.get(meas_key_name)
-        pin = cfg.get(pin_name)
+        pin = cfg.get(pin_name, "shield-sensor")
 
         if pin is None and n == 1:  # backward compatibility towards v1.2
             pin = 32
@@ -208,7 +211,7 @@ def add_explicit_key_values(measurements):
 
 
 def read_scale(measurements):
-    weight_on_pin = cfg.get("_UC_IO_WEIGHT_ON")
+    weight_on_pin = cfg.get("_UC_IO_WEIGHT_ON", "shield-sensor")
 
     if weight_on_pin:
         sensors.set_sensor_power_on(weight_on_pin)
@@ -233,9 +236,9 @@ def read_scale(measurements):
 
     while 1:
         weight = hx711.get_reading(
-            cfg.get("_UC_IO_SCALE_DATA_PIN"),
-            cfg.get("_UC_IO_SCALE_CLOCK_PIN"),
-            cfg.get("_UC_IO_SCALE_SPI_PIN"),
+            cfg.get("_UC_IO_SCALE_DATA_PIN", "shield-sensor"),
+            cfg.get("_UC_IO_SCALE_CLOCK_PIN", "shield-sensor"),
+            cfg.get("_UC_IO_SCALE_SPI_PIN", "shield-sensor"),
             cfg.get("meas-scale-offset"),
             cfg.get("meas-scale-scale"),
         )
@@ -259,11 +262,11 @@ def read_scale(measurements):
 def read_scale_shield_temperature(measurements):
     from sensors import analog_generic
 
-    if not cfg.has("_UC_IO_TEMP_SENSOR"):
+    if not cfg.has("_UC_IO_TEMP_SENSOR", "shield-sensor"):
         return None
 
     try:
-        volt_analog = analog_generic.get_reading(cfg.get("_UC_IO_TEMP_SENSOR"))
+        volt_analog = analog_generic.get_reading(cfg.get("_UC_IO_TEMP_SENSOR", "shield-sensor"))
         if volt_analog is None:
             return None
         else:
@@ -360,8 +363,8 @@ def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
         (co2, co2_temp) = sens.get_reading(
             cfg.get("_UC_IO_I2C_SDA", "board"),
             cfg.get("_UC_IO_I2C_SCL", "board"),
-            cfg.get("_SENSAIR_EN_PIN_NUM"),
-            cfg.get("_SENSAIR_nRDY_PIN_NUM"),
+            cfg.get("_SENSAIR_EN_PIN_NUM", "board"),
+            cfg.get("_SENSAIR_nRDY_PIN_NUM", "board"),
         )
         set_value_int(
             measurements,
@@ -502,7 +505,7 @@ def calculate_baseline(asm330Obj):
     return (statsX.mean(), statsY.mean(), statsZ.mean())
 
 
-def storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total, do_store_measurement=True):
+def storeAccelerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total, do_store_measurement=True):
     set_value_float(measurement, "asm330_accX", statsX.mean(), SenmlUnits.SENML_UNIT_ACCELERATION)
     set_value_float(measurement, "asm330_accY", statsY.mean(), SenmlUnits.SENML_UNIT_ACCELERATION)
     set_value_float(measurement, "asm330_accZ", statsZ.mean(), SenmlUnits.SENML_UNIT_ACCELERATION)
@@ -552,7 +555,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
         statsY.push(asm330_accY)
         statsZ.push(asm330_accZ)
         current_total = sqrt(pow(statsX.mean(), 2) + pow(statsY.mean(), 2) + pow(statsZ.mean(), 2))
-        storeAccellerometerMeasurement(measurements, statsX, statsY, statsZ, -1, current_total, False)
+        storeAccelerometerMeasurement(measurements, statsX, statsY, statsZ, -1, current_total, False)
         return
 
     REPORT_PERIOD_MS = 10000
@@ -584,7 +587,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
             current_total = sqrt(pow(statsX.mean(), 2) + pow(statsY.mean(), 2) + pow(statsZ.mean(), 2))
             measurement = {}
 
-            storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
+            storeAccelerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
 
             next_force_report = now + FORCE_REPORT_PERIOD_MS
 
@@ -596,7 +599,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
             if len(previous_reported_total) < 2:
                 previous_reported_total.append(current_total)
 
-                storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
+                storeAccelerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
 
             elif previous_reported_total[0] != 0:
                 previous_reported_total.reverse()
@@ -615,7 +618,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
 
                     dev_is_operating = dev_is_operating_updated
 
-                    storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
+                    storeAccelerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
                 else:
                     logging.debug("Ignoring low intensity vibration: diff: {}".format(total_diff))
 

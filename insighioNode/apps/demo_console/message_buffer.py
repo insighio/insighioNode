@@ -82,7 +82,7 @@ def parse_stored_measurements_and_upload(network):
                     data["time_diff"] = {"value": 0}
                 del data["diff_dt"]
 
-            message = network.create_message(cfg.get("device_id"), data)
+            message = network.create_message(cfg.get("device-id"), data)
             message_send_status = network.send_message(cfg, message)
 
             logging.debug("Message send status: " + str(message_send_status))
