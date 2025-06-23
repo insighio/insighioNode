@@ -87,7 +87,7 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
                 measurements, variable_prefix + "_atmospheric_pressure", responseArray[9], SenmlUnits.SENML_UNIT_PASCAL, 3, 1000
             )
             set_value_float(
-                measurements, variable_prefix + "_relative_humidity", responseArray[10], SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, 1
+                measurements, variable_prefix + "_relative_humidity", responseArray[10], SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT
             )
             set_value_float(
                 measurements, variable_prefix + "_humidity_sensor_temperature", responseArray[11], SenmlUnits.SENML_UNIT_DEGREES_CELSIUS
