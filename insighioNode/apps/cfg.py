@@ -91,6 +91,8 @@ def init():
         return True
     return False
 
+def is_valid():
+    return is_config_valid
 
 def is_temp_config():
     # global is_temp_config
