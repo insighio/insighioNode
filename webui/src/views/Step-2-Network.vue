@@ -92,7 +92,7 @@ export default {
 
       console.log("in here.....")
 
-      fetchInternal("/settings")
+      fetchInternal("/config")
         .then((data) => {
           Object.keys(data).forEach((key) => {
             this.$cookies.set(key.replaceAll("_", "-"), data[key])

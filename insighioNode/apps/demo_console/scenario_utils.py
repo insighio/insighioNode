@@ -612,7 +612,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
                     if dev_is_operating == 1 and dev_is_operating_updated == 0:  # if dropping check if going to idle
                         drop_diff_from_idle = (current_total - idle_value) / min(idle_value, current_total)
 
-                        # if current vibraation has diff over 100% from the min idle, consider it non idle
+                        # if current vibration has diff over 100% from the min idle, consider it non idle
                         if drop_diff_from_idle > 1:
                             dev_is_operating_updated = 1  # do not consider that dev has dropped to idle.
 

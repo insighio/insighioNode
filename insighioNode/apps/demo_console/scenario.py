@@ -70,10 +70,10 @@ def executeBootstrap(useExistingConfiguration=False):
 
     from . import wifi as network
 
-    network.init(cfg)  # ?
+    network.init(cfg.get_config())  # ?
     logging.debug("Network modules loaded")
 
-    connection_results = network.connect(cfg)
+    connection_results = network.connect(cfg.get_config())
     is_connected = "status" in connection_results
 
     _DEVICE_ID = device_info.get_device_id()[0]

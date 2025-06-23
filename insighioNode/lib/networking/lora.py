@@ -23,13 +23,15 @@ def set_pins(power_on=None, modem_tx=None, modem_rx=None, modem_reset=None):
 def set_keys(cfg):
     try:
         # get app_eui and app_key in right formats
-        if cfg.lora-app-eui and cfg.lora-app-key:
-            dev_eui = cfg.lora-dev-eui
-            app_key = cfg.lora-app-key
-            app_eui = cfg.lora-app-eui
+        if cfg.get("lora-app-eui") and cfg.get("lora-app-key"):
+            dev_eui = cfg.get("lora-dev-eui")
+            app_key = cfg.get("lora-app-key")
+            app_eui = cfg.get("lora-app-eui")
             return (dev_eui, app_eui, app_key)
     except Exception as e:
-        logging.exception(e, "Invalid lora keys: {}, {}, {}".format(cfg.lora-dev-eui, cfg.lora-app-eui, cfg.lora-app-key))
+        logging.exception(
+            e, "Invalid lora keys: {}, {}, {}".format(cfg.get("lora-dev-eui"), cfg.get("lora-app-eui"), cfg.get("lora-app-key"))
+        )
 
     return (None, None, None)
 
@@ -62,19 +64,19 @@ def join(cfg, lora_keys):
         logging.info("No modem detected, ignoring join request")
         return (False, -1)
 
-    modem.set_region(cfg.lora-region if cfg.lora-region is not None else "EU868")
-    modem.set_dr(cfg.lora-dr if cfg.lora-dr is not None else 5)
-    modem.set_confirm(cfg.lora-confirmed if cfg.lora-confirmed is not None else 0)
-    modem.set_adr(cfg.lora-adr if cfg.lora-adr is not None else 0)
-    modem.set_retries(cfg.lora-retries if cfg.lora-retries is not None else 0)
+    modem.set_region(cfg.get("lora-region") if cfg.get("lora-region") is not None else "EU868")
+    modem.set_dr(cfg.get("lora-dr") if cfg.get("lora-dr") is not None else 5)
+    modem.set_confirm(cfg.get("lora-confirmed") if cfg.get("lora-confirmed") is not None else 0)
+    modem.set_adr(cfg.get("lora-adr") if cfg.get("lora-adr") is not None else 0)
+    modem.set_retries(cfg.get("lora-retries") if cfg.get("lora-retries") is not None else 0)
 
     modem.set_dev_eui(lora_keys[0])
 
     if lora_keys[1] and lora_keys[1] != "None":
         modem.set_app_eui(lora_keys[1])
     else:
-        _DEFAULTlora-app-eui = "0000000000000001"
-        modem.set_app_eui(_DEFAULTlora-app-eui)
+        _DEFAULT_LORA_APP_EUI = "0000000000000001"
+        modem.set_app_eui(_DEFAULT_LORA_APP_EUI)
     modem.set_app_key(lora_keys[2])
 
     # join network
@@ -84,6 +86,7 @@ def join(cfg, lora_keys):
         join_status = modem.join()
 
     return (modem.is_connected(), ticks_ms() - start_time)
+
 
 def is_connected():
     modem = get_modem_instance()

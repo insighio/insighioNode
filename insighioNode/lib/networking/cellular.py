@@ -114,7 +114,7 @@ def connect(cfg):
     try:
         logging.debug("Initializing modem")
         modemInst = get_modem_instance()
-        modemInst.init(cfg.ipversion, cfg.cell-apn, cfg.cell-tech)
+        modemInst.init(cfg.get("ipversion"), cfg.get("cell-apn"), cfg.get("cell-tech"))
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
@@ -129,7 +129,7 @@ def connect(cfg):
             activation_duration = ticks_ms() - start_activation_duration
             # proceed with attachment
             start_attachment_duration = ticks_ms()
-            attachment_timeout = start_attachment_duration + cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC * 1000
+            attachment_timeout = start_attachment_duration + cfg.get("_MAX_ATTACHMENT_ATTEMPT_TIME_SEC") * 1000
 
             modemInst.get_registered_mcc_mnc()
 
@@ -158,7 +158,7 @@ def connect(cfg):
                 if modemInst.has_data_over_ppp():
                     logging.debug("Entering Data State. Modem connecting...")
                     start_connection_duration = ticks_ms()
-                    connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
+                    connection_timeout = start_connection_duration + cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC") * 1000
                     if not modemInst.is_connected():
                         modemInst.connect()
 
@@ -173,7 +173,7 @@ def connect(cfg):
                     # when using AT commands we don't need to explicitly enter data mode
                     status = MODEM_CONNECTED
             else:
-                logging.debug("Unable to attach in {} sec".format(cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC))
+                logging.debug("Unable to attach in {} sec".format(cfg.get("_MAX_ATTACHMENT_ATTEMPT_TIME_SEC")))
     except Exception as e:
         logging.exception(e, "Outer Exception: {}".format(e))
 

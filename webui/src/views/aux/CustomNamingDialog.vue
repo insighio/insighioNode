@@ -227,7 +227,7 @@ export default {
 
       if (!configString) return
 
-      fetch("http://192.168.4.1" + "/save-config-temp", {
+      fetch("http://192.168.4.1" + "/config-temp", {
         method: "POST",
         headers: {
           Accept: "application/json, text/plain, */*",

@@ -224,9 +224,9 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
         configKeyValues["insighio_key"] = ""
 
     try:
-        ssid = list(cfg._CONF_NETS.keys())[0]
+        ssid = list(cfg.get("_CONF_NETS").keys())[0]
         configKeyValues["wifi_ssid"] = ssid
-        configKeyValues["wifi_pass"] = cfg._CONF_NETS[ssid]["pwd"]
+        configKeyValues["wifi_pass"] = cfg.get("_CONF_NETS")[ssid]["pwd"]
     except:
         configKeyValues["wifi_ssid"] = ""
         configKeyValues["wifi_pass"] = ""
@@ -339,6 +339,19 @@ def stringParamsToDict(configurationParameters):
         else:
             logging.error("key value error |{}|".format(keyValue))
     return keyValueDict
+
+
+def get_config_object():
+    """Returns the configuration object from the user config file."""
+    import ujson
+
+    try:
+        configObject = ujson.loads(utils.readFromFile(_CONFIG_FILE_PATH_USER))
+        logging.info("Configuration loaded successfully.")
+        return configObject
+    except Exception as e:
+        logging.exception(e, "Error loading configuration file: {}".format(_CONFIG_FILE_PATH_USER))
+        return None
 
 
 def apply_configuration(configObject, is_temp=False, request_file_system_optimization=True):

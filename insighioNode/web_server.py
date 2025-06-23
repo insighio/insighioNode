@@ -52,49 +52,6 @@ class DevID:
         }, 200
 
 
-class Settings:
-    def get(self, data):
-        global insighioSettings
-
-        logging.debug("[web-server][GET]: /settings, params: [{}]".format(data))
-
-        if not insighioSettings:
-            insighioSettings = {}
-            from utils import configuration_handler
-
-            try:
-                insighioSettings = configuration_handler.get_config_values(False)
-            except Exception as e:
-                logging.exception(e, "Unable to retrieve old configuration")
-
-            insighioSettings["hw_module"] = hw_version
-            insighioSettings["board_mac"] = get_device_id()[0]
-
-        if data.get("update_wifi_list") == "1":
-            insighioSettings["wifiAvailableNets"] = populateAvailableNets()
-        else:
-            insighioSettings["wifiAvailableNets"] = []
-
-        import ujson
-
-        res = None
-        try:
-            res = ujson.dumps(insighioSettings, separators=(",", ":"))
-        except:
-            pass
-
-        if res is None:
-            try:
-                res = ujson.dumps(insighioSettings)
-            except:
-                pass
-
-        if res is not None:
-            res_bytes = res.encode("utf-8")
-            logging.debug("Settings: " + res)
-        return res_bytes, 200
-
-
 class RawWeightIdle:
     def get(self, data):
         logging.debug("[web-server][GET]: /raw-weight-idle")
@@ -122,6 +79,48 @@ class RawWeightIdle:
 
 
 class Config:
+
+    def get(self, data):
+        global insighioSettings
+
+        logging.debug("[web-server][GET]: /config, params: [{}]".format(data))
+
+        if not insighioSettings:
+            insighioSettings = {}
+            from utils import configuration_handler
+
+            try:
+                insighioSettings = configuration_handler.get_config_object()
+            except Exception as e:
+                logging.exception(e, "Unable to retrieve old configuration")
+
+            insighioSettings["hw_module"] = hw_version
+            insighioSettings["board_mac"] = get_device_id()[0]
+
+        if data.get("update_wifi_list") == "1":
+            insighioSettings["wifiAvailableNets"] = populateAvailableNets()
+        else:
+            insighioSettings["wifiAvailableNets"] = []
+
+        res = insighioSettings
+
+        # res = None
+        # try:
+        #     res = ujson.dumps(insighioSettings, separators=(",", ":"))
+        # except:
+        #     pass
+
+        # if res is None:
+        #     try:
+        #         res = ujson.dumps(insighioSettings)
+        #     except:
+        #         pass
+
+        # if res is not None:
+        #     res_bytes = res.encode("utf-8")
+        #     logging.debug("Settings: " + res)
+        logging.debug("Settings: {}".format(insighioSettings))
+        return insighioSettings, 200
 
     def post(self, data):
         print("received config data: {}".format(data))
@@ -376,11 +375,10 @@ def start(timeoutMs=120000):
 
         machine.reset()
 
-    app.add_resource(Settings, "/settings")
     app.add_resource(RawWeightIdle, "/raw-weight-idle")
     # app.add_resource(RawWeight, '/raw-weight')
-    app.add_resource(Config, "/save-config")
-    app.add_resource(ConfigTemp, "/save-config-temp")
+    app.add_resource(Config, "/config")
+    app.add_resource(ConfigTemp, "/config-temp")
     app.add_resource(DevID, "/devid")
     app.add_resource(WiFiList, "/update_wifi_list")
     app.add_resource(DeviceMeasurements, "/device_measurements")

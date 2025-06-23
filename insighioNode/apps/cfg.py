@@ -135,19 +135,17 @@ class Config:
 
     def has(self, key, category=None):
         if category is None:
-            return _has(self.user_settings, key)
+            return _has(self.user_settings, key) or _has(self.device_settings, key)
         elif _has(self.category_setup, category):
             return _has(self.device_settings, category) and _has(self.device_settings[category], key)
-        else:
-            return _has(self.device_settings, key)
+        return False
 
     def get(self, key, category=None):
         if category is None:
-            return _get(user_settings, key)
+            return _get(user_settings, key) or _get(self.device_settings, key)
         elif self.has(key, category):
             return _get(self.device_settings[category], key)
-        else:
-            return _get(self.device_settings, key)
+        return False
 
     def set(self, key, value):
         global user_settings
@@ -183,6 +181,7 @@ class Config:
 def has(key, category=None):
     global config_instance
     if config_instance is None:
+        logging.error("Configuration instance is not initialized.")
         return False
     return config_instance.has(key, category)
 
@@ -190,6 +189,7 @@ def has(key, category=None):
 def get(key, category=None):
     global config_instance
     if config_instance is None:
+        logging.error("Configuration instance is not initialized.")
         return None
     return config_instance.get(key, category)
 
@@ -197,6 +197,7 @@ def get(key, category=None):
 def set(key, value):
     global config_instance
     if config_instance is None:
+        logging.error("Configuration instance is not initialized.")
         return False
     return config_instance.set(key, value)
 
@@ -204,5 +205,6 @@ def set(key, value):
 def get_protocol_config():
     global config_instance
     if config_instance is None:
+        logging.error("Configuration instance is not initialized.")
         return None
     return config_instance.get_protocol_config()
