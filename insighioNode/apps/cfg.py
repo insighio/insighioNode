@@ -120,7 +120,6 @@ class Config:
     def __init__(self, user_settings, device_settings):
         self.user_settings = user_settings
         self.device_settings = device_settings
-        self.protocol_config_instance = None
         self.category_setup = {"board": "esp32s3", "protocol": "mqtt", "shield-sensor": "", "network": "wifi"}
         self.protocol_config_instance = None
         self.config = {}
@@ -179,6 +178,13 @@ class Config:
             self.protocol_config_instance.server_ip = self.get("server-ipv6")
         else:
             self.protocol_config_instance.server_ip = self.get("server-ipv4")
+
+        self.protocol_config_instance.thing_id = self.get("insighio-id")
+        self.protocol_config_instance.thing_token = self.get("insighio-key")
+        self.protocol_config_instance.message_channel_id = self.get("insighio-channel")
+        self.protocol_config_instance.control_channel_id = self.get("insighio-control-channel")
+
+        return self.protocol_config_instance
 
 
 # Auxiliary functions

@@ -107,11 +107,11 @@ def connect(cfg):
         # AT command based implementation of communication of Quectel BG600L
         modem_model = modem_instance.get_model()
         if modem_model and "bg600" in modem_model:
-            transfer_client = transfer_protocol.TransferProtocolModemAT(cfg.get_instance(), modem_instance)
+            transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
         elif cfg.get("protocol") == "coap":
-            transfer_client = transfer_protocol.TransferProtocolCoAP(cfg.get_instance())
+            transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
         elif cfg.get("protocol") == "mqtt":
-            transfer_client = transfer_protocol.TransferProtocolMQTT(cfg.get_instance())
+            transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
         else:
             transfer_client = None
 

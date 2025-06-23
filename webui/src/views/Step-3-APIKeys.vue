@@ -111,7 +111,7 @@ export default {
       this.$cookies.remove("insighio-id")
       this.$cookies.remove("insighio-key")
       this.$cookies.remove("insighio-channel")
-      this.$cookies.remove("insighio-channel-control")
+      this.$cookies.remove("insighio-control-channel")
     },
 
     validateMyForm() {

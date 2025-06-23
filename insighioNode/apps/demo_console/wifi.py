@@ -51,11 +51,11 @@ def connect(cfg, explicit_protocol=None):
 
             global transfer_client
             if requested_protocol == "mqtt":
-                transfer_client = transfer_protocol.TransferProtocolMQTT(cfg.get_instance())
+                transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
             elif requested_protocol == "coap":
-                transfer_client = transfer_protocol.TransferProtocolCoAP(cfg.get_instance())
+                transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
             else:

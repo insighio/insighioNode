@@ -213,15 +213,15 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
 
     try:
         proto_config = cfg.get_protocol_config()
-        configKeyValues["insighio_channel"] = proto_config.message_channel_id
-        configKeyValues["insighio_control_channel"] = proto_config.control_channel_id
-        configKeyValues["insighio_id"] = proto_config.thing_id
-        configKeyValues["insighio_key"] = proto_config.thing_token
+        configKeyValues["insighio-channel"] = proto_config.message_channel_id
+        configKeyValues["insighio-control-channel"] = proto_config.control_channel_id
+        configKeyValues["insighio-id"] = proto_config.thing_id
+        configKeyValues["insighio-key"] = proto_config.thing - key
     except:
-        configKeyValues["insighio_channel"] = ""
-        configKeyValues["insighio_control_channel"] = ""
-        configKeyValues["insighio_id"] = ""
-        configKeyValues["insighio_key"] = ""
+        configKeyValues["insighio-channel"] = ""
+        configKeyValues["insighio-control-channel"] = ""
+        configKeyValues["insighio-id"] = ""
+        configKeyValues["insighio-key"] = ""
 
     try:
         ssid = list(cfg.get("_CONF_NETS").keys())[0]
