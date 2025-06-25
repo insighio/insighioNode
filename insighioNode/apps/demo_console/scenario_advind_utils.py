@@ -192,8 +192,8 @@ def measure_4_20_mA_on_port(measurements, port_id):
     import gpio_handler
     from sensors import analog_generic
 
-    port_enabled = cfg.get("_4_20_SNSR_{}_ENABLE".format(port_id))
-    port_formula = cfg.get("_4_20_SNSR_{}_FORMULA".format(port_id))
+    port_enabled = cfg.get("meas-4-20-snsr-{}-enable".format(port_id))
+    port_formula = cfg.get("meas-4-20-snsr-{}-formula".format(port_id))
 
     if port_enabled:
         sensor_on_pin = cfg.get("_UC_IO_SNSR_GND_4_20_SNSR_{}_ON".format(port_id))
