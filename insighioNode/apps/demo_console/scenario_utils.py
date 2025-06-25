@@ -169,7 +169,7 @@ def default_board_measurements(measurements):
     meas_key_name = None
 
     for n in range(1, 3):
-        meas_key_name = "_MEAS_I2C_" + str(n)
+        meas_key_name = "meas-i2c-" + str(n)
         i2c_config = cfg.get(meas_key_name)
         if i2c_config and cfg.has("_UC_IO_I2C_SDA") and cfg.has("_UC_IO_I2C_SCL") and i2c_config != cfg.get("_CONST_MEAS_DISABLED"):
             logging.debug("Getting measurement for [{}] from sensor [{}]".format(meas_key_name, i2c_config))
@@ -177,9 +177,9 @@ def default_board_measurements(measurements):
 
     # up to 3 Digital/Analog sensors
     for n in range(1, 4):
-        meas_key_name = "_MEAS_ANALOG_DIGITAL_P" + str(n)
+        meas_key_name = "meas-sensor-a-d-p" + str(n)
         pin_name = "_UC_IO_ANALOG_DIGITAL_P" + str(n)
-        transformation_key = "_MEAS_ANALOG_DIGITAL_P" + str(n) + "_TRANSFORMATION"
+        transformation_key = "meas-sensor-a-d-p" + str(n) + "-t"
         meas_key = cfg.get(meas_key_name)
         pin = cfg.get(pin_name)
 

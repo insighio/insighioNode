@@ -503,7 +503,6 @@ def executeDeviceStatisticsUpload(cfg, network):
 def executeDeviceConfigurationUpload(cfg, network):
     # check for configuration pending for upload
     configUploadFileContent = utils.readFromFlagFile("/configLog")
-    logging.debug("configUploadFileContent: {}".format(configUploadFileContent))
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
         # from utils import configuration_handler
