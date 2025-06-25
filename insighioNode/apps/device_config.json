@@ -61,14 +61,14 @@
     "coap": {
       "server-port": 5683,
       "use-custom-socket": false,
-      "server-ipv4": "2001:41d0:701:1100:0:0:0:2060",
-      "server-ipv6": "console.insigh.io"
+      "server-ipv4": "console.insigh.io",
+      "server-ipv6": "2001:41d0:701:1100:0:0:0:2060"
     },
     "mqtt": {
       "server-port": 1884,
       "use-custom-socket": false,
-      "server-ipv4": "2001:41d0:701:1100:0:0:0:2060",
-      "server-ipv6": "console.insigh.io"
+      "server-ipv4": "console.insigh.io",
+      "server-ipv6": "2001:41d0:701:1100:0:0:0:2060"
     }
   },
   "shield-sensor": {
