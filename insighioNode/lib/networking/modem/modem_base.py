@@ -328,6 +328,27 @@ class Modem:
                         break
         return (self.mcc, self.mnc)
 
+    def _match_regex(self, regex, lines):
+        import ure
+
+        for line in lines:
+            match_res = ure.search(regex, line)
+            if match_res is not None:
+                return match_res
+        return None
+
+    def get_sim_card_ids(self):
+        self.sim_imsi = None
+        self.sim_iccid = None
+
+        (status, lines) = self.send_at_cmd("at+cimi")
+        if status:
+            match_res = self._match_regex(r"(\d+)", lines)
+            if match_res is not None:
+                self.sim_imsi = match_res.group(1)
+
+        return (self.sim_imsi, self.sim_iccid)
+
     # to be overriden by children
     def set_gps_state(self, poweron=True):
         logging.debug("base modem.set_gps_state is empty")

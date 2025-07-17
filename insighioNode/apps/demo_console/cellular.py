@@ -61,6 +61,12 @@ def updateSignalQuality(cfg, measurements):
     set_value(measurements, "cell_lac", lac)
     set_value(measurements, "cell_ci", ci)
 
+    try:
+        (imsi, iccid) = modem_instance.get_sim_card_ids()
+        set_value_int(measurements, "cell_imsi", imsi)
+    except:
+        pass
+
 
 # network connection
 def connect(cfg):
