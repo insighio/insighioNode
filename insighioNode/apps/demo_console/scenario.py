@@ -152,9 +152,12 @@ def executeBootstrap(useExistingConfiguration=False):
                 from utils import configuration_handler
 
                 if "content" in obj:
-                    keyValueDictContent = configuration_handler.stringParamsToDict(obj["content"])
-                    if keyValueDictContent is not None:
-                        keyValueDict.update(keyValueDictContent)
+                    try:
+                        keyValueDictContent = json.loads(obj["content"])
+                        if keyValueDictContent is not None:
+                            keyValueDict.update(keyValueDictContent)
+                    except Exception as e:
+                        pass
 
                 logging.info("about to apply: {}".format(keyValueDict))
                 configuration_handler.notifyServerWithNewConfig()
