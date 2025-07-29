@@ -32,13 +32,13 @@ class ModemBG600(modem_base.Modem):
         nwscanmode_expected = ""
         if technology == "nbiot":
             nwscanseq_expected = "030102"
-            nwscanmode_expected = "3"
+            nwscanmode_expected = "0"
         elif technology == "lte-m":
             nwscanseq_expected = "020301"
-            nwscanmode_expected = "3"
+            nwscanmode_expected = "0"
         elif technology == "gsm":
-            nwscanseq_expected = "010203"
-            nwscanmode_expected = "1"
+            nwscanseq_expected = "010302"
+            nwscanmode_expected = "0"
         else:
             nwscanseq_expected = "030102"
             nwscanmode_expected = "0"
