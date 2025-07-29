@@ -55,7 +55,6 @@ def _initialize_i2c():
 
     return _i2c
 
-
 def _deinitialize_i2c():
     global _i2c
     if _i2c is not None:
@@ -370,15 +369,16 @@ def execute_modbus_measurements(measurements):
         logging.debug("rtu_pins: {}".format(rtu_pins))
 
         from apps.demo_console import modbus
-        modbus.init_instance(rtu_pins, baudrate, data_bits, parity, stop_bits)
+        inst = modbus.init_instance(rtu_pins, baudrate, data_bits, parity, stop_bits)
 
         sleep_ms(5000)#cfg.get("_SDI12_WARM_UP_TIME_MSEC"))  # warmup time
 
         for sensor in sensor_list:
             read_modbus_sensor(modbus, measurements, sensor)
 
-        # read weather station
-        #res = modbus.send_modbus_read(3, 0x1, 500, 10, True)
+        inst._uart.deinit()
+        modbus.modbus_instance = None
+
     except Exception as e:
         logging.exception(e, "Exception while reading MODBUS data")
 
@@ -543,6 +543,8 @@ def read_adc_sensor(measurements, sensor):
 
     from external.ads1x15.ads1x15 import ADS1115
 
+    _initialize_i2c()
+
     adc = ADS1115(_i2c, address=_ads_addr, gain=gain)
 
     volt_analog = 1000 * adc.raw_to_v(adc.read(_ads_rate, channel - 1))
@@ -557,6 +559,8 @@ def read_adc_sensor(measurements, sensor):
     default_formula = "v"
     if formula is not None and formula != default_formula:
         execute_formula(measurements, meas_name, volt_analog, formula)
+
+    _deinitialize_i2c()
 
 
 #### Pulse Counter functions #####
