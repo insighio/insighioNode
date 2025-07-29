@@ -10,6 +10,8 @@ from .sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, pa
 
 from . import cfg
 
+import gpio_handler
+
 _i2c = None
 _io_expander_addr = None
 
@@ -61,23 +63,32 @@ def _deinitialize_i2c():
 
     return _i2c
 
+def _exec_i2c_op(func):
+    _initialize_i2c()
+    func()
+    _deinitialize_i2c()
+
 
 def io_expander_init():
     global _io_expander_addr
     _io_expander_addr = cfg.get("_UC_IO_EXPANDER_ADDR")
 
-    initialized = _initialize_i2c()
-    if not initialized:
-        return False
+    # initialized = _initialize_i2c()
+    # if not initialized:
+    #     return False
 
     # set all output pins to LOW
-    power_off_all_sensors()
+    _exec_i2c_op(power_off_all_sensors)
 
+    _exec_i2c_op(initialize_io_expander_ports)
+
+    return True
+
+
+def initialize_io_expander_ports():
     # set all ports as output except P3 which is input
     # and has UC_IO_XTNDR_ADC_ALERT_RDY
     _i2c.writeto_mem(_io_expander_addr, 3, b"\xf8")
-
-    return True
 
 
 def ads_init():
@@ -85,7 +96,7 @@ def ads_init():
     global _ads_rate
     _ads_addr = cfg.get("_UC_IO_ADS_ADDR")
     _ads_rate = cfg.get("_ADS_RATE")
-    return _initialize_i2c()
+    return True
 
 
 def io_expander_power_on_sdi12_sensors():
@@ -200,7 +211,7 @@ def execute_sdi12_measurements(measurements):
         logging.error("No sensors found in SDI12 config")
         return
 
-    io_expander_power_on_sdi12_sensors()
+    _exec_i2c_op(io_expander_power_on_sdi12_sensors)
 
     logging.info("Starting SDI12 measurements")
 
@@ -224,30 +235,40 @@ def execute_sdi12_measurements(measurements):
 
     try:
         sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
-        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 0)
+        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 1)
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
         for sensor in sensor_list:
             read_sdi12_sensor(sdi12, measurements, sensor)
+            sleep_ms(1000)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
 
     if sdi12:
         sdi12.close()
 
-    io_expander_power_off_sdi12_sensors()
+    _exec_i2c_op(io_expander_power_off_sdi12_sensors)
 
 
 def read_sdi12_sensor(sdi12, measurements, sensor):
     address = str(_get(sensor, "address"))
-    command = _get(sensor, "measCmd")
-    sub_cmd = _get(sensor, "measSubCmd")
+    command = str(_get(sensor, "measCmd"))
+    sub_cmd = str(_get(sensor, "measSubCmd"))
+
+    # sdi12.set_wait_after_uart_write(False)
 
     logging.debug("read_sdi12_sensor - address: {}, command: {}, sub_cmd: {}".format(address, command, sub_cmd))
 
     try:
-        if not sdi12.is_active(address):
+        is_active = False
+
+        for i in range(0, 3):
+            is_active = sdi12.is_active(address)
+            if is_active:
+                break
+
+        if not is_active:
             logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
             return
 
@@ -327,39 +348,43 @@ def execute_modbus_measurements(measurements):
 
     from machine import Pin
 
-    # need to set the SHDN pin to HIGH for not shutdown
-    pin_SHDN = Pin(cfg.get("_UC_IO_MODBUS_DRV_ON"), Pin.OUT)
-    pin_SHDN.value(1)
+    _exec_i2c_op(io_expander_power_on_modbus)
 
-    io_expander_power_on_modbus()
+    # need to set the SHDN pin to HIGH for not shutdown
+    gpio_handler.set_pin_value(cfg.get("_UC_IO_MODBUS_DRV_ON"), 1)
+    gpio_handler.set_pin_value(cfg.get("_UC_IO_MODBUS_RCV_ON"), 1)
 
     modbus = None
 
     try:
-        from external.umodbus.serial import Serial as ModbusRTUMaster
-
         rtu_pins = (cfg.get("_UC_IO_MODBUS_DRV_IN"), cfg.get("_UC_IO_MODBUS_RCV_OUT"))  # (TX, RX)
+        baudrate=_get(connectionSettings, "baudRate")  # optional, default 9600
+        data_bits=_get(connectionSettings, "dataBits")  # optional, default 8
+        stop_bits=_get(connectionSettings, "stopBits")  # optional, default 1
+        parity=_get(connectionSettings, "parity")  # optional, default None
 
-        config_parity = _get(connectionSettings, "parity")
-        if not config_parity:
-            config_parity = None
+        logging.debug("baud: {}".format(baudrate))
+        logging.debug("dataBits: {}".format(data_bits))
+        logging.debug("parity: {}".format(parity))
+        logging.debug("stopBits: {}".format(stop_bits))
+        logging.debug("rtu_pins: {}".format(rtu_pins))
 
-        modbus = ModbusRTUMaster(
-            pins=rtu_pins,  # given as tuple (TX, RX)
-            baudrate=_get(connectionSettings, "baudRate"),  # optional, default 9600
-            data_bits=_get(connectionSettings, "dataBits"),  # optional, default 8
-            stop_bits=_get(connectionSettings, "stopBits"),  # optional, default 1``
-            parity=config_parity,  # optional, default None
-            # ctrl_pin=12,          # optional, control DE/RE
-            # uart_id= 1              # optional, default 1, see port specific documentation
-        )
+        from apps.demo_console import modbus
+        modbus.init_instance(rtu_pins, baudrate, data_bits, parity, stop_bits)
+
+        sleep_ms(5000)#cfg.get("_SDI12_WARM_UP_TIME_MSEC"))  # warmup time
 
         for sensor in sensor_list:
             read_modbus_sensor(modbus, measurements, sensor)
+
+        # read weather station
+        #res = modbus.send_modbus_read(3, 0x1, 500, 10, True)
     except Exception as e:
         logging.exception(e, "Exception while reading MODBUS data")
 
-    io_expander_power_off_modbus()
+    gpio_handler.set_pin_value(cfg.get("_UC_IO_MODBUS_DRV_ON"), 0)
+
+    _exec_i2c_op(io_expander_power_off_modbus)
 
 
 def read_modbus_sensor(modbus, measurements, sensor):
@@ -384,18 +409,7 @@ def read_modbus_sensor(modbus, measurements, sensor):
             logging.error("Unsupported MODBUS format: {}".format(format))
             number_of_registers = 1
 
-        if type == 3:
-            logging.debug("[read_modbus_sensor]-[read_holding_registers]: id: {}, register_addr: {}".format(slave_address, register))
-            response = modbus.read_holding_registers(slave_address, register, number_of_registers)
-            logging.debug("  <= {}".format(response))
-
-        elif type == 4:
-            logging.debug("[read_modbus_sensor]-[read_input_registers]: id: {}, register_addr: {}".format(slave_address, register))
-            response = modbus.read_input_registers(slave_address, register, number_of_registers)
-            logging.debug("  <= {}".format(response))
-        else:
-            logging.error("Unsupported MODBUS type: {}".format(type))
-            return
+        response = modbus.send_modbus_read(type, slave_address, register, number_of_registers, False)
 
         if not response:
             logging.error("read_modbus_sensor - No response from sensor in address: [" + str(slave_address) + "]")
@@ -501,9 +515,9 @@ def execute_adc_measurements(measurements):
         logging.error("No enabled sensors found in ADS config")
         return
 
-    ads_init()
+    _exec_i2c_op(ads_init)
 
-    io_expander_power_on_ads_sensors()
+    _exec_i2c_op(io_expander_power_on_ads_sensors)
 
     try:
         for sensor in _adc_config:
@@ -511,7 +525,7 @@ def execute_adc_measurements(measurements):
     except Exception as e:
         logging.exception(e, "Exception while reading ADS data")
 
-    io_expander_power_off_adc_sensors()
+    _exec_i2c_op(io_expander_power_off_adc_sensors)
 
 
 def read_adc_sensor(measurements, sensor):

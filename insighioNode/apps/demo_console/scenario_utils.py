@@ -37,7 +37,7 @@ def read_shield_chip_id():
 
     chip_id = None
     try:
-        i2c = SoftI2C(scl=cfg.get("_UC_IO_I2C_SCL"), sda=Pin(cfg.get("_UC_IO_I2C_SDA")))
+        i2c = SoftI2C(scl=Pin(cfg.get("_UC_IO_I2C_SCL")), sda=Pin(cfg.get("_UC_IO_I2C_SDA")))
         chip_id = i2c.readfrom(cfg.get("_I2C_CHIP_ID_ADDRESS"), 3)
     except Exception as e:
         pass
@@ -116,6 +116,7 @@ def get_measurements(cfg_dummy=None):
                 board_humidity,
                 SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY,
             )
+
 
         shield_name = cfg.get("_SELECTED_SHIELD")
         if shield_name is not None and (

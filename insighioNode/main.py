@@ -14,6 +14,10 @@ logging.debug("start timestamp: " + str(ticks_ms()))
 
 # main.py -- put your code here!
 import device_info
+import gpio_handler
+
+gpio_handler.set_pin_value(12, 1)
+
 
 device_info.bq_charger_exec(device_info.bq_charger_setup)
 
