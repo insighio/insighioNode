@@ -30,31 +30,41 @@ class ModemBG600(modem_base.Modem):
         technology = technology.lower()
         nwscanseq_expected = ""
         nwscanmode_expected = ""
+        iotmode = "2"
         if technology == "nbiot":
             nwscanseq_expected = "030102"
             nwscanmode_expected = "0"
+            iotmode = "1"
         elif technology == "lte-m":
             nwscanseq_expected = "020301"
             nwscanmode_expected = "0"
+            iotmode = "0"
         elif technology == "gsm":
             nwscanseq_expected = "010302"
             nwscanmode_expected = "0"
+            iotmode = "2"
         else:
             nwscanseq_expected = "030102"
             nwscanmode_expected = "0"
+            iotmode = "2"
 
         (nwscanseq_status, nwscanseq_lines) = self.send_at_cmd('AT+QCFG="nwscanseq"')
-        nwscanseq_lines = "\n".join(nwscanseq_lines)
+        nwscanseq_match = self._match_regex(r'\+QCFG:\s*"nwscanseq",(\w+)', nwscanseq_lines)
 
         (nwscanmode_status, nwscanmode_lines) = self.send_at_cmd('AT+QCFG="nwscanmode"')
-        nwscanmode_lines = "\n".join(nwscanmode_lines)
-
-        if nwscanseq_expected not in nwscanseq_lines or nwscanmode_expected not in nwscanmode_lines:
-            self.send_at_cmd('AT+QCFG="nwscanseq",{},0'.format(nwscanseq_expected))
-            self.send_at_cmd('AT+QCFG="nwscanmode",{},0'.format(nwscanmode_expected))
-            self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
-            self.send_at_cmd("ATE0")
-            sleep_ms(1000)
+        nwscanmode_match = self._match_regex(r'\+QCFG:\s*"nwscanmode",(\w+)', nwscanseq_lines)
+        try:
+            if nwscanseq_match is None or nwscanseq_match.group(1) != nwscanseq_expected or nwscanmode_match is None or nwscanmode_match.group(1) != nwscanmode_expected:
+                self.send_at_cmd('AT+QCFG="nwscanseq",{},0'.format(nwscanseq_expected))
+                self.send_at_cmd('AT+QCFG="nwscanmode",{},0'.format(nwscanmode_expected))
+                self.send_at_cmd('AT+QCFG="iotopmode",{},0'.format(iotmode))
+                self.send_at_cmd('AT+QCFG="band",F,80084,80084') #Europe setting -> network application note v3, page 32
+                self.send_at_cmd('AT+QCFG="simeffect",0')
+                self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
+                self.send_at_cmd("ATE0")
+                sleep_ms(1000)
+        except Exception as e:
+            logging.excetion(e, "error changing device network scan settings")
 
     def get_sim_card_ids(self):
         (self.sim_imsi, self.sim_iccid) = super().get_sim_card_ids()
