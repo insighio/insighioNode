@@ -26,6 +26,23 @@ class ModemBG600(modem_base.Modem):
         status = super().init(ip_version, apn, technology)
         return status
 
+    def reset_to_factory(self):
+        import utime
+        self.send_at_cmd('AT+CFUN=0')
+        utime.sleep_ms(5000)
+        self.send_at_cmd('AT+QNVFD="/nv/item_files/modem/geran/grr/acq_db"')
+        self.send_at_cmd('AT+QNVFD="/nv/reg_files/modem/lte/rrc/csp/acq_db"')
+        self.send_at_cmd('AT+QNVFD="/nv/reg_files/modem/nb1/rrc/csp/acq_db"')
+        self.send_at_cmd('AT+CRSM=214,28542,0,0,11,"FFFFFFFFFFFFFFFFFFFFFF"')
+        self.send_at_cmd('AT+CRSM=214,28531,0,0,14,"FFFFFFFFFFFFFFFFFFFFFFFFFFFF"')
+        self.send_at_cmd('AT+CRSM=214,28643,0,0,18,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"')
+        self.send_at_cmd('AT+CRSM=214,28539,0,0,12,"FFFFFFFFFFFFFFFFFFFFFFFF"')
+        self.send_at_cmd('AT&F')
+        self.send_at_cmd('ATZ')
+        self.send_at_cmd('AT+CFUN=1')
+        utime.sleep_ms(5000)
+
+
     def set_technology(self, technology):
         technology = technology.lower()
         nwscanseq_expected = "030102"
@@ -90,7 +107,7 @@ class ModemBG600(modem_base.Modem):
         return (self.sim_imsi, self.sim_iccid)
 
     def wait_for_modem_power_off(self):
-        self.send_at_cmd("", 5000, "NORMAL POWER DOWN")
+        self.send_at_cmd("", 5000, "(NORMAL\s*)?POWER(ED)?\s*DOWN")
 
     def prioritizeWWAN(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == True:
@@ -127,10 +144,14 @@ class ModemBG600(modem_base.Modem):
         (status, lines) = self.send_at_cmd("AT+CGACT?")
         return status and len(lines) > 0 and "1,1" in lines[0]
 
-    def disconnect(self):
-        self.send_at_cmd("AT+QIDEACT=1")
+    def power_off(self):
+        (res, lines) = self.send_at_cmd("AT+QPOWD", 15000, r'\s*POWERED DOWN\s*')
+        return res
 
-        return super().disconnect()
+
+    def disconnect(self):
+        (res, lines) = self.send_at_cmd("AT+QIDEACT=1")
+        return res
 
     def get_extended_signal_quality(self):
         rsrp = None
@@ -229,6 +250,9 @@ class ModemBG600(modem_base.Modem):
 
         return (None, last_valid_gps_lat, last_valid_gps_lon, max_satellites, hdop)
 
+    def deactivate_context(self):
+        self.send_at_cmd("AT+QIDEACT=1")
+
     def mqtt_connect(self, server_ip, server_port, username, password, keepalive=120):
         (context_activated, _) = self.send_at_cmd('AT+QMTCFG="pdpcid",1')
         if not context_activated:
@@ -239,14 +263,25 @@ class ModemBG600(modem_base.Modem):
 
         max_retries = 3
         retry = 0
+        mqtt_ready = False
         while retry < max_retries:
             retry += 1
-            (mqtt_ready, lines) = self.send_at_cmd('AT+QMTOPEN=1,"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s+1,\d")
-            if mqtt_ready:
+            (mqtt_result, lines) = self.send_at_cmd('AT+QMTOPEN=1,"' + server_ip + '",' + str(server_port), 15000, r'\+QMTOPEN:\s*1,\d')
+            if mqtt_result:
                 # if MQTT already connected
-                if len(lines) > 0 and lines[-1].endswith("0,2"):
-                    return True
-                break
+                reg_match = self._match_regex(r'\+QMTOPEN:\s*1,(\d)', lines)
+                if reg_match and reg_match.group(1) == "0": # successfull connection
+                    mqtt_ready = True
+                    break
+                elif reg_match and reg_match.group(1) == "2": # already opened
+                    self.mqtt_disconnect()
+                    sleep_ms(2500)
+
+            #+QIURC: "pdpdeact",1
+            #elif self._match_regex(lines, r'\+QIURC:\s*"pdpdeact",1'): #check for pdpdeact message
+
+            self.deactivate_context()
+
             sleep_ms(1000)
 
         if mqtt_ready:
@@ -254,7 +289,7 @@ class ModemBG600(modem_base.Modem):
             while retry < max_retries:
                 retry += 1
                 (mqtt_connected, _) = self.send_at_cmd(
-                    'AT+QMTCONN=1,"{}","{}","{}"'.format(get_device_id()[0], username, password), 15000, "\\+QMTCONN:\\s+1,0,0"
+                    'AT+QMTCONN=1,"{}","{}","{}"'.format(get_device_id()[0], username, password), 15000, r"\+QMTCONN:\s+1,0,0"
                 )
                 if mqtt_connected:
                     break
@@ -266,7 +301,7 @@ class ModemBG600(modem_base.Modem):
 
     def mqtt_is_connected(self):
         (mqtt_ready, _) = self.send_at_cmd("AT+QMTOPEN?", 2000, r"\+QMTOPEN:\s+1.*")
-        (mqtt_connected, _) = self.send_at_cmd("AT+QMTCONN?", 2000, r"\+QMTCONN:\s+1.*")
+        (mqtt_connected, _) = self.send_at_cmd("AT+QMTCONN?", 2000, r"\+QMTCONN:\s+1,3")
         return mqtt_ready and mqtt_connected
 
     def mqtt_publish(self, topic, message, num_of_retries=3, retain=False, qos=1):
@@ -369,10 +404,18 @@ class ModemBG600(modem_base.Modem):
         return res
 
     def mqtt_disconnect(self):
-        (statusMqttDisconnect, _) = self.send_at_cmd("AT+QMTDISC=1", 20000, r"\+QMTDISC:.*")
-        (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE=1", 20000, r"\+QMTCLOSE:.*")
+        statusNetworkClose = False
+        #expected printed messages from modem
+        #OK
+        #+QMTDISC: 1,0
+        #+QMTSTAT: 1,5
+        (statusMqttDisconnect, _) = self.send_at_cmd("AT+QMTDISC=1", 20000, r"\++QMTDISC:\s*1,0")
 
-        return statusMqttDisconnect and statusNetworkClose
+        #if server does not report that the socket is closed, we close it for this side
+        if not statusMqttDisconnect:
+            (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE=1", 20000, r"\+QMTCLOSE:.*")
+
+        return statusMqttDisconnect or statusNetworkClose
 
     def get_next_bytes_from_file(self, file_handle, num_of_bytes, timeout_ms=2000):
         # clear incoming message buffer
