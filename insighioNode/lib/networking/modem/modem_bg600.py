@@ -31,7 +31,6 @@ class ModemBG600(modem_base.Modem):
         nwscanseq_expected = "030102"
         nwscanmode_expected = "0"
         iotmode = "2"
-        has_changes = False
         if technology == "nbiot":
             nwscanseq_expected = "030102"
             nwscanmode_expected = "0"
@@ -46,40 +45,36 @@ class ModemBG600(modem_base.Modem):
             iotmode = "2"
 
         try:
+            logging.debug("Reading current configuration")
             (nwscanseq_status, nwscanseq_lines) = self.send_at_cmd('AT+QCFG="nwscanseq"')
             nwscanseq_match = self._match_regex(r'\s*\+QCFG:\s*"nwscanseq",(\w+)', nwscanseq_lines)
-            if nwscanseq_match is None or nwscanseq_match.group(1) != nwscanseq_expected:
-                self.send_at_cmd('AT+QCFG="nwscanseq",{},0'.format(nwscanseq_expected))
-                has_changes = True
 
             (nwscanmode_status, nwscanmode_lines) = self.send_at_cmd('AT+QCFG="nwscanmode"')
             nwscanmode_match = self._match_regex(r'\s*\+QCFG:\s*"nwscanmode",(\w+)', nwscanmode_lines)
-            if nwscanmode_match is None or nwscanmode_match.group(1) != nwscanmode_expected:
-                self.send_at_cmd('AT+QCFG="nwscanmode",{},0'.format(nwscanmode_expected))
-                has_changes = True
 
             (iotopmode_status, iotopmode_lines) = self.send_at_cmd('AT+QCFG="iotopmode"')
             iotopmode_match = self._match_regex(r'\s*\+QCFG:\s*"iotopmode",{}'.format(iotmode), iotopmode_lines)
-            if iotopmode_match is None:
-                self.send_at_cmd('AT+QCFG="iotopmode",{},0'.format(iotmode))
-                has_changes = True
 
             (band_status, band_lines) = self.send_at_cmd('AT+QCFG="band"')
             band_match = self._match_regex(r'\s*\+QCFG:\s*"band",0xf,0x80084,0x80084', band_lines)
-            if band_match is None:
-                self.send_at_cmd('AT+QCFG="band",F,80084,80084') #Europe setting -> network application note v3, page 32
-                has_changes = True
 
             (simeffect_status, simeffect_lines) = self.send_at_cmd('AT+QCFG="simeffect"')
             simeffect_match = self._match_regex(r'\s*\+QCFG:\s*"simeffect",0', simeffect_lines)
-            if simeffect_match is None:
-                self.send_at_cmd('AT+QCFG="simeffect",0')
-                has_changes = True
 
-            if has_changes:
-                self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
+            logging.debug("Writing configuration")
+
+            if nwscanseq_match is None or nwscanseq_match.group(1) != nwscanseq_expected or nwscanmode_match is None or nwscanmode_match.group(1) != nwscanmode_expected or iotopmode_match is None or  band_match is None or simeffect_match is None:
+                self.send_at_cmd('AT+CFUN=0')
+                self.send_at_cmd('AT+QCFG="nwscanseq",{},1'.format(nwscanseq_expected))
+                self.send_at_cmd('AT+QCFG="nwscanmode",{},1'.format(nwscanmode_expected))
+                self.send_at_cmd('AT+QCFG="iotopmode",{},1'.format(iotmode))
+                self.send_at_cmd('AT+QCFG="servicedomain",1,1')
+                self.send_at_cmd('AT+QCFG="band",F,80084,80084') #Europe setting -> network application note v3, page 32
+                self.send_at_cmd('AT+QCFG="simeffect",0')
+                self.send_at_cmd("AT+CFUN=1", 15000, "APP RDY")
                 self.send_at_cmd("ATE0")
                 sleep_ms(1000)
+
         except Exception as e:
             logging.excetion(e, "error changing device network scan settings")
 
