@@ -212,6 +212,14 @@ class Modem:
             sleep_ms(100)
         return False
 
+    def wait_for_registration_fallback(self, timeoutms=30000):
+        status = False
+
+        self.send_at_cmd("AT+COPS=3,2")
+        (mcc, mnc) = self.get_registered_mcc_mnc()
+
+        return mcc is not None and mnc is not None
+
     def attach(self, do_attach=True):
         (status, _) = self.send_at_cmd("at+cgatt={}".format("1" if do_attach else "0"), 144000)
         return status
