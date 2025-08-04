@@ -204,9 +204,10 @@ class Modem:
                 for line in lines:
                     regex_match = ure.search(regex_creg, line)
                     if regex_match:
-                        if regex_match.group(1) == "1" or regex_match.group(1) == "5":
+                        group_val = regex_match.group(1)
+                        if group_val == "1" or group_val == "5":
                             return True
-                        elif regex_match.group(1) == "3":
+                        elif group_val == "3" or group_val == "0":
                             return False
             sleep_ms(100)
         return False
