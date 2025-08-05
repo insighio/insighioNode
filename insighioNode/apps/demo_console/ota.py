@@ -69,6 +69,8 @@ def checkAndApply(client):
             for key in keyValueDict:
                 configuration_handler.updateConfigValue(key, keyValueDict[key])
 
+            client.disconnect()
+
             import machine
 
             machine.reset()
@@ -92,6 +94,8 @@ def checkAndApply(client):
         client.clear_retained(topic)
     elif topic.endswith("/cmd") and message == "reboot":
         client.clear_retained(topic)
+
+        client.disconnect()
         import machine
 
         machine.reset()
@@ -130,6 +134,9 @@ def checkAndApply(client):
 
                     utils.clearCachedStates()
                     utils.writeToFlagFile("/ota_applied_flag", "done")
+
+                    client.disconnect()
+
                     import machine
 
                     machine.reset()
