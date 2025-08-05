@@ -110,13 +110,12 @@ def send_control_message(cfg, message, subtopic):
 
 
 def send_config_message(cfg, message):
-    with mutex:
-        if transfer_client is not None:
-            return send_control_message(
-                cfg,
-                '[{"n":"config","vs":"' + message + '"}]',
-                "/configResponse",
-            )
+    if transfer_client is not None:
+        return send_control_message(
+            cfg,
+            '[{"n":"config","vs":"' + message + '"}]',
+            "/configResponse",
+        )
     return None
 
 
