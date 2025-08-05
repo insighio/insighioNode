@@ -291,7 +291,7 @@ class ModemBG600(modem_base.Modem):
                     sleep_ms(2500)
 
             # +QIURC: "pdpdeact",1
-            elif self._match_regex(lines, r'\+QIURC:\s*"pdpdeact",1'):  # check for pdpdeact message
+            elif self._match_regex(r'\+QIURC:\s*"pdpdeact",1', lines):  # check for pdpdeact message
                 self.deactivate_context()
 
             sleep_ms(1000)
@@ -703,7 +703,7 @@ class ModemBG600(modem_base.Modem):
             post_body_str = json.dumps(post_body)
         else:
             post_body_str = str(post_body)
-        
+
         logging.debug("POST body: {}".format(post_body_str))
 
         # enable executing http request with custom headers
