@@ -89,6 +89,29 @@ export default {
           this.settingsAcquired = true
 
           this.activeNetwork = this.$cookies.get("network")
+
+          // Highlight the corresponding button based on activeNetwork value
+          this.$nextTick(() => {
+            if (this.activeNetwork) {
+              const buttons = this.$el.querySelectorAll(".btn-group .btn")
+              buttons.forEach((btn) => btn.classList.remove("btn-primary"))
+
+              const networkMap = {
+                wifi: "WiFi",
+                cellular: "Cellular",
+                lora: "LoRa",
+                satellite: "Satellite"
+              }
+
+              const targetText = networkMap[this.activeNetwork.toLowerCase()]
+              if (targetText) {
+                const targetButton = Array.from(buttons).find((btn) => btn.textContent.trim() === targetText)
+                if (targetButton) {
+                  targetButton.classList.add("btn-primary")
+                }
+              }
+            }
+          })
         })
         .catch((err) => {
           console.log("error completing request", err)
