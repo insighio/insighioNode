@@ -414,9 +414,6 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         if is_connected:
             device_info.set_led_color("green")
 
-            if is_first_run:
-                executeDeviceConfigurationUpload(cfg, network)
-
             # create packet
             message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
             logging.info("measurement sent: {}".format(message_sent))
@@ -424,6 +421,9 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
 
             if cfg.get("_CHECK_FOR_OTA") and (not light_sleep_on or (light_sleep_on and is_first_run)):
                 network.check_and_apply_ota(cfg)
+
+            if is_first_run:
+                executeDeviceConfigurationUpload(cfg, network)
         else:
             logging.debug("Network [" + selected_network + "] connected: False")
             device_info.set_led_color("red")
