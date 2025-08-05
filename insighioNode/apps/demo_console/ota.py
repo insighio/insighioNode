@@ -266,13 +266,26 @@ def downloadOTA(client, fileId, fileType, fileSize):
     if client.modem_based:
         file = fileId + fileType
         # TODO: clear all local files from previous failed attempts?
-        file_downloaded = client.modem_instance.http_get_file(URL, file, 250000)
-        if file_downloaded:
+        (file_downloaded, http_get_file_size) = client.modem_instance.http_get_file(URL, file, 250000)
+        if file_downloaded and int(http_get_file_size) == int(fileSize):
             local_file_name = device_info.get_device_root_folder() + file
-            is_file_locally = client.modem_instance.get_file(file, local_file_name)
-            if is_file_locally:
+            modem_file_size = client.modem_instance.get_file_size(file)
+            if modem_file_size != int(fileSize):
+                logging.error("file size mismatch, modem file size: {}, expected file size: {}".format(modem_file_size, fileSize))
                 client.modem_instance.delete_file(file)
+                return None
+            logging.debug("file size check passed, modem file size: {}".format(modem_file_size))
+            is_file_locally = client.modem_instance.get_file(file, local_file_name)
+            client.modem_instance.delete_file(file)
+
+            if is_file_locally:
                 return local_file_name
+        else:
+            logging.error(
+                "file download failed, file_downloaded: {}, http_get_file_size: {}, expected file size: {}".format(
+                    file_downloaded, http_get_file_size, fileSize
+                )
+            )
         return None
     else:
         gc.collect()
