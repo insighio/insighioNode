@@ -13,6 +13,7 @@ class ModemBG600(modem_base.Modem):
         self.connection_status = False
         self.data_over_ppp = True
         self._last_prioritization_is_gnss = None
+        self._mqtt_client_id = 1
 
     # even though this function is correct for BG600, it is normally called
     # while waiting for the modem to power on, where at that time we are not aware
@@ -28,7 +29,8 @@ class ModemBG600(modem_base.Modem):
 
     def reset_to_factory(self):
         import utime
-        self.send_at_cmd('AT+CFUN=0')
+
+        self.send_at_cmd("AT+CFUN=0")
         utime.sleep_ms(5000)
         self.send_at_cmd('AT+QNVFD="/nv/item_files/modem/geran/grr/acq_db"')
         self.send_at_cmd('AT+QNVFD="/nv/reg_files/modem/lte/rrc/csp/acq_db"')
@@ -37,11 +39,10 @@ class ModemBG600(modem_base.Modem):
         self.send_at_cmd('AT+CRSM=214,28531,0,0,14,"FFFFFFFFFFFFFFFFFFFFFFFFFFFF"')
         self.send_at_cmd('AT+CRSM=214,28643,0,0,18,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"')
         self.send_at_cmd('AT+CRSM=214,28539,0,0,12,"FFFFFFFFFFFFFFFFFFFFFFFF"')
-        self.send_at_cmd('AT&F')
-        self.send_at_cmd('ATZ')
-        self.send_at_cmd('AT+CFUN=1')
+        self.send_at_cmd("AT&F")
+        self.send_at_cmd("ATZ")
+        self.send_at_cmd("AT+CFUN=1")
         utime.sleep_ms(5000)
-
 
     def set_technology(self, technology):
         technology = technology.lower()
@@ -80,13 +81,21 @@ class ModemBG600(modem_base.Modem):
 
             logging.debug("Writing configuration")
 
-            if nwscanseq_match is None or nwscanseq_match.group(1) != nwscanseq_expected or nwscanmode_match is None or nwscanmode_match.group(1) != nwscanmode_expected or iotopmode_match is None or  band_match is None or simeffect_match is None:
-                self.send_at_cmd('AT+CFUN=0')
+            if (
+                nwscanseq_match is None
+                or nwscanseq_match.group(1) != nwscanseq_expected
+                or nwscanmode_match is None
+                or nwscanmode_match.group(1) != nwscanmode_expected
+                or iotopmode_match is None
+                or band_match is None
+                or simeffect_match is None
+            ):
+                self.send_at_cmd("AT+CFUN=0")
                 self.send_at_cmd('AT+QCFG="nwscanseq",{},1'.format(nwscanseq_expected))
                 self.send_at_cmd('AT+QCFG="nwscanmode",{},1'.format(nwscanmode_expected))
                 self.send_at_cmd('AT+QCFG="iotopmode",{},1'.format(iotmode))
                 self.send_at_cmd('AT+QCFG="servicedomain",1,1')
-                self.send_at_cmd('AT+QCFG="band",F,80084,80084') #Europe setting -> network application note v3, page 32
+                self.send_at_cmd('AT+QCFG="band",F,80084,80084')  # Europe setting -> network application note v3, page 32
                 self.send_at_cmd('AT+QCFG="simeffect",0')
                 self.send_at_cmd("AT+CFUN=1", 15000, "APP RDY")
                 self.send_at_cmd("ATE0")
@@ -98,7 +107,7 @@ class ModemBG600(modem_base.Modem):
     def get_sim_card_ids(self):
         (self.sim_imsi, self.sim_iccid) = super().get_sim_card_ids()
 
-        (status, lines)= self.send_at_cmd("AT+QCCID")
+        (status, lines) = self.send_at_cmd("AT+QCCID")
         if status:
             match_res = self._match_regex(r"\+QCCID:\s+(\d+)", lines)
             if match_res is not None:
@@ -145,9 +154,8 @@ class ModemBG600(modem_base.Modem):
         return status and len(lines) > 0 and "1,1" in lines[0]
 
     def power_off(self):
-        (res, lines) = self.send_at_cmd("AT+QPOWD", 15000, r'\s*POWERED DOWN\s*')
+        (res, lines) = self.send_at_cmd("AT+QPOWD", 15000, r"\s*POWERED DOWN\s*")
         return res
-
 
     def disconnect(self):
         (res, lines) = self.send_at_cmd("AT+QIDEACT=1")
@@ -264,23 +272,27 @@ class ModemBG600(modem_base.Modem):
         max_retries = 3
         retry = 0
         mqtt_ready = False
+
+        self._mqtt_client_id = 1
         while retry < max_retries:
             retry += 1
-            (mqtt_result, lines) = self.send_at_cmd('AT+QMTOPEN=1,"' + server_ip + '",' + str(server_port), 15000, r'\+QMTOPEN:\s*1,\d')
+            (mqtt_result, lines) = self.send_at_cmd(
+                "AT+QMTOPEN=" + str(self._mqtt_client_id) + ',"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s*1,\d"
+            )
             if mqtt_result:
                 # if MQTT already connected
-                reg_match = self._match_regex(r'\+QMTOPEN:\s*1,(\d)', lines)
-                if reg_match and reg_match.group(1) == "0": # successfull connection
+                reg_match = self._match_regex(r"\+QMTOPEN:\s*" + str(self._mqtt_client_id) + ",(\d)", lines)
+                if reg_match and reg_match.group(1) == "0":  # successfull connection
                     mqtt_ready = True
                     break
-                elif reg_match and reg_match.group(1) == "2": # already opened
+                elif reg_match and reg_match.group(1) == "2":  # already opened
                     self.mqtt_disconnect()
+                    self._mqtt_client_id += 1
                     sleep_ms(2500)
 
-            #+QIURC: "pdpdeact",1
-            #elif self._match_regex(lines, r'\+QIURC:\s*"pdpdeact",1'): #check for pdpdeact message
-
-            self.deactivate_context()
+            # +QIURC: "pdpdeact",1
+            elif self._match_regex(lines, r'\+QIURC:\s*"pdpdeact",1'):  # check for pdpdeact message
+                self.deactivate_context()
 
             sleep_ms(1000)
 
@@ -289,7 +301,9 @@ class ModemBG600(modem_base.Modem):
             while retry < max_retries:
                 retry += 1
                 (mqtt_connected, _) = self.send_at_cmd(
-                    'AT+QMTCONN=1,"{}","{}","{}"'.format(get_device_id()[0], username, password), 15000, r"\+QMTCONN:\s+1,0,0"
+                    'AT+QMTCONN={},"{}","{}","{}"'.format(self._mqtt_client_id, get_device_id()[0], username, password),
+                    15000,
+                    r"\+QMTCONN:\s+{},0,0".format(self._mqtt_client_id),
                 )
                 if mqtt_connected:
                     break
@@ -300,8 +314,11 @@ class ModemBG600(modem_base.Modem):
         return False
 
     def mqtt_is_connected(self):
-        (mqtt_ready, _) = self.send_at_cmd("AT+QMTOPEN?", 2000, r"\+QMTOPEN:\s+1.*")
-        (mqtt_connected, _) = self.send_at_cmd("AT+QMTCONN?", 2000, r"\+QMTCONN:\s+1,3")
+        if self._mqtt_client_id is None:
+            self._mqtt_client_id = 1
+
+        (mqtt_ready, _) = self.send_at_cmd("AT+QMTOPEN?", 2000, r"\+QMTOPEN:\s+{}.*".format(self._mqtt_client_id))
+        (mqtt_connected, _) = self.send_at_cmd("AT+QMTCONN?", 2000, r"\+QMTCONN:\s+{},3".format(self._mqtt_client_id))
         return mqtt_ready and mqtt_connected
 
     def mqtt_publish(self, topic, message, num_of_retries=3, retain=False, qos=1):
@@ -312,12 +329,17 @@ class ModemBG600(modem_base.Modem):
         general_retry_num = 0
         import random
 
+        if self._mqtt_client_id is None:
+            self._mqtt_client_id = 1
+
         logging.debug("mqtt_publish: qos: {}".format(qos))
         message_id = (int(random.random() * 65530) + 1) if qos else 0
         while not message_sent and general_retry_num < num_of_retries:
             for i in range(0, num_of_retries):
                 (mqtt_send_ready, _) = self.send_at_cmd(
-                    'AT+QMTPUB=1,{},{},{},"{}"'.format(message_id, 1 if qos else 0, 1 if retain else 0, topic), 15000, ">.*"
+                    'AT+QMTPUB={},{},{},{},"{}"'.format(self._mqtt_client_id, message_id, 1 if qos else 0, 1 if retain else 0, topic),
+                    15000,
+                    ">.*",
                 )
                 if mqtt_send_ready:
                     break
@@ -329,7 +351,10 @@ class ModemBG600(modem_base.Modem):
                     (mqtt_send_ok, lines) = self.send_at_cmd(message + "\x1a", 15000, r"\+QMTPUB:\s*\d+,\d+,[012]")
 
                     for line in lines:
-                        if "1,{},0".format(message_id) in line or "1,{},1".format(message_id) in line:
+                        if (
+                            "{},{},0".format(self._mqtt_client_id, message_id) in line
+                            or "{},{},1".format(self._mqtt_client_id, message_id) in line
+                        ):
                             message_sent = True
 
                     if mqtt_send_ok:
@@ -345,14 +370,21 @@ class ModemBG600(modem_base.Modem):
     def mqtt_get_message(self, topic, timeout_ms=5000):
         import random
 
+        if self._mqtt_client_id is None:
+            self._mqtt_client_id = 1
+
         # channels/f1937d78-6745-4b6b-98c3-62e2201c21ab/messages/5de93307-344f-48f2-a66d-1d2f7e359504/#
         # reg = r"\+QMTRECV:\s*\d+,\d+,\"([a-z\-0-9\/]+)\",\"(.*)\"" -> can not be used as it causes: RuntimeError: maximum recursion depth exceeded
         reg = r"\+QMTRECV:.*"
         # subscribe and receive message if any
         message_id = int(random.random() * 65530) + 1
-        (status_subscribed, lines) = self.send_at_cmd('AT+QMTSUB=1,{},"{}",1'.format(message_id, topic), timeout_ms, reg)
+        (status_subscribed, lines) = self.send_at_cmd(
+            'AT+QMTSUB={},{},"{}",1'.format(self._mqtt_client_id, message_id, topic), timeout_ms, reg
+        )
         # unsubscribe
-        (status_unsubscribed, _) = self.send_at_cmd('AT+QMTUNS=1,{},"{}"'.format(message_id, topic), 30000, r"\+QMTUNS:.*")
+        (status_unsubscribed, _) = self.send_at_cmd(
+            'AT+QMTUNS={},{},"{}"'.format(self._mqtt_client_id, message_id, topic), 30000, r"\+QMTUNS:.*"
+        )
 
         selected_line = None
         for line in lines:
@@ -405,15 +437,20 @@ class ModemBG600(modem_base.Modem):
 
     def mqtt_disconnect(self):
         statusNetworkClose = False
-        #expected printed messages from modem
-        #OK
-        #+QMTDISC: 1,0
-        #+QMTSTAT: 1,5
-        (statusMqttDisconnect, _) = self.send_at_cmd("AT+QMTDISC=1", 20000, r"\++QMTDISC:\s*1,0")
+        # expected printed messages from modem
+        # OK
+        # +QMTDISC: 1,0
+        # +QMTSTAT: 1,5
+        if self._mqtt_client_id is None:
+            self._mqtt_client_id = 1
 
-        #if server does not report that the socket is closed, we close it for this side
+        (statusMqttDisconnect, _) = self.send_at_cmd(
+            "AT+QMTDISC={}".format(self._mqtt_client_id), 20000, r"\++QMTDISC:\s*{},0".format(self._mqtt_client_id)
+        )
+
+        # if server does not report that the socket is closed, we close it for this side
         if not statusMqttDisconnect:
-            (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE=1", 20000, r"\+QMTCLOSE:.*")
+            (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE={}".format(self._mqtt_client_id), 20000, r"\+QMTCLOSE:.*")
 
         return statusMqttDisconnect or statusNetworkClose
 
@@ -492,7 +529,7 @@ class ModemBG600(modem_base.Modem):
         res = ure.match(reg, lines[0])
         return res.group(1) if res else None
 
-    def get_file(self, source, destination, timeoutms=150000):
+    def get_file(self, source, destination, timeoutms=250000):
         file_size = self.get_file_size(source)
         if not file_size:
             return False
@@ -503,9 +540,9 @@ class ModemBG600(modem_base.Modem):
 
         data_read = 0
         CHUNKSIZE = 256
-        #CHUNKSIZE = 384 good
-        #CHUNKSIZE = 448
-        #CHUNKSIZE = 470 no
+        # CHUNKSIZE = 384 good
+        # CHUNKSIZE = 448
+        # CHUNKSIZE = 470 no
 
         fw = open(destination, "wb")
         logging.debug("reading file contents")
@@ -529,31 +566,89 @@ class ModemBG600(modem_base.Modem):
         (status, _) = self.send_at_cmd('AT+QFDEL="' + destination + '"')
         return status
 
+    def http_context_connect(self, timeoutms=30000):
+        # for i in range(0, 5):
+        #     (status, lines) = self.send_at_cmd("AT+CGACT=3,1")
+        #     if status:
+        #         break
+
+        # if not status:
+        #     return False
+
+        (status1, _) = self.send_at_cmd('AT+QICSGP=3,1,"' + self.apn + '"')
+        (status2, _) = self.send_at_cmd("AT+QIACT=3")
+
+        return status1 and status2
+
+    def http_context_is_connected(self):
+        (status, lines) = self.send_at_cmd("AT+CGACT?")
+        return status and len(lines) > 0 and "3,1" in lines[0]
+
+    def http_context_disconnect(self):
+        (res, lines) = self.send_at_cmd("AT+QIDEACT=3")
+        return res
+
     def http_get_file(self, url, destination_file, timeout_ms=250000):
-        (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
+        file_downloaded = False
+        file_size = -1
+
+        (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')  # 3')
+
+        if not context_ready:
+            return (file_downloaded, file_size)
+
+        # http_context_connected = self.http_context_connect()
+        # if not http_context_connected:
+        #     logging.debug("http context not connected")
+        #     return (file_downloaded, file_size)
+
         self.send_at_cmd('AT+QHTTPCFG="requestheader",0')
         self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
         (url_ready, _) = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
         if not url_ready:
-            return False
+            self.http_context_disconnect()
+            return (file_downloaded, file_size)
 
         (url_setup, _) = self.send_at_cmd(url, 80)
         if not url_setup:
-            return False
+            self.http_context_disconnect()
+            return (file_downloaded, file_size)
 
-        (get_requested, _) = self.send_at_cmd("AT+QHTTPGET=80", 80000, r"\+QHTTPGET:.*")
+        (get_requested, lines) = self.send_at_cmd("AT+QHTTPGET=80", timeout_ms, r"\+QHTTPGET:.*")
+        line_maches = self._match_regex(r"\+QHTTPGET:\s*(\d+),(\d+),(\d+)", lines)
+        file_size = -1
+        if line_maches:
+            file_size = int(line_maches.group(3))
 
-        if not get_requested:
-            return False
+        if not get_requested or not line_maches or file_size < 0:
+            self.http_context_disconnect()
+            return (file_downloaded, file_size)
 
-        (file_downloaded, _) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
+        (file_downloaded, lines) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:\s*")
 
-        return file_downloaded
+        # need to handle => read all lines and search for 0 code.
+        # [DEBUG:115569]   +QMTSTAT: 1,1
+        # [DEBUG:115585]   +QHTTPREADFILE: Http socket close
+        # [DEBUG:115597]   +QIURC: "pdpdeact",1
+        # self.http_context_disconnect()
+
+        return (file_downloaded, file_size)
 
     # url_base = "console.insigh.io"
     # url_request_route = /mf-rproxy/channels/list
     def http_get_with_auth_header(self, url_base, url_request_route, auth_token, destination_file, timeout_ms=60000):
-        (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
+        file_downloaded = False
+        file_size = -1
+
+        (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')  # 3')
+        if not context_ready:
+            return (file_downloaded, file_size)
+
+        # http_context_connected = self.http_context_connect()
+        # if not http_context_connected:
+        #     logging.debug("http context not connected")
+        #     return (file_downloaded, file_size)
+
         # enable executing http request with custom headers
         self.send_at_cmd('AT+QHTTPCFG="requestheader",1')
         self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
@@ -576,7 +671,7 @@ class ModemBG600(modem_base.Modem):
         if not url_setup:
             return None
 
-        (url_req_ready, _) = self.send_at_cmd("AT+QHTTPGET=80," + str(len(requestHeader)), 90000, "CONNECT")
+        (url_req_ready, _) = self.send_at_cmd("AT+QHTTPGET=80," + str(len(requestHeader)), 125000, "CONNECT")
         if not url_req_ready:
             return None
 
@@ -589,7 +684,64 @@ class ModemBG600(modem_base.Modem):
         # if url_resp_received and len(lines) > 1:
         #     response = lines[1]
         (file_downloaded, _) = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
+
+        # self.http_context_disconnect()
+
         return file_downloaded
+
+    def http_post_with_auth_header(self, url_base, url_request_route, auth_token, post_body, timeout_ms=60000):
+        file_downloaded = False
+        file_size = -1
+
+        (context_ready, _) = self.send_at_cmd('AT+QHTTPCFG="contextid",1')  # 3')
+        if not context_ready:
+            return (file_downloaded, file_size)
+
+        # Ensure post_body is properly formatted JSON string
+        if isinstance(post_body, dict):
+            import json
+            post_body_str = json.dumps(post_body)
+        else:
+            post_body_str = str(post_body)
+        
+        logging.debug("POST body: {}".format(post_body_str))
+
+        # enable executing http request with custom headers
+        self.send_at_cmd('AT+QHTTPCFG="requestheader",1')
+        self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
+        url = "https://" + url_base
+        requestHeader = (
+            "POST " + url_request_route + " HTTP/1.1\r\n"
+            "Host: " + url_base + "\r\n"
+            "User-Agent: insighio-device/1.0\r\n"
+            "Accept: application/json\r\n"
+            "Content-Type: application/json\r\n"
+            "Content-Length: " + str(len(post_body_str)) + "\r\n"
+            "Authorization: " + auth_token + "\r\n"
+            "\r\n"
+        )
+
+        logging.debug("Request header: {}".format(requestHeader.replace('\r\n', '\\r\\n')))
+
+        (url_ready, _) = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
+        if not url_ready:
+            return None
+
+        (url_setup, _) = self.send_at_cmd(url, 80)
+        if not url_setup:
+            return None
+
+        (url_req_ready, _) = self.send_at_cmd("AT+QHTTPPOST={},80".format(len(requestHeader) + len(post_body_str)), 125000, "CONNECT")
+        if not url_req_ready:
+            return None
+
+        (url_req_body_ready, lines) = self.send_at_cmd(requestHeader + post_body_str, timeout_ms, r"\+QHTTPPOST:.*")
+
+        if not url_req_body_ready:
+            return None
+
+        line_matches = self._match_regex(r"\+QHTTPPOST:\s*(\d+)(,(\d+)(,(\d+))?)?", lines)
+        return line_matches and line_matches.group(1) == "0"  # 0 means success
 
     def coap_connect(self, server_ip, server_port):
         (context_activated, _) = self.send_at_cmd('AT+QCOAPCFG="pdpcid",2,1')

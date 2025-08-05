@@ -20,8 +20,10 @@ def updateSignalQuality(cfg, measurements):
         return
     pass
 
+
 def update_hw_ids(measurements, is_senml=True, is_json=False):
     pass
+
 
 def connect(cfg):
     # network connectivity & transmission
@@ -44,6 +46,7 @@ def is_connected():
 def disconnect():
     logging.info("about to power off modem")
     lora.deinit()
+
 
 ## commented out the cbor to keep it in source code and omit it to deployments
 # def create_message_cbor(device_id, measurements):
@@ -77,6 +80,11 @@ def send_message(cfg, message, explicit_channel_name=None):
 
 def send_control_message(cfg, message, subtopic):
     logging.error("Config message not yet supported for LoRA")
+
+
+def send_config_message(cfg, message):
+    logging.error("Config message not yet supported for LoRA")
+    return False
 
 
 def check_and_apply_ota(cfg):

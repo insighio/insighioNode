@@ -23,6 +23,7 @@ def updateSignalQuality(cfg, measurements):
         return
     pass
 
+
 def update_hw_ids(measurements, is_senml=True, is_json=False):
     pass
 
@@ -105,6 +106,17 @@ def send_control_message(cfg, message, subtopic):
     with mutex:
         if transfer_client is not None:
             return transfer_client.send_control_packet(message, subtopic)
+    return None
+
+
+def send_config_message(cfg, message):
+    with mutex:
+        if transfer_client is not None:
+            return send_control_message(
+                cfg,
+                '[{"n":"config","vs":"' + message + '"}]',
+                "/configResponse",
+            )
     return None
 
 

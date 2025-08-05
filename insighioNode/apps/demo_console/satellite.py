@@ -25,6 +25,7 @@ def deinit():
 def updateSignalQuality(cfg, measurements):
     pass
 
+
 def update_hw_ids(measurements, is_senml=True, is_json=False):
     pass
 
@@ -74,6 +75,11 @@ def send_message(cfg, message, explicit_channel_name=None):
 
 def send_control_message(cfg, message, subtopic):
     logging.error("Config message not yet supported for satellite")
+
+
+def send_config_message(cfg, message):
+    logging.error("Config message not yet supported for satellite")
+    return False
 
 
 def check_and_apply_ota(cfg):

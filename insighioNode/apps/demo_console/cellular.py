@@ -10,6 +10,7 @@ from .dictionary_utils import set_value, set_value_float, set_value_int
 transfer_client = None
 mqtt_connected = False
 
+
 def init(cfg):
     cellular.set_pins(
         cfg.get("_UC_IO_RADIO_ON"),
@@ -60,6 +61,7 @@ def updateSignalQuality(cfg, measurements):
     set_value_int(measurements, "cell_mnc", mnc)
     set_value_int(measurements, "cell_lac", lac)
     set_value_int(measurements, "cell_ci", ci)
+
 
 def update_hw_ids(measurements, is_senml=True, is_json=False):
     modem_instance = cellular.get_modem_instance()
@@ -199,6 +201,12 @@ def send_message(cfg, message, explicit_channel_name=None):
 def send_control_message(cfg, message, configSubtopic):
     if transfer_client is not None:
         return transfer_client.send_control_packet(message, configSubtopic)
+    return False
+
+
+def send_config_message(cfg, message):
+    if transfer_client is not None:
+        return transfer_client.send_config_packet(message)
     return False
 
 

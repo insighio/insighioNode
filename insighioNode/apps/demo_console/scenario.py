@@ -512,16 +512,22 @@ def executeDeviceConfigurationUpload(cfg, network):
 
         # configuration_handler.notifyServerWithNewConfig()
 
-        message_sent = network.send_control_message(
-            cfg,
-            '[{"n":"config","vs":"' + configUploadFileContent + '"}]',
-            "/configResponse",
-        )
+        # message_sent = network.send_control_message(
+        #     cfg,
+        #     '[{"n":"config","vs":"' + configUploadFileContent + '"}]',
+        #     "/configResponse",
+        # )
+        message_sent = network.send_config_message(cfg, configUploadFileContent)
         if message_sent:
             utils.deleteFlagFile("/configLog")
 
-        # whenever a new config log is uplaoded, upload also statistics for the device
-    if configUploadFileContent or utils.existsFlagFile("/ota_applied_flag") or utils.existsFile("/ota_applied_flag") or device_info.get_reset_cause() < 2:
+        # whenever a new config log is uploaded, upload also statistics for the device
+    if (
+        configUploadFileContent
+        or utils.existsFlagFile("/ota_applied_flag")
+        or utils.existsFile("/ota_applied_flag")
+        or device_info.get_reset_cause() < 2
+    ):
         message_sent = executeDeviceStatisticsUpload(cfg, network)
         if message_sent:
             utils.deleteFlagFile("/ota_applied_flag")

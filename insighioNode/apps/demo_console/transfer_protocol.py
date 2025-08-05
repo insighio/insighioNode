@@ -87,6 +87,26 @@ class TransferProtocolModemAT(TransferProtocol):
         topic = "channels/{}/messages/{}{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, subtopic)
         return self.modem_instance.mqtt_publish(topic, message)
 
+    def send_config_packet(self, message):
+        if not self.connected:
+            logging.info("TransferProtocol not connected")
+            return False
+
+        logging.info("About to send config message")
+        URL_base = self.protocol_config.server_ip
+        URL_PATH = "/mf-rproxy/device/config"
+
+        # topic = "channels/{}/messages/{}".format(self.protocol_config.config_channel_id, self.protocol_config.thing_id)
+        # url_base, url_request_route, auth_token, post_body, timeout_ms=60000
+        post_body = {
+            "id": self.protocol_config.thing_id,
+            "channel": self.protocol_config.control_channel_id,
+            "data": message,
+        }
+        return self.modem_instance.http_post_with_auth_header(
+            URL_base, URL_PATH, self.protocol_config.thing_token, post_body, timeout_ms=125000
+        )
+
     def get_control_message(self):
         if not self.connected:
             logging.info("TransferProtocol not connected")
