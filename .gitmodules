@@ -25,3 +25,6 @@
 [submodule "lib-external/micropython-modbus"]
 	path = lib-external/micropython-modbus
 	url = https://github.com/brainelectronics/micropython-modbus.git
+[submodule "lib-external/microUrllib"]
+	path = lib-external/microUrllib
+	url = https://github.com/insighio/microUrllib
