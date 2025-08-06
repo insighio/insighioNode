@@ -698,7 +698,7 @@ class ModemBG600(modem_base.Modem):
             return (file_downloaded, file_size)
 
         # Ensure post_body is properly formatted JSON string
-        if isinstance(post_body, dict):
+        if isinstance(post_body, dict) or isinstance(post_body, list):
             import json
             post_body_str = json.dumps(post_body)
         else:

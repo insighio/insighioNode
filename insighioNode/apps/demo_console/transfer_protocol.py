@@ -94,15 +94,9 @@ class TransferProtocolModemAT(TransferProtocol):
 
         logging.info("About to send config message")
         URL_base = self.protocol_config.server_ip
-        URL_PATH = "/mf-rproxy/device/config"
+        URL_PATH = "/http/channels/{}/messages/{}{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, "/configResponse")
 
-        # topic = "channels/{}/messages/{}".format(self.protocol_config.config_channel_id, self.protocol_config.thing_id)
-        # url_base, url_request_route, auth_token, post_body, timeout_ms=60000
-        post_body = {
-            "id": self.protocol_config.thing_id,
-            "channel": self.protocol_config.control_channel_id,
-            "data": message,
-        }
+        post_body = [{"n": "config", "vs": message}]
         return self.modem_instance.http_post_with_auth_header(
             URL_base, URL_PATH, self.protocol_config.thing_token, post_body, timeout_ms=125000
         )
