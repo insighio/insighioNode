@@ -331,6 +331,8 @@ def applyDeviceConfiguration(client, configurationParameters, topic):
 
     keyValueDict = configuration_handler.stringParamsToDict(configurationParameters)
 
+    urlDecodeComponentForKeys(keyValueDict)
+
     configuration_handler.apply_configuration(keyValueDict)
     client.clear_retained(topic)
     client.disconnect()
@@ -338,3 +340,25 @@ def applyDeviceConfiguration(client, configurationParameters, topic):
 
     logging.info("about to reset to use new configuration")
     machine.reset()
+
+
+# _MEAS_SDI12 = '<meas-sdi12>'
+# _MEAS_MODBUS = '<meas-modbus>'
+# _MEAS_ADC = '<meas-adc>'
+# _MEAS_PULSECOUNTER = '<meas-pulseCounter>'
+# _SYSTEM_SETTINGS = '<system-settings>'
+def urlDecodeComponentForKeys(keyValueDict):
+    from external.microUrllib import parse
+
+    for key in keyValueDict:
+        value = keyValueDict[key]
+
+        if value and isinstance(value, str) and (value.startswith("%7B") or value.startswith("%5B")):
+            try:
+                value = value.replace("'", '"')  # TODO - temp fix because server processed the data, TO REVISIT!
+                keyValueDict[key] = parse.unquote_to_bytes(value).decode()
+                logging.debug("url decoded key: {} before value: {} after value: {}".format(key, value, keyValueDict[key]))
+            except Exception as e:
+                logging.exception(e, "unable to decode URL component for key: " + key)
+        else:
+            logging.debug("url decode ignored key: {} with value: {}".format(key, value))
