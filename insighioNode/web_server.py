@@ -312,6 +312,13 @@ def start(timeoutMs=120000):
 
     app = tinyweb.webserver(10, 6, 16, False)
 
+    # Add middleware to add cache-busting headers to all responses
+    # @app.middleware
+    # async def add_cache_headers(req, resp):
+    #     resp.add_header("Cache-Control", "no-cache, no-store, must-revalidate")
+    #     resp.add_header("Pragma", "no-cache")
+    #     resp.add_header("Expires", "0")
+
     def get_content_type(file_name):
         if file_name.endswith("css"):
             return "text/css"
@@ -329,6 +336,12 @@ def start(timeoutMs=120000):
     async def index(req, resp):
         # Just send file
         logging.debug("[web-server]: /")
+
+        # Add cache-busting headers manually for file responses
+        resp.add_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        resp.add_header("Pragma", "no-cache")
+        resp.add_header("Expires", "0")
+
         if utils.existsFile("www/index.html.gz"):
             await resp.send_file("www/index.html.gz", content_encoding="gzip")
         else:
@@ -338,6 +351,12 @@ def start(timeoutMs=120000):
     async def httpfiles(req, resp, fn):
         # Just send file
         logging.debug("[web-server]: /{}".format(fn))
+
+        # Add cache-busting headers
+        resp.add_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        resp.add_header("Pragma", "no-cache")
+        resp.add_header("Expires", "0")
+
         file_path = "www/{}".format(fn)
         file_path_compressed = file_path + ".gz"
         if utils.existsFile(file_path_compressed):
@@ -349,6 +368,12 @@ def start(timeoutMs=120000):
     async def httpfiles(req, resp, fn):
         # Just send file
         logging.debug("[web-server]: /assets/{}".format(fn))
+
+        # Add cache-busting headers
+        resp.add_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        resp.add_header("Pragma", "no-cache")
+        resp.add_header("Expires", "0")
+
         file_path = "www/assets/{}".format(fn)
         file_path_compressed = file_path + ".gz"
 

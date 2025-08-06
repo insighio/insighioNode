@@ -1,4 +1,4 @@
-export function fetchInternal(url, timeout = 30000) {
+export function fetchInternal(url, timeout = 30000, method = "GET") {
   return new Promise((resolve, reject) => {
     const controller = new AbortController()
     const signal = controller.signal
@@ -8,7 +8,19 @@ export function fetchInternal(url, timeout = 30000) {
       reject(new Error("Request timed out"))
     }, timeout)
 
-    fetch("http://192.168.4.1" + url, { signal })
+    // Add cache-busting parameter
+    const separator = url.includes("?") ? "&" : "?"
+    const cacheBustUrl = url + separator + "_t=" + Date.now()
+
+    fetch("http://192.168.4.1" + cacheBustUrl, {
+      signal,
+      method,
+      cache: "no-cache",
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache"
+      }
+    })
       .then((response) => {
         clearTimeout(timeoutId)
         return response.json()

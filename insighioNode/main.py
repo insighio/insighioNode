@@ -76,8 +76,8 @@ if rstCause == 0 or rstCause == 1 or not demo_config_exists:
 
         web_server.start(120000 if demo_config_exists else -1)
         del sys.modules["web_server"]
-    except:
-        pass
+    except Exception as e:
+        logging.debug(e, "web server error")
     gc.collect()
 
 # in case a temp config has been generated and webserver timeout occurs before
