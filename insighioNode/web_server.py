@@ -52,6 +52,17 @@ class DevID:
         }, 200
 
 
+class Version:
+    def get(self, data):
+        logging.debug("[web-server][GET]: /version")
+        import srcInfo
+
+        return {
+            "branch": srcInfo.branch,
+            "commit": srcInfo.commit,
+        }, 200
+
+
 class Settings:
     def get(self, data):
         global insighioSettings
@@ -421,6 +432,7 @@ def start(timeoutMs=120000):
     app.add_resource(Config, "/save-config")
     app.add_resource(ConfigTemp, "/save-config-temp")
     app.add_resource(DevID, "/devid")
+    app.add_resource(Version, "/version")
     app.add_resource(WiFiList, "/update_wifi_list")
     app.add_resource(DeviceMeasurements, "/device_measurements")
 
