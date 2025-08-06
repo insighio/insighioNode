@@ -123,7 +123,7 @@ def connect(cfg):
         registration_fallback_status = False
         if not registration_status:
             registration_fallback_status = modemInst.wait_for_registration_fallback()
-            
+
         if registration_status or registration_fallback_status:
             # print("Modem activated (AT+CFUN=1), continuing...")
             # logging.debug("Deattaching (precautionary)")
@@ -248,7 +248,7 @@ def deactivate():
             modemInst.disconnect()
             logging.debug("Modem deinitializing...")
             modemInst.power_off()
-            modemInst.wait_for_modem_power_off()
+            #modemInst.wait_for_modem_power_off()
         # LTE().send_at_cmd('AT+CFUN=0')
         deactivation_status = True
     except Exception as e:
