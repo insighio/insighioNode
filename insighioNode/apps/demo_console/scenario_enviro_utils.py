@@ -55,12 +55,14 @@ def _initialize_i2c():
 
     return _i2c
 
+
 def _deinitialize_i2c():
     global _i2c
     if _i2c is not None:
         _i2c = None
 
     return _i2c
+
 
 def _exec_i2c_op(func):
     _initialize_i2c()
@@ -235,12 +237,14 @@ def execute_sdi12_measurements(measurements):
     try:
         sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
         sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 1)
+        # for 'v3-alpha-v2.6.12-sp34'
+        # sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
         for sensor in sensor_list:
             read_sdi12_sensor(sdi12, measurements, sensor)
-            sleep_ms(1000)
+            sleep_ms(2500)
     except Exception as e:
         logging.exception(e, "Exception while reading SDI-12 data")
 
@@ -357,10 +361,10 @@ def execute_modbus_measurements(measurements):
 
     try:
         rtu_pins = (cfg.get("_UC_IO_MODBUS_DRV_IN"), cfg.get("_UC_IO_MODBUS_RCV_OUT"))  # (TX, RX)
-        baudrate=_get(connectionSettings, "baudRate")  # optional, default 9600
-        data_bits=_get(connectionSettings, "dataBits")  # optional, default 8
-        stop_bits=_get(connectionSettings, "stopBits")  # optional, default 1
-        parity=_get(connectionSettings, "parity")  # optional, default None
+        baudrate = _get(connectionSettings, "baudRate")  # optional, default 9600
+        data_bits = _get(connectionSettings, "dataBits")  # optional, default 8
+        stop_bits = _get(connectionSettings, "stopBits")  # optional, default 1
+        parity = _get(connectionSettings, "parity")  # optional, default None
 
         logging.debug("baud: {}".format(baudrate))
         logging.debug("dataBits: {}".format(data_bits))
@@ -369,9 +373,10 @@ def execute_modbus_measurements(measurements):
         logging.debug("rtu_pins: {}".format(rtu_pins))
 
         from apps.demo_console import modbus
+
         inst = modbus.init_instance(rtu_pins, baudrate, data_bits, parity, stop_bits)
 
-        sleep_ms(5000)#cfg.get("_SDI12_WARM_UP_TIME_MSEC"))  # warmup time
+        sleep_ms(5000)  # cfg.get("_SDI12_WARM_UP_TIME_MSEC"))  # warmup time
 
         for sensor in sensor_list:
             read_modbus_sensor(modbus, measurements, sensor)
