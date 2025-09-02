@@ -7,3 +7,4 @@ webui/.env
 insighioNode/www/*
 tests/__pycache__
 insighioNode/apps/demo_console/__pycache__
+insighioNode/www_files.txt
