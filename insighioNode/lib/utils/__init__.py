@@ -7,6 +7,18 @@ key_value_storage = esp32.NVS("insighio")
 _DATA_DIR = "/data"
 
 
+def list_files_recursive(folder):
+    files = []
+    for entry in uos.ilistdir(folder):
+        name = entry[0]
+        path = folder + "/" + name
+        if entry[1] == 0x4000:  # directory
+            files += list_files_recursive(path)
+        else:
+            files.append(path)
+    return files
+
+
 def existsFile(source):
     try:
         logging.debug("existsFile: " + source)
