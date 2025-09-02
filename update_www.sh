@@ -8,6 +8,8 @@ echo "Updating package.json with commit hash $GIT_COMMIT"
 #jq --arg GIT_COMMIT "$GIT_COMMIT" '.version = $GIT_COMMIT' package.json > tmp.json && mv tmp.json package.json
 echo "Building webui"
 
+npm install
+npm audit fix
 npm run build
 cd ./dist
 FILES_TO_COPY=`find . | grep "gz$\|ico$\|png$"`
