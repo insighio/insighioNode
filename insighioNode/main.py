@@ -25,8 +25,7 @@ device_info.bq_charger_exec(device_info.bq_charger_setup)
 device_info.initialize_led()
 device_info.blink_led(0x252525)
 
-# from apps.demo_console import scenario_pcnt_ulp
-# scenario_pcnt_ulp.start()
+import utils
 
 demo_config_exists = False
 try:
@@ -34,8 +33,21 @@ try:
 
     demo_config_exists = True
 except Exception as e:
-    logging.exception(e, "Device never configured.")
-    pass
+    logging.exception(e, "Configuration error")
+    CONFIG_FILE = "/apps/demo_console/demo_config.py"
+    if utils.existsFile(CONFIG_FILE) and utils.existsFlagFile(CONFIG_FILE + ".prev"):
+        logging.info("Reverting configuration to previous...")
+        utils.copyFile(CONFIG_FILE + ".prev", CONFIG_FILE)
+        logging.info("Deleting config backup")
+        utils.deleteFile(CONFIG_FILE + ".prev")
+        utils.writeToFlagFile("/config_reverted", "reverted")
+        logging.info("Config revert done...")
+
+        import machine
+        machine.reset()
+    else:
+        logging.error("Device never configured")
+
 
 if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
     try:
@@ -61,26 +73,26 @@ if demo_config_exists and hasattr(cfg, "_NOTIFICATION_LED_ENABLED"):
 
 ##################################################################
 # run cleanup for www files
-import utils
 
-# List all files in /www recursively
-all_www_files = utils.list_files_recursive("/www")
+# # List all files in /www recursively
+# all_www_files = utils.list_files_recursive("/www")
+#
+# # Read allowed files from /www_files.txt
+# allowed_files = None
+# try:
+#     with open("/www_files.txt") as f:
+#         allowed_files = []
+#         allowed_files = [line.strip() for line in f if line.strip()]
+# except Exception as e:
+#     logging.debug("No /www_files.txt file found")
+#
+# if allowed_files is not None:
+#     # Delete files not listed in /www_files.txt
+#     for file_path in all_www_files:
+#         if file_path not in allowed_files:
+#             utils.deleteFile(file_path)
 
-# Read allowed files from /www_files.txt
-allowed_files = None
-try:
-    with open("/www_files.txt") as f:
-        allowed_files = []
-        allowed_files = [line.strip() for line in f if line.strip()]
-except Exception as e:
-    logging.debug("No /www_files.txt file found")
-
-if allowed_files is not None:
-    # Delete files not listed in /www_files.txt
-    for file_path in all_www_files:
-        if file_path not in allowed_files:
-            utils.deleteFile(file_path)
-
+####################################################################################
 rstCause = device_info.get_reset_cause()
 logging.info("Reset cause: " + str(rstCause))
 

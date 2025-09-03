@@ -398,6 +398,10 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
     if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
         network.updateSignalQuality(cfg, measurements)
 
+    if utils.existsFlagFile("/config_reverted"):
+        set_value_int(measurements, "config_recovery", 1)
+        utils.deleteFlagFile("/config_reverted")
+
     uptime = getUptime(timeDiffAfterNTP)
 
     set_value_int(
@@ -406,6 +410,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         uptime if is_first_run else (uptime - measurement_run_start_timestamp),
         SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
     )
+
 
     try:
         if is_first_run:
