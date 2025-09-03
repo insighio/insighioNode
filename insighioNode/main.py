@@ -16,8 +16,9 @@ logging.debug("start timestamp: " + str(ticks_ms()))
 import device_info
 import gpio_handler
 
+##################################################################
+# Device Setup
 gpio_handler.set_pin_value(12, 1)
-
 
 device_info.bq_charger_exec(device_info.bq_charger_setup)
 
@@ -58,17 +59,44 @@ if demo_config_exists and hasattr(cfg, "_NOTIFICATION_LED_ENABLED"):
     except:
         pass
 
+##################################################################
+# run cleanup for www files
+import utils
+
+# List all files in /www recursively
+all_www_files = utils.list_files_recursive("/www")
+
+# Read allowed files from /www_files.txt
+allowed_files = None
+try:
+    with open("/www_files.txt") as f:
+        allowed_files = []
+        allowed_files = [line.strip() for line in f if line.strip()]
+except Exception as e:
+    logging.debug("No /www_files.txt file found")
+
+if allowed_files is not None:
+    # Delete files not listed in /www_files.txt
+    for file_path in all_www_files:
+        if file_path not in allowed_files:
+            utils.deleteFile(file_path)
+
 rstCause = device_info.get_reset_cause()
 logging.info("Reset cause: " + str(rstCause))
 
 ENABLE_BOOTSTRAP = False
 if rstCause == 0 or rstCause == 1 or not demo_config_exists:
+    ####################################################################################
+    # Bootstrap check
+
     if ENABLE_BOOTSTRAP and not demo_config_exists:
         logging.info("Trying to get device auth from bootstrap")
         import apps.demo_console.scenario as scenario
 
         scenario.executeBootstrap()
 
+    ####################################################################################
+    # WebUI initialization
     logging.info("Starting Web server")
     gc.collect()
     try:
