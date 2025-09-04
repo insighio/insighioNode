@@ -115,7 +115,10 @@ def connect(cfg):
         else:
             transfer_client = None
 
-        transfer_client.connect()
+        tc_success = transfer_client.connect()
+        if modem_model and "bg600" in modem_model:
+            logging.debug("tc_success: {}".format(tc_success))
+            set_value(results, "status", status == cellular.MODEM_CONNECTED and tc_success)
 
     return results
 
