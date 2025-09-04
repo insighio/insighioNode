@@ -98,12 +98,8 @@ class Modem:
         (status, lines) = self.send_at_cmd("AT+COPS?")
         lines = "\n".join(lines)
 
-        if technology.lower() == "nbiot":
-            expected_configuration = "1"  # operator locking
-            command = "AT+COPS=4,2,20201"
-        else:
-            expected_configuration = "0"  # operator automatic selection
-            command = "AT+COPS=0"
+        expected_configuration = "0"  # operator automatic selection
+        command = "AT+COPS=0"
 
         operator_regex = r"\+COPS:\s*(\d).*"
         match = ure.search(operator_regex, lines)
@@ -228,6 +224,11 @@ class Modem:
                 if mcc is not None and mnc is not None:
                     return True
             sleep_ms(100)
+
+        if current_state != _STATE_CHECK_COPS:
+            (mcc, mnc) = self.get_registered_mcc_mnc()
+            return mcc is not None and mnc is not None
+
         return False
 
     def attach(self, do_attach=True):
