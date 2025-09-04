@@ -200,6 +200,7 @@ class Modem:
         _STATE_CHECK_CREG_INITIALIZATION = 0
         _STATE_CHECK_CREG = 1
         _STATE_CHECK_COPS = 2
+        current_state = _STATE_CHECK_CREG_INITIALIZATION
         while ticks_ms() < timeout_timestamp:
             if current_state == _STATE_CHECK_CREG or current_state == _STATE_CHECK_CREG_INITIALIZATION:
                 (status, lines) = self.send_at_cmd("AT+CREG?")
