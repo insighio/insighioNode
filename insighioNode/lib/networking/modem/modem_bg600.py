@@ -274,21 +274,20 @@ class ModemBG600(modem_base.Modem):
         mqtt_ready = False
 
         self._mqtt_client_id = 1
-        while retry < max_retries:
+        while retry < max_retries and not mqtt_ready:
             retry += 1
             (mqtt_result, lines) = self.send_at_cmd(
-                "AT+QMTOPEN=" + str(self._mqtt_client_id) + ',"' + server_ip + '",' + str(server_port), 15000, r"\+QMTOPEN:\s*1,\d"
+                "AT+QMTOPEN=" + str(self._mqtt_client_id) + ',"' + server_ip + '",' + str(server_port), 30000, r"\+QMTOPEN:\s*{},\d".format(str(self._mqtt_client_id))
             )
-            if mqtt_result:
-                # if MQTT already connected
-                reg_match = self._match_regex(r"\+QMTOPEN:\s*" + str(self._mqtt_client_id) + ",(\d)", lines)
-                if reg_match and reg_match.group(1) == "0":  # successfull connection
-                    mqtt_ready = True
-                    break
-                elif reg_match and reg_match.group(1) == "2":  # already opened
-                    self.mqtt_disconnect()
-                    self._mqtt_client_id += 1
-                    sleep_ms(2500)
+
+            reg_match = self._match_regex(r"\+QMTOPEN:\s*" + str(self._mqtt_client_id) + ",(-?\d)", lines)
+            if reg_match and reg_match.group(1) == "0":  # successfull connection
+                mqtt_ready = True
+                break
+            elif reg_match and reg_match.group(1) == "2":  # already opened
+                self.mqtt_disconnect()
+                #self._mqtt_client_id += 1
+                sleep_ms(2500)
 
             # +QIURC: "pdpdeact",1
             elif self._match_regex(r'\+QIURC:\s*"pdpdeact",1', lines):  # check for pdpdeact message
@@ -450,7 +449,7 @@ class ModemBG600(modem_base.Modem):
 
         # if server does not report that the socket is closed, we close it for this side
         if not statusMqttDisconnect:
-            (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE={}".format(self._mqtt_client_id), 20000, r"\+QMTCLOSE:.*")
+            (statusNetworkClose, _) = self.send_at_cmd("AT+QMTCLOSE={}".format(self._mqtt_client_id), 30000, r"\+QMTCLOSE:.*")
 
         return statusMqttDisconnect or statusNetworkClose
 
