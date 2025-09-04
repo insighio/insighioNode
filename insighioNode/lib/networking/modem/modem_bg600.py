@@ -77,9 +77,7 @@ class ModemBG600(modem_base.Modem):
             band_match = self._match_regex(r'\s*\+QCFG:\s*"band",0xf,0x80084,0x80084', band_lines)
 
             (simeffect_status, simeffect_lines) = self.send_at_cmd('AT+QCFG="simeffect"')
-            simeffect_match = self._match_regex(r'\s*\+QCFG:\s*"simeffect",0', simeffect_lines)
-
-            logging.debug("Writing configuration")
+            simeffect_match = self._match_regex(r'\s*\+QCFG:\s*"simeffect",1', simeffect_lines)
 
             if (
                 nwscanseq_match is None
@@ -90,14 +88,15 @@ class ModemBG600(modem_base.Modem):
                 or band_match is None
                 or simeffect_match is None
             ):
+                logging.debug("Writing configuration")
                 self.send_at_cmd("AT+CFUN=0")
-                self.send_at_cmd('AT+QCFG="nwscanseq",{},1'.format(nwscanseq_expected))
-                self.send_at_cmd('AT+QCFG="nwscanmode",{},1'.format(nwscanmode_expected))
-                self.send_at_cmd('AT+QCFG="iotopmode",{},1'.format(iotmode))
-                self.send_at_cmd('AT+QCFG="servicedomain",1,1')
+                self.send_at_cmd('AT+QCFG="nwscanseq",{}'.format(nwscanseq_expected))
+                self.send_at_cmd('AT+QCFG="nwscanmode",{}'.format(nwscanmode_expected))
+                self.send_at_cmd('AT+QCFG="iotopmode",{}'.format(iotmode))
+                self.send_at_cmd('AT+QCFG="servicedomain",1')
                 self.send_at_cmd('AT+QCFG="band",F,80084,80084')  # Europe setting -> network application note v3, page 32
-                self.send_at_cmd('AT+QCFG="simeffect",0')
-                self.send_at_cmd("AT+CFUN=1", 15000, "APP RDY")
+                self.send_at_cmd('AT+QCFG="simeffect",1')
+                self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
                 self.send_at_cmd("ATE0")
                 sleep_ms(1000)
 
@@ -277,7 +276,7 @@ class ModemBG600(modem_base.Modem):
         while retry < max_retries and not mqtt_ready:
             retry += 1
             (mqtt_result, lines) = self.send_at_cmd(
-                "AT+QMTOPEN=" + str(self._mqtt_client_id) + ',"' + server_ip + '",' + str(server_port), 30000, r"\+QMTOPEN:\s*{},\d".format(str(self._mqtt_client_id))
+                "AT+QMTOPEN=" + str(self._mqtt_client_id) + ',"' + server_ip + '",' + str(server_port), 60000, r"\+QMTOPEN:\s*{},\d".format(str(self._mqtt_client_id))
             )
 
             reg_match = self._match_regex(r"\+QMTOPEN:\s*" + str(self._mqtt_client_id) + ",(-?\d)", lines)
