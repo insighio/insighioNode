@@ -197,23 +197,34 @@ class Modem:
         start_timestamp = ticks_ms()
         timeout_timestamp = start_timestamp + timeoutms
         regex_creg = "\\+CREG:\\s+\\d,(\\d)"
+        _STATE_CHECK_CREG_INITIALIZATION = 0
         _STATE_CHECK_CREG = 1
         _STATE_CHECK_COPS = 2
-        current_state = _STATE_CHECK_CREG
+        current_state = _STATE_CHECK_CREG_INITIALIZATION
+        _CREG_INITIALIZATION_TIMEOUT_TIMESTAMP= start_timestamp + 10000
         while ticks_ms() < timeout_timestamp:
-            if current_state == _STATE_CHECK_CREG:
+            if current_state == _STATE_CHECK_CREG or current_state == _STATE_CHECK_CREG_INITIALIZATION:
                 (status, lines) = self.send_at_cmd("AT+CREG?")
                 if status:
                     regex_match = self._match_regex(regex_creg, lines)
                     if regex_match:
                         group_val = regex_match.group(1)
+                        #0: not registered, not trying to register
+                        #1: registered
+                        #2: not registered, trying to register
+                        #3: registration denied
+                        #4: Unknown
+                        #5: registed, roaming
                         if group_val == "1" or group_val == "5":
                             return True
                         elif group_val == "3":
                             return False
                         elif group_val == "0":
-                            current_state = _STATE_CHECK_COPS
-                            self.send_at_cmd("AT+COPS=3,2")
+                            if current_state == _STATE_CHECK_CREG_INITIALIZATION and ticks_ms() > _CREG_INITIALIZATION_TIMEOUT_TIMESTAMP:
+                                current_state = _STATE_CHECK_CREG
+                            elif current_state == _STATE_CHECK_CREG:
+                                current_state = _STATE_CHECK_COPS
+                                self.send_at_cmd("AT+COPS=3,2")
             elif current_state == _STATE_CHECK_COPS:
                 (mcc, mnc) = self.get_registered_mcc_mnc()
                 if mcc is not None and mnc is not None:
