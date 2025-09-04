@@ -255,6 +255,7 @@ def executeMeasureAndUploadLoop():
         # get measurements
         logging.debug("Starting getting measurements...")
         measurements = scenario_utils.get_measurements(cfg)
+        message_buffer.timestamp_measurements(measurements)
         if is_first_run:
             set_value_int(measurements, "reset_cause", device_info.get_reset_cause())
 
@@ -378,6 +379,8 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
             logging.info("Connecting to network over: " + selected_network)
             connection_results = network.connect(cfg)
 
+            logging.debug("Connection results: {}".format(connection_results))
+
             is_connected = "status" in connection_results and connection_results["status"]["value"] is True
             if "status" in connection_results:
                 del connection_results["status"]
@@ -420,6 +423,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
             device_info.set_led_color("green")
 
             # create packet
+
             message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
             logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
