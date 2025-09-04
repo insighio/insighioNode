@@ -120,11 +120,8 @@ def connect(cfg):
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
         start_activation_duration = ticks_ms()
         registration_status = modemInst.wait_for_registration(120000)
-        registration_fallback_status = False
-        if not registration_status:
-            registration_fallback_status = modemInst.wait_for_registration_fallback()
 
-        if registration_status or registration_fallback_status:
+        if registration_status:
             # print("Modem activated (AT+CFUN=1), continuing...")
             # logging.debug("Deattaching (precautionary)")
             # modemInst.attach(False)

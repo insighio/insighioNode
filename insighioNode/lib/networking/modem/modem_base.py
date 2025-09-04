@@ -197,28 +197,29 @@ class Modem:
         start_timestamp = ticks_ms()
         timeout_timestamp = start_timestamp + timeoutms
         regex_creg = "\\+CREG:\\s+\\d,(\\d)"
+        _STATE_CHECK_CREG = 1
+        _STATE_CHECK_COPS = 2
+        current_state = _STATE_CHECK_CREG
         while ticks_ms() < timeout_timestamp:
-            (status, lines) = self.send_at_cmd("AT+CREG?")
-            if status and len(lines) > 0:
-                regex_match = None
-                for line in lines:
-                    regex_match = ure.search(regex_creg, line)
+            if current_state == _STATE_CHECK_CREG:
+                (status, lines) = self.send_at_cmd("AT+CREG?")
+                if status:
+                    regex_match = self._match_regex(regex_creg, lines)
                     if regex_match:
                         group_val = regex_match.group(1)
                         if group_val == "1" or group_val == "5":
                             return True
-                        elif group_val == "3" or group_val == "0":
+                        elif group_val == "3":
                             return False
+                        elif group_val == "0":
+                            current_state = _STATE_CHECK_COPS
+                            self.send_at_cmd("AT+COPS=3,2")
+            elif current_state == _STATE_CHECK_COPS:
+                (mcc, mnc) = self.get_registered_mcc_mnc()
+                if mcc is not None and mnc is not None:
+                    return True
             sleep_ms(100)
         return False
-
-    def wait_for_registration_fallback(self, timeoutms=30000):
-        status = False
-
-        self.send_at_cmd("AT+COPS=3,2")
-        (mcc, mnc) = self.get_registered_mcc_mnc()
-
-        return mcc is not None and mnc is not None
 
     def attach(self, do_attach=True):
         (status, _) = self.send_at_cmd("at+cgatt={}".format("1" if do_attach else "0"), 144000)
@@ -324,10 +325,11 @@ class Modem:
 
     def _match_regex(self, regex, lines):
         import ure
-        for line in lines:
-            match_res = ure.search(regex, line)
-            if match_res is not None:
-                return match_res
+        if regex is not None or lines is not None:
+            for line in lines:
+                match_res = ure.search(regex, line)
+                if match_res is not None:
+                    return match_res
         return None
 
     def get_registered_mcc_mnc(self):
