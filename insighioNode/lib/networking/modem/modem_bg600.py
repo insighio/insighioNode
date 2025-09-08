@@ -93,7 +93,7 @@ class ModemBG600(modem_base.Modem):
                 self.send_at_cmd('AT+QCFG="nwscanseq",{}'.format(nwscanseq_expected))
                 self.send_at_cmd('AT+QCFG="nwscanmode",{}'.format(nwscanmode_expected))
                 self.send_at_cmd('AT+QCFG="iotopmode",{}'.format(iotmode))
-                self.send_at_cmd('AT+QCFG="servicedomain",1')
+                self.send_at_cmd('AT+QCFG="servicedomain",2,1')
                 self.send_at_cmd('AT+QCFG="band",F,80084,80084')  # Europe setting -> network application note v3, page 32
                 self.send_at_cmd('AT+QCFG="simeffect",1')
                 self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
