@@ -101,6 +101,10 @@ class Modem:
         expected_configuration = "0"  # operator automatic selection
         command = "AT+COPS=0"
 
+        if technology.lower() == "nbiot":
+            expected_configuration = "1"  # operator locking
+            command = "AT+COPS=4,2,20201"
+
         operator_regex = r"\+COPS:\s*(\d).*"
         match = ure.search(operator_regex, lines)
         if match and match.group(1) == expected_configuration:
