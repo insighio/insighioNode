@@ -79,6 +79,8 @@ class ModemBG600(modem_base.Modem):
             (simeffect_status, simeffect_lines) = self.send_at_cmd('AT+QCFG="simeffect"')
             simeffect_match = self._match_regex(r'\s*\+QCFG:\s*"simeffect",1', simeffect_lines)
 
+            self.send_at_cmd('AT+QCFG="servicedomain",2,1')
+
             if (
                 nwscanseq_match is None
                 or nwscanseq_match.group(1) != nwscanseq_expected
