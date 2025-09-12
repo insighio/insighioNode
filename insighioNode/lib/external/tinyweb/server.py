@@ -530,7 +530,7 @@ class webserver:
         params = {
             "methods": ["GET"],
             "save_headers": [],
-            "max_body_size": 8192,
+            "max_body_size": 32768,
             "allowed_access_control_headers": "*",
             "allowed_access_control_origins": "*",
         }
