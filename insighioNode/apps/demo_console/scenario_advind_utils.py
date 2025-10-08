@@ -85,6 +85,8 @@ def shield_measurements(measurements):
         sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
+        # sdi12._BREAK_MULTIPLIER = 1.55
+        # sdi12._MARK_MULTIPLIER = 1.15
 
         for i in range(1, 11):
             executeSDI12Measurement(sdi12, measurements, i)
@@ -160,6 +162,9 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         responseArray = sdi12.get_measurement(address, "M0")
         parse_sensor_licor(model, "M0", address, responseArray, measurements, location)
         responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
+    elif "rika" in manufacturer or ("kisters_" in manufacturer and model == "hyquan"):
+        responseArrayM = sdi12.get_measurement(address, "M", 1)
+        parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
     else:
         set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
         responseArrayC = sdi12.get_measurement(address, "C", 2)
