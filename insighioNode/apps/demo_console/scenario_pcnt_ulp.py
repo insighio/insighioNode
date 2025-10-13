@@ -118,7 +118,7 @@ check_stable_with_previous_stable_{gpio}:
     ld r3, r3, 0
     add r3, r0, r3
     and r3, r3, 1
-    jump no_detect, eq
+    jump no_detect_{gpio}, eq
     jump edge_detected_{gpio}
 
     .global edge_detected_{gpio}
@@ -137,8 +137,8 @@ edge_detected_{gpio}:
 {loop_detection}
     {sleep_or_halt}
 
-    .global no_detect
-no_detect:
+    .global no_detect_{gpio}
+no_detect_{gpio}:
     {sleep_or_halt}
 """
 
@@ -348,8 +348,8 @@ def read_ulp_values(measurements, pcnt_cfg):
             id = pcnt.get("id")
             formula = pcnt.get("formula")
             reg_edge_cnt_16bit = 1 + (cnt * 7)
-            cnt += 1
             reg_loops = 2 + (cnt * 7)
+            cnt += 1
 
             read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formula, time_diff_from_prev, id)
 
