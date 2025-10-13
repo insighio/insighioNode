@@ -29,10 +29,10 @@ def generate_assembly(
 next_edge_4: .long 0
 edge_count_4: .long 0
 edge_count_loops_4: .long 0
-debounce_counter_4: .long 0
-debounce_max_count_4: .long 3          // Debounce threshold (3 consecutive readings)
+previous_input_value_4: .long 0
+sequential_stable_values_count_4: .long 0
+sequential_stable_count_max_4: .long 5
 io_number_4: .long 4
-last_stable_state_4: .long 0           // Last confirmed stable state
 
     /* Code goes into .text section */
     .text
@@ -58,63 +58,54 @@ check_pcnt_4:
     /* Read the value of lower 16 RTC IOs into R0 */
     READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
 
+    /* get only the bit that refers to our GPIO */
     rsh r0, r0, r3
     and r0, r0, 1
 
-    /* Load last stable state for comparison */
-    move r3, last_stable_state_4
-    ld r1, r3, 0
+    /* check input value with the previous value */
 
-    /* Compare current reading with last stable state */
-    sub r2, r0, r1
-    jump state_changed, ov    // If overflow/underflow, states are different
-    and r2, r2, 0xFFFF       // Mask result to check if zero
-    jump state_same, eq      // If zero, states are same
-    jump state_changed       // Non-zero means different
+    /* load previous input to r3 */
+    move r2, previous_input_value_4
+    ld r3, r2, 0 /* get the value */
+    st r0, r2, 0 /* store current value as previous */
+    add r3, r0, r3
+    and r3, r3, 1
+    jump stable_value_detected_4, eq
+    jump unstable_value_detected_4
 
-    .global state_changed
-state_changed:
-    /* Input state changed, increment debounce counter */
-    move r3, debounce_counter_4
-    ld r2, r3, 0
-    add r2, r2, 1
-    st r2, r3, 0
-
-    /* Check if debounce threshold reached */
-    move r3, debounce_max_count_4
-    ld r1, r3, 0
-    sub r1, r2, r1
-    jump debounce_confirmed, ov   // If counter >= threshold, state is confirmed
-    halt                          // Otherwise, keep debouncing
-
-    .global state_same
-state_same:
-    /* Input state same as last stable state, reset debounce counter */
-    move r3, debounce_counter_4
+    .global unstable_value_detected_4
+unstable_value_detected_4:
+    move r3, sequential_stable_values_count_4
     move r2, 0
     st r2, r3, 0
     halt
 
-    .global debounce_confirmed
-debounce_confirmed:
-    /* Debounced state change confirmed */
-    /* Reset debounce counter */
-    move r3, debounce_counter_4
-    move r2, 0
+    .global stable_value_detected_4
+stable_value_detected_4:
+    move r3, sequential_stable_values_count_4
+    ld r2, r3, 0 /* get the value */
+    add r2, r2, 1
     st r2, r3, 0
 
-    /* Update last stable state */
-    move r3, last_stable_state_4
-    st r0, r3, 0
+    move r3, sequential_stable_count_max_4
+    ld r3, r3, 0
 
-    /* Use original edge detection logic for debounced state */
+    # ALU Operation: Compare with limit
+    sub r2, r2, r3          # r2 = counter - limit
+
+    # JUMP Operation: Branch based on comparison
+    jump check_stable_with_previous_stable_4, ov           # Jump if counter >= limit
+    halt
+
+    .global check_stable_with_previous_stable_4
+check_stable_with_previous_stable_4:
     /* State of input changed? */
     move r3, next_edge_4
     ld r3, r3, 0
     add r3, r0, r3
     and r3, r3, 1
-    jump edge_detected_4, eq
-    halt
+    jump no_detect, eq
+    jump edge_detected_4
 
     .global edge_detected_4
 edge_detected_4:
@@ -132,142 +123,143 @@ edge_detected_4:
 
     halt
 
+    .global no_detect
+no_detect:
+    halt
 
-    """
 
+"""
+    #     base_template = """\
+    # #define DR_REG_RTCIO_BASE            0x60008400
+    # #define RTC_IO_TOUCH_PADX_MUX_SEL_M  (BIT(19))
+    # #define RTC_IO_TOUCH_PADX_FUN_IE_M   (BIT(13))
+    # #define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
+    # #define RTC_GPIO_IN_NEXT_S           10
+    # #define DR_REG_SENS_BASE             0x60008800
+    # #define SENS_SAR_PERI_CLK_GATE_CONF_REG  (DR_REG_SENS_BASE + 0x104)
+    # #define SENS_IOMUX_CLK_EN            (BIT(31))
 
-#
-#     base_template = """\
-# #define DR_REG_RTCIO_BASE            0x60008400
-# #define RTC_IO_TOUCH_PADX_MUX_SEL_M  (BIT(19))
-# #define RTC_IO_TOUCH_PADX_FUN_IE_M   (BIT(13))
-# #define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
-# #define RTC_GPIO_IN_NEXT_S           10
-# #define DR_REG_SENS_BASE             0x60008800
-# #define SENS_SAR_PERI_CLK_GATE_CONF_REG  (DR_REG_SENS_BASE + 0x104)
-# #define SENS_IOMUX_CLK_EN            (BIT(31))
-#
-# /* Define variables, which go into .bss section (zero-initialized data) */
-# """
-#
-#     pcnt_template = """\
-#
-# /* pcnt {pcnt_num} */
-# #define RTC_IO_TOUCH_PADX_{gpio}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio}*0x4))
-# next_edge_{gpio}: .long 0
-# edge_count_{gpio}: .long 0
-# edge_count_loops_{gpio}: .long 0
-# debounce_counter_{gpio}: .long 1
-# debounce_max_count_{gpio}: .long 4
-# io_number_{gpio}: .long {gpio}
-#
-# """
-#
-#     code_template = """\
-#     /* Code goes into .text section */
-#     .text
-#     .global entry
-# entry:
-# {pcnt_checks}
-# {pcnt_functions}
-# """
-#
-#     pcnt_check_template = """\
-#     jump check_pcnt_{gpio}
-# """
-#
-#     pcnt_function_template = """\
-#     .global check_pcnt_{gpio}
-# check_pcnt_{gpio}:
-#     /* Load io_number_{gpio} */
-#     move r3, io_number_{gpio}
-#     ld r3, r3, 0
-#
-#     # enable IOMUX clock
-#     WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1)
-#
-#     # connect GPIO to the RTC subsystem so the ULP can read it
-#     WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 1)
-#
-#     # switch the GPIO into input mode
-#     WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 1)
-#
-#     /* Read the value of lower 16 RTC IOs into R0 */
-#     READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
-#
-#     rsh r0, r0, r3
-#     and r0, r0, 1
-#     /* State of input changed? */
-#     move r3, next_edge_{gpio}
-#     ld r3, r3, 0
-#     add r3, r0, r3
-#     and r3, r3, 1
-#     jump edge_detected_{gpio}, eq
-#     {sleep_or_halt}
-#
-#     .global edge_detected_{gpio}
-# edge_detected_{gpio}:
-#     /* Flip next_edge_{gpio} */
-#     move r3, next_edge_{gpio}
-#     ld r2, r3, 0
-#     add r2, r2, 1
-#     and r2, r2, 1
-#     st r2, r3, 0
-#     /* Increment edge_count_{gpio} */
-#     move r3, edge_count_{gpio}
-#     ld r2, r3, 0
-#     add r2, r2, 1
-#     st r2, r3, 0
-# {loop_detection}
-#     {sleep_or_halt}
-#
-# """
-#
-#     loop_detection_template = """\
-#     /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
-#     ld r0, r3, 0
-#     jumpr loop_detected_{gpio}, 0, EQ
-#     {sleep_or_halt}
-#
-#     .global loop_detected_{gpio}
-# loop_detected_{gpio}:
-#     move r3, edge_count_loops_{gpio}
-#     ld r2, r3, 0
-#     add r2, r2, 1
-#     st r2, r3, 0
-# """
-#
-# pcnt_checks = ""
-# pcnt_functions = ""
-#
-# if pcnt_1_enabled:
-#     pcnt_checks += pcnt_check_template.format(gpio=pcnt_1_gpio)
-#
-#     sleep_or_halt = (
-#         "jump check_pcnt_{}".format(pcnt_2_gpio) if pcnt_2_enabled else "SLEEP 100\n    jump entry" if pcnt_1_high_freq else "halt"
-#     )
-#
-#     pcnt_functions += pcnt_function_template.format(
-#         gpio=pcnt_1_gpio,
-#         sleep_or_halt=sleep_or_halt,
-#         loop_detection=loop_detection_template.format(gpio=pcnt_1_gpio, sleep_or_halt=sleep_or_halt) if pcnt_1_high_freq else "",
-#     )
-#     base_template += pcnt_template.format(pcnt_num=1, gpio=pcnt_1_gpio)
-#
-# if pcnt_2_enabled:
-#     pcnt_checks += pcnt_check_template.format(gpio=pcnt_2_gpio)
-#     pcnt_functions += pcnt_function_template.format(
-#         gpio=pcnt_2_gpio,
-#         sleep_or_halt="SLEEP 100\n    jump entry" if pcnt_2_high_freq else "halt",
-#         loop_detection=(
-#             loop_detection_template.format(gpio=pcnt_2_gpio, sleep_or_halt="SLEEP 100\n    jump entry" if pcnt_2_high_freq else "halt")
-#             if pcnt_2_high_freq
-#             else ""
-#         ),
-#     )
-#     base_template += pcnt_template.format(pcnt_num=2, gpio=pcnt_2_gpio)
-#
-# return base_template + code_template.format(pcnt_checks=pcnt_checks, pcnt_functions=pcnt_functions)
+    # /* Define variables, which go into .bss section (zero-initialized data) */
+    # """
+
+    #     pcnt_template = """\
+
+    # /* pcnt {pcnt_num} */
+    # #define RTC_IO_TOUCH_PADX_{gpio}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio}*0x4))
+    # next_edge_{gpio}: .long 0
+    # edge_count_{gpio}: .long 0
+    # edge_count_loops_{gpio}: .long 0
+    # debounce_counter_{gpio}: .long 1
+    # debounce_max_count_{gpio}: .long 1
+    # io_number_{gpio}: .long {gpio}
+
+    # """
+
+    #     code_template = """\
+    #     /* Code goes into .text section */
+    #     .text
+    #     .global entry
+    # entry:
+    # {pcnt_checks}
+    # {pcnt_functions}
+    # """
+
+    #     pcnt_check_template = """\
+    #     jump check_pcnt_{gpio}
+    # """
+
+    #     pcnt_function_template = """\
+    #     .global check_pcnt_{gpio}
+    # check_pcnt_{gpio}:
+    #     /* Load io_number_{gpio} */
+    #     move r3, io_number_{gpio}
+    #     ld r3, r3, 0
+
+    #     # enable IOMUX clock
+    #     WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1)
+
+    #     # connect GPIO to the RTC subsystem so the ULP can read it
+    #     WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 1)
+
+    #     # switch the GPIO into input mode
+    #     WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 1)
+
+    #     /* Read the value of lower 16 RTC IOs into R0 */
+    #     READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
+
+    #     rsh r0, r0, r3
+    #     and r0, r0, 1
+    #     /* State of input changed? */
+    #     move r3, next_edge_{gpio}
+    #     ld r3, r3, 0
+    #     add r3, r0, r3
+    #     and r3, r3, 1
+    #     jump edge_detected_{gpio}, eq
+    #     {sleep_or_halt}
+
+    #     .global edge_detected_{gpio}
+    # edge_detected_{gpio}:
+    #     /* Flip next_edge_{gpio} */
+    #     move r3, next_edge_{gpio}
+    #     ld r2, r3, 0
+    #     add r2, r2, 1
+    #     and r2, r2, 1
+    #     st r2, r3, 0
+    #     /* Increment edge_count_{gpio} */
+    #     move r3, edge_count_{gpio}
+    #     ld r2, r3, 0
+    #     add r2, r2, 1
+    #     st r2, r3, 0
+    # {loop_detection}
+    #     {sleep_or_halt}
+
+    # """
+
+    #     loop_detection_template = """\
+    #     /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
+    #     ld r0, r3, 0
+    #     jumpr loop_detected_{gpio}, 0, EQ
+    #     {sleep_or_halt}
+
+    #     .global loop_detected_{gpio}
+    # loop_detected_{gpio}:
+    #     move r3, edge_count_loops_{gpio}
+    #     ld r2, r3, 0
+    #     add r2, r2, 1
+    #     st r2, r3, 0
+    # """
+
+    pcnt_checks = ""
+    pcnt_functions = ""
+
+    if pcnt_1_enabled:
+        pcnt_checks += pcnt_check_template.format(gpio=pcnt_1_gpio)
+
+        sleep_or_halt = (
+            "jump check_pcnt_{}".format(pcnt_2_gpio) if pcnt_2_enabled else "SLEEP 100\n    jump entry" if pcnt_1_high_freq else "halt"
+        )
+
+        pcnt_functions += pcnt_function_template.format(
+            gpio=pcnt_1_gpio,
+            sleep_or_halt=sleep_or_halt,
+            loop_detection=loop_detection_template.format(gpio=pcnt_1_gpio, sleep_or_halt=sleep_or_halt) if pcnt_1_high_freq else "",
+        )
+        base_template += pcnt_template.format(pcnt_num=1, gpio=pcnt_1_gpio)
+
+    if pcnt_2_enabled:
+        pcnt_checks += pcnt_check_template.format(gpio=pcnt_2_gpio)
+        pcnt_functions += pcnt_function_template.format(
+            gpio=pcnt_2_gpio,
+            sleep_or_halt="SLEEP 100\n    jump entry" if pcnt_2_high_freq else "halt",
+            loop_detection=(
+                loop_detection_template.format(gpio=pcnt_2_gpio, sleep_or_halt="SLEEP 100\n    jump entry" if pcnt_2_high_freq else "halt")
+                if pcnt_2_high_freq
+                else ""
+            ),
+        )
+        base_template += pcnt_template.format(pcnt_num=2, gpio=pcnt_2_gpio)
+
+    return base_template + code_template.format(pcnt_checks=pcnt_checks, pcnt_functions=pcnt_functions)
 
 
 ULP_MEM_BASE = 0x50000000
@@ -304,13 +296,12 @@ def init_ulp(pcnt_cfg):
         logging.error("No pulse counters enabled")
         return
 
-    entry_addr = 8 * 4  # if one pulse counter is enabled
+    entry_addr = 7 * 4  # if one pulse counter is enabled
     if number_of_pulse_counters > 1:
         entry_addr = 12 * 4
 
     if number_of_pulse_counters == 1 and len(pcnt_cfg) == 1:
         pcnt_cfg.append({"enabled": False})
-        print("passed from here")
 
     script_to_run = generate_assembly(
         pcnt_1_enabled=pcnt_cfg[0].get("enabled"),
@@ -321,9 +312,9 @@ def init_ulp(pcnt_cfg):
         pcnt_2_high_freq=pcnt_cfg[1].get("highFreq"),
     )
 
-    # print("Generated ULP assembly code:")
-    # print(script_to_run)
-
+    print("\n\n\n\n")
+    print(script_to_run)
+    print("\n\n\n\n")
     binary = src_to_binary(script_to_run, cpu="esp32s2")
     ulp = ULP()
 
