@@ -47,26 +47,24 @@ io_number_{gpio}: .long {gpio}
 entry:
     # enable IOMUX clock
     WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1)
-{pcnt_checks}
-{pcnt_functions}
+    {pcnt_io_init}
+    {pcnt_functions}
 """
 
-    pcnt_check_template = """\
-    jump check_pcnt_{gpio}
-"""
-
-    pcnt_function_template = """\
-    .global check_pcnt_{gpio}
-check_pcnt_{gpio}:
-    /* Load io_number_{gpio} */
-    move r3, io_number_{gpio}
-    ld r3, r3, 0
-
+    pcnt_io_init_template = """
     # connect GPIO to the RTC subsystem so the ULP can read it
     WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 1)
 
     # switch the GPIO into input mode
     WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 1)
+"""
+
+    pcnt_function_template = """
+    .global check_pcnt_{gpio}
+check_pcnt_{gpio}:
+    /* Load io_number_{gpio} */
+    move r3, io_number_{gpio}
+    ld r3, r3, 0
 
     /* Read the value of lower 16 RTC IOs into R0 */
     READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
@@ -155,11 +153,11 @@ loop_detected_{gpio}:
     st r2, r3, 0
 """
 
-    pcnt_checks = ""
+    pcnt_io_init = ""
     pcnt_functions = ""
 
     if pcnt_1_enabled:
-        pcnt_checks += pcnt_check_template.format(gpio=pcnt_1_gpio)
+        pcnt_io_init += pcnt_io_init_template.format(gpio=pcnt_1_gpio)
 
         sleep_or_halt = (
             "jump check_pcnt_{}".format(pcnt_2_gpio)
@@ -179,8 +177,7 @@ loop_detected_{gpio}:
         base_template += pcnt_template.format(pcnt_num=1, gpio=pcnt_1_gpio)
 
     if pcnt_2_enabled:
-        if not pcnt_1_enabled:
-            pcnt_checks += pcnt_check_template.format(gpio=pcnt_2_gpio)
+        pcnt_io_init += pcnt_io_init_template.format(gpio=pcnt_2_gpio)
 
         sleep_or_halt = "SLEEP 100\n    jump entry" if pcnt_1_high_freq or pcnt_2_high_freq else "halt"
 
@@ -195,7 +192,7 @@ loop_detected_{gpio}:
         )
         base_template += pcnt_template.format(pcnt_num=2, gpio=pcnt_2_gpio)
 
-    return base_template + code_template.format(pcnt_checks=pcnt_checks, pcnt_functions=pcnt_functions)
+    return base_template + code_template.format(pcnt_io_init=pcnt_io_init, pcnt_functions=pcnt_functions)
 
 
 ULP_MEM_BASE = 0x50000000
