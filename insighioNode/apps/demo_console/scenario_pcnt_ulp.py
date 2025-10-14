@@ -245,9 +245,9 @@ def init_ulp(pcnt_cfg):
         pcnt_2_high_freq=pcnt_cfg[1].get("highFreq"),
     )
 
-    print("\n\n\n\n")
-    print(script_to_run)
-    print("\n\n\n\n")
+    # print("\n\n\n\n")
+    # print(script_to_run)
+    # print("\n\n\n\n")
     binary = src_to_binary(script_to_run, cpu="esp32s2")
     ulp = ULP()
 
