@@ -12,12 +12,13 @@ A complete description of all the supported APIs along with tutorials can be fou
 
 ## Release binaries
 
-Download the [latest release binary](https://github.com/insighio/insighioNode/releases) and extract localy. 
+Download the [latest release binary](https://github.com/insighio/insighioNode/releases) and extract localy.
 The archive can be found in the release assets and its file name is:
- * insighio-__\<release-version\>__-__\<commit-hash\>__-__\<board-version\>__.tar.gz
- * example: _insighio-v2.2.0-f49e354-esp32s3.tar.gz_
- 
-The archive includes the required binaries including a flash script. 
+
+- insighio-**\<release-version\>**-**\<commit-hash\>**-**\<board-version\>**.tar.gz
+- example: _insighio-v2.2.0-f49e354-esp32s3.tar.gz_
+
+The archive includes the required binaries including a flash script.
 
 The flash script uses [esptool](https://github.com/espressif/esptool) to download the binaries on the board, so before proceeding make sure esptool is installed.
 
@@ -31,16 +32,18 @@ bash flash_usb0.sh
 #   or
 # bash flash.sh /dev/ttyUSB0
 
-# 3) click "reset" button once and wait till the initialization finishes. 
+# 3) click "reset" button once and wait till the initialization finishes.
 #
-# 4) When ready the device will light up the RGB led. 
-#       - If it is the first boot, it will directly enter configuration mode. 
+# 4) When ready the device will light up the RGB led.
+#       - If it is the first boot, it will directly enter configuration mode.
 #       - If the device is already configured, it will continue the normal execution circle.
 
 ```
+
 For extended instructions, see [documentation](https://docs.insigh.io/firmwareapi/flashing/).
 
 ## From source code
+
 First thing first, clone repository and get all required submodules:
 
 ```bash
@@ -84,8 +87,8 @@ After following the [Getting Started](https://docs.insigh.io/gettingstarted/) st
 
 # Future Work
 
-* Security enhancements (TLS)
-* < Name your desired feature! >
+- Security enhancements (TLS)
+- < Name your desired feature! >
 
 # Issues
 
