@@ -31,7 +31,7 @@ sequential_stable_count_max: .long 5
 
 /* pcnt {pcnt_num} */
 #define RTC_IO_TOUCH_PADX_{gpio}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio}*0x4))
-next_edge_{gpio}: .long 0
+next_edge_{gpio}: .long 1
 edge_count_{gpio}: .long 0
 edge_count_loops_{gpio}: .long 0
 previous_input_value_{gpio}: .long 0
@@ -62,13 +62,6 @@ entry:
     pcnt_function_template = """
     .global check_pcnt_{gpio}
 check_pcnt_{gpio}:
-    /* Reset state periodically to prevent lock-up
-    move r3, sequential_stable_values_count_{gpio}
-    ld r2, r3, 0
-    move r1, 1000  // Reset every 1000 cycles
-    sub r1, r2, r1
-    jump reset_state_{gpio}, ov*/
-
     /* Load io_number_{gpio} */
     move r3, io_number_{gpio}
     ld r3, r3, 0
@@ -90,17 +83,6 @@ check_pcnt_{gpio}:
     and r3, r3, 1
     jump stable_value_detected_{gpio}, eq
     jump unstable_value_detected_{gpio}
-
-/*
-    .global reset_state_{gpio}
-reset_state_{gpio}:
-    move r3, sequential_stable_values_count_{gpio}
-    move r2, 0
-    st r2, r3, 0
-    move r3, previous_input_value_{gpio}
-    move r2, 0
-    st r2, r3, 0
-    jump check_pcnt_{gpio}*/
 
     .global unstable_value_detected_{gpio}
 unstable_value_detected_{gpio}:
@@ -141,7 +123,8 @@ check_stable_with_previous_stable_{gpio}:
 edge_detected_{gpio}:
     /* Flip next_edge_{gpio} */
     move r3, next_edge_{gpio}
-    ld r2, r3, 0
+    /*ld r2, r3, 0*/
+    move r2, r0
     add r2, r2, 1
     and r2, r2, 1
     st r2, r3, 0
