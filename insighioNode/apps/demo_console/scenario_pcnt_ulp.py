@@ -62,6 +62,13 @@ entry:
     pcnt_function_template = """
     .global check_pcnt_{gpio}
 check_pcnt_{gpio}:
+    /* Reset state periodically to prevent lock-up
+    move r3, sequential_stable_values_count_{gpio}
+    ld r2, r3, 0
+    move r1, 1000  // Reset every 1000 cycles
+    sub r1, r2, r1
+    jump reset_state_{gpio}, ov*/
+
     /* Load io_number_{gpio} */
     move r3, io_number_{gpio}
     ld r3, r3, 0
@@ -83,6 +90,17 @@ check_pcnt_{gpio}:
     and r3, r3, 1
     jump stable_value_detected_{gpio}, eq
     jump unstable_value_detected_{gpio}
+
+/*
+    .global reset_state_{gpio}
+reset_state_{gpio}:
+    move r3, sequential_stable_values_count_{gpio}
+    move r2, 0
+    st r2, r3, 0
+    move r3, previous_input_value_{gpio}
+    move r2, 0
+    st r2, r3, 0
+    jump check_pcnt_{gpio}*/
 
     .global unstable_value_detected_{gpio}
 unstable_value_detected_{gpio}:
@@ -115,8 +133,9 @@ check_stable_with_previous_stable_{gpio}:
     ld r3, r3, 0
     add r3, r0, r3
     and r3, r3, 1
-    jump no_detect_{gpio}, eq
-    jump edge_detected_{gpio}
+    jump edge_detected_{gpio}, eq
+    jump no_detect_{gpio}
+
 
     .global edge_detected_{gpio}
 edge_detected_{gpio}:
@@ -141,7 +160,7 @@ no_detect_{gpio}:
 
     loop_detection_template = """\
     /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
-    ld r0, r3, 0
+    ld r1, r3, 0
     jumpr loop_detected_{gpio}, 0, EQ
     {sleep_or_halt}
 
@@ -245,9 +264,9 @@ def init_ulp(pcnt_cfg):
         pcnt_2_high_freq=pcnt_cfg[1].get("highFreq"),
     )
 
-    # print("\n\n\n\n")
-    # print(script_to_run)
-    # print("\n\n\n\n")
+    print("\n\n\n\n")
+    print(script_to_run)
+    print("\n\n\n\n")
     binary = src_to_binary(script_to_run, cpu="esp32s2")
     ulp = ULP()
 
