@@ -96,6 +96,11 @@ def get_modem_instance():
 
     return modem_instance
 
+def reset_modem_instance():
+    global modem_instance
+    global cellular_model
+    modem_instance = None
+    cellular_model = CELLULAR_NO_INIT
 
 def connect(cfg):
     """Complete cellular connection procedure (activation, attachment, data connection)

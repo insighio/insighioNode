@@ -24,7 +24,7 @@ def generate_assembly(
 #define SENS_IOMUX_CLK_EN            (BIT(31))
 
 /* Define variables, which go into .bss section (zero-initialized data) */
-sequential_stable_count_max: .long 5
+sequential_stable_count_max: .long 2
 """
 
     pcnt_template = """\
@@ -259,7 +259,7 @@ def init_ulp(pcnt_cfg):
         if pcnt.get("enabled"):
             init_gpio(pcnt.get("gpio"), ulp)
 
-    ulp.set_wakeup_period(0, 1 if get_pulse_counters_are_high_frequency(pcnt_cfg) else 1000)
+    ulp.set_wakeup_period(0, 1 if get_pulse_counters_are_high_frequency(pcnt_cfg) else 1)
 
     ulp.run(entry_addr)
     logging.info("Pulse counting read")
@@ -320,7 +320,7 @@ def read_ulp_values(measurements, pcnt_cfg):
                 id = pcnt.get("id")
                 set_value_float(measurements, "pcnt_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
                 set_value_int(measurements, "pcnt_edge_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
-                set_value_float(measurements, "pcnt_period_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
+                set_value_float(measurements, "pcnt_period_s_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
                 set_value_float(measurements, "pcnt_count_formula_{}".format(id), 0)
                 logging.debug("================ {} =======================".format(id))
                 logging.debug("========= pcnt_count: ----------------")
@@ -431,6 +431,10 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
 def execute(measurements, pcnt_cfg):
     global _is_first_run
     global _is_after_initialization
+
+    for pcnt in pcnt_cfg:
+        if pcnt.get("enabled"):
+            pcnt["highFreq"] = False
     try:
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
             init_ulp(pcnt_cfg)

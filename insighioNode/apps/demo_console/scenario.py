@@ -286,9 +286,9 @@ def executeMeasureAndUploadLoop():
 
         logging.debug("buffered_upload_enabled: {}, message_buffer.buffered_measurements_count(): {}, cfg.get(__BATCH_UPLOAD_MESSAGE_BUFFER_): {}".format(buffered_upload_enabled, message_buffer.buffered_measurements_count(), cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER"), light_sleep_on))
 
-        if buffered_upload_enabled and not is_first_run and  (message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") or not measurementStored) and light_sleep_on :
-            import machine
-            machine.reset()
+        # if buffered_upload_enabled and not is_first_run and  (message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") or not measurementStored) and light_sleep_on :
+        #     import machine
+        #     machine.reset()
 
         # connect (if needed) and upload message
         if execute_connection_procedure:

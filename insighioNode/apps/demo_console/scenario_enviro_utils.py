@@ -627,7 +627,8 @@ def execute_pulse_counter_measurements(measurements):
     # pulse_counter_thread(_pulse_counter_config)
 
     if _pulse_counter_thread_started is None:
-        _thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
+        #_thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
+        start_counting_thread()
         _pulse_counter_thread_started = True
 
         for sensor in _pulse_counter_config:
@@ -662,6 +663,8 @@ def execute_pulse_counter_measurements(measurements):
                     _get(sensor, "formula"),
                 )
 
+def start_counting_thread():
+    _thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
 
 def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_prev, formula):
     pulse_cnt = edge_cnt / 2
@@ -766,6 +769,8 @@ def pulse_counter_thread(config):
                     reported_stop = True
                     reported_start = False
                     print(">>>> STOPPED")
+
+                    break
                 continue
 
             if not reported_start:
