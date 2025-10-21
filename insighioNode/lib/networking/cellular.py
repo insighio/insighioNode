@@ -46,25 +46,31 @@ def detect_modem():
     from networking.modem.modem_base import Modem
 
     modemInst = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
-    if not modemInst.is_alive():
-        modemInst.power_on()
-    model_name = modemInst.get_model()
-    # logging.debug("modem name returned: " + model_name)
-    # if modem is still not responding, try power off/on
-    if not model_name:
-        modemInst.power_off()
-        sleep_ms(1000)
-        modemInst.power_on()
-        model_name = modemInst.get_model()
 
-    if not model_name:
-        cellular_model = CELLULAR_NO
-    elif CELLULAR_MC60_STR in model_name:
-        cellular_model = CELLULAR_MC60
-    elif CELLULAR_BG600_STR in model_name:
-        cellular_model = CELLULAR_BG600
-    else:
-        cellular_model = CELLULAR_UNKNOWN
+    model_name = None
+
+    try:
+        if not modemInst.is_alive():
+            modemInst.power_on()
+        model_name = modemInst.get_model()
+        # logging.debug("modem name returned: " + model_name)
+        # if modem is still not responding, try power off/on
+        if not model_name:
+            modemInst.power_off()
+            sleep_ms(1000)
+            modemInst.power_on()
+            model_name = modemInst.get_model()
+    except:
+        pass
+
+        if not model_name:
+            cellular_model = CELLULAR_NO
+        elif CELLULAR_MC60_STR in model_name:
+            cellular_model = CELLULAR_MC60
+        elif CELLULAR_BG600_STR in model_name:
+            cellular_model = CELLULAR_BG600
+        else:
+            cellular_model = CELLULAR_UNKNOWN
 
     logging.debug("selected modem: " + str(cellular_model))
     return cellular_model
