@@ -55,11 +55,12 @@ def pop_last_stored_measurement():
         lines = utils.readFromFlagFile(storage_file_name)
         if not lines:
             return None
-        last_line = lines[-1]
-        lines = lines[:-1]
-        utils.writeToFlagFile(storage_file_name, lines)
-        logging.debug("message_buffer: last line: {}".format(last_line))
-        return last_line
+        lines = lines.split("\n")
+        last_lines = lines[-2:-1]
+        lines = lines[:-2]
+        utils.writeToFlagFile(storage_file_name, "\n".join(lines) + "\n")
+        logging.debug("message_buffer: last line: {}".format(last_lines))
+        return last_lines
 
 
 def parse_stored_measurements_and_upload(network):
