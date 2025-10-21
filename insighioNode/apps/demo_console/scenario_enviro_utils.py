@@ -636,7 +636,7 @@ def execute_pulse_counter_measurements(measurements):
                 id = sensor.get("id")
                 set_value_float(measurements, "pcnt_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
                 set_value_int(measurements, "pcnt_edge_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
-                set_value_float(measurements, "pcnt_period_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
+                set_value_float(measurements, "pcnt_period_s_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
                 set_value_float(measurements, "pcnt_count_formula_{}".format(id), 0)
     else:
         time_diff = -1
