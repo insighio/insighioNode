@@ -4,13 +4,15 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
 
-from .dictionary_utils import set_value, set_value_float, _get, _has
+from .dictionary_utils import set_value, set_value_float, set_value_int, _get, _has
 
 from .sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
 
 from . import cfg
 
 import gpio_handler
+import _thread
+import utime
 
 _i2c = None
 _io_expander_addr = None
@@ -22,6 +24,12 @@ _sdi12_config = {}
 _modbus_config = {}
 _adc_config = []
 _pulse_counter_config = []
+_pcnt_active = True
+
+#_pcnt_pause_period_ms = 0
+#_pcnt_sleep_period_us = 500
+#_PCNT_SLOW_PERIOD_US = 500
+#_PCNT_SLOW_PERIOD_MS = 1000
 
 _modbus_reg_quantity_per_format = {
     "uint16": 1,
@@ -38,6 +46,13 @@ _modbus_struct_format_options = {
     "int32": "i",
     "float": "f",
 }
+
+_pulse_counter_thread_started = None
+pcnt_1_edge_count = 0
+pcnt_2_edge_count = 0
+pcnt_last_run_start_timestamp_ms = 0
+pcnt_last_run_pause_timestamp_ms = 0
+_thread_lock = _thread.allocate_lock()
 
 
 def _initialize_i2c():
@@ -573,6 +588,13 @@ def read_adc_sensor(measurements, sensor):
 
 # [{"id":1,"enabled":false,"formula":"v","highFreq":false},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
 def execute_pulse_counter_measurements(measurements):
+    global _pulse_counter_thread_started
+    global pcnt_1_edge_count
+    global pcnt_2_edge_count
+    global _pcnt_pause_period_ms
+    global pcnt_last_run_start_timestamp_ms
+    global pcnt_last_run_pause_timestamp_ms
+
     logging.info("Starting Pulse Counter measurements")
 
     if not _pulse_counter_config or len(_pulse_counter_config) == 0:
@@ -596,12 +618,207 @@ def execute_pulse_counter_measurements(measurements):
         utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
         return
 
-    from . import scenario_pcnt_ulp
-
     for sensor in _pulse_counter_config:
         sensor["gpio"] = cfg.get("UC_IO_DGTL_SNSR_{}_READ".format(_get(sensor, "id")))
 
-    scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
+    # from . import scenario_pcnt_ulp
+    # scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
+
+    # pulse_counter_thread(_pulse_counter_config)
+
+    if _pulse_counter_thread_started is None:
+        _thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
+        _pulse_counter_thread_started = True
+
+        for sensor in _pulse_counter_config:
+            if _get(sensor, "enabled"):
+                id = sensor.get("id")
+                set_value_float(measurements, "pcnt_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
+                set_value_int(measurements, "pcnt_edge_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
+                set_value_float(measurements, "pcnt_period_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
+                set_value_float(measurements, "pcnt_count_formula_{}".format(id), 0)
+    else:
+        time_diff = -1
+        pcnt_1_val = 0
+        pcnt_2_val = 0
+        with _thread_lock:
+            #time_diff = utime.ticks_diff(utime.ticks_ms() - _pcnt_pause_period_ms, pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
+            time_diff = utime.ticks_diff(pcnt_last_run_pause_timestamp_ms, pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
+            pcnt_1_val = pcnt_1_edge_count
+            pcnt_2_val = pcnt_2_edge_count
+            _pcnt_pause_period_ms = 0
+            pcnt_1_edge_count = 0
+            pcnt_2_edge_count = 0
+            pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
+
+        for sensor in _pulse_counter_config:
+            if _get(sensor, "enabled"):
+                id = sensor.get("id")
+                store_pulse_counter_measurements(
+                    measurements,
+                    id,
+                    pcnt_1_val if id == 1 else pcnt_2_val,
+                    time_diff,
+                    _get(sensor, "formula"),
+                )
+
+
+def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_prev, formula):
+    pulse_cnt = edge_cnt / 2
+    set_value_float(measurements, "pcnt_count_{}".format(id), pulse_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND, 3)
+
+    calculated_value = 0
+
+    # check if formula is just a number as multiplier
+    if type(formula) == int or type(formula) == float:
+        formula = "v*{}".format(formula)
+    elif type(formula) == str:  # check if formula is a number stored as string
+        try:
+            float(formula)
+            formula = "v*{}".format(formula)
+        except:
+            pass
+
+    try:
+        raw_value = edge_cnt / 2
+        formula = formula.replace("v", str(raw_value))
+        to_execute = "v_transformed=({})".format(formula)
+        namespace = {}
+        exec(to_execute, namespace)
+        calculated_value = namespace["v_transformed"]
+        set_value_float(measurements, "pcnt_count_formula_{}".format(id), calculated_value, None, 4)
+    except Exception as e:
+        logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(id, raw_value, formula))
+        pass
+
+    logging.debug("   ")
+    logging.debug("================ pcnt {} =======================".format(id))
+    logging.debug(
+        "========= pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}, {} pulse/sec".format(
+            pulse_cnt, edge_cnt, time_diff_from_prev, calculated_value, pulse_cnt / time_diff_from_prev if time_diff_from_prev > 0 else 0
+        )
+    )
+    logging.debug("=============================================")
+
+
+def pulse_counter_thread(config):
+    global pcnt_1_edge_count
+    global pcnt_2_edge_count
+    global _pcnt_active
+    global pcnt_last_run_start_timestamp_ms
+
+    logging.debug("!!!!!!!!!!!!!!!!!!!!!! Starting pulse counter thread!")
+
+    pcnt_1_enabled = config[0].get("enabled")
+    pcnt_1_gpio = config[0].get("gpio")
+    pcnt_1_high_freq = config[0].get("highFreq")
+    pcnt_2_enabled = config[1].get("enabled")
+    pcnt_2_gpio = config[1].get("gpio")
+    pcnt_2_high_freq = config[1].get("highFreq")
+
+    from machine import ADC, Pin
+
+    V_LOW = 825  # mV
+    V_HIGH = 2475  # mV
+
+    pcnt_1_adc = None
+    pcnt_2_adc = None
+
+    if pcnt_1_enabled and pcnt_1_gpio is not None:
+        adc = ADC(Pin(pcnt_1_gpio))
+        adc.atten(ADC.ATTN_11DB)
+        adc_width = ADC.WIDTH_12BIT
+        adc.width(adc_width)
+        pcnt_1_adc = adc
+    if pcnt_2_enabled and pcnt_2_gpio is not None:
+        adc = ADC(Pin(pcnt_2_gpio))
+        adc.atten(ADC.ATTN_11DB)
+        adc_width = ADC.WIDTH_12BIT
+        adc.width(adc_width)
+        pcnt_2_adc = adc
+
+    with _thread_lock:
+        pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
+
+    pcnt_1_next_edge = 1
+    pcnt_1_edge_count = 0
+    pcnt_1_previous_input_value = 0
+    pcnt_1_sequential_stable_values_count = 0
+    pcnt_1_sequential_stable_values_max = 2
+    pcnt_1_reported_waiting_for_change = False
+
+    pcnt_2_next_edge = 1
+    pcnt_2_edge_count = 0
+    pcnt_2_previous_input_value = 0
+    pcnt_2_sequential_stable_values_count = 0
+    pcnt_2_sequential_stable_values_max = 2
+    pcnt_2_reported_waiting_for_change = False
+
+    reported_start = False
+    reported_stop = False
+    try:
+        while True:
+            if not _pcnt_active:
+                utime.sleep_ms(100)
+                if not reported_stop:
+                    reported_stop = True
+                    reported_start = False
+                    print(">>>> STOPPED")
+                continue
+
+            if not reported_start:
+                reported_stop = False
+                reported_start = True
+                print(">>>> Started")
+
+
+            if pcnt_1_enabled and pcnt_1_adc is not None:
+                v = pcnt_1_adc.read_voltage(1)
+                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+
+                if edge_level is None or edge_level != pcnt_1_previous_input_value:
+                    pcnt_1_sequential_stable_values_count = 0
+                    pcnt_1_previous_input_value = edge_level
+                    pcnt_1_reported_waiting_for_change = False
+
+                elif not pcnt_1_reported_waiting_for_change:
+                    pcnt_1_sequential_stable_values_count += 1
+                    pcnt_1_previous_input_value = edge_level
+
+                    if pcnt_1_sequential_stable_values_count >= pcnt_1_sequential_stable_values_max:
+                        if edge_level == pcnt_1_next_edge:
+                            with _thread_lock:
+                                pcnt_1_edge_count += 1
+                            pcnt_1_next_edge = 1 - pcnt_1_next_edge
+                            pcnt_1_reported_waiting_for_change = True
+
+            if pcnt_2_enabled and pcnt_2_adc is not None:
+                v = pcnt_2_adc.read_voltage(1)
+                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+
+                if edge_level is None or edge_level != pcnt_2_previous_input_value:
+                    pcnt_2_sequential_stable_values_count = 0
+                    pcnt_2_previous_input_value = edge_level
+                    pcnt_2_reported_waiting_for_change = False
+
+                elif not pcnt_2_reported_waiting_for_change:
+                    pcnt_2_sequential_stable_values_count += 1
+                    pcnt_2_previous_input_value = edge_level
+
+                    if pcnt_2_sequential_stable_values_count >= pcnt_2_sequential_stable_values_max:
+                        if edge_level == pcnt_2_next_edge:
+                            with _thread_lock:
+                                pcnt_2_edge_count += 1
+                            pcnt_2_next_edge = 1 - pcnt_2_next_edge
+                            pcnt_2_reported_waiting_for_change = True
+
+            #yield()
+            utime.sleep_us(500)
+    except KeyboardInterrupt:
+        logging.debug("modem_bg600: gps explicitly interupted")
+    logging.debug("Pulse counting thread stopped!")
 
 
 ### Auxiliary functions ###

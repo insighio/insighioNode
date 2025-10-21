@@ -207,33 +207,24 @@ def executeDeviceInitialization():
 
 def determine_message_buffering_and_network_connection_necessity():
     buffered_upload_enabled = cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
-    execute_connection_procedure = not buffered_upload_enabled
 
     # if RTC is invalid, force network connection
-    if buffered_upload_enabled and gmtime()[0] < 2021:
-        execute_connection_procedure = True
-    return (buffered_upload_enabled, execute_connection_procedure)
+    RTC_clock_ok = buffered_upload_enabled and (gmtime()[0] > 2024)
 
+    return (buffered_upload_enabled, RTC_clock_ok)
 
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
-    (
-        buffered_upload_enabled,
-        execute_connection_procedure,
-    ) = determine_message_buffering_and_network_connection_necessity()
+    measurement_run_start_timestamp = ticks_ms()
 
     is_first_run = True
-    # None: connection not executed
-    # False: connection failed
-    # True: connection succeded
-    connectAndUploadCompletedWithoutErrors = None
 
     light_sleep_on = isLightSleepScenario()
     light_sleep_on_period = cfg.get("_ALWAYS_ON_PERIOD")
     if light_sleep_on_period is None:
         light_sleep_on_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
 
-    if light_sleep_on_period:
+    if light_sleep_on_period and cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"):
         try:
             # set keepalive timing used for heartbeats in open connections
             proto_cfg_instance = cfg.get_protocol_config()
@@ -245,12 +236,18 @@ def executeMeasureAndUploadLoop():
         except:
             logging.debug("no protocol info, ignoring keepalive configuration")
 
-    measurement_run_start_timestamp = ticks_ms()
-
     while 1:
+        if not is_first_run:
+            measurement_run_start_timestamp = ticks_ms()
+
+        scenario_utils.pause_background_measurements()
+
+        # None: connection not executed
+        # False: connection failed
+        # True: connection succeded
+        connectAndUploadCompletedWithoutErrors = None
         logging.info("Light sleep activated: " + str(light_sleep_on))
         device_info.wdt_reset()
-        measurement_run_start_timestamp = ticks_ms()
 
         # get measurements
         logging.debug("Starting getting measurements...")
@@ -259,27 +256,43 @@ def executeMeasureAndUploadLoop():
         if is_first_run:
             set_value_int(measurements, "reset_cause", device_info.get_reset_cause())
 
-        logging.debug("printing measurements so far: " + str(measurements))
+        uptime = getUptime(timeDiffAfterNTP)
+
+        from external.kpn_senml.senml_unit import SenmlSecondaryUnits
+
+        set_value_int(
+            measurements,
+            "uptime",
+            uptime if is_first_run else (ticks_ms() - measurement_run_start_timestamp),
+            SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
+        )
+
+        (
+            buffered_upload_enabled,
+            rtc_clock_ok #execute_connection_procedure,
+        ) = determine_message_buffering_and_network_connection_necessity()
+        logging.debug("buffered_upload_enabled: {}, rtc_clock_ok: {}".format(buffered_upload_enabled, rtc_clock_ok))
 
         # if the RTC is OK, timestamp message
-        if buffered_upload_enabled and not execute_connection_procedure:
-            uptime = getUptime(timeDiffAfterNTP)
-
-            from external.kpn_senml.senml_unit import SenmlSecondaryUnits
-
-            set_value_int(
-                measurements,
-                "uptime",
-                uptime if is_first_run else (uptime - measurement_run_start_timestamp),
-                SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
-            )
-            measurementStored = scenario_utils.storeMeasurement(measurements, False)
+        measurementStored = True
+        if buffered_upload_enabled and rtc_clock_ok:
+            measurementStored = scenario_utils.storeMeasurement(measurements, True)
             # if always on, do run connect and upload
             # else run connection only if measurement was not stored
-            execute_connection_procedure = True if light_sleep_on else not measurementStored
+
+        logging.debug("printing measurements so far: " + str(measurements))
+
+        execute_connection_procedure = not buffered_upload_enabled or message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") or not rtc_clock_ok or (buffered_upload_enabled and not measurementStored)
+
+        logging.debug("buffered_upload_enabled: {}, message_buffer.buffered_measurements_count(): {}, cfg.get(__BATCH_UPLOAD_MESSAGE_BUFFER_): {}".format(buffered_upload_enabled, message_buffer.buffered_measurements_count(), cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER"), light_sleep_on))
+
+        if buffered_upload_enabled and not is_first_run and  (message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") or not measurementStored) and light_sleep_on :
+            import machine
+            machine.reset()
 
         # connect (if needed) and upload message
         if execute_connection_procedure:
+            logging.debug("Executing network connection procedure")
             hasGPSFix = executeGetGPSPosition(measurements, light_sleep_on)
             if not hasGPSFix and cfg.get("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
                 connectAndUploadCompletedWithoutErrors = False
@@ -288,7 +301,7 @@ def executeMeasureAndUploadLoop():
 
         if is_first_run:
             # if it is always on, first connect to the network and then start threads,
-            # to allow them to immediatelly upload events
+            # to allow them to immediately upload events
             scenario_utils.executePostConnectionOperations()
         is_first_run = False
 
@@ -298,6 +311,7 @@ def executeMeasureAndUploadLoop():
             logging.info(
                 "exiting measurement loop, light_sleep_on: {}, light_sleep_on_period: {}".format(light_sleep_on, light_sleep_on_period)
             )
+            #scenario_utils.resume_background_measurements()
             break
 
         logging.debug("[light sleep]: continuing execution")
@@ -321,11 +335,13 @@ def executeMeasureAndUploadLoop():
         logging.info("[light sleep]: sleeping for: " + str(time_to_sleep) + " milliseconds")
         gc.collect()
 
+        scenario_utils.resume_background_measurements()
         start_sleep_time = ticks_ms()
         end_sleep_time = start_sleep_time + time_to_sleep
         while ticks_ms() < end_sleep_time:
             device_info.wdt_reset()
-            sleep_ms(100)
+            print("checking: ")
+            sleep_ms(1000)
         light_sleep_on = isLightSleepScenario()
 
     # if connection procedure was executed
@@ -413,7 +429,6 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         uptime if is_first_run else (uptime - measurement_run_start_timestamp),
         SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
     )
-
 
     try:
         if is_first_run:

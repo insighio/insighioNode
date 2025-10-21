@@ -12,6 +12,7 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from .dictionary_utils import set_value, set_value_int, set_value_float
 from . import message_buffer
 
+_measurement_pause_timestamp_ms = 0
 
 def device_init():
     if (
@@ -48,6 +49,30 @@ def device_deinit():
     gpio_handler.set_pin_value(cfg.get("_UC_IO_LOAD_PWR_SAVE_OFF"), 0)
     gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 0)
 
+
+def pause_background_measurements():
+    global _measurement_pause_timestamp_ms
+    logging.debug("Pausing Measurements")
+    shield_name = cfg.get("_SELECTED_SHIELD")
+    if shield_name == cfg.get("_CONST_SHIELD_ENVIRO"):
+        from . import scenario_enviro_utils
+        import utime
+        scenario_enviro_utils._pcnt_active = False
+        scenario_enviro_utils.pcnt_last_run_pause_timestamp_ms = utime.ticks_ms()
+        #_measurement_pause_timestamp_ms = utime.ticks_ms()
+
+def resume_background_measurements():
+    global _measurement_pause_timestamp_ms
+    logging.debug("Resuming Measurements")
+    shield_name = cfg.get("_SELECTED_SHIELD")
+    if shield_name == cfg.get("_CONST_SHIELD_ENVIRO"):
+        from . import scenario_enviro_utils
+        import utime
+        scenario_enviro_utils._pcnt_active = True
+        scenario_enviro_utils.pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
+        #scenario_enviro_utils._pcnt_pause_period_ms += utime.ticks_diff(utime.ticks_ms(), _measurement_pause_timestamp_ms)
+        #logging.debug("...paused measurements for: {}".format(scenario_enviro_utils._pcnt_pause_period_ms))
+        #_measurement_pause_timestamp_ms = -1
 
 # functions
 def get_measurements(cfg_dummy=None):
