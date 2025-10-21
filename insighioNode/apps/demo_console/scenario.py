@@ -456,7 +456,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
             # logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
 
-            if cfg.get("_CHECK_FOR_OTA") and (not light_sleep_on or (light_sleep_on and is_first_run)):
+            if cfg.get("_CHECK_FOR_OTA"):# and (not light_sleep_on or (light_sleep_on and is_first_run)):
                 network.check_and_apply_ota(cfg)
 
             if is_first_run:
