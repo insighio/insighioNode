@@ -213,6 +213,7 @@ def determine_message_buffering_and_network_connection_necessity():
 
     return (buffered_upload_enabled, RTC_clock_ok)
 
+
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
     measurement_run_start_timestamp = ticks_ms()
@@ -267,24 +268,33 @@ def executeMeasureAndUploadLoop():
             SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
         )
 
-        (
-            buffered_upload_enabled,
-            rtc_clock_ok #execute_connection_procedure,
-        ) = determine_message_buffering_and_network_connection_necessity()
+        (buffered_upload_enabled, rtc_clock_ok) = (  # execute_connection_procedure,
+            determine_message_buffering_and_network_connection_necessity()
+        )
         logging.debug("buffered_upload_enabled: {}, rtc_clock_ok: {}".format(buffered_upload_enabled, rtc_clock_ok))
 
         # if the RTC is OK, timestamp message
-        measurementStored = True
-        if buffered_upload_enabled and rtc_clock_ok:
-            measurementStored = scenario_utils.storeMeasurement(measurements, True)
-            # if always on, do run connect and upload
-            # else run connection only if measurement was not stored
+        measurementStored = scenario_utils.storeMeasurement(measurements, True)
+        # if always on, do run connect and upload
+        # else run connection only if measurement was not stored
 
         logging.debug("printing measurements so far: " + str(measurements))
 
-        execute_connection_procedure = not buffered_upload_enabled or message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") or not rtc_clock_ok or (buffered_upload_enabled and not measurementStored)
+        execute_connection_procedure = (
+            not buffered_upload_enabled
+            or message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER")
+            or not rtc_clock_ok
+            or (buffered_upload_enabled and not measurementStored)
+        )
 
-        logging.debug("buffered_upload_enabled: {}, message_buffer.buffered_measurements_count(): {}, cfg.get(__BATCH_UPLOAD_MESSAGE_BUFFER_): {}".format(buffered_upload_enabled, message_buffer.buffered_measurements_count(), cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER"), light_sleep_on))
+        logging.debug(
+            "buffered_upload_enabled: {}, message_buffer.buffered_measurements_count(): {}, cfg.get(__BATCH_UPLOAD_MESSAGE_BUFFER_): {}".format(
+                buffered_upload_enabled,
+                message_buffer.buffered_measurements_count(),
+                cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER"),
+                light_sleep_on,
+            )
+        )
 
         # if buffered_upload_enabled and not is_first_run and  (message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") or not measurementStored) and light_sleep_on :
         #     import machine
@@ -311,7 +321,7 @@ def executeMeasureAndUploadLoop():
             logging.info(
                 "exiting measurement loop, light_sleep_on: {}, light_sleep_on_period: {}".format(light_sleep_on, light_sleep_on_period)
             )
-            #scenario_utils.resume_background_measurements()
+            # scenario_utils.resume_background_measurements()
             break
 
         logging.debug("[light sleep]: continuing execution")
@@ -323,12 +333,12 @@ def executeMeasureAndUploadLoop():
                 cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors
             )
         )
-        if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and connectAndUploadCompletedWithoutErrors:
+        if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and execute_connection_procedure: # and connectAndUploadCompletedWithoutErrors:
             logging.debug("[light sleep]: disconnecting")
             executeNetworkDisconnect()
             device_info.set_led_color("black")
-        else:
-            logging.debug("[light sleep]: ignoring disconnection")
+        # else:
+        #     logging.debug("[light sleep]: ignoring disconnection")
 
         time_to_sleep = light_sleep_on_period * 1000 - (ticks_ms() - measurement_run_start_timestamp)
         time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
@@ -430,6 +440,9 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
     )
 
+    pop_last_stored_measurement = message_buffer.pop_last_stored_measurement()
+    scenario_utils.storeMeasurement(measurements, True)
+
     try:
         if is_first_run:
             logging.debug("Network [" + selected_network + "] connected: " + str(is_connected))
@@ -439,8 +452,8 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
 
             # create packet
 
-            message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
-            logging.info("measurement sent: {}".format(message_sent))
+            # message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
+            # logging.info("measurement sent: {}".format(message_sent))
             message_buffer.parse_stored_measurements_and_upload(network)
 
             if cfg.get("_CHECK_FOR_OTA") and (not light_sleep_on or (light_sleep_on and is_first_run)):
@@ -460,12 +473,12 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
     if selected_network == "cellular":
         network.prepareForGPS()
 
-    if not message_sent:
-        if cfg.get("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
-            logging.info("Message transmission failed, storing for later")
-            scenario_utils.storeMeasurement(measurements, True)
-        else:
-            logging.info("Message transmission failed, ignoring message")
+    # if not message_sent:
+    #     if cfg.get("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+    #         logging.info("Message transmission failed, storing for later")
+    #         scenario_utils.storeMeasurement(measurements, True)
+    #     else:
+    #         logging.info("Message transmission failed, ignoring message")
 
     # disconnect from network
     if not light_sleep_on or not is_connected:

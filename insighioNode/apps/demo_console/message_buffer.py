@@ -49,6 +49,19 @@ def store_measurement(measurements, force_store=False):
     return False
 
 
+def pop_last_stored_measurement():
+    global mutex
+    with mutex:
+        lines = utils.readFromFlagFile(storage_file_name)
+        if not lines:
+            return None
+        last_line = lines[-1]
+        lines = lines[:-1]
+        utils.writeToFlagFile(storage_file_name, lines)
+        logging.debug("message_buffer: last line: {}".format(last_line))
+        return last_line
+
+
 def parse_stored_measurements_and_upload(network):
     global mutex
     # load stored measurements
