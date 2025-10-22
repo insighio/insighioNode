@@ -26,6 +26,9 @@ _adc_config = []
 _pulse_counter_config = []
 _pcnt_active = True
 
+V_LOW = 825  # mV
+V_HIGH = 2475  # mV
+
 #_pcnt_pause_period_ms = 0
 #_pcnt_sleep_period_us = 500
 #_PCNT_SLOW_PERIOD_US = 500
@@ -706,6 +709,16 @@ def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_
     )
     logging.debug("=============================================")
 
+def detect_stable_edge(adc_inst):
+    cnt = 0
+    while cnt < 1000:
+        v = adc_inst.read_voltage(1)
+        detected_edge = 1 if v > V_HIGH else 0 if v < V_LOW else None
+        if detected_edge is not None:
+            return detected_edge
+        cnt += 1
+        utime.sleep_us(50)
+    return None
 
 def pulse_counter_thread(config):
     global pcnt_1_edge_count
@@ -723,9 +736,6 @@ def pulse_counter_thread(config):
     pcnt_2_high_freq = config[1].get("highFreq")
 
     from machine import ADC, Pin
-
-    V_LOW = 825  # mV
-    V_HIGH = 2475  # mV
 
     pcnt_1_adc = None
     pcnt_2_adc = None
@@ -760,12 +770,10 @@ def pulse_counter_thread(config):
     pcnt_2_sequential_stable_values_max = 2
     pcnt_2_reported_waiting_for_change = False
 
-    v1 = pcnt_1_adc.read_voltage(1)
-    pcnt_1_previous_input_value = 1 if v1 > V_HIGH else 0 if v1 < V_LOW else None
+    pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc)
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
 
-    v2 = pcnt_2_adc.read_voltage(1)
-    pcnt_2_previous_input_value = 1 if v2 > V_HIGH else 0 if v2 < V_LOW else None
+    pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc)
     pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
 
     try:
