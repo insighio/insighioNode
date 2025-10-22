@@ -760,26 +760,17 @@ def pulse_counter_thread(config):
     pcnt_2_sequential_stable_values_max = 2
     pcnt_2_reported_waiting_for_change = False
 
-    reported_start = False
-    reported_stop = False
+    v1 = pcnt_1_adc.read_voltage(1)
+    pcnt_1_previous_input_value = 1 if v1 > V_HIGH else 0 if v1 < V_LOW else None
+    pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
+
+    v2 = pcnt_2_adc.read_voltage(1)
+    pcnt_2_previous_input_value = 1 if v2 > V_HIGH else 0 if v2 < V_LOW else None
+    pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
+
     try:
-        while True:
-            if not _pcnt_active:
-                utime.sleep_ms(100)
-                if not reported_stop:
-                    reported_stop = True
-                    reported_start = False
-                    print(">>>> STOPPED")
-
-                    break
-                continue
-
-            if not reported_start:
-                reported_stop = False
-                reported_start = True
-                print(">>>> Started")
-
-
+        print(">>>> Started")
+        while _pcnt_active:
             if pcnt_1_enabled and pcnt_1_adc is not None:
                 v = pcnt_1_adc.read_voltage(1)
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
@@ -824,6 +815,8 @@ def pulse_counter_thread(config):
             utime.sleep_us(500)
     except KeyboardInterrupt:
         logging.debug("modem_bg600: gps explicitly interupted")
+
+    print(">>>> STOPPED")
     logging.debug("Pulse counting thread stopped!")
 
 
