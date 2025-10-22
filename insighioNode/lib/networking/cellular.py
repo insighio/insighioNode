@@ -60,17 +60,17 @@ def detect_modem():
             sleep_ms(1000)
             modemInst.power_on()
             model_name = modemInst.get_model()
-    except:
-        pass
+    except Exception as e:
+        logging.exception(e, "error detecting modem")
 
-        if not model_name:
-            cellular_model = CELLULAR_NO
-        elif CELLULAR_MC60_STR in model_name:
-            cellular_model = CELLULAR_MC60
-        elif CELLULAR_BG600_STR in model_name:
-            cellular_model = CELLULAR_BG600
-        else:
-            cellular_model = CELLULAR_UNKNOWN
+    if not model_name:
+        cellular_model = CELLULAR_NO
+    elif CELLULAR_MC60_STR in model_name:
+        cellular_model = CELLULAR_MC60
+    elif CELLULAR_BG600_STR in model_name:
+        cellular_model = CELLULAR_BG600
+    else:
+        cellular_model = CELLULAR_UNKNOWN
 
     logging.debug("selected modem: " + str(cellular_model))
     return cellular_model
