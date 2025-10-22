@@ -81,6 +81,8 @@ def parse_stored_measurements_and_upload(network):
 
     uploaded_measurement_count = 0
 
+    completed_without_errors = True
+
     for line in stored_measurements_str.split("\n"):
         utime.sleep_ms(50)
         try:
@@ -99,6 +101,8 @@ def parse_stored_measurements_and_upload(network):
             message = network.create_message(cfg.get("device_id"), data)
             message_send_status = network.send_message(cfg, message)
 
+            completed_without_errors &= message_send_status
+
             logging.debug("Message send status: " + str(message_send_status))
 
             # this only works for BG600 modem since it supports correct message transmission status
@@ -116,3 +120,5 @@ def parse_stored_measurements_and_upload(network):
         # if failed messages were logged, recreate the file to upload during next connection
         for failed_message in failed_messages:
             utils.appendToFlagFile(storage_file_name, failed_message)
+
+    return completed_without_errors
