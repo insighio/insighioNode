@@ -13,6 +13,7 @@ from . import cfg
 import gpio_handler
 import _thread
 import utime
+from math import ceil
 
 _i2c = None
 _io_expander_addr = None
@@ -646,13 +647,14 @@ def execute_pulse_counter_measurements(measurements):
         pcnt_2_val = 0
         with _thread_lock:
             #time_diff = utime.ticks_diff(utime.ticks_ms() - _pcnt_pause_period_ms, pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
-            time_diff = utime.ticks_diff(pcnt_last_run_pause_timestamp_ms, pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
+            logging.debug("pcnt_last_run_start_timestamp_ms: {}, pcnt_last_run_pause_timestamp_ms: {}".format(pcnt_last_run_start_timestamp_ms, pcnt_last_run_pause_timestamp_ms))
+            time_diff = (pcnt_last_run_pause_timestamp_ms - pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
             pcnt_1_val = pcnt_1_edge_count
             pcnt_2_val = pcnt_2_edge_count
             _pcnt_pause_period_ms = 0
             pcnt_1_edge_count = 0
             pcnt_2_edge_count = 0
-            pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
+            #pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
 
         for sensor in _pulse_counter_config:
             if _get(sensor, "enabled"):
@@ -671,7 +673,8 @@ def start_counting_thread():
     _pulse_counter_thread_started = True
 
 def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_prev, formula):
-    pulse_cnt = edge_cnt / 2
+    pulse_cnt = ceil(edge_cnt / 2)
+
     set_value_float(measurements, "pcnt_count_{}".format(id), pulse_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND, 3)
@@ -725,6 +728,7 @@ def pulse_counter_thread(config):
     global pcnt_2_edge_count
     global _pcnt_active
     global pcnt_last_run_start_timestamp_ms
+    global pcnt_last_run_pause_timestamp_ms
 
     logging.debug("!!!!!!!!!!!!!!!!!!!!!! Starting pulse counter thread!")
 
@@ -822,7 +826,9 @@ def pulse_counter_thread(config):
             #yield()
             utime.sleep_us(500)
     except KeyboardInterrupt:
-        logging.debug("modem_bg600: gps explicitly interupted")
+        logging.debug("pulse_counter_thread explicitly interupted")
+
+    pcnt_last_run_pause_timestamp_ms = utime.ticks_ms()
 
     print(">>>> STOPPED")
     logging.debug("Pulse counting thread stopped!")

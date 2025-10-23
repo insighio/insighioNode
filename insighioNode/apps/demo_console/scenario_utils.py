@@ -58,8 +58,6 @@ def pause_background_measurements():
         from . import scenario_enviro_utils
         import utime
         scenario_enviro_utils._pcnt_active = False
-        scenario_enviro_utils.pcnt_last_run_pause_timestamp_ms = utime.ticks_ms()
-        #_measurement_pause_timestamp_ms = utime.ticks_ms()
 
 def resume_background_measurements():
     global _measurement_pause_timestamp_ms
@@ -69,11 +67,7 @@ def resume_background_measurements():
         from . import scenario_enviro_utils
         import utime
         scenario_enviro_utils._pcnt_active = True
-        scenario_enviro_utils.pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
         scenario_enviro_utils.start_counting_thread()
-        #scenario_enviro_utils._pcnt_pause_period_ms += utime.ticks_diff(utime.ticks_ms(), _measurement_pause_timestamp_ms)
-        #logging.debug("...paused measurements for: {}".format(scenario_enviro_utils._pcnt_pause_period_ms))
-        #_measurement_pause_timestamp_ms = -1
 
 # functions
 def get_measurements(cfg_dummy=None):
