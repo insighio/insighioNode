@@ -216,7 +216,6 @@ def determine_message_buffering_and_network_connection_necessity():
 
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
-    measurement_run_start_timestamp = ticks_ms()
 
     is_first_run = True
 
@@ -238,8 +237,7 @@ def executeMeasureAndUploadLoop():
             logging.debug("no protocol info, ignoring keepalive configuration")
 
     while 1:
-        if not is_first_run:
-            measurement_run_start_timestamp = ticks_ms()
+        measurement_run_start_timestamp = ticks_ms()
 
         scenario_utils.pause_background_measurements()
 
@@ -325,7 +323,7 @@ def executeMeasureAndUploadLoop():
             break
 
         logging.debug("[light sleep]: continuing execution")
-        time_to_sleep = 1
+        sleep_period = 1
 
         # if connection procedure was executed
         logging.debug(
@@ -333,21 +331,29 @@ def executeMeasureAndUploadLoop():
                 cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors
             )
         )
-        if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and execute_connection_procedure: # and connectAndUploadCompletedWithoutErrors:
+        if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and execute_connection_procedure:  # and connectAndUploadCompletedWithoutErrors:
             logging.debug("[light sleep]: disconnecting")
             executeNetworkDisconnect()
             device_info.set_led_color("black")
-        # else:
-        #     logging.debug("[light sleep]: ignoring disconnection")
+        else:
+            logging.debug("[light sleep]: ignoring disconnection")
 
-        time_to_sleep = light_sleep_on_period * 1000 - (ticks_ms() - measurement_run_start_timestamp)
-        time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
-        logging.info("[light sleep]: sleeping for: " + str(time_to_sleep) + " milliseconds")
+        sleep_period = get_sleep_duration_ms_remaining(light_sleep_on_period)
+
+        from math import floor
+
+        logging.info(
+            "[light sleep]: sleeping for {} hours, {} minutes, {} seconds".format(
+                floor(sleep_period / 1000 / 3600),
+                floor(sleep_period / 1000 % 3600 / 60),
+                floor(sleep_period / 1000 % 60),
+            )
+        )
         gc.collect()
 
         scenario_utils.resume_background_measurements()
         start_sleep_time = ticks_ms()
-        end_sleep_time = start_sleep_time + time_to_sleep
+        end_sleep_time = start_sleep_time + sleep_period
         while ticks_ms() < end_sleep_time:
             device_info.wdt_reset()
             print("checking: ")
@@ -454,12 +460,12 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
 
             # message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
             # logging.info("measurement sent: {}".format(message_sent))
-            message_buffer.parse_stored_measurements_and_upload(network)
+            message_sent = message_buffer.parse_stored_measurements_and_upload(network)
 
-            if cfg.get("_CHECK_FOR_OTA"):# and (not light_sleep_on or (light_sleep_on and is_first_run)):
+            if cfg.get("_CHECK_FOR_OTA"):  # and (not light_sleep_on or (light_sleep_on and is_first_run)):
                 network.check_and_apply_ota(cfg)
 
-            #if is_first_run:
+            # if is_first_run:
             executeDeviceConfigurationUpload(cfg, network)
         else:
             logging.debug("Network [" + selected_network + "] connected: False")
@@ -585,37 +591,48 @@ def executeDeviceDeinitialization():
     scenario_utils.device_deinit()
 
 
+def get_sleep_duration_ms_remaining(sleep_period_s):
+    uptime = getUptime(timeDiffAfterNTP)
+    sleep_period_s = sleep_period_s if sleep_period_s is not None else 600
+    if sleep_period_s % 60 == 0:
+        now_timestamp = ticks_ms()
+        next_tick_s = now_timestamp / 1000 + sleep_period_s
+
+        meas_duration_ms = now_timestamp - measurement_run_start_timestamp  # duration of measurement
+        #
+        remaining_ms = (sleep_period_s - next_tick_s % sleep_period_s) * 1000 - meas_duration_ms
+        logging.debug(
+            "now_timestamp: {}, next_tick_s: {}, uptime: {}, meas_duration_ms: {}, remaining_ms: {}".format(
+                now_timestamp,
+                next_tick_s,
+                uptime,
+                meas_duration_ms,
+                remaining_ms,
+            )
+        )
+        if remaining_ms <= 0:
+            remaining_ms = sleep_period_s * 1000 - uptime
+    else:
+        remaining_ms = sleep_period_s * 1000 - uptime
+    if remaining_ms < 0:
+        remaining_ms = 1000
+    sleep_period_ms = remaining_ms % 86400000
+    return sleep_period_ms
+
+
 def executeTimingConfiguration():
     if cfg.get("_DEEP_SLEEP_PERIOD_SEC") is not None:
         uptime = getUptime(timeDiffAfterNTP)
         logging.debug("end timestamp: " + str(uptime))
         logging.info("Getting into deep sleep...")
         sleep_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
-        sleep_period = sleep_period if sleep_period is not None else 600
-        if sleep_period % 60 == 0:
-            now_timestamp = time()
-            next_tick = now_timestamp + sleep_period
-            remaining = (sleep_period - next_tick % sleep_period) * 1000 - measurement_run_start_timestamp
-            logging.debug(
-                "now_timestamp: {}, next_tick: {}, uptime: {}, measurement_time: {}, remaining: {}".format(
-                    now_timestamp,
-                    next_tick,
-                    uptime,
-                    measurement_run_start_timestamp,
-                    remaining,
-                )
-            )
-            if remaining <= 0:
-                remaining = sleep_period * 1000 - uptime
-        else:
-            remaining = sleep_period * 1000 - uptime
-        if remaining < 0:
-            remaining = 1000
-        sleep_period = remaining % 86400000
+
+        sleep_period = get_sleep_duration_ms_remaining(sleep_period)
+
         from math import floor
 
         logging.info(
-            "will sleep for {} hours, {} minutes, {} seconds".format(
+            "[deep sleep]: sleeping for {} hours, {} minutes, {} seconds".format(
                 floor(sleep_period / 1000 / 3600),
                 floor(sleep_period / 1000 % 3600 / 60),
                 floor(sleep_period / 1000 % 60),
