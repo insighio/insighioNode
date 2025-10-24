@@ -35,7 +35,7 @@ try:
 except Exception as e:
     logging.exception(e, "Configuration error")
     CONFIG_FILE = "/apps/demo_console/demo_config.py"
-    if utils.existsFile(CONFIG_FILE) and utils.existsFlagFile(CONFIG_FILE + ".prev"):
+    if utils.existsFile(CONFIG_FILE) and utils.existsFile(CONFIG_FILE + ".prev"):
         logging.info("Reverting configuration to previous...")
         utils.copyFile(CONFIG_FILE + ".prev", CONFIG_FILE)
         logging.info("Deleting config backup")
@@ -44,6 +44,7 @@ except Exception as e:
         logging.info("Config revert done...")
 
         import machine
+
         machine.reset()
     else:
         logging.error("Device never configured")
