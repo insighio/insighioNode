@@ -18,6 +18,7 @@ import utils
 # Globals
 timeDiffAfterNTP = None
 measurement_run_start_timestamp = None
+connection_start_ms = None
 
 
 def getUptime(timeOffset=None):
@@ -216,6 +217,7 @@ def determine_message_buffering_and_network_connection_necessity():
 
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
+    global connection_start_ms
 
     is_first_run = True
 
@@ -272,6 +274,8 @@ def executeMeasureAndUploadLoop():
         logging.debug("buffered_upload_enabled: {}, rtc_clock_ok: {}".format(buffered_upload_enabled, rtc_clock_ok))
 
         # if the RTC is OK, timestamp message
+        # measurementStored = True
+        # if buffered_upload_enabled:
         measurementStored = scenario_utils.storeMeasurement(measurements, True)
         # if always on, do run connect and upload
         # else run connection only if measurement was not stored
@@ -282,7 +286,7 @@ def executeMeasureAndUploadLoop():
             not buffered_upload_enabled
             or message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER")
             or not rtc_clock_ok
-            or (buffered_upload_enabled and not measurementStored)
+            or not measurementStored
         )
 
         logging.debug(
@@ -299,6 +303,7 @@ def executeMeasureAndUploadLoop():
         #     machine.reset()
 
         # connect (if needed) and upload message
+        connection_start_ms = ticks_ms()
         if execute_connection_procedure:
             logging.debug("Executing network connection procedure")
             hasGPSFix = executeGetGPSPosition(measurements, light_sleep_on)
@@ -306,6 +311,8 @@ def executeMeasureAndUploadLoop():
                 connectAndUploadCompletedWithoutErrors = False
             else:
                 connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on)
+
+        # connection_duration_ms = ticks_ms() - connection_start_ms
 
         if is_first_run:
             # if it is always on, first connect to the network and then start threads,
@@ -327,17 +334,20 @@ def executeMeasureAndUploadLoop():
 
         # if connection procedure was executed
         logging.debug(
-            "[light sleep]: active: {}, connected: {}".format(
-                cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors
+            "[light sleep]: network active: {}, connected: {}, connection_start_ms: {}".format(
+                cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors, connection_start_ms
             )
         )
-        if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and execute_connection_procedure:  # and connectAndUploadCompletedWithoutErrors:
+
+        if not cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") and execute_connection_procedure:  # and connectAndUploadCompletedWithoutErrors:
             logging.debug("[light sleep]: disconnecting")
             executeNetworkDisconnect()
             device_info.set_led_color("black")
         else:
             logging.debug("[light sleep]: ignoring disconnection")
 
+        # instead of (sleep_period -= connection_duration_ms) we move forward the starting timestamp
+        # measurement_run_start_timestamp += connection_duration_ms
         sleep_period = get_sleep_duration_ms_remaining(light_sleep_on_period)
 
         from math import floor
@@ -391,7 +401,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         network.init(cfg)
     except:
         logging.error("Unsupported network selection: [{}]".format(selected_network))
-        return
+        return False
 
     logging.debug("Network modules loaded")
 
@@ -592,18 +602,19 @@ def executeDeviceDeinitialization():
 
 
 def get_sleep_duration_ms_remaining(sleep_period_s):
+    import utime
+
     uptime = getUptime(timeDiffAfterNTP)
     sleep_period_s = sleep_period_s if sleep_period_s is not None else 600
     if sleep_period_s % 60 == 0:
-        now_timestamp = ticks_ms()
-        next_tick_s = now_timestamp / 1000 + sleep_period_s
+        next_tick_s = utime.time() + sleep_period_s
 
-        meas_duration_ms = now_timestamp - measurement_run_start_timestamp  # duration of measurement
+        meas_duration_ms = connection_start_ms - measurement_run_start_timestamp  # duration of measurement
         #
         remaining_ms = (sleep_period_s - next_tick_s % sleep_period_s) * 1000 - meas_duration_ms
         logging.debug(
-            "now_timestamp: {}, next_tick_s: {}, uptime: {}, meas_duration_ms: {}, remaining_ms: {}".format(
-                now_timestamp,
+            "connection_start_ms: {}, next_tick_s: {}, uptime: {}, meas_duration_ms: {}, remaining_ms: {}".format(
+                connection_start_ms,
                 next_tick_s,
                 uptime,
                 meas_duration_ms,
@@ -611,7 +622,7 @@ def get_sleep_duration_ms_remaining(sleep_period_s):
             )
         )
         if remaining_ms <= 0:
-            remaining_ms = sleep_period_s * 1000 - uptime
+            remaining_ms = (sleep_period_s - next_tick_s % sleep_period_s) * 1000
     else:
         remaining_ms = sleep_period_s * 1000 - uptime
     if remaining_ms < 0:
