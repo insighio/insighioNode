@@ -174,7 +174,7 @@ def fixValue(val):
         return "True"
     elif val == "false":
         return "False"
-    elif val == "":
+    elif val == "" or val == "undefined":
         return "None"
     else:
         return val
