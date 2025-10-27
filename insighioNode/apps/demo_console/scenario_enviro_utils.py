@@ -30,11 +30,6 @@ _pcnt_active = True
 V_LOW = 825  # mV
 V_HIGH = 2475  # mV
 
-#_pcnt_pause_period_ms = 0
-#_pcnt_sleep_period_us = 500
-#_PCNT_SLOW_PERIOD_US = 500
-#_PCNT_SLOW_PERIOD_MS = 1000
-
 _modbus_reg_quantity_per_format = {
     "uint16": 1,
     "int16": 1,
@@ -628,12 +623,7 @@ def execute_pulse_counter_measurements(measurements):
     # from . import scenario_pcnt_ulp
     # scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
 
-    # pulse_counter_thread(_pulse_counter_config)
-
     if _pulse_counter_thread_started is None:
-        #_thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
-        #start_counting_thread()
-
         for sensor in _pulse_counter_config:
             if _get(sensor, "enabled"):
                 id = sensor.get("id")
@@ -646,15 +636,18 @@ def execute_pulse_counter_measurements(measurements):
         pcnt_1_val = 0
         pcnt_2_val = 0
         with _thread_lock:
-            #time_diff = utime.ticks_diff(utime.ticks_ms() - _pcnt_pause_period_ms, pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
-            logging.debug("pcnt_last_run_start_timestamp_ms: {}, pcnt_last_run_pause_timestamp_ms: {}".format(pcnt_last_run_start_timestamp_ms, pcnt_last_run_pause_timestamp_ms))
+            logging.debug(
+                "pcnt_last_run_start_timestamp_ms: {}, pcnt_last_run_pause_timestamp_ms: {}".format(
+                    pcnt_last_run_start_timestamp_ms, pcnt_last_run_pause_timestamp_ms
+                )
+            )
             time_diff = (pcnt_last_run_pause_timestamp_ms - pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
             pcnt_1_val = pcnt_1_edge_count
             pcnt_2_val = pcnt_2_edge_count
             _pcnt_pause_period_ms = 0
             pcnt_1_edge_count = 0
             pcnt_2_edge_count = 0
-            #pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
+            # pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
 
         for sensor in _pulse_counter_config:
             if _get(sensor, "enabled"):
@@ -667,10 +660,23 @@ def execute_pulse_counter_measurements(measurements):
                     _get(sensor, "formula"),
                 )
 
+
+def pause_background_measurements():
+    global _pcnt_active
+    _pcnt_active = False
+
+
+def resume_background_measurements():
+    global _pcnt_active
+    _pcnt_active = True
+    start_counting_thread()
+
+
 def start_counting_thread():
     global _pulse_counter_thread_started
     _thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
     _pulse_counter_thread_started = True
+
 
 def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_prev, formula):
     pulse_cnt = ceil(edge_cnt / 2)
@@ -692,15 +698,14 @@ def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_
             pass
 
     try:
-        raw_value = edge_cnt / 2
-        formula = formula.replace("v", str(raw_value))
+        formula = formula.replace("v", str(pulse_cnt))
         to_execute = "v_transformed=({})".format(formula)
         namespace = {}
         exec(to_execute, namespace)
         calculated_value = namespace["v_transformed"]
         set_value_float(measurements, "pcnt_count_formula_{}".format(id), calculated_value, None, 4)
     except Exception as e:
-        logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(id, raw_value, formula))
+        logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(id, pulse_cnt, formula))
         pass
 
     logging.debug("   ")
@@ -712,6 +717,7 @@ def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_
     )
     logging.debug("=============================================")
 
+
 def detect_stable_edge(adc_inst):
     cnt = 0
     while cnt < 1000:
@@ -722,6 +728,7 @@ def detect_stable_edge(adc_inst):
         cnt += 1
         utime.sleep_us(50)
     return None
+
 
 def pulse_counter_thread(config):
     global pcnt_1_edge_count
@@ -823,10 +830,9 @@ def pulse_counter_thread(config):
                             pcnt_2_next_edge = 1 - pcnt_2_next_edge
                             pcnt_2_reported_waiting_for_change = True
 
-            #yield()
             utime.sleep_us(500)
-    except KeyboardInterrupt:
-        logging.debug("pulse_counter_thread explicitly interupted")
+    except Exception as e:
+        logging.exception(e, "pulse_counter_thread exception occurred")
 
     pcnt_last_run_pause_timestamp_ms = utime.ticks_ms()
 

@@ -12,7 +12,6 @@ from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 from .dictionary_utils import set_value, set_value_int, set_value_float
 from . import message_buffer
 
-_measurement_pause_timestamp_ms = 0
 
 def device_init():
     if (
@@ -51,23 +50,22 @@ def device_deinit():
 
 
 def pause_background_measurements():
-    global _measurement_pause_timestamp_ms
     logging.debug("Pausing Measurements")
     shield_name = cfg.get("_SELECTED_SHIELD")
     if shield_name == cfg.get("_CONST_SHIELD_ENVIRO"):
         from . import scenario_enviro_utils
-        import utime
-        scenario_enviro_utils._pcnt_active = False
+
+        scenario_enviro_utils.pause_background_measurements()
+
 
 def resume_background_measurements():
-    global _measurement_pause_timestamp_ms
     logging.debug("Resuming Measurements")
     shield_name = cfg.get("_SELECTED_SHIELD")
     if shield_name == cfg.get("_CONST_SHIELD_ENVIRO"):
         from . import scenario_enviro_utils
-        import utime
-        scenario_enviro_utils._pcnt_active = True
-        scenario_enviro_utils.start_counting_thread()
+
+        scenario_enviro_utils.resume_background_measurements()
+
 
 # functions
 def get_measurements(cfg_dummy=None):
@@ -136,7 +134,6 @@ def get_measurements(cfg_dummy=None):
                 board_humidity,
                 SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY,
             )
-
 
         shield_name = cfg.get("_SELECTED_SHIELD")
         if shield_name is not None and (
