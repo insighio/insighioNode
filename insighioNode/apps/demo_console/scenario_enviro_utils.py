@@ -746,6 +746,10 @@ def pulse_counter_thread(config):
     pcnt_2_gpio = config[1].get("gpio")
     pcnt_2_high_freq = config[1].get("highFreq")
 
+    logging.debug(config)
+    logging.debug("pcnt_1_enabled: {}, pcnt_1_gpio: {}, pcnt_1_high_freq: {}".format(pcnt_1_enabled, pcnt_1_gpio, pcnt_1_high_freq))
+    logging.debug("pcnt_2_enabled: {}, pcnt_2_gpio: {}, pcnt_2_high_freq: {}".format(pcnt_2_enabled, pcnt_2_gpio, pcnt_2_high_freq))
+
     from machine import ADC, Pin
 
     pcnt_1_adc = None
@@ -781,10 +785,10 @@ def pulse_counter_thread(config):
     pcnt_2_sequential_stable_values_max = 2
     pcnt_2_reported_waiting_for_change = False
 
-    pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc)
+    pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else 0
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
 
-    pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc)
+    pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else 0
     pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
 
     try:
