@@ -606,6 +606,8 @@ def get_sleep_duration_ms_remaining(sleep_period_s):
 
     uptime = getUptime(timeDiffAfterNTP)
     sleep_period_s = sleep_period_s if sleep_period_s is not None else 600
+    sleep_period_ms = sleep_period_s * 1000
+    remaining_ms = sleep_period_ms
     if sleep_period_s % 60 == 0:
         next_tick_s = utime.time() + sleep_period_s
 
@@ -623,12 +625,19 @@ def get_sleep_duration_ms_remaining(sleep_period_s):
         )
         if remaining_ms <= 0:
             remaining_ms = (sleep_period_s - next_tick_s % sleep_period_s) * 1000
+
     else:
-        remaining_ms = sleep_period_s * 1000 - uptime
+        remaining_ms = sleep_period_ms - uptime
     if remaining_ms < 0:
         remaining_ms = 1000
-    sleep_period_ms = remaining_ms % 86400000
-    return sleep_period_ms
+
+    remaining_ms = remaining_ms % 86400000
+
+    # the remaining can never be bigger than sleep period
+    # can not guess in which case this will be triggered though it is left here as a safety mechanism
+    if remaining_ms > sleep_period_ms:
+        remaining_ms = sleep_period_ms
+    return remaining_ms
 
 
 def executeTimingConfiguration():
