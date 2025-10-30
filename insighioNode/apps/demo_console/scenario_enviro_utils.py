@@ -49,9 +49,8 @@ _modbus_struct_format_options = {
 _pulse_counter_thread_started = None
 pcnt_1_edge_count = 0
 pcnt_2_edge_count = 0
-pcnt_last_run_start_timestamp_ms = 0
-pcnt_last_run_pause_timestamp_ms = 0
 _thread_lock = _thread.allocate_lock()
+pcnt_last_run_timestamp_ms = 0
 
 
 def _initialize_i2c():
@@ -588,11 +587,10 @@ def read_adc_sensor(measurements, sensor):
 # [{"id":1,"enabled":false,"formula":"v","highFreq":false},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
 def execute_pulse_counter_measurements(measurements):
     global _pulse_counter_thread_started
+    global pcnt_last_run_timestamp_ms
     global pcnt_1_edge_count
     global pcnt_2_edge_count
-    global _pcnt_pause_period_ms
-    global pcnt_last_run_start_timestamp_ms
-    global pcnt_last_run_pause_timestamp_ms
+    global _thread_lock
 
     logging.info("Starting Pulse Counter measurements")
 
@@ -624,6 +622,35 @@ def execute_pulse_counter_measurements(measurements):
     # scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
 
     if _pulse_counter_thread_started is None:
+
+        _pulse_counter_thread_started = True
+        from machine import Pin
+
+        def pcnt_1_interrupt(pin):
+            global pcnt_1_edge_count
+            with _thread_lock:
+                pcnt_1_edge_count += 1
+
+        def pcnt_2_interrupt(pin):
+            global pcnt_2_edge_count
+            with _thread_lock:
+                pcnt_2_edge_count += 1
+
+        pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
+        pcnt_1_gpio = _pulse_counter_config[0].get("gpio")
+        pcnt_2_enabled = _pulse_counter_config[1].get("enabled")
+        pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
+
+        if pcnt_1_enabled and pcnt_1_gpio:
+            pin1 = Pin(pcnt_1_gpio, Pin.IN, Pin.PULL_UP)
+            pin1.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
+
+        if pcnt_2_enabled and pcnt_2_gpio:
+            pin2 = Pin(pcnt_2_gpio, Pin.IN, Pin.PULL_UP)
+            pin2.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_2_interrupt)
+
+        pcnt_last_run_timestamp_ms = utime.ticks_ms()
+
         for sensor in _pulse_counter_config:
             if _get(sensor, "enabled"):
                 id = sensor.get("id")
@@ -635,19 +662,17 @@ def execute_pulse_counter_measurements(measurements):
         time_diff = -1
         pcnt_1_val = 0
         pcnt_2_val = 0
+
+        time_diff = (utime.ticks_ms() - pcnt_last_run_timestamp_ms) / 1000.0  # in seconds
+        pcnt_last_run_timestamp_ms = utime.ticks_ms()
+
         with _thread_lock:
-            logging.debug(
-                "pcnt_last_run_start_timestamp_ms: {}, pcnt_last_run_pause_timestamp_ms: {}".format(
-                    pcnt_last_run_start_timestamp_ms, pcnt_last_run_pause_timestamp_ms
-                )
-            )
-            time_diff = (pcnt_last_run_pause_timestamp_ms - pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
             pcnt_1_val = pcnt_1_edge_count
-            pcnt_2_val = pcnt_2_edge_count
-            _pcnt_pause_period_ms = 0
             pcnt_1_edge_count = 0
+
+        with _thread_lock:
+            pcnt_2_val = pcnt_2_edge_count
             pcnt_2_edge_count = 0
-            # pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
 
         for sensor in _pulse_counter_config:
             if _get(sensor, "enabled"):
@@ -659,23 +684,6 @@ def execute_pulse_counter_measurements(measurements):
                     time_diff,
                     _get(sensor, "formula"),
                 )
-
-
-def pause_background_measurements():
-    global _pcnt_active
-    _pcnt_active = False
-
-
-def resume_background_measurements():
-    global _pcnt_active
-    _pcnt_active = True
-    start_counting_thread()
-
-
-def start_counting_thread():
-    global _pulse_counter_thread_started
-    _thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
-    _pulse_counter_thread_started = True
 
 
 def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_prev, formula):
@@ -718,130 +726,151 @@ def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_
     logging.debug("=============================================")
 
 
-def detect_stable_edge(adc_inst):
-    cnt = 0
-    while cnt < 1000:
-        v = adc_inst.read_voltage(1)
-        detected_edge = 1 if v > V_HIGH else 0 if v < V_LOW else None
-        if detected_edge is not None:
-            return detected_edge
-        cnt += 1
-        utime.sleep_us(50)
-    return None
+def pause_background_measurements():
+    pass
+    # global _pcnt_active
+    # _pcnt_active = False
+
+
+def resume_background_measurements():
+    pass
+    # global _pcnt_active
+    # _pcnt_active = True
+    # start_counting_thread()
+
+
+def start_counting_thread():
+    pass
+    # global _pulse_counter_thread_started
+    # _thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
+    # _pulse_counter_thread_started = True
+
+
+# def detect_stable_edge(adc_inst):
+#     cnt = 0
+#     while cnt < 1000:
+#         v = adc_inst.read_voltage(1)
+#         detected_edge = 1 if v > V_HIGH else 0 if v < V_LOW else None
+#         if detected_edge is not None:
+#             return detected_edge
+#         cnt += 1
+#         utime.sleep_us(50)
+#     return None
 
 
 def pulse_counter_thread(config):
-    global pcnt_1_edge_count
-    global pcnt_2_edge_count
-    global _pcnt_active
-    global pcnt_last_run_start_timestamp_ms
-    global pcnt_last_run_pause_timestamp_ms
+    pass
+    # global pcnt_1_edge_count
+    # global pcnt_2_edge_count
+    # global _pcnt_active
+    # global pcnt_last_run_start_timestamp_ms
+    # global pcnt_last_run_pause_timestamp_ms
 
-    logging.debug("!!!!!!!!!!!!!!!!!!!!!! Starting pulse counter thread!")
+    # logging.debug("!!!!!!!!!!!!!!!!!!!!!! Starting pulse counter thread!")
 
-    pcnt_1_enabled = config[0].get("enabled")
-    pcnt_1_gpio = config[0].get("gpio")
-    pcnt_1_high_freq = config[0].get("highFreq")
-    pcnt_2_enabled = config[1].get("enabled")
-    pcnt_2_gpio = config[1].get("gpio")
-    pcnt_2_high_freq = config[1].get("highFreq")
+    # pcnt_1_enabled = config[0].get("enabled")
+    # pcnt_1_gpio = config[0].get("gpio")
+    # pcnt_1_high_freq = config[0].get("highFreq")
+    # pcnt_2_enabled = config[1].get("enabled")
+    # pcnt_2_gpio = config[1].get("gpio")
+    # pcnt_2_high_freq = config[1].get("highFreq")
 
-    logging.debug(config)
-    logging.debug("pcnt_1_enabled: {}, pcnt_1_gpio: {}, pcnt_1_high_freq: {}".format(pcnt_1_enabled, pcnt_1_gpio, pcnt_1_high_freq))
-    logging.debug("pcnt_2_enabled: {}, pcnt_2_gpio: {}, pcnt_2_high_freq: {}".format(pcnt_2_enabled, pcnt_2_gpio, pcnt_2_high_freq))
+    # logging.debug(config)
+    # logging.debug("pcnt_1_enabled: {}, pcnt_1_gpio: {}, pcnt_1_high_freq: {}".format(pcnt_1_enabled, pcnt_1_gpio, pcnt_1_high_freq))
+    # logging.debug("pcnt_2_enabled: {}, pcnt_2_gpio: {}, pcnt_2_high_freq: {}".format(pcnt_2_enabled, pcnt_2_gpio, pcnt_2_high_freq))
 
-    from machine import ADC, Pin
+    # from machine import ADC, Pin
 
-    pcnt_1_adc = None
-    pcnt_2_adc = None
+    # pcnt_1_adc = None
+    # pcnt_2_adc = None
 
-    if pcnt_1_enabled and pcnt_1_gpio is not None:
-        adc = ADC(Pin(pcnt_1_gpio))
-        adc.atten(ADC.ATTN_11DB)
-        adc_width = ADC.WIDTH_12BIT
-        adc.width(adc_width)
-        pcnt_1_adc = adc
-    if pcnt_2_enabled and pcnt_2_gpio is not None:
-        adc = ADC(Pin(pcnt_2_gpio))
-        adc.atten(ADC.ATTN_11DB)
-        adc_width = ADC.WIDTH_12BIT
-        adc.width(adc_width)
-        pcnt_2_adc = adc
+    # if pcnt_1_enabled and pcnt_1_gpio is not None:
+    #     adc = ADC(Pin(pcnt_1_gpio))
+    #     adc.atten(ADC.ATTN_11DB)
+    #     adc_width = ADC.WIDTH_12BIT
+    #     adc.width(adc_width)
+    #     pcnt_1_adc = adc
+    # if pcnt_2_enabled and pcnt_2_gpio is not None:
+    #     adc = ADC(Pin(pcnt_2_gpio))
+    #     adc.atten(ADC.ATTN_11DB)
+    #     adc_width = ADC.WIDTH_12BIT
+    #     adc.width(adc_width)
+    #     pcnt_2_adc = adc
 
-    with _thread_lock:
-        pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
+    # with _thread_lock:
+    #     pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
 
-    pcnt_1_next_edge = 1
-    pcnt_1_edge_count = 0
-    pcnt_1_previous_input_value = 0
-    pcnt_1_sequential_stable_values_count = 0
-    pcnt_1_sequential_stable_values_max = 2
-    pcnt_1_reported_waiting_for_change = False
+    # pcnt_1_next_edge = 1
+    # pcnt_1_edge_count = 0
+    # pcnt_1_previous_input_value = 0
+    # pcnt_1_sequential_stable_values_count = 0
+    # pcnt_1_sequential_stable_values_max = 2
+    # pcnt_1_reported_waiting_for_change = False
 
-    pcnt_2_next_edge = 1
-    pcnt_2_edge_count = 0
-    pcnt_2_previous_input_value = 0
-    pcnt_2_sequential_stable_values_count = 0
-    pcnt_2_sequential_stable_values_max = 2
-    pcnt_2_reported_waiting_for_change = False
+    # pcnt_2_next_edge = 1
+    # pcnt_2_edge_count = 0
+    # pcnt_2_previous_input_value = 0
+    # pcnt_2_sequential_stable_values_count = 0
+    # pcnt_2_sequential_stable_values_max = 2
+    # pcnt_2_reported_waiting_for_change = False
 
-    pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else 0
-    pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
+    # pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else 0
+    # pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
 
-    pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else 0
-    pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
+    # pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else 0
+    # pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
 
-    try:
-        print(">>>> Started")
-        while _pcnt_active:
-            if pcnt_1_enabled and pcnt_1_adc is not None:
-                v = pcnt_1_adc.read_voltage(1)
-                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+    # try:
+    #     print(">>>> Started")
+    #     while _pcnt_active:
+    #         if pcnt_1_enabled and pcnt_1_adc is not None:
+    #             v = pcnt_1_adc.read_voltage(1)
+    #             edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
 
-                if edge_level is None or edge_level != pcnt_1_previous_input_value:
-                    pcnt_1_sequential_stable_values_count = 0
-                    pcnt_1_previous_input_value = edge_level
-                    pcnt_1_reported_waiting_for_change = False
+    #             if edge_level is None or edge_level != pcnt_1_previous_input_value:
+    #                 pcnt_1_sequential_stable_values_count = 0
+    #                 pcnt_1_previous_input_value = edge_level
+    #                 pcnt_1_reported_waiting_for_change = False
 
-                elif not pcnt_1_reported_waiting_for_change:
-                    pcnt_1_sequential_stable_values_count += 1
-                    pcnt_1_previous_input_value = edge_level
+    #             elif not pcnt_1_reported_waiting_for_change:
+    #                 pcnt_1_sequential_stable_values_count += 1
+    #                 pcnt_1_previous_input_value = edge_level
 
-                    if pcnt_1_sequential_stable_values_count >= pcnt_1_sequential_stable_values_max:
-                        if edge_level == pcnt_1_next_edge:
-                            with _thread_lock:
-                                pcnt_1_edge_count += 1
-                            pcnt_1_next_edge = 1 - pcnt_1_next_edge
-                            pcnt_1_reported_waiting_for_change = True
+    #                 if pcnt_1_sequential_stable_values_count >= pcnt_1_sequential_stable_values_max:
+    #                     if edge_level == pcnt_1_next_edge:
+    #                         with _thread_lock:
+    #                             pcnt_1_edge_count += 1
+    #                         pcnt_1_next_edge = 1 - pcnt_1_next_edge
+    #                         pcnt_1_reported_waiting_for_change = True
 
-            if pcnt_2_enabled and pcnt_2_adc is not None:
-                v = pcnt_2_adc.read_voltage(1)
-                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+    #         if pcnt_2_enabled and pcnt_2_adc is not None:
+    #             v = pcnt_2_adc.read_voltage(1)
+    #             edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
 
-                if edge_level is None or edge_level != pcnt_2_previous_input_value:
-                    pcnt_2_sequential_stable_values_count = 0
-                    pcnt_2_previous_input_value = edge_level
-                    pcnt_2_reported_waiting_for_change = False
+    #             if edge_level is None or edge_level != pcnt_2_previous_input_value:
+    #                 pcnt_2_sequential_stable_values_count = 0
+    #                 pcnt_2_previous_input_value = edge_level
+    #                 pcnt_2_reported_waiting_for_change = False
 
-                elif not pcnt_2_reported_waiting_for_change:
-                    pcnt_2_sequential_stable_values_count += 1
-                    pcnt_2_previous_input_value = edge_level
+    #             elif not pcnt_2_reported_waiting_for_change:
+    #                 pcnt_2_sequential_stable_values_count += 1
+    #                 pcnt_2_previous_input_value = edge_level
 
-                    if pcnt_2_sequential_stable_values_count >= pcnt_2_sequential_stable_values_max:
-                        if edge_level == pcnt_2_next_edge:
-                            with _thread_lock:
-                                pcnt_2_edge_count += 1
-                            pcnt_2_next_edge = 1 - pcnt_2_next_edge
-                            pcnt_2_reported_waiting_for_change = True
+    #                 if pcnt_2_sequential_stable_values_count >= pcnt_2_sequential_stable_values_max:
+    #                     if edge_level == pcnt_2_next_edge:
+    #                         with _thread_lock:
+    #                             pcnt_2_edge_count += 1
+    #                         pcnt_2_next_edge = 1 - pcnt_2_next_edge
+    #                         pcnt_2_reported_waiting_for_change = True
 
-            utime.sleep_us(500)
-    except Exception as e:
-        logging.exception(e, "pulse_counter_thread exception occurred")
+    #         utime.sleep_us(500)
+    # except Exception as e:
+    #     logging.exception(e, "pulse_counter_thread exception occurred")
 
-    pcnt_last_run_pause_timestamp_ms = utime.ticks_ms()
+    # pcnt_last_run_pause_timestamp_ms = utime.ticks_ms()
 
-    print(">>>> STOPPED")
-    logging.debug("Pulse counting thread stopped!")
+    # print(">>>> STOPPED")
+    # logging.debug("Pulse counting thread stopped!")
 
 
 ### Auxiliary functions ###
