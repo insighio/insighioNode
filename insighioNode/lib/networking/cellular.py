@@ -50,8 +50,17 @@ def detect_modem():
     model_name = None
 
     try:
-        if not modemInst.is_alive():
+        modem_is_alive = False
+        retry_cnt = 0
+        while retry_cnt < 3:
+            modem_is_alive = modemInst.is_alive()
+            if modem_is_alive:
+                break
+            retry_cnt += 1
+
+        if not modem_is_alive:
             modemInst.power_on()
+
         model_name = modemInst.get_model()
         # logging.debug("modem name returned: " + model_name)
         # if modem is still not responding, try power off/on
