@@ -24,7 +24,7 @@ def generate_assembly(
 #define SENS_IOMUX_CLK_EN            (BIT(31))
 
 /* Define variables, which go into .bss section (zero-initialized data) */
-sequential_stable_count_max: .long 2
+sequential_stable_count_max: .long 5
 """
 
     pcnt_template = """\
