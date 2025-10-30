@@ -618,8 +618,10 @@ def execute_pulse_counter_measurements(measurements):
     for sensor in _pulse_counter_config:
         sensor["gpio"] = cfg.get("UC_IO_DGTL_SNSR_{}_READ".format(_get(sensor, "id")))
 
-    # from . import scenario_pcnt_ulp
-    # scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
+    if not cfg.get("_LIGHT_SLEEP_ON"):
+        from . import scenario_pcnt_ulp
+        scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
+        return
 
     if _pulse_counter_thread_started is None:
 
