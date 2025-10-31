@@ -9,6 +9,45 @@ _is_first_run = True
 _is_after_initialization = False
 
 
+def generate_reset_assembly(pcnt_1_gpio=4, pcnt_2_gpio=5):
+    base_template = """\
+#define DR_REG_RTCIO_BASE            0x60008400
+#define RTC_IO_TOUCH_PADX_MUX_SEL_M  (BIT(19))
+#define RTC_IO_TOUCH_PADX_FUN_IE_M   (BIT(13))
+#define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
+#define RTC_GPIO_IN_NEXT_S           10
+#define DR_REG_SENS_BASE             0x60008800
+#define SENS_SAR_PERI_CLK_GATE_CONF_REG  (DR_REG_SENS_BASE + 0x104)
+#define SENS_IOMUX_CLK_EN            (BIT(31))
+#define RTC_IO_TOUCH_PADX_{gpio_1}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio_1}*0x4))
+#define RTC_IO_TOUCH_PADX_{gpio_2}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio_2}*0x4))
+"""
+
+    reset_code_template = """
+    /* Code goes into .text section */
+    .text
+    .global entry
+entry:
+    # enable IOMUX clock
+    WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 0)
+"""
+
+    reset_pcnt_io_init_template = """
+    # connect GPIO to the RTC subsystem so the ULP can read it
+    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 0)
+
+    # switch the GPIO into input mode
+    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 0)
+"""
+    return (
+        base_template.format(gpio_1=pcnt_1_gpio, gpio_2=pcnt_2_gpio)
+        + reset_code_template
+        + reset_pcnt_io_init_template.format(gpio=pcnt_1_gpio)
+        + reset_pcnt_io_init_template.format(gpio=pcnt_2_gpio)
+        + "\n halt"
+    )
+
+
 def generate_assembly(
     pcnt_1_enabled=False, pcnt_1_gpio=4, pcnt_1_high_freq=False, pcnt_2_enabled=False, pcnt_2_gpio=5, pcnt_2_high_freq=False
 ):
@@ -24,7 +63,8 @@ def generate_assembly(
 #define SENS_IOMUX_CLK_EN            (BIT(31))
 
 /* Define variables, which go into .bss section (zero-initialized data) */
-sequential_stable_count_max: .long 5
+sequential_stable_count_max: .long 4
+diagnostic_cycles: .long 0
 """
 
     pcnt_template = """\
@@ -40,11 +80,35 @@ io_number_{gpio}: .long {gpio}
 
 """
 
+    reset_code_template = """
+    /* Code goes into .text section */
+    .text
+    .global entry
+entry:
+    # enable IOMUX clock
+    WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 0)
+    {pcnt_io_reset}
+"""
+
+    reset_pcnt_io_init_template = """
+    # connect GPIO to the RTC subsystem so the ULP can read it
+    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 0)
+
+    # switch the GPIO into input mode
+    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 0)
+"""
+
     code_template = """
     /* Code goes into .text section */
     .text
     .global entry
 entry:
+    /* Increment diagnostic counter */
+    move r3, diagnostic_cycles
+    ld r2, r3, 0
+    add r2, r2, 1
+    st r2, r3, 0
+
     # enable IOMUX clock
     WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1)
     {pcnt_io_init}
@@ -123,7 +187,7 @@ check_stable_with_previous_stable_{gpio}:
 edge_detected_{gpio}:
     /* Flip next_edge_{gpio} */
     move r3, next_edge_{gpio}
-    /*ld r2, r3, 0*/
+    ld r2, r3, 0
     move r2, r0
     add r2, r2, 1
     and r2, r2, 1
@@ -220,6 +284,30 @@ def get_pulse_counters_are_high_frequency(pcnt_cfg):
     return False
 
 
+def reset_ulp(pcnt_cfg):
+    from esp32 import ULP
+    from external.esp32_ulp import src_to_binary
+
+    logging.debug("executing ULP reset")
+
+    script_to_run = generate_reset_assembly(pcnt_cfg[0].get("gpio"), pcnt_cfg[1].get("gpio"))
+
+    print("\n\n\n\n")
+    print(script_to_run)
+    print("\n\n\n\n")
+    binary = src_to_binary(script_to_run, cpu="esp32s2")
+    ulp = ULP()
+    load_addr = 0
+    ulp.load_binary(load_addr, binary)
+    ulp.set_wakeup_period(0, 1000)
+    entry_addr = 0
+    ulp.run(entry_addr)
+    import utime
+
+    utime.sleep_ms(1000)
+    logging.debug("ULP reset done!")
+
+
 def init_ulp(pcnt_cfg):
     from esp32 import ULP
     from external.esp32_ulp import src_to_binary
@@ -231,9 +319,9 @@ def init_ulp(pcnt_cfg):
         logging.error("No pulse counters enabled")
         return
 
-    entry_addr = 7 * 4  # if one pulse counter is enabled
+    entry_addr = 8 * 4  # if one pulse counter is enabled
     if number_of_pulse_counters > 1:
-        entry_addr = 13 * 4
+        entry_addr = 15 * 4
 
     if number_of_pulse_counters == 1 and len(pcnt_cfg) == 1:
         pcnt_cfg.append({"enabled": False})
@@ -355,8 +443,8 @@ def read_ulp_values(measurements, pcnt_cfg):
         if pcnt.get("enabled"):
             id = pcnt.get("id")
             formula = pcnt.get("formula")
-            reg_edge_cnt_16bit = 2 + (cnt * 6)
-            reg_loops = 3 + (cnt * 6)
+            reg_edge_cnt_16bit = 3 + (cnt * 6)  # to fix for diagnostic
+            reg_loops = 4 + (cnt * 6)
             cnt += 1
 
             read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formula, time_diff_from_prev, id)
@@ -366,8 +454,8 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
     cnt = 0
     for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
-            reg_edge_cnt_16bit = 2 + (cnt * 6)
-            reg_loops = 3 + (cnt * 6)
+            reg_edge_cnt_16bit = 3 + (cnt * 6)
+            reg_loops = 4 + (cnt * 6)
 
             setval(reg_edge_cnt_16bit, 0x0)
             setval(reg_loops, 0x0)
@@ -379,9 +467,12 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
     if _is_after_initialization:
         edge_cnt_16bit = 0
         loops = 0
+        diagnostic_count = 0
     else:
         edge_cnt_16bit = value(reg_edge_cnt_16bit)
         loops = value(reg_loops)
+        reg_diagnostic = 1  # + (cnt * 7)  # Adjusted for new diagnostic variable
+        diagnostic_count = value(reg_diagnostic)
 
     # reset registers
     setval(reg_edge_cnt_16bit, 0x0)
@@ -421,8 +512,13 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
     logging.debug("   ")
     logging.debug("================ pcnt {} =======================".format(id))
     logging.debug(
-        "========= pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}, {} pulse/sec".format(
-            pulse_cnt, edge_cnt, time_diff_from_prev, calculated_value, pulse_cnt / time_diff_from_prev if time_diff_from_prev > 0 else 0
+        "========= pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}, {} pulse/sec, diagnostic_count: {}".format(
+            pulse_cnt,
+            edge_cnt,
+            time_diff_from_prev,
+            calculated_value,
+            pulse_cnt / time_diff_from_prev if time_diff_from_prev > 0 else 0,
+            diagnostic_count,
         )
     )
     logging.debug("=============================================")
@@ -437,6 +533,7 @@ def execute(measurements, pcnt_cfg):
             pcnt["highFreq"] = False
     try:
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
+            # reset_ulp(pcnt_cfg)
             init_ulp(pcnt_cfg)
             _is_after_initialization = True
         read_ulp_values(measurements, pcnt_cfg)
