@@ -531,12 +531,210 @@ def execute(measurements, pcnt_cfg):
     for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
             pcnt["highFreq"] = False
+
     try:
-        if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
-            # reset_ulp(pcnt_cfg)
+        # Check if we're recovering from ULP freeze
+        recovery_flag = utils.readFromFlagFile("/ulp_reset_recovery")
+        if recovery_flag == "1":
+            logging.info("Detected recovery from ULP freeze - reinitializing")
+            utils.deleteFlagFile("/ulp_reset_recovery")
+            reset_ulp_hardware()
+            utime.sleep_ms(100)
             init_ulp(pcnt_cfg)
             _is_after_initialization = True
+            _is_first_run = False
+            return
+
+        # Normal initialization
+        if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
+            init_ulp(pcnt_cfg)
+            _is_after_initialization = True
+        else:
+            ulp_healthy = detect_and_recover_ulp_freeze(pcnt_cfg)
+        # Check ULP health before reading
+        # if not _is_first_run:
+
+        # if not ulp_healthy:
+        #     return  # Recovery will handle continuation
+
         read_ulp_values(measurements, pcnt_cfg)
+
     except Exception as e:
         logging.exception(e, "Error reading pulse counter")
+
+        # Attempt recovery on any error
+        try:
+            attempt_ulp_recovery(pcnt_cfg)
+        except:
+            logging.error("Recovery attempt failed")
+
     _is_first_run = False
+
+
+def reset_ulp_hardware():
+    """Reset ULP hardware completely via RTC registers"""
+    import machine
+
+    # RTC register addresses for ESP32-S3
+    RTC_CNTL_ULP_CP_CTRL_REG = 0x60008000 + 0x1C
+    RTC_CNTL_ULP_CP_TIMER_REG = 0x60008000 + 0x20
+    RTC_CNTL_COCPU_CTRL_REG = 0x60008000 + 0x104
+
+    # ULP control bits
+    ULP_CP_FORCE_START_TOP = 1 << 31
+    ULP_CP_START_TOP = 1 << 30
+    ULP_CP_RESET_N = 1 << 29
+    ULP_CP_CLK_FO = 1 << 28
+    ULP_CP_MEM_ADDR_INIT = 1 << 23
+    ULP_CP_MEM_ADDR_SIZE = 0x7FF
+
+    logging.info("Performing ULP hardware reset...")
+
+    try:
+        # Step 1: Force stop ULP
+        machine.mem32[RTC_CNTL_ULP_CP_CTRL_REG] = 0
+        utime.sleep_ms(10)
+
+        # Step 2: Reset ULP processor
+        machine.mem32[RTC_CNTL_ULP_CP_CTRL_REG] = ULP_CP_RESET_N
+        utime.sleep_ms(10)
+
+        # Step 3: Clear ULP memory
+        ULP_MEM_BASE = 0x50000000
+        for i in range(512):  # Clear first 512 words
+            machine.mem32[ULP_MEM_BASE + i * 4] = 0
+
+        # Step 4: Reset timer
+        machine.mem32[RTC_CNTL_ULP_CP_TIMER_REG] = 0
+
+        # Step 5: Reset COCPU if present
+        machine.mem32[RTC_CNTL_COCPU_CTRL_REG] = 0
+
+        utime.sleep_ms(50)
+        logging.info("ULP hardware reset completed")
+        return True
+
+    except Exception as e:
+        logging.error(f"ULP hardware reset failed: {e}")
+        return False
+
+
+def detect_and_recover_ulp_freeze(pcnt_cfg):
+    """Detect ULP freeze and attempt recovery"""
+    global _is_after_initialization
+
+    # Check diagnostic counter
+    try:
+        reg_diagnostic = 1  # diagnostic_cycles register
+        current_diagnostic = value(reg_diagnostic)
+
+        # Store last diagnostic count in a file
+        last_diagnostic_file = "/ulp_last_diagnostic"
+        last_diagnostic_str = utils.readFromFlagFile(last_diagnostic_file)
+
+        try:
+            last_diagnostic = int(last_diagnostic_str)
+        except:
+            last_diagnostic = 0
+
+        utils.writeToFlagFile(last_diagnostic_file, str(current_diagnostic))
+
+        # Check if ULP is frozen (diagnostic counter not incrementing)
+        if current_diagnostic == last_diagnostic:
+            logging.error(f"ULP appears frozen - diagnostic counter stuck at {current_diagnostic}")
+
+            # Attempt recovery sequence
+            recovery_success = attempt_ulp_recovery(pcnt_cfg)
+
+            if not recovery_success:
+                logging.error("ULP recovery failed - performing soft reset")
+                perform_soft_reset_and_continue()
+
+            return recovery_success
+
+    except Exception as e:
+        logging.error(f"Error checking ULP status: {e}")
+        return False
+
+    return True
+
+
+def attempt_ulp_recovery(pcnt_cfg):
+    """Attempt to recover frozen ULP"""
+    global _is_after_initialization
+
+    logging.info("Attempting ULP recovery...")
+
+    try:
+        # Step 1: Hardware reset
+        if not reset_ulp_hardware():
+            return False
+
+        # Step 2: Wait for reset to complete
+        utime.sleep_ms(100)
+
+        # Step 3: Reinitialize ULP
+        _is_after_initialization = True
+        init_ulp(pcnt_cfg)
+
+        # Step 4: Verify ULP is running
+        utime.sleep_ms(500)
+        initial_diagnostic = value(1)
+        utime.sleep_ms(500)
+        new_diagnostic = value(1)
+
+        if new_diagnostic > initial_diagnostic:
+            logging.info("ULP recovery successful")
+            return True
+        else:
+            logging.error("ULP still not running after recovery")
+            return False
+
+    except Exception as e:
+        logging.error(f"ULP recovery failed: {e}")
+        return False
+
+
+def perform_soft_reset_and_continue():
+    """Perform soft reset while preserving essential state"""
+
+    logging.info("Performing soft reset to recover ULP...")
+
+    # Save essential state to files
+    try:
+        utils.writeToFlagFile("/ulp_reset_recovery", "1")
+        utils.writeToFlagFile("/recovery_timestamp", str(utime.time_ns()))
+    except:
+        pass
+
+    # Perform soft reset
+    machine.soft_reset()
+
+
+def comprehensive_rtc_reset():
+    """More comprehensive RTC subsystem reset"""
+    import machine
+
+    # RTC base addresses
+    RTC_CNTL_BASE = 0x60008000
+    RTC_IO_BASE = 0x60008400
+
+    # Key registers to reset
+    registers_to_reset = [
+        (RTC_CNTL_BASE + 0x1C, 0),  # ULP_CP_CTRL
+        (RTC_CNTL_BASE + 0x20, 0),  # ULP_CP_TIMER
+        (RTC_CNTL_BASE + 0x104, 0),  # COCPU_CTRL
+        (RTC_CNTL_BASE + 0x108, 0),  # TOUCH_CTRL1
+        (RTC_CNTL_BASE + 0x10C, 0),  # TOUCH_CTRL2
+    ]
+
+    logging.info("Performing comprehensive RTC reset...")
+
+    for reg_addr, reset_value in registers_to_reset:
+        try:
+            machine.mem32[reg_addr] = reset_value
+            utime.sleep_ms(1)
+        except Exception as e:
+            logging.error(f"Failed to reset register 0x{reg_addr:08x}: {e}")
+
+    utime.sleep_ms(50)
