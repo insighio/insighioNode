@@ -51,6 +51,10 @@ pcnt_1_edge_count = 0
 pcnt_2_edge_count = 0
 _thread_lock = _thread.allocate_lock()
 pcnt_last_run_timestamp_ms = 0
+pcnt_unstable_readings_1 = 0
+pcnt_unstable_readings_2 = 0
+pcnt_readings_1 = 0
+pcnt_readings_2 = 0
 
 
 def _initialize_i2c():
@@ -675,7 +679,7 @@ def execute_pulse_counter_measurements(measurements):
             time_diff = (utime.ticks_ms() - pcnt_last_run_timestamp_ms) / 1000.0  # in seconds
             pcnt_last_run_timestamp_ms = utime.ticks_ms()
         else:
-            time_diff = (pcnt_last_run_pause_timestamp_ms - pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds            
+            time_diff = (pcnt_last_run_pause_timestamp_ms - pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
 
         with _thread_lock:
             pcnt_1_val = pcnt_1_edge_count
@@ -694,15 +698,19 @@ def execute_pulse_counter_measurements(measurements):
                     pcnt_1_val if id == 1 else pcnt_2_val,
                     time_diff,
                     _get(sensor, "formula"),
+                    pcnt_unstable_readings_1 if id == 1 else pcnt_unstable_readings_2,
+                    pcnt_readings_1 if id == 1 else pcnt_readings_2,
                 )
 
 
-def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_prev, formula):
+def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_prev, formula, invalid_readings_cnt, readings_cnt):
     pulse_cnt = ceil(edge_cnt / 2)
 
     set_value_float(measurements, "pcnt_count_{}".format(id), pulse_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND, 3)
+    set_value_int(measurements, "pcnt_unstable_readings_{}".format(id), invalid_readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+    set_value_int(measurements, "pcnt_readings_{}".format(id), readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
 
     calculated_value = 0
 
@@ -772,6 +780,11 @@ def pulse_counter_thread(config):
     global _pcnt_active
     global pcnt_last_run_start_timestamp_ms
     global pcnt_last_run_pause_timestamp_ms
+    global pcnt_unstable_readings_1
+    global pcnt_unstable_readings_2
+    global pcnt_readings_1
+    global pcnt_readings_2
+    global _thread_lock
 
     pcnt_method_1 = config[0].get("method") if config and len(config) > 0 else "interrupt"
     pcnt_method_2 = config[1].get("method") if config and len(config) > 1 else "interrupt"
@@ -828,6 +841,12 @@ def pulse_counter_thread(config):
     pcnt_2_sequential_stable_values_max = 2
     pcnt_2_reported_waiting_for_change = False
 
+    pcnt_unstable_readings_1 = 0
+    pcnt_unstable_readings_2 = 0
+
+    pcnt_readings_1 = 0
+    pcnt_readings_2 = 0
+
     pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else 0
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
 
@@ -841,7 +860,10 @@ def pulse_counter_thread(config):
                 v = pcnt_1_adc.read_voltage(1)
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
 
+                pcnt_readings_1 += 1
+
                 if edge_level is None or edge_level != pcnt_1_previous_input_value:
+                    pcnt_unstable_readings_1 += 1
                     pcnt_1_sequential_stable_values_count = 0
                     pcnt_1_previous_input_value = edge_level
                     pcnt_1_reported_waiting_for_change = False
@@ -861,7 +883,10 @@ def pulse_counter_thread(config):
                 v = pcnt_2_adc.read_voltage(1)
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
 
+                pcnt_readings_2 += 1
+
                 if edge_level is None or edge_level != pcnt_2_previous_input_value:
+                    pcnt_unstable_readings_2 += 1
                     pcnt_2_sequential_stable_values_count = 0
                     pcnt_2_previous_input_value = edge_level
                     pcnt_2_reported_waiting_for_change = False
