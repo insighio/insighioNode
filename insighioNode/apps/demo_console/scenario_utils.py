@@ -83,7 +83,6 @@ def get_measurements(cfg_dummy=None):
 
         if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
             (mem_alloc, mem_free) = device_info.get_heap_memory()
-            set_value(measurements, "reset_cause", device_info.get_reset_cause())
             set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
             set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
             try:
@@ -101,8 +100,19 @@ def get_measurements(cfg_dummy=None):
                         device_info.get_cpu_temp(False),
                         SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT,
                     )
-            except:
-                logging.error("Error getting cpu_temp.")
+            except Exception as e:
+                logging.exception(e, "Error getting cpu_temp.")
+
+            try:
+                from machine import SoftI2C, Pin
+
+                # initialization & measurement
+                i2c = SoftI2C(sda=Pin(cfg.get("_UC_IO_I2C_SDA")), scl=Pin(cfg.get("_UC_IO_I2C_SCL")))
+                # get list of i2c devices returned from scan
+                i2c_devices = i2c.scan()
+                set_value(measurements, "i2c_devices", str(i2c_devices))
+            except Exception as e:
+                logging.exception(e, "Error getting i2c_devices.")
     except Exception as e:
         logging.exception(e, "unable to measure board sensors")
 
