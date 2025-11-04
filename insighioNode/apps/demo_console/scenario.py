@@ -361,7 +361,7 @@ def executeMeasureAndUploadLoop():
         )
         gc.collect()
 
-        scenario_utils.resume_background_measurements()
+        scenario_utils.resume_background_measurements(sleep_period)
         start_sleep_time = ticks_ms()
         end_sleep_time = start_sleep_time + sleep_period
         while ticks_ms() < end_sleep_time:

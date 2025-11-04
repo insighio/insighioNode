@@ -750,15 +750,15 @@ def pause_background_measurements():
     _pcnt_active = False
 
 
-def resume_background_measurements():
+def resume_background_measurements(execution_period_ms=None):
     global _pcnt_active
     _pcnt_active = True
-    start_counting_thread()
+    start_counting_thread(execution_period_ms)
 
 
-def start_counting_thread():
+def start_counting_thread(execution_period_ms=None):
     global _pulse_counter_thread_started
-    _thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config]))
+    _thread.start_new_thread(pulse_counter_thread, ([_pulse_counter_config, execution_period_ms]))
     _pulse_counter_thread_started = True
 
 
@@ -774,7 +774,7 @@ def detect_stable_edge(adc_inst):
     return None
 
 
-def pulse_counter_thread(config):
+def pulse_counter_thread(config, execution_period_ms=None):
     global pcnt_1_edge_count
     global pcnt_2_edge_count
     global _pcnt_active
@@ -827,6 +827,10 @@ def pulse_counter_thread(config):
     with _thread_lock:
         pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
 
+    timeout_timestamp_ms = -1
+    if execution_period_ms is not None:
+        timeout_timestamp_ms = pcnt_last_run_start_timestamp_ms + execution_period_ms
+
     pcnt_1_next_edge = 1
     pcnt_1_edge_count = 0
     pcnt_1_previous_input_value = 0
@@ -856,9 +860,16 @@ def pulse_counter_thread(config):
     try:
         print(">>>> Started")
         while _pcnt_active:
+            if timeout_timestamp_ms != -1 and utime.ticks_ms() >= timeout_timestamp_ms:
+                logging.debug("Exiting thread due to timeout")
+                break
+
             if pcnt_1_enabled and pcnt_1_adc is not None:
                 v = pcnt_1_adc.read_voltage(1)
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+
+                if edge_level is None:
+                    edge_level = detect_stable_edge(pcnt_1_adc)
 
                 pcnt_readings_1 += 1
 
@@ -882,6 +893,9 @@ def pulse_counter_thread(config):
             if pcnt_2_enabled and pcnt_2_adc is not None:
                 v = pcnt_2_adc.read_voltage(1)
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+
+                if edge_level is None:
+                    edge_level = detect_stable_edge(pcnt_2_adc)
 
                 pcnt_readings_2 += 1
 

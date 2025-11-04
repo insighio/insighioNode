@@ -58,13 +58,13 @@ def pause_background_measurements():
         scenario_enviro_utils.pause_background_measurements()
 
 
-def resume_background_measurements():
+def resume_background_measurements(execution_period_ms=None):
     logging.debug("Resuming Measurements")
     shield_name = cfg.get("_SELECTED_SHIELD")
     if shield_name == cfg.get("_CONST_SHIELD_ENVIRO"):
         from . import scenario_enviro_utils
 
-        scenario_enviro_utils.resume_background_measurements()
+        scenario_enviro_utils.resume_background_measurements(execution_period_ms)
 
 
 # functions
