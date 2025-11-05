@@ -204,7 +204,10 @@ def shield_measurements(measurements):
         logging.debug("io expander can not be initialized, aborting shiled measurements")
         return
 
-    execute_sdi12_measurements(measurements)
+    try:
+        execute_sdi12_measurements(measurements)
+    except:
+        pass
 
     execute_modbus_measurements(measurements)
 
@@ -263,6 +266,7 @@ def execute_sdi12_measurements(measurements):
             read_sdi12_sensor(sdi12, measurements, sensor)
             sleep_ms(2500)
     except Exception as e:
+        set_value(measurements, "sdi12_e", "{}".format(e), None)
         logging.exception(e, "Exception while reading SDI-12 data")
 
     if sdi12:
@@ -289,6 +293,7 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
                 break
 
         if not is_active:
+            set_value(measurements, "sdi12_{}_e".format(address), "not_found", None)
             logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
             return
 
@@ -301,6 +306,7 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
         force_wait = True if manufacturer == "in-situ" and (model == "at500" or model == "at400") else False
         responseArray = sdi12.get_measurement(address, command_to_execute, 1, force_wait)
         if not responseArray:
+            set_value(measurements, "sdi12_{}_e".format(address), "no_response", None)
             logging.error("read_sdi12_sensor - No response from sensor in address: [" + str(address) + "]")
             return
 
@@ -311,6 +317,7 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
             sdi12._send(address + "XT!")  # trigger next round of measurements
 
     except Exception as e:
+        set_value(measurements, "sdi12_{}_e".format(address), "{}".format(e), None)
         logging.exception(e, "Exception while reading SDI-12 data for address: {}".format(address))
         return
 

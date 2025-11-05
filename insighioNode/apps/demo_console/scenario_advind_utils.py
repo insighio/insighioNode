@@ -65,7 +65,11 @@ def executeSDI12Measurement(sdi12, measurements, index):
         set_sensor_power_on(_sdi12_sensor_switch_list[location])
     powerOffAllSwitchExcept(location)
     sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
-    read_sdi12_sensor(sdi12, address, measurements, location)
+    try:
+        read_sdi12_sensor(sdi12, address, measurements, location)
+    except Exception as e:
+        set_value(measurements, "sdi12_{}_e".format(address), "{}".format(e), None)
+        logging.exception(e, "Exception while reading SDI-12 sensor at address: {}".format(address))
     powerOffAllSwitchExcept()
 
 
@@ -116,8 +120,10 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         manufacturer = manufacturer.lower()
         model = model.lower()
         logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
-        # set_value(measurements, "sdi12_{}_model".format(address), model)
-        # set_value(measurements, "sdi12_{}_manufacturer".format(address), manufacturer)
+        set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
+        set_value(measurements, "sdi12_{}_m".format(address), model, None)
+    else:
+        set_value(measurements, "sdi12_{}_e".format(address), "not_found", None)
 
     if not manufacturer:
         logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
@@ -171,6 +177,9 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
         responseArrayM = sdi12.get_measurement(address, "M", 1)
         parse_generic_sdi12(address, responseArrayC, measurements, "sdi12", None, "_c", location)
         parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
+
+    if not responseArray and not responseArrayC and not responseArrayM:
+        set_value(measurements, "sdi12_{}_e".format(address), "no_response", None)
 
 
 def current_sense_4_20mA(measurements):
