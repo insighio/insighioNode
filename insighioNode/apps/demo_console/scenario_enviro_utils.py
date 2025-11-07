@@ -56,6 +56,11 @@ pcnt_unstable_readings_2 = 0
 pcnt_readings_1 = 0
 pcnt_readings_2 = 0
 
+pcnt_voltage_min_1 = 0
+pcnt_voltage_max_1 = 0
+pcnt_voltage_min_2 = 0
+pcnt_voltage_max_2 = 0
+
 
 def _initialize_i2c():
     global _i2c
@@ -720,6 +725,24 @@ def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_
     if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
         set_value_int(measurements, "pcnt_unstable_readings_{}".format(id), invalid_readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
         set_value_int(measurements, "pcnt_readings_{}".format(id), readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+        try:
+            set_value_float(
+                measurements,
+                "pcnt_voltage_min_{}".format(id),
+                (pcnt_voltage_min_1 if id == 1 else pcnt_voltage_min_2) / 1000.0,
+                SenmlUnits.SENML_UNIT_VOLT,
+            )
+        except Exception as e:
+            logging.error("Error setting pcnt_voltage_min_{}: {}".format(id, e))
+        try:
+            set_value_float(
+                measurements,
+                "pcnt_voltage_max_{}".format(id),
+                (pcnt_voltage_max_1 if id == 1 else pcnt_voltage_max_2) / 1000.0,
+                SenmlUnits.SENML_UNIT_VOLT,
+            )
+        except Exception as e:
+            logging.error("Error setting pcnt_voltage_max_{}: {}".format(id, e))
 
     calculated_value = 0
 
@@ -794,6 +817,10 @@ def pulse_counter_thread(config, execution_period_ms=None):
     global pcnt_readings_1
     global pcnt_readings_2
     global _thread_lock
+    global pcnt_voltage_min_1
+    global pcnt_voltage_max_1
+    global pcnt_voltage_min_2
+    global pcnt_voltage_max_2
 
     pcnt_method_1 = config[0].get("method") if config and len(config) > 0 else "interrupt"
     pcnt_method_2 = config[1].get("method") if config and len(config) > 1 else "interrupt"
@@ -844,15 +871,13 @@ def pulse_counter_thread(config, execution_period_ms=None):
     pcnt_1_edge_count = 0
     pcnt_1_previous_input_value = 0
     pcnt_1_sequential_stable_values_count = 0
-    pcnt_1_sequential_stable_values_max = 2
-    pcnt_1_reported_waiting_for_change = False
+    pcnt_1_sequential_stable_values_max = 5
 
     pcnt_2_next_edge = 1
     pcnt_2_edge_count = 0
     pcnt_2_previous_input_value = 0
     pcnt_2_sequential_stable_values_count = 0
-    pcnt_2_sequential_stable_values_max = 2
-    pcnt_2_reported_waiting_for_change = False
+    pcnt_2_sequential_stable_values_max = 5
 
     pcnt_unstable_readings_1 = 0
     pcnt_unstable_readings_2 = 0
@@ -862,9 +887,13 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
     pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else 0
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
+    pcnt_voltage_min_1 = None
+    pcnt_voltage_max_1 = None
 
     pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else 0
     pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
+    pcnt_voltage_min_2 = None
+    pcnt_voltage_max_2 = None
 
     try:
         print(">>>> Started")
@@ -875,6 +904,12 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
             if pcnt_1_enabled and pcnt_1_adc is not None:
                 v = pcnt_1_adc.read_voltage(1)
+
+                if pcnt_voltage_min_1 is None or v < pcnt_voltage_min_1:
+                    pcnt_voltage_min_1 = v
+                if pcnt_voltage_max_1 is None or v > pcnt_voltage_max_1:
+                    pcnt_voltage_max_1 = v
+
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
 
                 if edge_level is None:
@@ -886,22 +921,30 @@ def pulse_counter_thread(config, execution_period_ms=None):
                     pcnt_unstable_readings_1 += 1
                     pcnt_1_sequential_stable_values_count = 0
                     pcnt_1_previous_input_value = edge_level
-                    pcnt_1_reported_waiting_for_change = False
 
-                elif not pcnt_1_reported_waiting_for_change:
-                    pcnt_1_sequential_stable_values_count += 1
+                else:
                     pcnt_1_previous_input_value = edge_level
 
                     if pcnt_1_sequential_stable_values_count >= pcnt_1_sequential_stable_values_max:
                         if edge_level == pcnt_1_next_edge:
                             with _thread_lock:
                                 pcnt_1_edge_count += 1
+
                             pcnt_1_next_edge = 1 - pcnt_1_next_edge
-                            pcnt_1_reported_waiting_for_change = True
+                        else:
+                            # stable level, waiting for change
+                            pass
+                    else:
+                        pcnt_1_sequential_stable_values_count += 1
 
             if pcnt_2_enabled and pcnt_2_adc is not None:
                 v = pcnt_2_adc.read_voltage(1)
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+
+                if pcnt_voltage_min_2 is None or v < pcnt_voltage_min_2:
+                    pcnt_voltage_min_2 = v
+                if pcnt_voltage_max_2 is None or v > pcnt_voltage_max_2:
+                    pcnt_voltage_max_2 = v
 
                 if edge_level is None:
                     edge_level = detect_stable_edge(pcnt_2_adc)
@@ -912,20 +955,23 @@ def pulse_counter_thread(config, execution_period_ms=None):
                     pcnt_unstable_readings_2 += 1
                     pcnt_2_sequential_stable_values_count = 0
                     pcnt_2_previous_input_value = edge_level
-                    pcnt_2_reported_waiting_for_change = False
 
-                elif not pcnt_2_reported_waiting_for_change:
-                    pcnt_2_sequential_stable_values_count += 1
+                else:
                     pcnt_2_previous_input_value = edge_level
 
                     if pcnt_2_sequential_stable_values_count >= pcnt_2_sequential_stable_values_max:
                         if edge_level == pcnt_2_next_edge:
                             with _thread_lock:
                                 pcnt_2_edge_count += 1
-                            pcnt_2_next_edge = 1 - pcnt_2_next_edge
-                            pcnt_2_reported_waiting_for_change = True
 
-            utime.sleep_us(500)
+                            pcnt_2_next_edge = 1 - pcnt_2_next_edge
+                        else:
+                            # stable level, waiting for change
+                            pass
+                    else:
+                        pcnt_2_sequential_stable_values_count += 1
+
+            utime.sleep_us(5)
     except Exception as e:
         logging.exception(e, "pulse_counter_thread exception occurred")
 
