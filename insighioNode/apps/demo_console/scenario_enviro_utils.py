@@ -56,6 +56,16 @@ pcnt_unstable_readings_2 = 0
 pcnt_readings_1 = 0
 pcnt_readings_2 = 0
 
+# Add debounce timer variables
+from machine import Timer
+pcnt_1_debounce_timer = Timer(1)
+pcnt_2_debounce_timer = Timer(2)
+pcnt_1_pending_edge = False
+pcnt_2_pending_edge = False
+pcnt_1_filtered_edges = 0
+pcnt_2_filtered_edges = 0
+DEBOUNCE_TIME_MS = 1  # Debounce period in milliseconds
+
 pcnt_voltage_min_1 = 0
 pcnt_voltage_max_1 = 0
 pcnt_voltage_min_2 = 0
@@ -607,6 +617,12 @@ def execute_pulse_counter_measurements(measurements):
     global pcnt_1_edge_count
     global pcnt_2_edge_count
     global _thread_lock
+    global pcnt_1_debounce_timer
+    global pcnt_2_debounce_timer
+    global pcnt_1_pending_edge
+    global pcnt_2_pending_edge
+    global pcnt_1_filtered_edges
+    global pcnt_2_filtered_edges
 
     logging.info("Starting Pulse Counter measurements")
 
@@ -650,15 +666,50 @@ def execute_pulse_counter_measurements(measurements):
         if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
             from machine import Pin
 
+            def pcnt_1_timer_callback(timer):
+                global pcnt_1_edge_count, pcnt_1_pending_edge
+                # if pcnt_1_pending_edge:
+                #     with _thread_lock:
+                pcnt_1_edge_count += 1
+                pcnt_1_pending_edge = False
+
+            def pcnt_2_timer_callback(timer):
+                global pcnt_2_edge_count, pcnt_2_pending_edge
+                #if pcnt_2_pending_edge:
+                #with _thread_lock:
+                pcnt_2_edge_count += 1
+                pcnt_2_pending_edge = False
+                print("edge counted")
+
             def pcnt_1_interrupt(pin):
-                global pcnt_1_edge_count
-                with _thread_lock:
-                    pcnt_1_edge_count += 1
+                global pcnt_1_debounce_timer, pcnt_1_pending_edge, pcnt_1_filtered_edges
+
+                if pcnt_1_pending_edge:
+                    # Already have a pending edge, this is noise/bounce
+                    #with _thread_lock:
+                    pcnt_1_filtered_edges += 1
+                    # Reset the timer to extend the debounce period
+                else:
+                    # First edge detected, start debounce timer
+                    pcnt_1_pending_edge = True
+                #pcnt_1_debounce_timer.deinit()
+                pcnt_1_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_1_timer_callback)
 
             def pcnt_2_interrupt(pin):
-                global pcnt_2_edge_count
-                with _thread_lock:
-                    pcnt_2_edge_count += 1
+                global pcnt_2_debounce_timer, pcnt_2_pending_edge, pcnt_2_filtered_edges
+
+                if pcnt_2_pending_edge:
+                    # Already have a pending edge, this is noise/bounce
+                    #with _thread_lock:
+                    pcnt_2_filtered_edges += 1
+                    print("edge filtered")
+                else:
+                    # First edge detected, start debounce timer
+                    pcnt_2_pending_edge = True
+                    print("edge pending")
+
+                #pcnt_2_debounce_timer.deinit()
+                pcnt_2_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_2_timer_callback)
 
             pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
             pcnt_1_gpio = _pulse_counter_config[0].get("gpio")
@@ -682,6 +733,9 @@ def execute_pulse_counter_measurements(measurements):
                 set_value_int(measurements, "pcnt_edge_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
                 set_value_float(measurements, "pcnt_period_s_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
                 set_value_float(measurements, "pcnt_count_formula_{}".format(id), 0)
+                # Add filtered edge count for debugging
+                if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
+                    set_value_int(measurements, "pcnt_filtered_edges_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
     else:
         time_diff = -1
         pcnt_1_val = 0
@@ -696,14 +750,19 @@ def execute_pulse_counter_measurements(measurements):
         with _thread_lock:
             pcnt_1_val = pcnt_1_edge_count
             pcnt_1_edge_count = 0
+            pcnt_1_filtered = pcnt_1_filtered_edges
+            pcnt_1_filtered_edges = 0
 
         with _thread_lock:
             pcnt_2_val = pcnt_2_edge_count
             pcnt_2_edge_count = 0
+            pcnt_2_filtered = pcnt_2_filtered_edges
+            pcnt_2_filtered_edges = 0
 
         for sensor in _pulse_counter_config:
             if _get(sensor, "enabled"):
                 id = sensor.get("id")
+                filtered_count = pcnt_1_filtered if id == 1 else pcnt_2_filtered
                 store_pulse_counter_measurements(
                     measurements,
                     id,
@@ -712,10 +771,14 @@ def execute_pulse_counter_measurements(measurements):
                     _get(sensor, "formula"),
                     pcnt_unstable_readings_1 if id == 1 else pcnt_unstable_readings_2,
                     pcnt_readings_1 if id == 1 else pcnt_readings_2,
+                    filtered_count,
+                    pcnt_method_1 if id == 1 else pcnt_method_2,
                 )
 
 
-def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_prev, formula, invalid_readings_cnt, readings_cnt):
+def store_pulse_counter_measurements(
+    measurements, id, edge_cnt, time_diff_from_prev, formula, invalid_readings_cnt, readings_cnt, filtered_edges_cnt, method=None
+):
     pulse_cnt = ceil(edge_cnt / 2)
 
     set_value_float(measurements, "pcnt_count_{}".format(id), pulse_cnt, SenmlUnits.SENML_UNIT_COUNTER)
@@ -723,26 +786,30 @@ def store_pulse_counter_measurements(measurements, id, edge_cnt, time_diff_from_
     set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND, 3)
 
     if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
-        set_value_int(measurements, "pcnt_unstable_readings_{}".format(id), invalid_readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-        set_value_int(measurements, "pcnt_readings_{}".format(id), readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-        try:
-            set_value_float(
-                measurements,
-                "pcnt_voltage_min_{}".format(id),
-                (pcnt_voltage_min_1 if id == 1 else pcnt_voltage_min_2) / 1000.0,
-                SenmlUnits.SENML_UNIT_VOLT,
-            )
-        except Exception as e:
-            logging.error("Error setting pcnt_voltage_min_{}: {}".format(id, e))
-        try:
-            set_value_float(
-                measurements,
-                "pcnt_voltage_max_{}".format(id),
-                (pcnt_voltage_max_1 if id == 1 else pcnt_voltage_max_2) / 1000.0,
-                SenmlUnits.SENML_UNIT_VOLT,
-            )
-        except Exception as e:
-            logging.error("Error setting pcnt_voltage_max_{}: {}".format(id, e))
+
+        if method == "adc":
+            set_value_int(measurements, "pcnt_unstable_readings_{}".format(id), invalid_readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+            set_value_int(measurements, "pcnt_readings_{}".format(id), readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+            try:
+                set_value_float(
+                    measurements,
+                    "pcnt_voltage_min_{}".format(id),
+                    (pcnt_voltage_min_1 if id == 1 else pcnt_voltage_min_2) / 1000.0,
+                    SenmlUnits.SENML_UNIT_VOLT,
+                )
+            except Exception as e:
+                logging.error("Error setting pcnt_voltage_min_{}: {}".format(id, e))
+            try:
+                set_value_float(
+                    measurements,
+                    "pcnt_voltage_max_{}".format(id),
+                    (pcnt_voltage_max_1 if id == 1 else pcnt_voltage_max_2) / 1000.0,
+                    SenmlUnits.SENML_UNIT_VOLT,
+                )
+            except Exception as e:
+                logging.error("Error setting pcnt_voltage_max_{}: {}".format(id, e))
+        else:
+            set_value_int(measurements, "pcnt_filtered_edges_{}".format(id), filtered_edges_cnt, SenmlUnits.SENML_UNIT_COUNTER)
 
     calculated_value = 0
 
