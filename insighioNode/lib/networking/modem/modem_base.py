@@ -60,8 +60,8 @@ class Modem:
         Pin(self.modem_power_on, Pin.OUT).on()
         # modem boot
         p0 = Pin(self.modem_power_key, Pin.OUT)
-        p0.on()
         logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
+        p0.on()
         sleep_ms(1200)
         p0.off()
         logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))

@@ -49,6 +49,20 @@ def store_measurement(measurements, force_store=False):
     return False
 
 
+def pop_last_stored_measurement():
+    global mutex
+    with mutex:
+        lines = utils.readFromFlagFile(storage_file_name)
+        if not lines:
+            return None
+        lines = lines.split("\n")
+        last_lines = lines[-2:-1]
+        lines = lines[:-2]
+        utils.writeToFlagFile(storage_file_name, "\n".join(lines) + "\n")
+        logging.debug("message_buffer: last line: {}".format(last_lines))
+        return last_lines
+
+
 def parse_stored_measurements_and_upload(network):
     global mutex
     # load stored measurements
@@ -66,6 +80,8 @@ def parse_stored_measurements_and_upload(network):
         stored_measurements_str += "\n" + interupted_upload_str
 
     uploaded_measurement_count = 0
+
+    completed_without_errors = True
 
     for line in stored_measurements_str.split("\n"):
         utime.sleep_ms(50)
@@ -85,6 +101,8 @@ def parse_stored_measurements_and_upload(network):
             message = network.create_message(cfg.get("device_id"), data)
             message_send_status = network.send_message(cfg, message)
 
+            completed_without_errors &= message_send_status
+
             logging.debug("Message send status: " + str(message_send_status))
 
             # this only works for BG600 modem since it supports correct message transmission status
@@ -102,3 +120,5 @@ def parse_stored_measurements_and_upload(network):
         # if failed messages were logged, recreate the file to upload during next connection
         for failed_message in failed_messages:
             utils.appendToFlagFile(storage_file_name, failed_message)
+
+    return completed_without_errors

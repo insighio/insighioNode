@@ -46,16 +46,31 @@ def detect_modem():
     from networking.modem.modem_base import Modem
 
     modemInst = Modem(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
-    if not modemInst.is_alive():
-        modemInst.power_on()
-    model_name = modemInst.get_model()
-    # logging.debug("modem name returned: " + model_name)
-    # if modem is still not responding, try power off/on
-    if not model_name:
-        modemInst.power_off()
-        sleep_ms(1000)
-        modemInst.power_on()
+
+    model_name = None
+
+    try:
+        modem_is_alive = False
+        retry_cnt = 0
+        while retry_cnt < 3:
+            modem_is_alive = modemInst.is_alive()
+            if modem_is_alive:
+                break
+            retry_cnt += 1
+
+        if not modem_is_alive:
+            modemInst.power_on()
+
         model_name = modemInst.get_model()
+        # logging.debug("modem name returned: " + model_name)
+        # if modem is still not responding, try power off/on
+        if not model_name:
+            modemInst.power_off()
+            sleep_ms(1000)
+            modemInst.power_on()
+            model_name = modemInst.get_model()
+    except Exception as e:
+        logging.exception(e, "error detecting modem")
 
     if not model_name:
         cellular_model = CELLULAR_NO
@@ -96,6 +111,11 @@ def get_modem_instance():
 
     return modem_instance
 
+def reset_modem_instance():
+    global modem_instance
+    global cellular_model
+    modem_instance = None
+    cellular_model = CELLULAR_NO_INIT
 
 def connect(cfg):
     """Complete cellular connection procedure (activation, attachment, data connection)

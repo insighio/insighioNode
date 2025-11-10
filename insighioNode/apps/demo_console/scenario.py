@@ -18,6 +18,7 @@ import utils
 # Globals
 timeDiffAfterNTP = None
 measurement_run_start_timestamp = None
+connection_start_ms = None
 
 
 def getUptime(timeOffset=None):
@@ -207,33 +208,25 @@ def executeDeviceInitialization():
 
 def determine_message_buffering_and_network_connection_necessity():
     buffered_upload_enabled = cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") is not None
-    execute_connection_procedure = not buffered_upload_enabled
 
     # if RTC is invalid, force network connection
-    if buffered_upload_enabled and gmtime()[0] < 2021:
-        execute_connection_procedure = True
-    return (buffered_upload_enabled, execute_connection_procedure)
+    RTC_clock_ok = buffered_upload_enabled and (gmtime()[0] > 2024)
+
+    return (buffered_upload_enabled, RTC_clock_ok)
 
 
 def executeMeasureAndUploadLoop():
     global measurement_run_start_timestamp
-    (
-        buffered_upload_enabled,
-        execute_connection_procedure,
-    ) = determine_message_buffering_and_network_connection_necessity()
+    global connection_start_ms
 
     is_first_run = True
-    # None: connection not executed
-    # False: connection failed
-    # True: connection succeded
-    connectAndUploadCompletedWithoutErrors = None
 
     light_sleep_on = isLightSleepScenario()
     light_sleep_on_period = cfg.get("_ALWAYS_ON_PERIOD")
     if light_sleep_on_period is None:
         light_sleep_on_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
 
-    if light_sleep_on_period:
+    if light_sleep_on_period and cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"):
         try:
             # set keepalive timing used for heartbeats in open connections
             proto_cfg_instance = cfg.get_protocol_config()
@@ -245,12 +238,17 @@ def executeMeasureAndUploadLoop():
         except:
             logging.debug("no protocol info, ignoring keepalive configuration")
 
-    measurement_run_start_timestamp = ticks_ms()
-
     while 1:
+        measurement_run_start_timestamp = ticks_ms()
+
+        scenario_utils.pause_background_measurements()
+
+        # None: connection not executed
+        # False: connection failed
+        # True: connection succeded
+        connectAndUploadCompletedWithoutErrors = None
         logging.info("Light sleep activated: " + str(light_sleep_on))
         device_info.wdt_reset()
-        measurement_run_start_timestamp = ticks_ms()
 
         # get measurements
         logging.debug("Starting getting measurements...")
@@ -259,36 +257,66 @@ def executeMeasureAndUploadLoop():
         if is_first_run:
             set_value_int(measurements, "reset_cause", device_info.get_reset_cause())
 
-        logging.debug("printing measurements so far: " + str(measurements))
+        uptime = getUptime(timeDiffAfterNTP)
+
+        from external.kpn_senml.senml_unit import SenmlSecondaryUnits
+
+        set_value_int(
+            measurements,
+            "uptime",
+            uptime if is_first_run else (ticks_ms() - measurement_run_start_timestamp),
+            SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
+        )
+
+        (buffered_upload_enabled, rtc_clock_ok) = (  # execute_connection_procedure,
+            determine_message_buffering_and_network_connection_necessity()
+        )
+        logging.debug("buffered_upload_enabled: {}, rtc_clock_ok: {}".format(buffered_upload_enabled, rtc_clock_ok))
 
         # if the RTC is OK, timestamp message
-        if buffered_upload_enabled and not execute_connection_procedure:
-            uptime = getUptime(timeDiffAfterNTP)
+        # measurementStored = True
+        # if buffered_upload_enabled:
+        measurementStored = scenario_utils.storeMeasurement(measurements, True)
+        # if always on, do run connect and upload
+        # else run connection only if measurement was not stored
 
-            from external.kpn_senml.senml_unit import SenmlSecondaryUnits
+        logging.debug("printing measurements so far: " + str(measurements))
 
-            set_value_int(
-                measurements,
-                "uptime",
-                uptime if is_first_run else (uptime - measurement_run_start_timestamp),
-                SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
+        execute_connection_procedure = (
+            not buffered_upload_enabled
+            or message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER")
+            or not rtc_clock_ok
+            or not measurementStored
+        )
+
+        logging.debug(
+            "buffered_upload_enabled: {}, message_buffer.buffered_measurements_count(): {}, cfg.get(__BATCH_UPLOAD_MESSAGE_BUFFER_): {}".format(
+                buffered_upload_enabled,
+                message_buffer.buffered_measurements_count(),
+                cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER"),
+                light_sleep_on,
             )
-            measurementStored = scenario_utils.storeMeasurement(measurements, False)
-            # if always on, do run connect and upload
-            # else run connection only if measurement was not stored
-            execute_connection_procedure = True if light_sleep_on else not measurementStored
+        )
+
+        # if buffered_upload_enabled and not is_first_run and  (message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") or not measurementStored) and light_sleep_on :
+        #     import machine
+        #     machine.reset()
 
         # connect (if needed) and upload message
+        connection_start_ms = ticks_ms()
         if execute_connection_procedure:
+            logging.debug("Executing network connection procedure")
             hasGPSFix = executeGetGPSPosition(measurements, light_sleep_on)
             if not hasGPSFix and cfg.get("_MEAS_GPS_NO_FIX_NO_UPLOAD"):
                 connectAndUploadCompletedWithoutErrors = False
             else:
                 connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on)
 
+        # connection_duration_ms = ticks_ms() - connection_start_ms
+
         if is_first_run:
             # if it is always on, first connect to the network and then start threads,
-            # to allow them to immediatelly upload events
+            # to allow them to immediately upload events
             scenario_utils.executePostConnectionOperations()
         is_first_run = False
 
@@ -298,34 +326,48 @@ def executeMeasureAndUploadLoop():
             logging.info(
                 "exiting measurement loop, light_sleep_on: {}, light_sleep_on_period: {}".format(light_sleep_on, light_sleep_on_period)
             )
+            # scenario_utils.resume_background_measurements()
             break
 
         logging.debug("[light sleep]: continuing execution")
-        time_to_sleep = 1
+        sleep_period = 1
 
         # if connection procedure was executed
         logging.debug(
-            "[light sleep]: active: {}, connected: {}".format(
-                cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors
+            "[light sleep]: network active: {}, connected: {}, connection_start_ms: {}".format(
+                cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"), connectAndUploadCompletedWithoutErrors, connection_start_ms
             )
         )
-        if cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") == False and connectAndUploadCompletedWithoutErrors:
+
+        if not cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE") and execute_connection_procedure:  # and connectAndUploadCompletedWithoutErrors:
             logging.debug("[light sleep]: disconnecting")
             executeNetworkDisconnect()
             device_info.set_led_color("black")
         else:
             logging.debug("[light sleep]: ignoring disconnection")
 
-        time_to_sleep = light_sleep_on_period * 1000 - (ticks_ms() - measurement_run_start_timestamp)
-        time_to_sleep = time_to_sleep if time_to_sleep > 0 else 0
-        logging.info("[light sleep]: sleeping for: " + str(time_to_sleep) + " milliseconds")
+        # instead of (sleep_period -= connection_duration_ms) we move forward the starting timestamp
+        # measurement_run_start_timestamp += connection_duration_ms
+        sleep_period = get_sleep_duration_ms_remaining(light_sleep_on_period)
+
+        from math import floor
+
+        logging.info(
+            "[light sleep]: sleeping for {} hours, {} minutes, {} seconds".format(
+                floor(sleep_period / 1000 / 3600),
+                floor(sleep_period / 1000 % 3600 / 60),
+                floor(sleep_period / 1000 % 60),
+            )
+        )
         gc.collect()
 
+        scenario_utils.resume_background_measurements(sleep_period)
         start_sleep_time = ticks_ms()
-        end_sleep_time = start_sleep_time + time_to_sleep
+        end_sleep_time = start_sleep_time + sleep_period
         while ticks_ms() < end_sleep_time:
             device_info.wdt_reset()
-            sleep_ms(100)
+            print("checking: ")
+            sleep_ms(1000)
         light_sleep_on = isLightSleepScenario()
 
     # if connection procedure was executed
@@ -359,7 +401,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         network.init(cfg)
     except:
         logging.error("Unsupported network selection: [{}]".format(selected_network))
-        return
+        return False
 
     logging.debug("Network modules loaded")
 
@@ -414,6 +456,8 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
     )
 
+    pop_last_stored_measurement = message_buffer.pop_last_stored_measurement()
+    scenario_utils.storeMeasurement(measurements, True)
 
     try:
         if is_first_run:
@@ -424,15 +468,15 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
 
             # create packet
 
-            message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
-            logging.info("measurement sent: {}".format(message_sent))
-            message_buffer.parse_stored_measurements_and_upload(network)
+            # message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
+            # logging.info("measurement sent: {}".format(message_sent))
+            message_sent = message_buffer.parse_stored_measurements_and_upload(network)
 
-            if cfg.get("_CHECK_FOR_OTA") and (not light_sleep_on or (light_sleep_on and is_first_run)):
+            if cfg.get("_CHECK_FOR_OTA"):  # and (not light_sleep_on or (light_sleep_on and is_first_run)):
                 network.check_and_apply_ota(cfg)
 
-            if is_first_run:
-                executeDeviceConfigurationUpload(cfg, network)
+            # if is_first_run:
+            executeDeviceConfigurationUpload(cfg, network)
         else:
             logging.debug("Network [" + selected_network + "] connected: False")
             device_info.set_led_color("red")
@@ -445,12 +489,12 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
     if selected_network == "cellular":
         network.prepareForGPS()
 
-    if not message_sent:
-        if cfg.get("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
-            logging.info("Message transmission failed, storing for later")
-            scenario_utils.storeMeasurement(measurements, True)
-        else:
-            logging.info("Message transmission failed, ignoring message")
+    # if not message_sent:
+    #     if cfg.get("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
+    #         logging.info("Message transmission failed, storing for later")
+    #         scenario_utils.storeMeasurement(measurements, True)
+    #     else:
+    #         logging.info("Message transmission failed, ignoring message")
 
     # disconnect from network
     if not light_sleep_on or not is_connected:
@@ -557,37 +601,58 @@ def executeDeviceDeinitialization():
     scenario_utils.device_deinit()
 
 
+def get_sleep_duration_ms_remaining(sleep_period_s):
+    import utime
+
+    uptime = getUptime(timeDiffAfterNTP)
+    sleep_period_s = sleep_period_s if sleep_period_s is not None else 600
+    sleep_period_ms = sleep_period_s * 1000
+    remaining_ms = sleep_period_ms
+    if sleep_period_s % 60 == 0:
+        next_tick_s = utime.time() + sleep_period_s
+
+        meas_duration_ms = connection_start_ms - measurement_run_start_timestamp  # duration of measurement
+        #
+        remaining_ms = (sleep_period_s - next_tick_s % sleep_period_s) * 1000 - meas_duration_ms
+        logging.debug(
+            "connection_start_ms: {}, next_tick_s: {}, uptime: {}, meas_duration_ms: {}, remaining_ms: {}".format(
+                connection_start_ms,
+                next_tick_s,
+                uptime,
+                meas_duration_ms,
+                remaining_ms,
+            )
+        )
+        if remaining_ms <= 0:
+            remaining_ms = (sleep_period_s - next_tick_s % sleep_period_s) * 1000
+
+    else:
+        remaining_ms = sleep_period_ms - uptime
+    if remaining_ms < 0:
+        remaining_ms = 1000
+
+    remaining_ms = remaining_ms % 86400000
+
+    # the remaining can never be bigger than sleep period
+    # can not guess in which case this will be triggered though it is left here as a safety mechanism
+    if remaining_ms > sleep_period_ms:
+        remaining_ms = sleep_period_ms
+    return remaining_ms
+
+
 def executeTimingConfiguration():
     if cfg.get("_DEEP_SLEEP_PERIOD_SEC") is not None:
         uptime = getUptime(timeDiffAfterNTP)
         logging.debug("end timestamp: " + str(uptime))
         logging.info("Getting into deep sleep...")
         sleep_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
-        sleep_period = sleep_period if sleep_period is not None else 600
-        if sleep_period % 60 == 0:
-            now_timestamp = time()
-            next_tick = now_timestamp + sleep_period
-            remaining = (sleep_period - next_tick % sleep_period) * 1000 - measurement_run_start_timestamp
-            logging.debug(
-                "now_timestamp: {}, next_tick: {}, uptime: {}, measurement_time: {}, remaining: {}".format(
-                    now_timestamp,
-                    next_tick,
-                    uptime,
-                    measurement_run_start_timestamp,
-                    remaining,
-                )
-            )
-            if remaining <= 0:
-                remaining = sleep_period * 1000 - uptime
-        else:
-            remaining = sleep_period * 1000 - uptime
-        if remaining < 0:
-            remaining = 1000
-        sleep_period = remaining % 86400000
+
+        sleep_period = get_sleep_duration_ms_remaining(sleep_period)
+
         from math import floor
 
         logging.info(
-            "will sleep for {} hours, {} minutes, {} seconds".format(
+            "[deep sleep]: sleeping for {} hours, {} minutes, {} seconds".format(
                 floor(sleep_period / 1000 / 3600),
                 floor(sleep_period / 1000 % 3600 / 60),
                 floor(sleep_period / 1000 % 60),

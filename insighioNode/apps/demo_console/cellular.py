@@ -22,6 +22,7 @@ def init(cfg):
 
 def deinit():
     logging.info("Deactivate cellular: {}".format(cellular.deactivate()))
+    cellular.reset_modem_instance()
 
 
 def prepareForConnectAndUpload():
