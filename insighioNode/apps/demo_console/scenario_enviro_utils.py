@@ -58,6 +58,7 @@ pcnt_readings_2 = 0
 
 # Add debounce timer variables
 from machine import Timer
+
 pcnt_1_debounce_timer = Timer(1)
 pcnt_2_debounce_timer = Timer(2)
 pcnt_1_pending_edge = False
@@ -675,8 +676,8 @@ def execute_pulse_counter_measurements(measurements):
 
             def pcnt_2_timer_callback(timer):
                 global pcnt_2_edge_count, pcnt_2_pending_edge
-                #if pcnt_2_pending_edge:
-                #with _thread_lock:
+                # if pcnt_2_pending_edge:
+                # with _thread_lock:
                 pcnt_2_edge_count += 1
                 pcnt_2_pending_edge = False
                 print("edge counted")
@@ -686,13 +687,13 @@ def execute_pulse_counter_measurements(measurements):
 
                 if pcnt_1_pending_edge:
                     # Already have a pending edge, this is noise/bounce
-                    #with _thread_lock:
+                    # with _thread_lock:
                     pcnt_1_filtered_edges += 1
                     # Reset the timer to extend the debounce period
                 else:
                     # First edge detected, start debounce timer
                     pcnt_1_pending_edge = True
-                #pcnt_1_debounce_timer.deinit()
+                # pcnt_1_debounce_timer.deinit()
                 pcnt_1_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_1_timer_callback)
 
             def pcnt_2_interrupt(pin):
@@ -700,7 +701,7 @@ def execute_pulse_counter_measurements(measurements):
 
                 if pcnt_2_pending_edge:
                     # Already have a pending edge, this is noise/bounce
-                    #with _thread_lock:
+                    # with _thread_lock:
                     pcnt_2_filtered_edges += 1
                     print("edge filtered")
                 else:
@@ -708,7 +709,7 @@ def execute_pulse_counter_measurements(measurements):
                     pcnt_2_pending_edge = True
                     print("edge pending")
 
-                #pcnt_2_debounce_timer.deinit()
+                # pcnt_2_debounce_timer.deinit()
                 pcnt_2_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_2_timer_callback)
 
             pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
@@ -717,11 +718,11 @@ def execute_pulse_counter_measurements(measurements):
             pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
 
             if pcnt_1_enabled and pcnt_1_gpio:
-                pin1 = Pin(pcnt_1_gpio, Pin.IN, Pin.PULL_UP)
+                pin1 = Pin(pcnt_1_gpio, Pin.IN)
                 pin1.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
 
             if pcnt_2_enabled and pcnt_2_gpio:
-                pin2 = Pin(pcnt_2_gpio, Pin.IN, Pin.PULL_UP)
+                pin2 = Pin(pcnt_2_gpio, Pin.IN)
                 pin2.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_2_interrupt)
 
         pcnt_last_run_timestamp_ms = utime.ticks_ms()
