@@ -717,11 +717,11 @@ def execute_pulse_counter_measurements(measurements):
             pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
 
             if pcnt_1_enabled and pcnt_1_gpio:
-                pin1 = Pin(pcnt_1_gpio, Pin.IN, Pin.PULL_UP)
+                pin1 = Pin(pcnt_1_gpio, Pin.IN)
                 pin1.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
 
             if pcnt_2_enabled and pcnt_2_gpio:
-                pin2 = Pin(pcnt_2_gpio, Pin.IN, Pin.PULL_UP)
+                pin2 = Pin(pcnt_2_gpio, Pin.IN)
                 pin2.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_2_interrupt)
 
         pcnt_last_run_timestamp_ms = utime.ticks_ms()
