@@ -72,6 +72,9 @@ pcnt_voltage_max_1 = 0
 pcnt_voltage_min_2 = 0
 pcnt_voltage_max_2 = 0
 
+pcnt_1_last_interrupt_time = 0
+pcnt_2_last_interrupt_time = 0
+
 
 def _initialize_i2c():
     global _i2c
@@ -624,6 +627,8 @@ def execute_pulse_counter_measurements(measurements):
     global pcnt_2_pending_edge
     global pcnt_1_filtered_edges
     global pcnt_2_filtered_edges
+    global pcnt_1_last_interrupt_time
+    global pcnt_2_last_interrupt_time
 
     logging.info("Starting Pulse Counter measurements")
 
@@ -667,6 +672,35 @@ def execute_pulse_counter_measurements(measurements):
         if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
             from machine import Pin
 
+            pcnt_1_high_freq = (
+                _pulse_counter_config[0].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 0 else False
+            )
+            pcnt_2_high_freq = (
+                _pulse_counter_config[1].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 1 else False
+            )
+
+            pcnt_1_filter_threshold_us = (
+                _pulse_counter_config[0].get("filterUs") if _pulse_counter_config and len(_pulse_counter_config) > 0 else 500
+            )
+            try:
+                pcnt_1_filter_threshold_us = int(pcnt_1_filter_threshold_us)
+            except:
+                pcnt_1_filter_threshold_us = 500
+
+            pcnt_2_filter_threshold_us = (
+                _pulse_counter_config[1].get("filterUs") if _pulse_counter_config and len(_pulse_counter_config) > 1 else 500
+            )
+
+            try:
+                pcnt_2_filter_threshold_us = int(pcnt_2_filter_threshold_us)
+            except:
+                pcnt_2_filter_threshold_us = 500
+
+            if pcnt_1_high_freq or pcnt_2_high_freq:
+                import machine
+                machine.freq(240000000)
+
+
             def pcnt_1_timer_callback(timer):
                 global pcnt_1_edge_count, pcnt_1_pending_edge
                 # if pcnt_1_pending_edge:
@@ -680,37 +714,57 @@ def execute_pulse_counter_measurements(measurements):
                 # with _thread_lock:
                 pcnt_2_edge_count += 1
                 pcnt_2_pending_edge = False
-                print("edge counted")
 
             def pcnt_1_interrupt(pin):
+                global pcnt_1_last_interrupt_time, pcnt_1_edge_count
                 global pcnt_1_debounce_timer, pcnt_1_pending_edge, pcnt_1_filtered_edges
 
-                if pcnt_1_pending_edge:
-                    # Already have a pending edge, this is noise/bounce
-                    # with _thread_lock:
-                    pcnt_1_filtered_edges += 1
-                    # Reset the timer to extend the debounce period
+                if pcnt_1_high_freq:
+                    current_time = utime.ticks_us()
+
+                    # Debounce check (500 microseconds = 0.5ms)
+                    if (current_time - pcnt_1_last_interrupt_time) > 500:
+                        pcnt_1_edge_count += 1
+                        pcnt_1_last_interrupt_time = current_time
+                    else:
+                        pcnt_1_filtered_edges += 1
                 else:
-                    # First edge detected, start debounce timer
-                    pcnt_1_pending_edge = True
-                # pcnt_1_debounce_timer.deinit()
-                pcnt_1_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_1_timer_callback)
+                    if pcnt_1_pending_edge:
+                        # Already have a pending edge, this is noise/bounce
+                        # with _thread_lock:
+                        pcnt_1_filtered_edges += 1
+                        # Reset the timer to extend the debounce period
+                    else:
+                        # First edge detected, start debounce timer
+                        pcnt_1_pending_edge = True
+                    # pcnt_1_debounce_timer.deinit()
+                    pcnt_1_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_1_timer_callback)
 
             def pcnt_2_interrupt(pin):
+                global pcnt_2_last_interrupt_time, pcnt_2_edge_count
                 global pcnt_2_debounce_timer, pcnt_2_pending_edge, pcnt_2_filtered_edges
 
-                if pcnt_2_pending_edge:
-                    # Already have a pending edge, this is noise/bounce
-                    # with _thread_lock:
-                    pcnt_2_filtered_edges += 1
-                    print("edge filtered")
-                else:
-                    # First edge detected, start debounce timer
-                    pcnt_2_pending_edge = True
-                    print("edge pending")
+                if pcnt_2_high_freq:
+                    current_time = utime.ticks_us()
 
-                # pcnt_2_debounce_timer.deinit()
-                pcnt_2_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_2_timer_callback)
+                    # Debounce check (500 microseconds = 0.5ms)
+                    if (current_time - pcnt_2_last_interrupt_time) > 500:
+                        pcnt_2_edge_count += 1
+                        pcnt_2_last_interrupt_time = current_time
+                    else:
+                        pcnt_2_filtered_edges += 1
+                else:
+                    if pcnt_2_pending_edge:
+                        # Already have a pending edge, this is noise/bounce
+                        # with _thread_lock:
+                        pcnt_2_filtered_edges += 1
+                        print("pcnt2 filtered")
+                        # Reset the timer to extend the debounce period
+                    else:
+                        # First edge detected, start debounce timer
+                        pcnt_2_pending_edge = True
+                    # pcnt_2_debounce_timer.deinit()
+                    pcnt_2_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_2_timer_callback)
 
             pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
             pcnt_1_gpio = _pulse_counter_config[0].get("gpio")
