@@ -669,15 +669,19 @@ def execute_pulse_counter_measurements(measurements):
 
         _pulse_counter_thread_started = True
 
+        pcnt_1_high_freq = (
+            _pulse_counter_config[0].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 0 else False
+        )
+        pcnt_2_high_freq = (
+            _pulse_counter_config[1].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 1 else False
+        )
+
+        if pcnt_1_high_freq or pcnt_2_high_freq:
+            import machine
+            machine.freq(240000000)
+
         if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
             from machine import Pin
-
-            pcnt_1_high_freq = (
-                _pulse_counter_config[0].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 0 else False
-            )
-            pcnt_2_high_freq = (
-                _pulse_counter_config[1].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 1 else False
-            )
 
             pcnt_1_filter_threshold_us = (
                 _pulse_counter_config[0].get("filterUs") if _pulse_counter_config and len(_pulse_counter_config) > 0 else 500
@@ -696,9 +700,6 @@ def execute_pulse_counter_measurements(measurements):
             except:
                 pcnt_2_filter_threshold_us = 500
 
-            if pcnt_1_high_freq or pcnt_2_high_freq:
-                import machine
-                machine.freq(240000000)
 
 
             def pcnt_1_timer_callback(timer):
