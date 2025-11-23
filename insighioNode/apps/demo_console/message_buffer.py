@@ -65,6 +65,8 @@ def pop_last_stored_measurement():
 
 def parse_stored_measurements_and_upload(network):
     global mutex
+    import device_info
+
     # load stored measurements
     failed_messages = []
     if not utils.existsFlagFile(storage_file_name) and not utils.existsFlagFile(storage_file_name + ".up"):
@@ -86,6 +88,8 @@ def parse_stored_measurements_and_upload(network):
     for line in stored_measurements_str.split("\n"):
         utime.sleep_ms(50)
         try:
+            device_info.wdt_reset()
+
             if not line:
                 continue
 

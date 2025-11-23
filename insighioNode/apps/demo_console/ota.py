@@ -31,6 +31,7 @@ def checkAndApply(client):
         pass
 
     logging.debug("mqtt message received: " + str(message) + " in topic: " + str(topic))
+    device_info.wdt_reset()
 
     # if it is a device configuration with content
     if topic.endswith("/config"):

@@ -14,6 +14,7 @@ import gpio_handler
 import _thread
 import utime
 from math import ceil
+from device_info import wdt_reset
 
 _i2c = None
 _io_expander_addr = None
@@ -265,6 +266,7 @@ def execute_sdi12_measurements(measurements):
         logging.debug("SDI12 warmup time: {}".format(t))
         try:
             t = int(t)
+            wdt_reset()
             sleep_ms(t)
         except Exception as e:
             logging.exception(e, "Error during SDI12 warmup time")
@@ -283,6 +285,7 @@ def execute_sdi12_measurements(measurements):
 
         for sensor in sensor_list:
             read_sdi12_sensor(sdi12, measurements, sensor)
+            wdt_reset()
             sleep_ms(2500)
     except Exception as e:
         set_value(measurements, "sdi12_e", "{}".format(e), None)
@@ -392,9 +395,9 @@ def execute_modbus_measurements(measurements):
 
     logging.info("Starting modbus measurements")
 
-    from machine import Pin
-
     _exec_i2c_op(io_expander_power_on_modbus)
+
+    wdt_reset()
 
     # need to set the SHDN pin to HIGH for not shutdown
     gpio_handler.set_pin_value(cfg.get("_UC_IO_MODBUS_DRV_ON"), 1)
@@ -422,6 +425,7 @@ def execute_modbus_measurements(measurements):
         sleep_ms(5000)  # cfg.get("_SDI12_WARM_UP_TIME_MSEC"))  # warmup time
 
         for sensor in sensor_list:
+            wdt_reset()
             read_modbus_sensor(modbus, measurements, sensor)
 
         inst._uart.deinit()
@@ -569,6 +573,7 @@ def execute_adc_measurements(measurements):
 
     try:
         for sensor in _adc_config:
+            wdt_reset()
             read_adc_sensor(measurements, sensor)
     except Exception as e:
         logging.exception(e, "Exception while reading ADS data")
@@ -669,15 +674,12 @@ def execute_pulse_counter_measurements(measurements):
 
         _pulse_counter_thread_started = True
 
-        pcnt_1_high_freq = (
-            _pulse_counter_config[0].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 0 else False
-        )
-        pcnt_2_high_freq = (
-            _pulse_counter_config[1].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 1 else False
-        )
+        pcnt_1_high_freq = _pulse_counter_config[0].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 0 else False
+        pcnt_2_high_freq = _pulse_counter_config[1].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 1 else False
 
         if pcnt_1_high_freq or pcnt_2_high_freq:
             import machine
+
             machine.freq(240000000)
 
         if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
@@ -699,8 +701,6 @@ def execute_pulse_counter_measurements(measurements):
                 pcnt_2_filter_threshold_us = int(pcnt_2_filter_threshold_us)
             except:
                 pcnt_2_filter_threshold_us = 500
-
-
 
             def pcnt_1_timer_callback(timer):
                 global pcnt_1_edge_count, pcnt_1_pending_edge
@@ -1020,10 +1020,17 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
     try:
         print(">>>> Started")
+        WDT_RESET_INTERVAL_MS = 5000
+        next_wdt_reset_time_ms = utime.ticks_ms() + WDT_RESET_INTERVAL_MS
         while _pcnt_active:
-            if timeout_timestamp_ms != -1 and utime.ticks_ms() >= timeout_timestamp_ms:
+            now = utime.ticks_ms()
+            if timeout_timestamp_ms != -1 and now >= timeout_timestamp_ms:
                 logging.debug("Exiting thread due to timeout")
                 break
+
+            if now >= next_wdt_reset_time_ms:
+                wdt_reset()
+                next_wdt_reset_time_ms = now + WDT_RESET_INTERVAL_MS
 
             if pcnt_1_enabled and pcnt_1_adc is not None:
                 v = pcnt_1_adc.read_voltage(1)
