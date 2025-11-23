@@ -366,8 +366,16 @@ def executeMeasureAndUploadLoop():
         end_sleep_time = start_sleep_time + sleep_period
         while ticks_ms() < end_sleep_time:
             device_info.wdt_reset()
-            print("checking: ")
             sleep_ms(1000)
+
+        ACTIVE_FORCED_DEVICE_RESET = False
+        if ACTIVE_FORCED_DEVICE_RESET:
+            FORCED_DEVICE_RESET_PERIOD_HOURS = 168  # 7 days
+            uptime_threshold_ms = FORCED_DEVICE_RESET_PERIOD_HOURS * 3600 * 1000
+            if getUptime(timeDiffAfterNTP) >= uptime_threshold_ms:
+                logging.info("Uptime exceeded {} hours, performing forced device reset".format(FORCED_DEVICE_RESET_PERIOD_HOURS))
+                machine.reset()
+
         light_sleep_on = isLightSleepScenario()
 
     # if connection procedure was executed
