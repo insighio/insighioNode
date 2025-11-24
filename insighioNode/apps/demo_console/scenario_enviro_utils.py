@@ -759,7 +759,6 @@ def execute_pulse_counter_measurements(measurements):
                         # Already have a pending edge, this is noise/bounce
                         # with _thread_lock:
                         pcnt_2_filtered_edges += 1
-                        print("pcnt2 filtered")
                         # Reset the timer to extend the debounce period
                     else:
                         # First edge detected, start debounce timer
