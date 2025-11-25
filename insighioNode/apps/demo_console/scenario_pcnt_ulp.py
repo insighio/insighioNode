@@ -9,45 +9,6 @@ _is_first_run = True
 _is_after_initialization = False
 
 
-def generate_reset_assembly(pcnt_1_gpio=4, pcnt_2_gpio=5):
-    base_template = """\
-#define DR_REG_RTCIO_BASE            0x60008400
-#define RTC_IO_TOUCH_PADX_MUX_SEL_M  (BIT(19))
-#define RTC_IO_TOUCH_PADX_FUN_IE_M   (BIT(13))
-#define RTC_GPIO_IN_REG              (DR_REG_RTCIO_BASE + 0x24)
-#define RTC_GPIO_IN_NEXT_S           10
-#define DR_REG_SENS_BASE             0x60008800
-#define SENS_SAR_PERI_CLK_GATE_CONF_REG  (DR_REG_SENS_BASE + 0x104)
-#define SENS_IOMUX_CLK_EN            (BIT(31))
-#define RTC_IO_TOUCH_PADX_{gpio_1}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio_1}*0x4))
-#define RTC_IO_TOUCH_PADX_{gpio_2}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio_2}*0x4))
-"""
-
-    reset_code_template = """
-    /* Code goes into .text section */
-    .text
-    .global entry
-entry:
-    # enable IOMUX clock
-    WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 0)
-"""
-
-    reset_pcnt_io_init_template = """
-    # connect GPIO to the RTC subsystem so the ULP can read it
-    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 0)
-
-    # switch the GPIO into input mode
-    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 0)
-"""
-    return (
-        base_template.format(gpio_1=pcnt_1_gpio, gpio_2=pcnt_2_gpio)
-        + reset_code_template
-        + reset_pcnt_io_init_template.format(gpio=pcnt_1_gpio)
-        + reset_pcnt_io_init_template.format(gpio=pcnt_2_gpio)
-        + "\n halt"
-    )
-
-
 def generate_assembly(
     pcnt_1_enabled=False, pcnt_1_gpio=4, pcnt_1_high_freq=False, pcnt_2_enabled=False, pcnt_2_gpio=5, pcnt_2_high_freq=False
 ):
@@ -63,8 +24,7 @@ def generate_assembly(
 #define SENS_IOMUX_CLK_EN            (BIT(31))
 
 /* Define variables, which go into .bss section (zero-initialized data) */
-sequential_stable_count_max: .long 4
-diagnostic_cycles: .long 0
+sequential_stable_count_max: .long 5
 """
 
     pcnt_template = """\
@@ -80,35 +40,11 @@ io_number_{gpio}: .long {gpio}
 
 """
 
-    reset_code_template = """
-    /* Code goes into .text section */
-    .text
-    .global entry
-entry:
-    # enable IOMUX clock
-    WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 0)
-    {pcnt_io_reset}
-"""
-
-    reset_pcnt_io_init_template = """
-    # connect GPIO to the RTC subsystem so the ULP can read it
-    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_MUX_SEL_M, 1, 0)
-
-    # switch the GPIO into input mode
-    WRITE_RTC_REG(RTC_IO_TOUCH_PADX_{gpio}_REG, RTC_IO_TOUCH_PADX_FUN_IE_M, 1, 0)
-"""
-
     code_template = """
     /* Code goes into .text section */
     .text
     .global entry
 entry:
-    /* Increment diagnostic counter */
-    move r3, diagnostic_cycles
-    ld r2, r3, 0
-    add r2, r2, 1
-    st r2, r3, 0
-
     # enable IOMUX clock
     WRITE_RTC_FIELD(SENS_SAR_PERI_CLK_GATE_CONF_REG, SENS_IOMUX_CLK_EN, 1)
     {pcnt_io_init}
@@ -187,7 +123,7 @@ check_stable_with_previous_stable_{gpio}:
 edge_detected_{gpio}:
     /* Flip next_edge_{gpio} */
     move r3, next_edge_{gpio}
-    ld r2, r3, 0
+    /*ld r2, r3, 0*/
     move r2, r0
     add r2, r2, 1
     and r2, r2, 1
@@ -284,30 +220,6 @@ def get_pulse_counters_are_high_frequency(pcnt_cfg):
     return False
 
 
-def reset_ulp(pcnt_cfg):
-    from esp32 import ULP
-    from external.esp32_ulp import src_to_binary
-
-    logging.debug("executing ULP reset")
-
-    script_to_run = generate_reset_assembly(pcnt_cfg[0].get("gpio"), pcnt_cfg[1].get("gpio"))
-
-    print("\n\n\n\n")
-    print(script_to_run)
-    print("\n\n\n\n")
-    binary = src_to_binary(script_to_run, cpu="esp32s2")
-    ulp = ULP()
-    load_addr = 0
-    ulp.load_binary(load_addr, binary)
-    ulp.set_wakeup_period(0, 1000)
-    entry_addr = 0
-    ulp.run(entry_addr)
-    import utime
-
-    utime.sleep_ms(1000)
-    logging.debug("ULP reset done!")
-
-
 def init_ulp(pcnt_cfg):
     from esp32 import ULP
     from external.esp32_ulp import src_to_binary
@@ -319,9 +231,9 @@ def init_ulp(pcnt_cfg):
         logging.error("No pulse counters enabled")
         return
 
-    entry_addr = 8 * 4  # if one pulse counter is enabled
+    entry_addr = 7 * 4  # if one pulse counter is enabled
     if number_of_pulse_counters > 1:
-        entry_addr = 15 * 4
+        entry_addr = 13 * 4
 
     if number_of_pulse_counters == 1 and len(pcnt_cfg) == 1:
         pcnt_cfg.append({"enabled": False})
@@ -443,8 +355,8 @@ def read_ulp_values(measurements, pcnt_cfg):
         if pcnt.get("enabled"):
             id = pcnt.get("id")
             formula = pcnt.get("formula")
-            reg_edge_cnt_16bit = 3 + (cnt * 6)  # to fix for diagnostic
-            reg_loops = 4 + (cnt * 6)
+            reg_edge_cnt_16bit = 2 + (cnt * 6)
+            reg_loops = 3 + (cnt * 6)
             cnt += 1
 
             read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formula, time_diff_from_prev, id)
@@ -454,8 +366,8 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
     cnt = 0
     for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
-            reg_edge_cnt_16bit = 3 + (cnt * 6)
-            reg_loops = 4 + (cnt * 6)
+            reg_edge_cnt_16bit = 2 + (cnt * 6)
+            reg_loops = 3 + (cnt * 6)
 
             setval(reg_edge_cnt_16bit, 0x0)
             setval(reg_loops, 0x0)
@@ -467,12 +379,9 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
     if _is_after_initialization:
         edge_cnt_16bit = 0
         loops = 0
-        diagnostic_count = 0
     else:
         edge_cnt_16bit = value(reg_edge_cnt_16bit)
         loops = value(reg_loops)
-        reg_diagnostic = 1  # + (cnt * 7)  # Adjusted for new diagnostic variable
-        diagnostic_count = value(reg_diagnostic)
 
     # reset registers
     setval(reg_edge_cnt_16bit, 0x0)
@@ -512,13 +421,8 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
     logging.debug("   ")
     logging.debug("================ pcnt {} =======================".format(id))
     logging.debug(
-        "========= pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}, {} pulse/sec, diagnostic_count: {}".format(
-            pulse_cnt,
-            edge_cnt,
-            time_diff_from_prev,
-            calculated_value,
-            pulse_cnt / time_diff_from_prev if time_diff_from_prev > 0 else 0,
-            diagnostic_count,
+        "========= pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}, {} pulse/sec".format(
+            pulse_cnt, edge_cnt, time_diff_from_prev, calculated_value, pulse_cnt / time_diff_from_prev if time_diff_from_prev > 0 else 0
         )
     )
     logging.debug("=============================================")
@@ -531,210 +435,11 @@ def execute(measurements, pcnt_cfg):
     for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
             pcnt["highFreq"] = False
-
     try:
-        # Check if we're recovering from ULP freeze
-        recovery_flag = utils.readFromFlagFile("/ulp_reset_recovery")
-        if recovery_flag == "1":
-            logging.info("Detected recovery from ULP freeze - reinitializing")
-            utils.deleteFlagFile("/ulp_reset_recovery")
-            reset_ulp_hardware()
-            utime.sleep_ms(100)
-            init_ulp(pcnt_cfg)
-            _is_after_initialization = True
-            _is_first_run = False
-            return
-
-        # Normal initialization
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
             init_ulp(pcnt_cfg)
             _is_after_initialization = True
-        else:
-            ulp_healthy = detect_and_recover_ulp_freeze(pcnt_cfg)
-        # Check ULP health before reading
-        # if not _is_first_run:
-
-        # if not ulp_healthy:
-        #     return  # Recovery will handle continuation
-
         read_ulp_values(measurements, pcnt_cfg)
-
     except Exception as e:
         logging.exception(e, "Error reading pulse counter")
-
-        # Attempt recovery on any error
-        try:
-            attempt_ulp_recovery(pcnt_cfg)
-        except:
-            logging.error("Recovery attempt failed")
-
     _is_first_run = False
-
-
-def reset_ulp_hardware():
-    """Reset ULP hardware completely via RTC registers"""
-    import machine
-
-    # RTC register addresses for ESP32-S3
-    RTC_CNTL_ULP_CP_CTRL_REG = 0x60008000 + 0x1C
-    RTC_CNTL_ULP_CP_TIMER_REG = 0x60008000 + 0x20
-    RTC_CNTL_COCPU_CTRL_REG = 0x60008000 + 0x104
-
-    # ULP control bits
-    ULP_CP_FORCE_START_TOP = 1 << 31
-    ULP_CP_START_TOP = 1 << 30
-    ULP_CP_RESET_N = 1 << 29
-    ULP_CP_CLK_FO = 1 << 28
-    ULP_CP_MEM_ADDR_INIT = 1 << 23
-    ULP_CP_MEM_ADDR_SIZE = 0x7FF
-
-    logging.info("Performing ULP hardware reset...")
-
-    try:
-        # Step 1: Force stop ULP
-        machine.mem32[RTC_CNTL_ULP_CP_CTRL_REG] = 0
-        utime.sleep_ms(10)
-
-        # Step 2: Reset ULP processor
-        machine.mem32[RTC_CNTL_ULP_CP_CTRL_REG] = ULP_CP_RESET_N
-        utime.sleep_ms(10)
-
-        # Step 3: Clear ULP memory
-        ULP_MEM_BASE = 0x50000000
-        for i in range(512):  # Clear first 512 words
-            machine.mem32[ULP_MEM_BASE + i * 4] = 0
-
-        # Step 4: Reset timer
-        machine.mem32[RTC_CNTL_ULP_CP_TIMER_REG] = 0
-
-        # Step 5: Reset COCPU if present
-        machine.mem32[RTC_CNTL_COCPU_CTRL_REG] = 0
-
-        utime.sleep_ms(50)
-        logging.info("ULP hardware reset completed")
-        return True
-
-    except Exception as e:
-        logging.error(f"ULP hardware reset failed: {e}")
-        return False
-
-
-def detect_and_recover_ulp_freeze(pcnt_cfg):
-    """Detect ULP freeze and attempt recovery"""
-    global _is_after_initialization
-
-    # Check diagnostic counter
-    try:
-        reg_diagnostic = 1  # diagnostic_cycles register
-        current_diagnostic = value(reg_diagnostic)
-
-        # Store last diagnostic count in a file
-        last_diagnostic_file = "/ulp_last_diagnostic"
-        last_diagnostic_str = utils.readFromFlagFile(last_diagnostic_file)
-
-        try:
-            last_diagnostic = int(last_diagnostic_str)
-        except:
-            last_diagnostic = 0
-
-        utils.writeToFlagFile(last_diagnostic_file, str(current_diagnostic))
-
-        # Check if ULP is frozen (diagnostic counter not incrementing)
-        if current_diagnostic == last_diagnostic:
-            logging.error(f"ULP appears frozen - diagnostic counter stuck at {current_diagnostic}")
-
-            # Attempt recovery sequence
-            recovery_success = attempt_ulp_recovery(pcnt_cfg)
-
-            if not recovery_success:
-                logging.error("ULP recovery failed - performing soft reset")
-                perform_soft_reset_and_continue()
-
-            return recovery_success
-
-    except Exception as e:
-        logging.error(f"Error checking ULP status: {e}")
-        return False
-
-    return True
-
-
-def attempt_ulp_recovery(pcnt_cfg):
-    """Attempt to recover frozen ULP"""
-    global _is_after_initialization
-
-    logging.info("Attempting ULP recovery...")
-
-    try:
-        # Step 1: Hardware reset
-        if not reset_ulp_hardware():
-            return False
-
-        # Step 2: Wait for reset to complete
-        utime.sleep_ms(100)
-
-        # Step 3: Reinitialize ULP
-        _is_after_initialization = True
-        init_ulp(pcnt_cfg)
-
-        # Step 4: Verify ULP is running
-        utime.sleep_ms(500)
-        initial_diagnostic = value(1)
-        utime.sleep_ms(500)
-        new_diagnostic = value(1)
-
-        if new_diagnostic > initial_diagnostic:
-            logging.info("ULP recovery successful")
-            return True
-        else:
-            logging.error("ULP still not running after recovery")
-            return False
-
-    except Exception as e:
-        logging.error(f"ULP recovery failed: {e}")
-        return False
-
-
-def perform_soft_reset_and_continue():
-    """Perform soft reset while preserving essential state"""
-
-    logging.info("Performing soft reset to recover ULP...")
-
-    # Save essential state to files
-    try:
-        utils.writeToFlagFile("/ulp_reset_recovery", "1")
-        utils.writeToFlagFile("/recovery_timestamp", str(utime.time_ns()))
-    except:
-        pass
-
-    # Perform soft reset
-    machine.soft_reset()
-
-
-def comprehensive_rtc_reset():
-    """More comprehensive RTC subsystem reset"""
-    import machine
-
-    # RTC base addresses
-    RTC_CNTL_BASE = 0x60008000
-    RTC_IO_BASE = 0x60008400
-
-    # Key registers to reset
-    registers_to_reset = [
-        (RTC_CNTL_BASE + 0x1C, 0),  # ULP_CP_CTRL
-        (RTC_CNTL_BASE + 0x20, 0),  # ULP_CP_TIMER
-        (RTC_CNTL_BASE + 0x104, 0),  # COCPU_CTRL
-        (RTC_CNTL_BASE + 0x108, 0),  # TOUCH_CTRL1
-        (RTC_CNTL_BASE + 0x10C, 0),  # TOUCH_CTRL2
-    ]
-
-    logging.info("Performing comprehensive RTC reset...")
-
-    for reg_addr, reset_value in registers_to_reset:
-        try:
-            machine.mem32[reg_addr] = reset_value
-            utime.sleep_ms(1)
-        except Exception as e:
-            logging.error(f"Failed to reset register 0x{reg_addr:08x}: {e}")
-
-    utime.sleep_ms(50)
