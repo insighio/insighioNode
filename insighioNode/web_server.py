@@ -4,7 +4,7 @@ import sys
 from external import tinyweb
 
 from device_info import get_hw_module_version, get_device_id, get_hw_module_version, set_led_enabled, set_led_color, wdt_reset
-from utime import ticks_ms
+from utime import ticks_ms, ticks_diff, ticks_add
 import logging
 import uasyncio
 import utils
@@ -264,19 +264,11 @@ async def server_loop(server_instance, timeoutMs):
     # Main program loop until keyboard interrupt,
     try:
         start_time = ticks_ms()
-        end_time = start_time + timeoutMs
-        # 5 minutes timeout if timeoutMs is > -1 and someone has connected to the wifi
-        # self.wlan.isconnected() is confirmed to be NOT supported by firmware 1.18
-        end_time_when_connected = start_time + 600000
+        end_time = ticks_add(start_time, timeoutMs)
 
-        print(
-            "webserver: timeoutMs: {}, start_time: {}, end_time: {}, end_time_when_connected: {}".format(
-                timeoutMs, start_time, end_time, end_time_when_connected
-            )
-        )
+        print("webserver: timeoutMs: {}, start_time: {}, end_time: {}".format(timeoutMs, start_time, end_time))
 
         is_connected = False
-        now = 0
         cnt = 0
         while 1:
             is_connected = wlan.isconnected()
@@ -288,8 +280,7 @@ async def server_loop(server_instance, timeoutMs):
             # if is_connected:
             #     keep_active_after_connection = True
 
-            now = ticks_ms()
-            if timeoutMs <= 0 or (not is_connected and now < end_time) or is_connected:
+            if timeoutMs <= 0 or (not is_connected and ticks_diff(end_time, ticks_ms()) > 0) or is_connected:
                 pass
             else:
                 break

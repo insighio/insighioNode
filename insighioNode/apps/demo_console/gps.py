@@ -1,21 +1,21 @@
-
 import logging
-from utime import ticks_ms, sleep_ms, time
+from utime import ticks_ms, time, ticks_diff
 from .dictionary_utils import set_value
 from device_info import get_reset_cause
 from utils import writeToFlagFile
 
+
 def init(cfg):
     pass
+
 
 def deinit():
     pass
 
+
 def get_gps_position(cfg, measurements, keep_open=False):
     try:
-        if cfg.get("_MEAS_GPS_ENABLE") and (
-            not cfg.get("_MEAS_GPS_ONLY_ON_BOOT") or (get_reset_cause() == 0 or get_reset_cause() == 1)
-        ):
+        if cfg.get("_MEAS_GPS_ENABLE") and (not cfg.get("_MEAS_GPS_ONLY_ON_BOOT") or (get_reset_cause() == 0 or get_reset_cause() == 1)):
             gps_status = False
             if cfg.get("network") == "cellular" or cfg.get("network") == "wifi":
                 return internal_modem_get_position(cfg, measurements, keep_open)
@@ -26,6 +26,7 @@ def get_gps_position(cfg, measurements, keep_open=False):
 
     return False
 
+
 def coord_to_double(part1, part2, part3):
     try:
         direction = {"N": 1, "S": -1, "E": 1, "W": -1}
@@ -33,6 +34,7 @@ def coord_to_double(part1, part2, part3):
     except Exception as e:
         logging.exception(e, "error converting coord {} {} {}".format(part1, part2, part3))
         return None
+
 
 def internal_modem_get_position(cfg, measurements, always_on):
     from . import cellular as network_gps
@@ -46,13 +48,20 @@ def internal_modem_get_position(cfg, measurements, always_on):
         network_gps.disconnect()
     return gps_status
 
+
 def external_modem_get_position(cfg, measurements, always_on):
     # the following is to be relocated in the future
     from external.kpn_senml.senml_unit import SenmlUnits, SenmlSecondaryUnits
     from networking.modem import modem_gps_l76l
 
     gps_status = False
-    modem = modem_gps_l76l.ModemGPSL76L(cfg.get("_UC_IO_RADIO_GPS_ON"), cfg.get("_UC_GPS_RESET"), cfg.get("_UC_IO_I2C_SCL"), cfg.get("_UC_IO_I2C_SDA"), cfg.get("_I2C_GPS_ADDRESS"))
+    modem = modem_gps_l76l.ModemGPSL76L(
+        cfg.get("_UC_IO_RADIO_GPS_ON"),
+        cfg.get("_UC_GPS_RESET"),
+        cfg.get("_UC_IO_I2C_SCL"),
+        cfg.get("_UC_IO_I2C_SDA"),
+        cfg.get("_I2C_GPS_ADDRESS"),
+    )
     modem.power_on()
     modem_ready = modem.wait_for_modem_power_on()
     if modem_ready:
@@ -69,7 +78,7 @@ def external_modem_get_position(cfg, measurements, always_on):
             min_satellite_fix_num = cfg.get("_MEAS_GPS_SATELLITE_FIX_NUM")
 
         (gps_timestamp, lat, lon, num_of_sat, hdop) = modem.get_gps_position(timeout_ms, min_satellite_fix_num)
-        set_value(measurements, "gps_dur", ticks_ms() - start_time, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+        set_value(measurements, "gps_dur", ticks_diff(ticks_ms(), start_time), SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         if lat is not None and lon is not None:
             latD = coord_to_double(lat[0], lat[1], lat[2])
             lonD = coord_to_double(lon[0], lon[1], lon[2])
@@ -84,6 +93,7 @@ def external_modem_get_position(cfg, measurements, always_on):
     if not always_on:
         modem.power_off()
     return gps_status
+
 
 def update_system_time(gps_timestamp):
     if gps_timestamp is None:

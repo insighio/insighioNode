@@ -1,4 +1,4 @@
-from utime import sleep_ms, ticks_ms, sleep_us
+from utime import sleep_ms, ticks_ms, sleep_us, ticks_add, ticks_diff
 import logging
 import gpio_handler
 import device_info
@@ -534,7 +534,7 @@ def calculate_baseline(asm330Obj):
     return (statsX.mean(), statsY.mean(), statsZ.mean())
 
 
-def storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total, do_store_measurement=True):
+def storeAccelerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total, do_store_measurement=True):
     set_value_float(measurement, "asm330_accX", statsX.mean(), SenmlUnits.SENML_UNIT_ACCELERATION)
     set_value_float(measurement, "asm330_accY", statsY.mean(), SenmlUnits.SENML_UNIT_ACCELERATION)
     set_value_float(measurement, "asm330_accZ", statsZ.mean(), SenmlUnits.SENML_UNIT_ACCELERATION)
@@ -584,15 +584,15 @@ def read_accelerometer(measurements=None, single_measurement=False):
         statsY.push(asm330_accY)
         statsZ.push(asm330_accZ)
         current_total = sqrt(pow(statsX.mean(), 2) + pow(statsY.mean(), 2) + pow(statsZ.mean(), 2))
-        storeAccellerometerMeasurement(measurements, statsX, statsY, statsZ, -1, current_total, False)
+        storeAccelerometerMeasurement(measurements, statsX, statsY, statsZ, -1, current_total, False)
         return
 
     REPORT_PERIOD_MS = 10000
     FORCE_REPORT_PERIOD_MS = 300000
 
     now = ticks_ms()
-    next_report = now + REPORT_PERIOD_MS
-    next_force_report = now + FORCE_REPORT_PERIOD_MS
+    next_report = ticks_add(now, REPORT_PERIOD_MS)
+    next_force_report = ticks_add(now, FORCE_REPORT_PERIOD_MS)
 
     previous_reported_total = []
     dev_is_operating = -1
@@ -611,16 +611,16 @@ def read_accelerometer(measurements=None, single_measurement=False):
         statsZ.push(fabs(asm330_accZ - baseZ))
 
         now = ticks_ms()
-        if now > next_force_report:
+        if ticks_diff(now, next_force_report) >= 0:
             logging.debug("======== Starting force report!")
             current_total = sqrt(pow(statsX.mean(), 2) + pow(statsY.mean(), 2) + pow(statsZ.mean(), 2))
             measurement = {}
 
-            storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
+            storeAccelerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
 
-            next_force_report = now + FORCE_REPORT_PERIOD_MS
+            next_force_report = ticks_add(now, FORCE_REPORT_PERIOD_MS)
 
-        if now > next_report:
+        if ticks_diff(now, next_report) >= 0:
             logging.debug("======== Starting normal report")
             current_total = sqrt(pow(statsX.mean(), 2) + pow(statsY.mean(), 2) + pow(statsZ.mean(), 2))
             measurement = {}
@@ -628,7 +628,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
             if len(previous_reported_total) < 2:
                 previous_reported_total.append(current_total)
 
-                storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
+                storeAccelerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
 
             elif previous_reported_total[0] != 0:
                 previous_reported_total.reverse()
@@ -647,7 +647,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
 
                     dev_is_operating = dev_is_operating_updated
 
-                    storeAccellerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
+                    storeAccelerometerMeasurement(measurement, statsX, statsY, statsZ, dev_is_operating, current_total)
                 else:
                     logging.debug("Ignoring low intensity vibration: diff: {}".format(total_diff))
 
@@ -659,7 +659,7 @@ def read_accelerometer(measurements=None, single_measurement=False):
 
             (baseX, baseY, baseZ) = calculate_baseline(asm330)
 
-            next_report = now + REPORT_PERIOD_MS
+            next_report = ticks_add(now, REPORT_PERIOD_MS)
 
         sleep_ms(1)
 

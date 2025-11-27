@@ -95,7 +95,7 @@ def parse_stored_measurements_and_upload(network):
 
             data = json.loads(line)
             if "diff_dt" in data:
-                time_diff = utime.ticks_ms() - data["diff_dt"]["value"]
+                time_diff = utime.ticks_diff(utime.ticks_ms(), data["diff_dt"]["value"])
                 if time_diff > 0:
                     data["time_diff"] = {"value": time_diff}
                 else:

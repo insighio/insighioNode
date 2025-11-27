@@ -73,8 +73,8 @@ pcnt_voltage_max_1 = 0
 pcnt_voltage_min_2 = 0
 pcnt_voltage_max_2 = 0
 
-pcnt_1_last_interrupt_time = 0
-pcnt_2_last_interrupt_time = 0
+pcnt_1_last_interrupt_time = utime.ticks_us()
+pcnt_2_last_interrupt_time = utime.ticks_us()
 
 
 def _initialize_i2c():
@@ -724,7 +724,7 @@ def execute_pulse_counter_measurements(measurements):
                     current_time = utime.ticks_us()
 
                     # Debounce check (500 microseconds = 0.5ms)
-                    if (current_time - pcnt_1_last_interrupt_time) > 500:
+                    if utime.ticks_diff(current_time, pcnt_1_last_interrupt_time) > 500:
                         pcnt_1_edge_count += 1
                         pcnt_1_last_interrupt_time = current_time
                     else:
@@ -749,7 +749,7 @@ def execute_pulse_counter_measurements(measurements):
                     current_time = utime.ticks_us()
 
                     # Debounce check (500 microseconds = 0.5ms)
-                    if (current_time - pcnt_2_last_interrupt_time) > 500:
+                    if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > 500:
                         pcnt_2_edge_count += 1
                         pcnt_2_last_interrupt_time = current_time
                     else:
@@ -797,7 +797,7 @@ def execute_pulse_counter_measurements(measurements):
         pcnt_2_val = 0
 
         if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
-            time_diff = (utime.ticks_ms() - pcnt_last_run_timestamp_ms) / 1000.0  # in seconds
+            time_diff = utime.ticks_diff(utime.ticks_ms(), pcnt_last_run_timestamp_ms) / 1000.0  # in seconds
             pcnt_last_run_timestamp_ms = utime.ticks_ms()
         else:
             time_diff = (pcnt_last_run_pause_timestamp_ms - pcnt_last_run_start_timestamp_ms) / 1000.0  # in seconds
@@ -987,7 +987,7 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
     timeout_timestamp_ms = -1
     if execution_period_ms is not None:
-        timeout_timestamp_ms = pcnt_last_run_start_timestamp_ms + execution_period_ms
+        timeout_timestamp_ms = utime.ticks_add(pcnt_last_run_start_timestamp_ms, execution_period_ms)
 
     pcnt_1_next_edge = 1
     pcnt_1_edge_count = 0
@@ -1020,16 +1020,16 @@ def pulse_counter_thread(config, execution_period_ms=None):
     try:
         print(">>>> Started")
         WDT_RESET_INTERVAL_MS = 5000
-        next_wdt_reset_time_ms = utime.ticks_ms() + WDT_RESET_INTERVAL_MS
+        next_wdt_reset_time_ms = utime.ticks_add(utime.ticks_ms(), WDT_RESET_INTERVAL_MS)
         while _pcnt_active:
             now = utime.ticks_ms()
-            if timeout_timestamp_ms != -1 and now >= timeout_timestamp_ms:
+            if timeout_timestamp_ms != -1 and utime.ticks_diff(now, timeout_timestamp_ms) >= 0:
                 logging.debug("Exiting thread due to timeout")
                 break
 
-            if now >= next_wdt_reset_time_ms:
+            if utime.ticks_diff(now, next_wdt_reset_time_ms) >= 0:
                 wdt_reset()
-                next_wdt_reset_time_ms = now + WDT_RESET_INTERVAL_MS
+                next_wdt_reset_time_ms = utime.ticks_add(now, WDT_RESET_INTERVAL_MS)
 
             if pcnt_1_enabled and pcnt_1_adc is not None:
                 v = pcnt_1_adc.read_voltage(1)
