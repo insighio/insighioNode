@@ -455,8 +455,7 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
     )
 
-    pop_last_stored_measurement = message_buffer.pop_last_stored_measurement()
-    scenario_utils.storeMeasurement(measurements, True)
+    message_buffer.update_last_stored_measurement(measurements)
 
     try:
         if is_first_run:

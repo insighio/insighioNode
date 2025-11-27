@@ -63,6 +63,18 @@ def pop_last_stored_measurement():
         return last_lines
 
 
+def update_last_stored_measurement(updated_measurement):
+    last_stored_measurement = pop_last_stored_measurement()
+
+    # parse json and get "dt" field
+    if last_stored_measurement is not None:
+        measurement = json.loads(last_stored_measurement[0])
+        if "dt" in measurement:
+            print("updating dt field of last stored measurement")
+            updated_measurement["dt"] = measurement["dt"]
+    store_measurement(updated_measurement, force_store=True)
+
+
 def parse_stored_measurements_and_upload(network):
     global mutex
     import device_info
