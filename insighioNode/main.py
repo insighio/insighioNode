@@ -75,23 +75,23 @@ if demo_config_exists and hasattr(cfg, "_NOTIFICATION_LED_ENABLED"):
 ##################################################################
 # run cleanup for www files
 
-# # List all files in /www recursively
-# all_www_files = utils.list_files_recursive("/www")
-#
-# # Read allowed files from /www_files.txt
-# allowed_files = None
-# try:
-#     with open("/www_files.txt") as f:
-#         allowed_files = []
-#         allowed_files = [line.strip() for line in f if line.strip()]
-# except Exception as e:
-#     logging.debug("No /www_files.txt file found")
-#
-# if allowed_files is not None:
-#     # Delete files not listed in /www_files.txt
-#     for file_path in all_www_files:
-#         if file_path not in allowed_files:
-#             utils.deleteFile(file_path)
+# List all files in /www recursively
+all_www_files = utils.list_files_recursive("/www")
+
+# Read allowed files from /www_files.txt
+allowed_files = None
+try:
+    with open("/www_files.txt") as f:
+        allowed_files = []
+        allowed_files = [line.strip() for line in f if line.strip()]
+except Exception as e:
+    logging.debug("No /www_files.txt file found")
+
+if allowed_files is not None:
+    # Delete files not listed in /www_files.txt
+    for file_path in all_www_files:
+        if file_path not in allowed_files:
+            utils.deleteFile(file_path)
 
 ####################################################################################
 rstCause = device_info.get_reset_cause()
@@ -130,6 +130,21 @@ try:
 except:
     pass
 
-import apps.demo_console.scenario as scenario
+try:
+    import apps.demo_console.scenario as scenario
 
-scenario.execute()
+    scenario.execute()
+except Exception as e:
+    logging.exception(e, "Error executing scenario")
+    # write exception to a file for debugging
+    try:
+        with open("/error_log.txt", "a") as f:
+            f.write(str(e) + "\n")
+    except:
+        pass
+
+    # TODO: decide whether to factory reset on scenario execution failure
+
+    import machine
+
+    machine.reset()
