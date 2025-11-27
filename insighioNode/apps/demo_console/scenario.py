@@ -1,6 +1,6 @@
 # setup init
 
-from utime import ticks_ms, gmtime, sleep_ms
+from utime import ticks_ms, gmtime, sleep_ms, ticks_diff, ticks_add, time_ns
 
 start_time = ticks_ms()
 
@@ -14,23 +14,18 @@ import device_info
 import gc
 import machine
 import utils
+from machine import RTC
 
 # Globals
-timeDiffAfterNTP = None
 measurement_run_start_timestamp = None
 connection_start_ms = None
 
 
-def getUptime(timeOffset=None):
-    uptime = ticks_ms()
-    if timeOffset is not None:
-        uptime -= timeOffset
-    return uptime - start_time
+def getUptime():
+    return ticks_diff(ticks_ms(), start_time)
 
 
 def now():
-    from machine import RTC
-
     return RTC().datetime()
 
 
@@ -257,14 +252,14 @@ def executeMeasureAndUploadLoop():
         if is_first_run:
             set_value_int(measurements, "reset_cause", device_info.get_reset_cause())
 
-        uptime = getUptime(timeDiffAfterNTP)
+        uptime = getUptime()
 
         from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
         set_value_int(
             measurements,
             "uptime",
-            uptime if is_first_run else (ticks_ms() - measurement_run_start_timestamp),
+            uptime if is_first_run else (ticks_diff(ticks_ms(), measurement_run_start_timestamp)),
             SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
         )
 
@@ -311,8 +306,6 @@ def executeMeasureAndUploadLoop():
                 connectAndUploadCompletedWithoutErrors = False
             else:
                 connectAndUploadCompletedWithoutErrors = executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on)
-
-        # connection_duration_ms = ticks_ms() - connection_start_ms
 
         if is_first_run:
             # if it is always on, first connect to the network and then start threads,
@@ -362,9 +355,8 @@ def executeMeasureAndUploadLoop():
         gc.collect()
 
         scenario_utils.resume_background_measurements(sleep_period)
-        start_sleep_time = ticks_ms()
-        end_sleep_time = start_sleep_time + sleep_period
-        while ticks_ms() < end_sleep_time:
+        end_sleep_time = ticks_add(ticks_ms(), sleep_period)
+        while ticks_diff(ticks_ms(), end_sleep_time) < 0:
             device_info.wdt_reset()
             sleep_ms(1000)
 
@@ -372,7 +364,7 @@ def executeMeasureAndUploadLoop():
         if ACTIVE_FORCED_DEVICE_RESET:
             FORCED_DEVICE_RESET_PERIOD_HOURS = 168  # 7 days
             uptime_threshold_ms = FORCED_DEVICE_RESET_PERIOD_HOURS * 3600 * 1000
-            if getUptime(timeDiffAfterNTP) >= uptime_threshold_ms:
+            if getUptime() >= uptime_threshold_ms:
                 logging.info("Uptime exceeded {} hours, performing forced device reset".format(FORCED_DEVICE_RESET_PERIOD_HOURS))
                 machine.reset()
 
@@ -390,7 +382,6 @@ def executeGetGPSPosition(measurements, light_sleep_on):
 
 
 def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
-    global timeDiffAfterNTP
     from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
     logging.debug("loading network modules...")
@@ -455,12 +446,12 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         set_value_int(measurements, "config_recovery", 1)
         utils.deleteFlagFile("/config_reverted")
 
-    uptime = getUptime(timeDiffAfterNTP)
+    uptime = getUptime()
 
     set_value_int(
         measurements,
         "uptime",
-        uptime if is_first_run else (uptime - measurement_run_start_timestamp),
+        uptime if is_first_run else ticks_diff(uptime, measurement_run_start_timestamp),
         SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
     )
 
@@ -610,32 +601,30 @@ def executeDeviceDeinitialization():
 
 
 def get_sleep_duration_ms_remaining(sleep_period_s):
-    import utime
-
-    uptime = getUptime(timeDiffAfterNTP)
-    sleep_period_s = sleep_period_s if sleep_period_s is not None else 600
-    sleep_period_ms = sleep_period_s * 1000
+    uptime = getUptime()
+    sleep_period_ms = sleep_period_s * 1000 if sleep_period_s is not None else 600000
     remaining_ms = sleep_period_ms
-    if sleep_period_s % 60 == 0:
-        next_tick_s = utime.time() + sleep_period_s
+    if sleep_period_ms % 60000 == 0:
+        next_tick_ms = time_ns() // 1000000 - sleep_period_ms
 
-        meas_duration_ms = connection_start_ms - measurement_run_start_timestamp  # duration of measurement
+        meas_duration_ms = ticks_diff(connection_start_ms, measurement_run_start_timestamp)  # duration of measurement
         #
-        remaining_ms = (sleep_period_s - next_tick_s % sleep_period_s) * 1000 - meas_duration_ms
+        remaining_ms = (sleep_period_ms - next_tick_ms % sleep_period_ms) - meas_duration_ms
         logging.debug(
-            "connection_start_ms: {}, next_tick_s: {}, uptime: {}, meas_duration_ms: {}, remaining_ms: {}".format(
+            "connection_start_ms: {}, next_tick_ms: {}, uptime: {}, meas_duration_ms: {}, remaining_ms: {}".format(
                 connection_start_ms,
-                next_tick_s,
+                next_tick_ms,
                 uptime,
                 meas_duration_ms,
                 remaining_ms,
             )
         )
         if remaining_ms <= 0:
-            remaining_ms = (sleep_period_s - next_tick_s % sleep_period_s) * 1000
+            remaining_ms = sleep_period_ms - next_tick_ms % sleep_period_ms
 
     else:
         remaining_ms = sleep_period_ms - uptime
+
     if remaining_ms < 0:
         remaining_ms = 1000
 
@@ -650,7 +639,7 @@ def get_sleep_duration_ms_remaining(sleep_period_s):
 
 def executeTimingConfiguration():
     if cfg.get("_DEEP_SLEEP_PERIOD_SEC") is not None:
-        uptime = getUptime(timeDiffAfterNTP)
+        uptime = getUptime()
         logging.debug("end timestamp: " + str(uptime))
         logging.info("Getting into deep sleep...")
         sleep_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
