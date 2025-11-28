@@ -18,14 +18,14 @@ def buffered_measurements_count():
     return utils.countFlagFileLines(storage_file_name)
 
 
-def timestamp_measurements(measurements):
+def timestamp_measurements(measurements, round_seconds=False):
     offset = 946684800
 
     epoch = utime.time() + offset
 
     # Friday, April 15, 2022
     if epoch > 1650000000:
-        measurements["dt"] = {"value": epoch}  # time offset 1970 -> 2000
+        measurements["dt"] = {"value": epoch - (epoch % 60 if round_seconds else 0)}  # time offset 1970 -> 2000
     else:
         measurements["diff_dt"] = {"value": utime.ticks_ms()}
 

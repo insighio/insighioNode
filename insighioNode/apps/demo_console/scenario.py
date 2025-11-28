@@ -235,6 +235,8 @@ def executeMeasureAndUploadLoop():
 
     while 1:
         measurement_run_start_timestamp = ticks_ms()
+        timestamp_obj = {}
+        message_buffer.timestamp_measurements(timestamp_obj, True)
 
         scenario_utils.pause_background_measurements()
 
@@ -248,7 +250,8 @@ def executeMeasureAndUploadLoop():
         # get measurements
         logging.debug("Starting getting measurements...")
         measurements = scenario_utils.get_measurements(cfg)
-        message_buffer.timestamp_measurements(measurements)
+        measurements.update(timestamp_obj)
+
         if is_first_run:
             set_value_int(measurements, "reset_cause", device_info.get_reset_cause())
 
@@ -271,7 +274,7 @@ def executeMeasureAndUploadLoop():
         # if the RTC is OK, timestamp message
         # measurementStored = True
         # if buffered_upload_enabled:
-        measurementStored = scenario_utils.storeMeasurement(measurements, True)
+        measurementStored = scenario_utils.storeMeasurement(measurements, True, False)
         # if always on, do run connect and upload
         # else run connection only if measurement was not stored
 
@@ -341,7 +344,7 @@ def executeMeasureAndUploadLoop():
 
         # instead of (sleep_period -= connection_duration_ms) we move forward the starting timestamp
         # measurement_run_start_timestamp += connection_duration_ms
-        sleep_period = get_sleep_duration_ms_remaining(light_sleep_on_period)
+        sleep_period = get_sleep_duration_ms_remaining(light_sleep_on_period, False)
 
         from math import floor
 
@@ -599,7 +602,7 @@ def executeDeviceDeinitialization():
     scenario_utils.device_deinit()
 
 
-def get_sleep_duration_ms_remaining(sleep_period_s):
+def get_sleep_duration_ms_remaining(sleep_period_s, subtract_measurement_duration=True):
     uptime = getUptime()
     sleep_period_ms = sleep_period_s * 1000 if sleep_period_s is not None else 600000
     remaining_ms = sleep_period_ms
@@ -608,7 +611,7 @@ def get_sleep_duration_ms_remaining(sleep_period_s):
 
         meas_duration_ms = ticks_diff(connection_start_ms, measurement_run_start_timestamp)  # duration of measurement
         #
-        remaining_ms = (sleep_period_ms - next_tick_ms % sleep_period_ms) - meas_duration_ms
+        remaining_ms = sleep_period_ms - next_tick_ms % sleep_period_ms - (meas_duration_ms if subtract_measurement_duration else 0)
         logging.debug(
             "connection_start_ms: {}, next_tick_ms: {}, uptime: {}, meas_duration_ms: {}, remaining_ms: {}".format(
                 connection_start_ms,
@@ -625,7 +628,7 @@ def get_sleep_duration_ms_remaining(sleep_period_s):
         remaining_ms = sleep_period_ms - uptime
 
     if remaining_ms < 0:
-        remaining_ms = 1000
+        remaining_ms = 1
 
     remaining_ms = remaining_ms % 86400000
 
@@ -643,7 +646,7 @@ def executeTimingConfiguration():
         logging.info("Getting into deep sleep...")
         sleep_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
 
-        sleep_period = get_sleep_duration_ms_remaining(sleep_period)
+        sleep_period = get_sleep_duration_ms_remaining(sleep_period, False)
 
         from math import floor
 
