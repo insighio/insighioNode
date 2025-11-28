@@ -359,9 +359,16 @@ def executeMeasureAndUploadLoop():
 
         scenario_utils.resume_background_measurements(sleep_period)
         end_sleep_time = ticks_add(ticks_ms(), sleep_period)
-        while ticks_diff(ticks_ms(), end_sleep_time) < 0:
+
+        check_loops_fallback_cnt = 0
+        check_loops_fallback_cnt_max = sleep_period // 1000 + 10
+
+        while ticks_diff(ticks_ms(), end_sleep_time) < 0 and check_loops_fallback_cnt < check_loops_fallback_cnt_max:
+            check_loops_fallback_cnt += 1
             device_info.wdt_reset()
             sleep_ms(1000)
+
+        logging.debug("[light sleep]: remaining fallback counts: {}".format(check_loops_fallback_cnt_max - check_loops_fallback_cnt))
 
         ACTIVE_FORCED_DEVICE_RESET = False
         if ACTIVE_FORCED_DEVICE_RESET:
