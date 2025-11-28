@@ -1,4 +1,4 @@
-from utime import ticks_ms, sleep_ms
+from utime import ticks_ms, sleep_ms, ticks_diff, ticks_add
 from machine import Pin, UART
 import ure
 import logging
@@ -155,9 +155,9 @@ class Modem:
 
     def get_network_date_time(self):
         start_timestamp = ticks_ms()
-        timeout_timestamp = start_timestamp + 10000
+        timeout_timestamp = ticks_add(start_timestamp, 10000)
         regex = "(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):\\s*(\\d+):(\\d+)([+-]\\d+)"
-        while ticks_ms() < timeout_timestamp:
+        while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
             (status, lines) = self.send_at_cmd("AT+CCLK?")
             if status and len(lines) > 0:
                 reg_res = ure.search(regex, lines[0])
@@ -195,25 +195,25 @@ class Modem:
         status = False
 
         start_timestamp = ticks_ms()
-        timeout_timestamp = start_timestamp + timeoutms
+        timeout_timestamp = ticks_add(start_timestamp, timeoutms)
         regex_creg = "\\+CREG:\\s+\\d,(\\d)"
         _STATE_CHECK_CREG_INITIALIZATION = 0
         _STATE_CHECK_CREG = 1
         _STATE_CHECK_COPS = 2
         current_state = _STATE_CHECK_CREG_INITIALIZATION
-        while ticks_ms() < timeout_timestamp:
+        while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
             if current_state == _STATE_CHECK_CREG or current_state == _STATE_CHECK_CREG_INITIALIZATION:
                 (status, lines) = self.send_at_cmd("AT+CREG?")
                 if status:
                     regex_match = self._match_regex(regex_creg, lines)
                     if regex_match:
                         group_val = regex_match.group(1)
-                        #0: not registered, not trying to register
-                        #1: registered
-                        #2: not registered, trying to register
-                        #3: registration denied
-                        #4: Unknown
-                        #5: registed, roaming
+                        # 0: not registered, not trying to register
+                        # 1: registered
+                        # 2: not registered, trying to register
+                        # 3: registration denied
+                        # 4: Unknown
+                        # 5: registed, roaming
                         if group_val == "1" or group_val == "5":
                             return True
                         elif group_val == "3":
@@ -262,8 +262,8 @@ class Modem:
         self.ppp.connect()
 
         start_timestamp = ticks_ms()
-        timeout_timestamp = start_timestamp + timeoutms
-        while ticks_ms() < timeout_timestamp:
+        timeout_timestamp = ticks_add(start_timestamp, timeoutms)
+        while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
             self.connected = self.is_connected()
             if self.connected:
                 break
@@ -339,6 +339,7 @@ class Modem:
 
     def _match_regex(self, regex, lines):
         import ure
+
         if regex is not None or lines is not None:
             for line in lines:
                 match_res = ure.search(regex, line)
@@ -365,7 +366,7 @@ class Modem:
         self.sim_imsi = None
         self.sim_iccid = None
 
-        (status, lines)= self.send_at_cmd("at+cimi")
+        (status, lines) = self.send_at_cmd("at+cimi")
         if status:
             match_res = self._match_regex(r"(\d+)", lines)
             if match_res is not None:
@@ -409,7 +410,7 @@ class Modem:
             return (status, ["error: can not send command"])
 
         start_timestamp = ticks_ms()
-        timeout_timestamp = start_timestamp + timeoutms
+        timeout_timestamp = ticks_add(start_timestamp, timeoutms)
 
         success_regex = "^([\\w\\s\\+]+)?" + success_condition
         error_regex = "(\\w+\\s+)?(ERROR|FAIL|(\\+CM[ES] ERROR)" + (
@@ -422,7 +423,7 @@ class Modem:
             wdt_reset()
 
             remaining_bytes = self.uart.any()
-            if ticks_ms() >= timeout_timestamp:
+            if ticks_diff(ticks_ms(), timeout_timestamp) >= 0:
                 if status is None:
                     status = False
                 break

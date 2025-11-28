@@ -1,5 +1,5 @@
 from external.umqtt.simple import MQTTClient as uMQTTClient
-from utime import sleep_ms, ticks_ms, ticks_diff
+from utime import sleep_ms, ticks_ms, ticks_diff, ticks_add
 from .mqtt_config import MQTTConfig
 import logging
 import _thread
@@ -55,9 +55,8 @@ class MQTTClientCustom:
             self.lastReceivedMessage["message"] = message
 
     def __check_msg(self, timeout_ms):
-        start_time = ticks_ms()
-        end_time = start_time + timeout_ms
-        while ticks_ms() < end_time:
+        end_time = ticks_add(ticks_ms(), timeout_ms)
+        while ticks_diff(ticks_ms(), end_time) < 0:
             try:
                 self.client.check_msg()
                 with self.mutex:

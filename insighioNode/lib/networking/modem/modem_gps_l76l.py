@@ -1,5 +1,5 @@
 from . import modem_base
-from utime import sleep_ms, ticks_ms
+from utime import sleep_ms, ticks_ms, ticks_diff, ticks_add
 import logging
 from device_info import wdt_reset
 from external.micropyGPS.micropyGPS import MicropyGPS
@@ -22,7 +22,7 @@ class ModemGPSL76L(modem_base.Modem):
         pass
 
     def is_alive(self):
-        #todo
+        # todo
         pass
 
     def print_status(self):
@@ -39,9 +39,9 @@ class ModemGPSL76L(modem_base.Modem):
 
     def wait_for_modem_power_on(self, command=None):
         modem_ok = False
-        for i in range(0,10):
+        for i in range(0, 10):
             devs = self.i2c_obj.scan()
-            modem_ok = (self.gps_i2c_addr in devs)
+            modem_ok = self.gps_i2c_addr in devs
             logging.info("i2c devices: {}, GPS found: {}".format(devs, modem_ok))
             if modem_ok:
                 break
@@ -61,7 +61,7 @@ class ModemGPSL76L(modem_base.Modem):
         pass
 
     def init(self, ip_version=None, apn=None, technology=None):
-        self.i2c_obj.writeto_mem(self.gps_i2c_addr, 0, b'$PMTK353,1,0,1,0,0*2B') #enable GPS and Galileo
+        self.i2c_obj.writeto_mem(self.gps_i2c_addr, 0, b"$PMTK353,1,0,1,0,0*2B")  # enable GPS and Galileo
         sleep_ms(10)
         self.i2c_obj.readfrom_mem(self.gps_i2c_addr, 0, 255)
 
@@ -140,10 +140,10 @@ class ModemGPSL76L(modem_base.Modem):
         max_satellites = 0
         hdop = None
         hdop_thresh = 2
-        timeout_timestamp = start_timestamp + timeoutms
+        timeout_timestamp = ticks_add(start_timestamp, timeoutms)
         try:
-            while ticks_ms() < timeout_timestamp:
-                self.i2c_obj.writeto_mem(self.gps_i2c_addr, 0, b'\x00')
+            while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
+                self.i2c_obj.writeto_mem(self.gps_i2c_addr, 0, b"\x00")
                 sleep_ms(10)
                 lines = self.i2c_obj.readfrom_mem(self.gps_i2c_addr, 0, 255).decode().split("\n")
                 for line in lines:

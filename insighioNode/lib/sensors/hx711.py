@@ -1,4 +1,4 @@
-from utime import sleep_ms, ticks_ms
+from utime import sleep_ms, ticks_ms, ticks_diff, ticks_add
 import logging
 import sensors
 from external.hx711.hx711_spi import HX711
@@ -137,11 +137,11 @@ class ScaleSensor:
         raw_idle = -1
 
         start_time = ticks_ms()
-        timeout_ms = 15000 + start_time
+        timeout_ms = ticks_add(start_time, 15000)
 
         value_buffer = []
 
-        while ticks_ms() < timeout_ms:
+        while ticks_diff(ticks_ms(), timeout_ms) < 0:
             raw = self.get_reading_raw(10)
             value_buffer.append(raw)
 

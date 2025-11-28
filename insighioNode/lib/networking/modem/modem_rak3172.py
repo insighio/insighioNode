@@ -2,7 +2,7 @@ from . import modem_base
 import logging
 import ure
 import gpio_handler
-from utime import sleep_ms, ticks_ms
+from utime import sleep_ms
 
 
 class ModemRak3172(modem_base.Modem):

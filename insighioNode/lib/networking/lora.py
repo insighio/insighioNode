@@ -1,4 +1,4 @@
-from utime import ticks_ms, sleep_ms
+from utime import ticks_ms, sleep_ms, ticks_diff
 import ubinascii
 import logging
 
@@ -83,7 +83,8 @@ def join(cfg, lora_keys):
     if not modem.is_connected():
         join_status = modem.join()
 
-    return (modem.is_connected(), ticks_ms() - start_time)
+    return (modem.is_connected(), ticks_diff(ticks_ms(), start_time))
+
 
 def is_connected():
     modem = get_modem_instance()

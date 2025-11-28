@@ -1,5 +1,5 @@
 import device_info
-from utime import sleep_ms, ticks_ms, time
+from utime import sleep_ms, ticks_ms, time, ticks_diff, ticks_add
 import logging
 import utils
 
@@ -111,11 +111,13 @@ def get_modem_instance():
 
     return modem_instance
 
+
 def reset_modem_instance():
     global modem_instance
     global cellular_model
     modem_instance = None
     cellular_model = CELLULAR_NO_INIT
+
 
 def connect(cfg):
     """Complete cellular connection procedure (activation, attachment, data connection)
@@ -148,10 +150,10 @@ def connect(cfg):
             # sleep_ms(1000)
 
             status = MODEM_ACTIVATED
-            activation_duration = ticks_ms() - start_activation_duration
+            activation_duration = ticks_diff(ticks_ms(), start_activation_duration)
             # proceed with attachment
             start_attachment_duration = ticks_ms()
-            attachment_timeout = start_attachment_duration + cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC * 1000
+            attachment_timeout = ticks_add(start_attachment_duration, cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC * 1000)
 
             modemInst.get_registered_mcc_mnc()
 
@@ -159,14 +161,14 @@ def connect(cfg):
                 logging.debug("Attaching...")
                 modemInst.attach()
                 # lte.attach(band=int(cfg._BAND), apn=cfg._APN, legacyattach=False)
-                while not modemInst.is_attached() and (ticks_ms() < attachment_timeout):
+                while not modemInst.is_attached() and ticks_diff(ticks_ms(), attachment_timeout) < 0:
                     sleep_ms(10)
 
             update_rtc_from_network_time(modemInst)
 
             if modemInst.is_attached():
                 status = MODEM_ATTACHED
-                attachment_duration = ticks_ms() - start_attachment_duration
+                attachment_duration = ticks_diff(ticks_ms(), start_attachment_duration)
                 logging.debug("Modem attached")
 
                 # signal quality
@@ -180,7 +182,7 @@ def connect(cfg):
                 if modemInst.has_data_over_ppp():
                     logging.debug("Entering Data State. Modem connecting...")
                     start_connection_duration = ticks_ms()
-                    connection_timeout = start_connection_duration + cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000
+                    connection_timeout = ticks_add(start_connection_duration, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000)
                     if not modemInst.is_connected():
                         modemInst.connect()
 
@@ -188,7 +190,7 @@ def connect(cfg):
                         # modemInst.force_time_update()
                         # update_rtc_from_network_time(modemInst)
                         status = MODEM_CONNECTED
-                        connection_duration = ticks_ms() - start_connection_duration
+                        connection_duration = ticks_diff(ticks_ms(), start_connection_duration)
                         logging.debug("Modem connected")
                         device_info.set_led_color("yellow")
                 else:
@@ -265,10 +267,10 @@ def deactivate():
             modemInst.disconnect()
             logging.debug("Modem deinitializing...")
             modemInst.power_off()
-            #modemInst.wait_for_modem_power_off()
+            # modemInst.wait_for_modem_power_off()
         # LTE().send_at_cmd('AT+CFUN=0')
         deactivation_status = True
     except Exception as e:
         logging.exception(e, "Error in deactivation")
 
-    return (deactivation_status, ticks_ms() - start_time_deactivation)
+    return (deactivation_status, ticks_diff(ticks_ms(), start_time_deactivation))

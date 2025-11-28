@@ -1,7 +1,7 @@
 # from network import WLAN
 import network
 from machine import RTC
-from utime import ticks_ms, sleep_ms, time
+from utime import ticks_ms, sleep_ms, time, ticks_diff, ticks_add
 import logging
 
 wl = None
@@ -27,11 +27,11 @@ def connect_to_network(wifi_ssid, wifi_pass, max_connection_attempt_time_sec):
     try:
         # connect
         start_time = ticks_ms()
-        connect_timeout = start_time + max_connection_attempt_time_sec * 1000
+        connect_timeout = ticks_add(start_time, max_connection_attempt_time_sec * 1000)
         wl.connect(wifi_ssid, wifi_pass)
-        while not wl.isconnected() and ticks_ms() < connect_timeout:
+        while not wl.isconnected() and ticks_diff(ticks_ms(), connect_timeout) < 0:
             sleep_ms(10)
-        conn_attempt_duration = ticks_ms() - start_time
+        conn_attempt_duration = ticks_diff(ticks_ms(), start_time)
 
         if wl.isconnected():
             logging.debug("Connected to " + wifi_ssid + " with IP address:" + wl.ifconfig()[0])
@@ -63,7 +63,7 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
             start_time = ticks_ms()
             available_nets = wl.scan()
             nrScannedNetworks = len(available_nets)
-            scan_attempt_duration = ticks_ms() - start_time
+            scan_attempt_duration = ticks_diff(ticks_ms(), start_time)
             nets = frozenset([e.ssid for e in available_nets])
             known_nets_names = frozenset([key for key in known_nets])
             net_to_use = list(nets & known_nets_names)
@@ -114,7 +114,7 @@ def deactivate():
     except:
         logging.debug("WiFi disconnecting ignored.")
 
-    return (deactivation_status, ticks_ms() - start_time_deactivation)
+    return (deactivation_status, ticks_diff(ticks_ms(), start_time_deactivation))
 
 
 def update_time_ntp():

@@ -1,5 +1,5 @@
 from . import modem_base
-from utime import sleep_ms, ticks_ms
+from utime import sleep_ms, ticks_ms, ticks_diff, ticks_add
 import ure
 import logging
 
@@ -47,9 +47,9 @@ class ModemMC60(modem_base.Modem):
         last_valid_gps_lon = None
         max_satellites = 0
         hdop = None
-        timeout_timestamp = start_timestamp + timeoutms
+        timeout_timestamp = ticks_add(start_timestamp, timeoutms)
         try:
-            while ticks_ms() < timeout_timestamp:
+            while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
                 counter += 1
                 (status, lines) = self.send_at_cmd('AT+QGNSSRD="NMEA/GGA"')
                 if status and len(lines) > 0:

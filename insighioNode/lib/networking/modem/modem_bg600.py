@@ -1,5 +1,5 @@
 from . import modem_base
-from utime import sleep_ms, ticks_ms
+from utime import sleep_ms, ticks_ms, ticks_diff, ticks_add
 import logging
 import ure
 from device_info import wdt_reset, get_device_id
@@ -214,9 +214,9 @@ class ModemBG600(modem_base.Modem):
         max_satellites = 0
         hdop = None
         hdop_thresh = 2
-        timeout_timestamp = start_timestamp + timeoutms
+        timeout_timestamp = ticks_add(start_timestamp, timeoutms)
         try:
-            while ticks_ms() < timeout_timestamp:
+            while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
                 (status, lines) = self.send_at_cmd('AT+QGPSGNMEA="GGA"')
                 if status and len(lines) > 0:
                     if lines[0].startswith("+QGPSGNMEA:"):
@@ -278,7 +278,9 @@ class ModemBG600(modem_base.Modem):
         while retry < max_retries and not mqtt_ready:
             retry += 1
             (mqtt_result, lines) = self.send_at_cmd(
-                "AT+QMTOPEN=" + str(self._mqtt_client_id) + ',"' + server_ip + '",' + str(server_port), 60000, r"\+QMTOPEN:\s*{},\d".format(str(self._mqtt_client_id))
+                "AT+QMTOPEN=" + str(self._mqtt_client_id) + ',"' + server_ip + '",' + str(server_port),
+                60000,
+                r"\+QMTOPEN:\s*{},\d".format(str(self._mqtt_client_id)),
             )
 
             reg_match = self._match_regex(r"\+QMTOPEN:\s*" + str(self._mqtt_client_id) + ",(-?\d)", lines)
@@ -287,7 +289,7 @@ class ModemBG600(modem_base.Modem):
                 break
             elif reg_match and reg_match.group(1) == "2":  # already opened
                 self.mqtt_disconnect()
-                #self._mqtt_client_id += 1
+                # self._mqtt_client_id += 1
                 sleep_ms(2500)
 
             # +QIURC: "pdpdeact",1
@@ -464,7 +466,7 @@ class ModemBG600(modem_base.Modem):
         responseLines = []
         is_echo_on = True
         start_timestamp = ticks_ms()
-        timeout_timestamp = start_timestamp + timeout_ms
+        timeout_timestamp = ticks_add(start_timestamp, timeout_ms)
         success_regex = "^([\\w\\s\\+]+)?OK$"
         error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
 
@@ -478,7 +480,7 @@ class ModemBG600(modem_base.Modem):
             wdt_reset()
 
             remaining_bytes = self.uart.any()
-            if ticks_ms() >= timeout_timestamp:
+            if ticks_diff(ticks_ms(), timeout_timestamp) >= 0:
                 if status is None:
                     status = False
                 break
@@ -700,6 +702,7 @@ class ModemBG600(modem_base.Modem):
         # Ensure post_body is properly formatted JSON string
         if isinstance(post_body, dict) or isinstance(post_body, list):
             import json
+
             post_body_str = json.dumps(post_body)
         else:
             post_body_str = str(post_body)
@@ -721,7 +724,7 @@ class ModemBG600(modem_base.Modem):
             "\r\n"
         )
 
-        logging.debug("Request header: {}".format(requestHeader.replace('\r\n', '\\r\\n')))
+        logging.debug("Request header: {}".format(requestHeader.replace("\r\n", "\\r\\n")))
 
         (url_ready, _) = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
         if not url_ready:
