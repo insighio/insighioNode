@@ -708,6 +708,7 @@ def execute_pulse_counter_measurements(measurements):
                 #     with _thread_lock:
                 pcnt_1_edge_count += 1
                 pcnt_1_pending_edge = False
+                #print("pcnt1 low")
 
             def pcnt_2_timer_callback(timer):
                 global pcnt_2_edge_count, pcnt_2_pending_edge
@@ -715,6 +716,7 @@ def execute_pulse_counter_measurements(measurements):
                 # with _thread_lock:
                 pcnt_2_edge_count += 1
                 pcnt_2_pending_edge = False
+                #print("pcnt2 low")
 
             def pcnt_1_interrupt(pin):
                 global pcnt_1_last_interrupt_time, pcnt_1_edge_count
@@ -724,9 +726,11 @@ def execute_pulse_counter_measurements(measurements):
                     current_time = utime.ticks_us()
 
                     # Debounce check (500 microseconds = 0.5ms)
-                    if utime.ticks_diff(current_time, pcnt_1_last_interrupt_time) > 500:
+                    if utime.ticks_diff(current_time, pcnt_1_last_interrupt_time) > pcnt_1_filter_threshold_us:
                         pcnt_1_edge_count += 1
                         pcnt_1_last_interrupt_time = current_time
+
+                        #print("pcnt1 high")
                     else:
                         pcnt_1_filtered_edges += 1
                 else:
@@ -749,9 +753,10 @@ def execute_pulse_counter_measurements(measurements):
                     current_time = utime.ticks_us()
 
                     # Debounce check (500 microseconds = 0.5ms)
-                    if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > 500:
+                    if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > pcnt_2_filter_threshold_us:
                         pcnt_2_edge_count += 1
                         pcnt_2_last_interrupt_time = current_time
+                        #print("pcnt2 high")
                     else:
                         pcnt_2_filtered_edges += 1
                 else:
