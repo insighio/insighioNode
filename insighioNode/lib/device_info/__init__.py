@@ -228,19 +228,6 @@ def get_heap_memory():
     return (gc.mem_alloc(), gc.mem_free())
 
 
-def get_cpu_temp(unit_in_celsius=True):
-    """Returns CPU temperature in degrees of Celsius"""
-    temp = None
-    import esp32
-
-    temp = esp32.raw_temperature()
-
-    if unit_in_celsius:
-        return (temp - 32) / 1.8
-    else:
-        return temp
-
-
 def get_free_flash(partition_path="/"):
     import uos
 

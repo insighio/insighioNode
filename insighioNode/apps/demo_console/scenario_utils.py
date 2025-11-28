@@ -85,23 +85,6 @@ def get_measurements(cfg_dummy=None):
             (mem_alloc, mem_free) = device_info.get_heap_memory()
             set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
             set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
-            try:
-                if cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS"):
-                    set_value_float(
-                        measurements,
-                        "cpu_temp",
-                        device_info.get_cpu_temp(),
-                        SenmlUnits.SENML_UNIT_DEGREES_CELSIUS,
-                    )
-                else:
-                    set_value_float(
-                        measurements,
-                        "cpu_temp",
-                        device_info.get_cpu_temp(False),
-                        SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT,
-                    )
-            except Exception as e:
-                logging.exception(e, "Error getting cpu_temp.")
 
             try:
                 from machine import SoftI2C, Pin
@@ -500,12 +483,13 @@ def execute_formula(measurements, name, raw_value, formula):
         pass
 
 
-def storeMeasurement(measurements, force_store=False):
+def storeMeasurement(measurements, force_store=False, do_timestamp=True):
     if cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER") is None and not force_store:
         logging.error("Batch upload not activated, ignoring")
         return False
 
-    message_buffer.timestamp_measurements(measurements)
+    if do_timestamp:
+        message_buffer.timestamp_measurements(measurements)
     return message_buffer.store_measurement(measurements, force_store)
 
 
