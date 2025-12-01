@@ -76,6 +76,9 @@ pcnt_voltage_max_2 = 0
 pcnt_1_last_interrupt_time = utime.ticks_us()
 pcnt_2_last_interrupt_time = utime.ticks_us()
 
+pcnt_1_triggered_edge_level = None
+pcnt_2_triggered_edge_level = None
+
 
 def _initialize_i2c():
     global _i2c
@@ -622,18 +625,20 @@ def read_adc_sensor(measurements, sensor):
 # [{"id":1,"enabled":false,"formula":"v","highFreq":false},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
 def execute_pulse_counter_measurements(measurements):
     global _pulse_counter_thread_started
-    global pcnt_last_run_timestamp_ms
-    global pcnt_1_edge_count
-    global pcnt_2_edge_count
     global _thread_lock
     global pcnt_1_debounce_timer
-    global pcnt_2_debounce_timer
-    global pcnt_1_pending_edge
-    global pcnt_2_pending_edge
+    global pcnt_1_edge_count
     global pcnt_1_filtered_edges
-    global pcnt_2_filtered_edges
     global pcnt_1_last_interrupt_time
+    global pcnt_1_pending_edge
+    global pcnt_1_triggered_edge_level
+    global pcnt_2_debounce_timer
+    global pcnt_2_edge_count
+    global pcnt_2_filtered_edges
     global pcnt_2_last_interrupt_time
+    global pcnt_2_pending_edge
+    global pcnt_2_triggered_edge_level
+    global pcnt_last_run_timestamp_ms
 
     logging.info("Starting Pulse Counter measurements")
 
@@ -702,25 +707,50 @@ def execute_pulse_counter_measurements(measurements):
             except:
                 pcnt_2_filter_threshold_us = 500
 
+            pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
+            pcnt_1_gpio = _pulse_counter_config[0].get("gpio")
+            pcnt_2_enabled = _pulse_counter_config[1].get("enabled")
+            pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
+
+            #from micropython import schedule
+
             def pcnt_1_timer_callback(timer):
                 global pcnt_1_edge_count, pcnt_1_pending_edge
+                global pcnt_1_triggered_edge_level
                 # if pcnt_1_pending_edge:
                 #     with _thread_lock:
                 pcnt_1_edge_count += 1
                 pcnt_1_pending_edge = False
+
                 #print("pcnt1 low")
+                # if debounce filtered the whole pulse due to delayed interrupts,
+                # count an extra edge if the pin level is different than the triggered edge level
+                if pcnt_1_triggered_edge_level != pin1.value():
+                    pcnt_1_edge_count += 1
+                    print("pcnt1 extra")
+                # pcnt_1_triggered_edge_level = None
 
             def pcnt_2_timer_callback(timer):
                 global pcnt_2_edge_count, pcnt_2_pending_edge
+                global pcnt_2_triggered_edge_level
                 # if pcnt_2_pending_edge:
                 # with _thread_lock:
                 pcnt_2_edge_count += 1
                 pcnt_2_pending_edge = False
-                #print("pcnt2 low")
 
+                #print("pcnt2 low")
+                # if debounce filtered the whole pulse due to delayed interrupts,
+                # count an extra edge if the pin level is different than the triggered edge level
+                if pcnt_2_triggered_edge_level != pin2.value():
+                    pcnt_2_edge_count += 1
+                    print("pcnt2 extra")
+                # pcnt_2_triggered_edge_level = None
+
+            # def pcnt_1_interrupt_process(pin):
             def pcnt_1_interrupt(pin):
                 global pcnt_1_last_interrupt_time, pcnt_1_edge_count
                 global pcnt_1_debounce_timer, pcnt_1_pending_edge, pcnt_1_filtered_edges
+                global pcnt_1_triggered_edge_level
 
                 if pcnt_1_high_freq:
                     current_time = utime.ticks_us()
@@ -742,12 +772,21 @@ def execute_pulse_counter_measurements(measurements):
                     else:
                         # First edge detected, start debounce timer
                         pcnt_1_pending_edge = True
+                        pcnt_1_triggered_edge_level = pin.value()
                     # pcnt_1_debounce_timer.deinit()
                     pcnt_1_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_1_timer_callback)
 
+            # def pcnt_1_interrupt(pin):
+            #     try:
+            #         schedule(pcnt_1_interrupt_process, pin)
+            #     except Exception as e:
+            #         logging.exception(e, "scheduling queue full for pcnt_1_interrupt_process")
+
+            # def pcnt_2_interrupt_process(pin):
             def pcnt_2_interrupt(pin):
                 global pcnt_2_last_interrupt_time, pcnt_2_edge_count
                 global pcnt_2_debounce_timer, pcnt_2_pending_edge, pcnt_2_filtered_edges
+                global pcnt_2_triggered_edge_level
 
                 if pcnt_2_high_freq:
                     current_time = utime.ticks_us()
@@ -768,13 +807,15 @@ def execute_pulse_counter_measurements(measurements):
                     else:
                         # First edge detected, start debounce timer
                         pcnt_2_pending_edge = True
+                        pcnt_2_triggered_edge_level = pin.value()
                     # pcnt_2_debounce_timer.deinit()
                     pcnt_2_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_2_timer_callback)
 
-            pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
-            pcnt_1_gpio = _pulse_counter_config[0].get("gpio")
-            pcnt_2_enabled = _pulse_counter_config[1].get("enabled")
-            pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
+            # def pcnt_2_interrupt(pin):
+            #     try:
+            #         schedule(pcnt_2_interrupt_process, pin)
+            #     except Exception as e:
+            #         logging.exception(e, "scheduling queue full for pcnt_2_interrupt_process")
 
             if pcnt_1_enabled and pcnt_1_gpio:
                 pin1 = Pin(pcnt_1_gpio, Pin.IN)
