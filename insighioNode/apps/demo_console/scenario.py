@@ -363,6 +363,8 @@ def executeMeasureAndUploadLoop():
         check_loops_fallback_cnt = 0
         check_loops_fallback_cnt_max = sleep_period // 1000 + 10
 
+        device_info.set_led_color("black")
+
         while ticks_diff(ticks_ms(), end_sleep_time) < 0 and check_loops_fallback_cnt < check_loops_fallback_cnt_max:
             check_loops_fallback_cnt += 1
             device_info.wdt_reset()
@@ -405,6 +407,11 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         from . import cellular as network
     elif selected_network == "satellite":
         from . import satellite as network
+
+    #import random
+    #random_wait_time = random.randint(0,30000)
+    #logging.debug("about to wait for: {}".format(random_wait_time))
+    #sleep_ms(random_wait_time)
 
     try:
         network.init(cfg)
