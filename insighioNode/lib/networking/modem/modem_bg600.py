@@ -296,7 +296,7 @@ class ModemBG600(modem_base.Modem):
             elif self._match_regex(r'\+QIURC:\s*"pdpdeact",1', lines):  # check for pdpdeact message
                 self.deactivate_context()
 
-            sleep_ms(1000)
+            sleep_ms(500)
 
         if mqtt_ready:
             retry = 0
@@ -309,7 +309,7 @@ class ModemBG600(modem_base.Modem):
                 )
                 if mqtt_connected:
                     break
-                sleep_ms(1000)
+                sleep_ms(500)
             return mqtt_connected
         else:
             logging.error("Mqtt not ready")
