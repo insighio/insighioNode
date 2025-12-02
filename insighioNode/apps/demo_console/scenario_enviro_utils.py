@@ -723,7 +723,7 @@ def execute_pulse_counter_measurements(measurements):
                 # count an extra edge if the pin level is different than the triggered edge level
                 if pcnt_1_triggered_edge_level != pin1.value():
                     pcnt_1_edge_count += 1
-                    print("pcnt1 extra")
+                    #print("pcnt1 low extra")
                 # pcnt_1_triggered_edge_level = None
 
             def pcnt_2_timer_callback(timer):
@@ -739,7 +739,7 @@ def execute_pulse_counter_measurements(measurements):
                 # count an extra edge if the pin level is different than the triggered edge level
                 if pcnt_2_triggered_edge_level != pin2.value():
                     pcnt_2_edge_count += 1
-                    print("pcnt2 extra")
+                    #print("pcnt2 low extra")
                 # pcnt_2_triggered_edge_level = None
 
             # def pcnt_1_interrupt_process(pin):
@@ -755,6 +755,9 @@ def execute_pulse_counter_measurements(measurements):
                     if utime.ticks_diff(current_time, pcnt_1_last_interrupt_time) > pcnt_1_filter_threshold_us:
                         pcnt_1_edge_count += 1
                         # print("pcnt1 high")
+                        if pcnt_1_triggered_edge_level == pin1.value():
+                            pcnt_1_edge_count += 1
+                            #print("pcnt1 high extra")
                     else:
                         pcnt_1_filtered_edges += 1
                     pcnt_1_last_interrupt_time = current_time
@@ -767,9 +770,8 @@ def execute_pulse_counter_measurements(measurements):
                     else:
                         # First edge detected, start debounce timer
                         pcnt_1_pending_edge = True
-                        pcnt_1_triggered_edge_level = pin.value()
-                    # pcnt_1_debounce_timer.deinit()
                     pcnt_1_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_1_timer_callback)
+                pcnt_1_triggered_edge_level = pin.value()
 
             # def pcnt_2_interrupt_process(pin):
             def pcnt_2_interrupt(pin):
@@ -784,6 +786,9 @@ def execute_pulse_counter_measurements(measurements):
                     if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > pcnt_2_filter_threshold_us:
                         pcnt_2_edge_count += 1
                         # print("pcnt2 high")
+                        if pcnt_2_triggered_edge_level == pin2.value():
+                            pcnt_2_edge_count += 1
+                            #print("pcnt2 high extra")
                     else:
                         pcnt_2_filtered_edges += 1
 
@@ -797,9 +802,9 @@ def execute_pulse_counter_measurements(measurements):
                     else:
                         # First edge detected, start debounce timer
                         pcnt_2_pending_edge = True
-                        pcnt_2_triggered_edge_level = pin.value()
                     # pcnt_2_debounce_timer.deinit()
                     pcnt_2_debounce_timer.init(mode=Timer.ONE_SHOT, period=DEBOUNCE_TIME_MS, callback=pcnt_2_timer_callback)
+                pcnt_2_triggered_edge_level = pin.value()
 
             if pcnt_1_enabled and pcnt_1_gpio:
                 logging.debug("pcnt_1_filter_threshold_us: {}".format(pcnt_1_filter_threshold_us))
