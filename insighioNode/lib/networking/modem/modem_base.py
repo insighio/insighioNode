@@ -419,46 +419,54 @@ class Modem:
         first_line = True
         is_echo_on = True
 
-        while 1:
-            wdt_reset()
+        watchdog_reset_period_ms = 1000
+        last_wdt_reset_timestamp = ticks_ms()
 
+        wdt_reset()
+
+        while 1:
+            now = ticks_ms()
             remaining_bytes = self.uart.any()
-            if ticks_diff(ticks_ms(), timeout_timestamp) >= 0:
+            if ticks_diff(now, timeout_timestamp) >= 0:
                 if status is None:
                     status = False
                 break
+
+            if ticks_diff(now, last_wdt_reset_timestamp) >= watchdog_reset_period_ms:
+                wdt_reset()
+                last_wdt_reset_timestamp = now
 
             # if OK or ERROR has already been read though there are still
             # data on the UART, keep reading
             if status is not None and remaining_bytes == 0:
                 break
+            elif remaining_bytes != 0:
+                line = self.uart.readline()
+                try:
+                    line = line if line is None else line.decode("utf8", "ignore").strip()
+                except Exception as e:
+                    logging.error("! " + str(line))
+                    line = ""
 
-            line = self.uart.readline()
-            try:
-                line = line if line is None else line.decode("utf8", "ignore").strip()
-            except Exception as e:
-                logging.error("! " + str(line))
-                line = ""
-
-            if line:
-                if line == command:
-                    logging.debug("- <command echo is on - ignoring>")
-                    is_echo_on = False
-                    # possibly deactivate echo through ATE0
-                else:
-                    if first_line:
-                        logging.debug("< " + str(line))
-                        first_line = False
+                if line:
+                    if line == command:
+                        logging.debug("- <command echo is on - ignoring>")
+                        is_echo_on = False
+                        # possibly deactivate echo through ATE0
                     else:
-                        logging.debug("  " + str(line))
-                    responseLines.append(line)
-                    try:
-                        if ure.search(success_regex, line) is not None:
-                            status = True
-                        elif ure.search(error_regex, line) is not None:
-                            status = False
-                    except Exception as e:
-                        logging.exception(e, "Excluding line from success matching...")
+                        if first_line:
+                            logging.debug("< " + str(line))
+                            first_line = False
+                        else:
+                            logging.debug("  " + str(line))
+                        responseLines.append(line)
+                        try:
+                            if ure.search(success_regex, line) is not None:
+                                status = True
+                            elif ure.search(error_regex, line) is not None:
+                                status = False
+                        except Exception as e:
+                            logging.exception(e, "Excluding line from success matching...")
 
             sleep_ms(5)
 
