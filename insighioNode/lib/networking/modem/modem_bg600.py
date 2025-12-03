@@ -319,8 +319,8 @@ class ModemBG600(modem_base.Modem):
         if self._mqtt_client_id is None:
             self._mqtt_client_id = 1
 
-        (mqtt_ready, _) = self.send_at_cmd("AT+QMTOPEN?", 2000, r"\+QMTOPEN:\s+{}.*".format(self._mqtt_client_id))
-        (mqtt_connected, _) = self.send_at_cmd("AT+QMTCONN?", 2000, r"\+QMTCONN:\s+{},3".format(self._mqtt_client_id))
+        (mqtt_ready, _) = self.send_at_cmd("AT+QMTOPEN?", 1000, r"\+QMTOPEN:\s+{}.*".format(self._mqtt_client_id))
+        (mqtt_connected, _) = self.send_at_cmd("AT+QMTCONN?", 1000, r"\+QMTCONN:\s+{},3".format(self._mqtt_client_id))
         return mqtt_ready and mqtt_connected
 
     def mqtt_publish(self, topic, message, num_of_retries=3, retain=False, qos=1):
