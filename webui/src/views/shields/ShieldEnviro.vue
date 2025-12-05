@@ -266,6 +266,7 @@ export default {
       adcConfig: [],
       modbusSensors: [],
       modbusBaudRateOptions: [
+        { value: 4800, label: "4800" },
         { value: 9600, label: "9600" },
         { value: 19200, label: "19200" },
         { value: 38400, label: "38400" },
