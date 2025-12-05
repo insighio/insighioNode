@@ -336,6 +336,9 @@ class ModemBG600(modem_base.Modem):
 
         logging.debug("mqtt_publish: qos: {}".format(qos))
         message_id = (int(random.random() * 65530) + 1) if qos else 0
+        # deactivate our retries because BG600 has default retransmission mechanism
+        # default: 3 retries with 5 seconds interval = 15 seconds total
+        num_of_retries = 1
         while not message_sent and general_retry_num < num_of_retries:
             for i in range(0, num_of_retries):
                 (mqtt_send_ready, _) = self.send_at_cmd(
