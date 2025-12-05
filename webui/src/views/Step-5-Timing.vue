@@ -40,11 +40,11 @@
               />
             </div>
             <div class="form-group columns">
-              <div class="col-1 col-mr-auto"></div>
-              <div class="col-3 col-sm-12">
+              <div class="column col-1 col-mr-auto"></div>
+              <div class="column col-3 col-sm-12">
                 <label class="form-label" for="measurements">Estimated Upload Period</label>
               </div>
-              <div class="col-3 col-sm-12">
+              <div class="column col-3 col-sm-12">
                 <span> {{ timing_period }} </span> s <i class="icon icon-arrow-right"></i>
                 <span>{{ timing_proc_h }}</span
                 >:<span>{{ timing_proc_s }}</span>
@@ -60,16 +60,16 @@
             <br />
             <br />
             <div class="columns flex-centered">
-              <div class="col-1 col-sm-12">
+              <div class="column col-1 col-sm-12">
                 <label class="form-label" for="input-scheduled-time-a">A:</label>
               </div>
-              <div class="col-3 col-sm-12">
+              <div class="column col-3 col-sm-12">
                 <input type="time" name="appt" value="05:30" />
               </div>
-              <div class="col-1 col-sm-12">
+              <div class="column col-1 col-sm-12">
                 <label class="form-label" for="input-scheduled-time-b">B:</label>
               </div>
-              <div class="col-3 col-sm-12">
+              <div class="column col-3 col-sm-12">
                 <input type="time" name="appt" value="21:30" />
               </div>
               <div class="column col-6 col-mr-auto"></div>
@@ -86,10 +86,10 @@
                   @update:value="batchUploadStatusChanged"
                 />
               </div>
-              <div class="col-12" v-show="timing_batch_enabled">
+              <div class="column col-12" v-show="timing_batch_enabled">
                 <br />
                 <div class="columns">
-                  <div class="col-1 col-mr-auto"></div>
+                  <div class="column col-1 col-mr-auto"></div>
                   <SInput
                     label="Message Buffer Size"
                     v-model:value="timing_batch_upload_buffer_size"

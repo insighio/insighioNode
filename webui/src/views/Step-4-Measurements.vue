@@ -38,7 +38,7 @@
                 </label>
                 <div class="accordion-body">
                   <div class="columns">
-                    <div class="col-12">
+                    <div class="column col-12">
                       <table class="table">
                         <thead>
                           <tr>
@@ -101,7 +101,7 @@
 
               <SDivider label="Shield Selection" />
 
-              <div class="col-12">
+              <div class="column col-12">
                 <ul class="tab tab-block">
                   <li
                     v-for="(tab, index) in tabs"
@@ -114,7 +114,7 @@
                 </ul>
               </div>
               <br />
-              <div class="col-12" v-for="(tab, index) in tabs" :key="index">
+              <div class="column col-12" v-for="(tab, index) in tabs" :key="index">
                 <transition :name="transitionDirection" mode="out-in">
                   <div v-if="activeTab === tab.id" :key="tab.id">
                     <br />

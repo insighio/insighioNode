@@ -33,10 +33,10 @@
       :colsInput="8"
     />
     <div v-if="scaleEnabled" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-      <div class="col-4 col-sm-12">
+      <div class="column col-4 col-sm-12">
         <label class="form-label"></label>
       </div>
-      <div class="col-8 col-sm-12">
+      <div class="column col-8 col-sm-12">
         <button class="btn btn-primary" @click="startCalibration()" style="margin-left: 30px">Calibrate</button>
       </div>
       <br />
@@ -97,10 +97,10 @@
               <span class="text-bold">Measure</span> to complete calibration.
             </p>
             <div class="columns">
-              <div class="col-3 col-sm-12 col-ml-auto">
+              <div class="column col-3 col-sm-12 col-ml-auto">
                 <label class="form-label p-centered" for="input-ref-weight">Reference Weight (g)</label>
               </div>
-              <div class="col-3 col-sm-12 col-mr-auto">
+              <div class="column col-3 col-sm-12 col-mr-auto">
                 <input class="form-input p-centered" type="number" v-model="referenceWeight" style="width: 300px" />
               </div>
             </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="form-group columns">
     <SDivider label="SDI12" />
-    <div class="col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+    <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
       <SDivider label="General Settings" />
       <SInput
         label="Warmup time (ms)"
@@ -53,129 +53,135 @@
       </table>
     </div>
     <SDivider label="MODBUS" />
-    <div class="col-12 columns" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
-      <SDivider label="General Settings" />
-      <SSelect
-        label="Baud Rate"
-        v-model:value="modbusConfig.baudRate"
-        @update:value="modbusConfig.baudRate = $event"
-        :valueOptions="modbusBaudRateOptions"
-      />
-      <SSelect
-        label="Data Bits"
-        v-model:value="modbusConfig.dataBits"
-        @update:value="modbusConfig.dataBits = $event"
-        :valueOptions="modbusDataBitsOptions"
-      />
-      <SSelect
-        label="Stop Bits"
-        v-model:value="modbusConfig.stopBits"
-        @update:value="modbusConfig.stopBits = $event"
-        :valueOptions="modbusStopBitsOptions"
-      />
-      <SSelect
-        label="Parity"
-        v-model:value="modbusConfig.parity"
-        @update:value="modbusConfig.parity = $event"
-        :valueOptions="modbusParityOptions"
-      />
-      <br />
-      <SDivider label="Sensors" />
-      <table class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th>Slave Addr</th>
-            <th>Register</th>
-            <th>Type</th>
-            <th>Format</th>
-            <th>Factor</th>
-            <th>Decimal Digits</th>
-            <th>MSW First</th>
-            <th>Little Endian</th>
-            <th>
-              <button class="btn btn-primary" @click="addModbusRow">
-                <i class="icon icon-plus"></i>
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in modbusSensors" :key="index">
-            <td><input type="number" class="form-input" min="1" max="255" v-model="row.slaveAddress" /></td>
-            <td><input type="number" class="form-input" min="0" max="65535" v-model="row.register" /></td>
-            <td>
-              <select class="form-select" v-model="row.type">
-                <option v-for="opt in modbusSupportedTypes" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
-            </td>
-            <td>
-              <select class="form-select" v-model="row.format">
-                <option v-for="opt in modbusSupportedFormats" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
-            </td>
+    <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+      <div class="columns">
+        <SDivider label="General Settings" />
+        <SSelect
+          label="Baud Rate"
+          v-model:value="modbusConfig.baudRate"
+          @update:value="modbusConfig.baudRate = $event"
+          :valueOptions="modbusBaudRateOptions"
+        />
+        <SSelect
+          label="Data Bits"
+          v-model:value="modbusConfig.dataBits"
+          @update:value="modbusConfig.dataBits = $event"
+          :valueOptions="modbusDataBitsOptions"
+        />
+        <SSelect
+          label="Stop Bits"
+          v-model:value="modbusConfig.stopBits"
+          @update:value="modbusConfig.stopBits = $event"
+          :valueOptions="modbusStopBitsOptions"
+        />
+        <SSelect
+          label="Parity"
+          v-model:value="modbusConfig.parity"
+          @update:value="modbusConfig.parity = $event"
+          :valueOptions="modbusParityOptions"
+        />
+        <br />
+        <SDivider label="Sensors" />
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Slave Addr</th>
+              <th>Register</th>
+              <th>Type</th>
+              <th>Format</th>
+              <th>Factor</th>
+              <th>Decimal Digits</th>
+              <th>MSW First</th>
+              <th>Little Endian</th>
+              <th>
+                <button class="btn btn-primary" @click="addModbusRow">
+                  <i class="icon icon-plus"></i>
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in modbusSensors" :key="index">
+              <td><input type="number" class="form-input" min="1" max="255" v-model="row.slaveAddress" /></td>
+              <td><input type="number" class="form-input" min="0" max="65535" v-model="row.register" /></td>
+              <td>
+                <select class="form-select" v-model="row.type">
+                  <option v-for="opt in modbusSupportedTypes" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </td>
+              <td>
+                <select class="form-select" v-model="row.format">
+                  <option v-for="opt in modbusSupportedFormats" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </td>
 
-            <td><input type="number" class="form-input" step="0.000001" v-model="row.factor" /></td>
-            <td>
-              <select class="form-select" v-model="row.decimalDigits">
-                <option v-for="opt in modbusDecimalDigits" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-              </select>
-            </td>
+              <td><input type="number" class="form-input" step="0.000001" v-model="row.factor" /></td>
+              <td>
+                <select class="form-select" v-model="row.decimalDigits">
+                  <option v-for="opt in modbusDecimalDigits" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </td>
 
-            <td><SSwitch v-model:value="row.mswFirst" /></td>
-            <td><SSwitch v-model:value="row.littleEndian" /></td>
-            <td>
-              <button class="btn btn-primary" @click="modbusSensors.splice(index, 1)">
-                <i class="icon icon-delete"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <td><SSwitch v-model:value="row.mswFirst" /></td>
+              <td><SSwitch v-model:value="row.littleEndian" /></td>
+              <td>
+                <button class="btn btn-primary" @click="modbusSensors.splice(index, 1)">
+                  <i class="icon icon-delete"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <br />
       <br />
     </div>
     <SDivider label="ADC" />
-    <div class="col-12 columns" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
-      <div class="container" v-for="adc in adcConfig" :key="adc.id">
-        <SSwitch :label="'Analog Sensor' + adc.id" v-model:value="adc.enabled" />
+    <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+      <div class="columns">
+        <div class="container" v-for="adc in adcConfig" :key="adc.id">
+          <SSwitch :label="'Analog Sensor' + adc.id" v-model:value="adc.enabled" />
 
-        <div v-if="adc.enabled" class="col-12">
-          <div class="form-group columns">
-            <div class="column col-1 col-mr-auto"></div>
-            <div class="column col-9 col-mr-auto">
-              <SSelect
-                label="gain"
-                v-model:value="adc.gain"
-                @update:value="adc.gain = $event"
-                :valueOptions="adsGainOptions"
-                :tooltip="gain_tooltip"
-              />
+          <div v-if="adc.enabled" class="column col-12">
+            <div class="form-group columns">
+              <div class="column col-1 col-mr-auto"></div>
+              <div class="column col-9 col-mr-auto">
+                <SSelect
+                  label="gain"
+                  v-model:value="adc.gain"
+                  @update:value="adc.gain = $event"
+                  :valueOptions="adsGainOptions"
+                  :tooltip="gain_tooltip"
+                />
+              </div>
+              <div class="column col-2 col-mr-auto"></div>
+              <div class="column col-1 col-mr-auto"></div>
+              <div class="column col-9 col-mr-auto">
+                <SInput
+                  label="formula"
+                  v-model:value="adc.formula"
+                  @update:value="adc.formula = $event"
+                  :tooltip="formula_tooltip"
+                />
+              </div>
+              <div class="column col-2 col-mr-auto"></div>
             </div>
-            <div class="column col-2 col-mr-auto"></div>
-            <div class="column col-1 col-mr-auto"></div>
-            <div class="column col-9 col-mr-auto">
-              <SInput
-                label="formula"
-                v-model:value="adc.formula"
-                @update:value="adc.formula = $event"
-                :tooltip="formula_tooltip"
-              />
-            </div>
-            <div class="column col-2 col-mr-auto"></div>
           </div>
         </div>
       </div>
     </div>
     <SDivider label="Pulse Counter" />
-    <div class="col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+    <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
       <div class="container" v-for="pc in pulseCounterConfig" :key="pc.id">
         <SSwitch :label="'Pulse Counter ' + pc.id" v-model:value="pc.enabled" />
-        <div v-if="pc.enabled" class="col-12">
+        <div v-if="pc.enabled" class="column col-12">
           <div class="form-group columns">
             <div class="column col-1 col-mr-auto"></div>
             <div class="column col-9 col-mr-auto">

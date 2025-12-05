@@ -17,7 +17,7 @@
       :colsInput="8"
     />
 
-    <div v-if="adc1TransformationIsVisible" class="col-12">
+    <div v-if="adc1TransformationIsVisible" class="column col-12">
       <div class="form-group columns">
         <div class="column col-1 col-mr-auto"></div>
         <div class="column col-9 col-mr-auto">
@@ -44,7 +44,7 @@
       :colsLabel="4"
       :colsInput="8"
     />
-    <div v-if="adc2TransformationIsVisible" class="col-12">
+    <div v-if="adc2TransformationIsVisible" class="column col-12">
       <div class="form-group columns">
         <div class="column col-1 col-mr-auto"></div>
         <div class="column col-9 col-mr-auto">
@@ -71,7 +71,7 @@
       :colsLabel="4"
       :colsInput="8"
     />
-    <div v-if="adc3TransformationIsVisible" class="col-12">
+    <div v-if="adc3TransformationIsVisible" class="column col-12">
       <div class="form-group columns">
         <div class="column col-1 col-mr-auto"></div>
         <div class="column col-9 col-mr-auto">

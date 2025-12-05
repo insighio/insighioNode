@@ -8,26 +8,26 @@
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="form-group">
             <div class="columns">
-              <div class="col-3 col-sm-12">
+              <div class="column col-3 col-sm-12">
                 <label class="form-label" for="input-id">ID</label>
               </div>
-              <div class="col-9 col-sm-12">
+              <div class="column col-9 col-sm-12">
                 <input class="form-input constr-field" type="text" v-model="insighio_id" @paste="fillClipboardData" />
               </div>
               <br />
               <br />
-              <div class="col-3 col-sm-12">
+              <div class="column col-3 col-sm-12">
                 <label class="form-label" for="input-key">KEY</label>
               </div>
-              <div class="col-9 col-sm-12">
+              <div class="column col-9 col-sm-12">
                 <input class="form-input constr-field" type="text" v-model="insighio_key" @paste="fillClipboardData" />
               </div>
               <br />
               <br />
-              <div class="col-3 col-sm-12">
+              <div class="column col-3 col-sm-12">
                 <label class="form-label" for="input-channel">Data Channel</label>
               </div>
-              <div class="col-9 col-sm-12">
+              <div class="column col-9 col-sm-12">
                 <input
                   class="form-input constr-field"
                   type="text"
@@ -37,10 +37,10 @@
               </div>
               <br />
               <br />
-              <div class="col-3 col-sm-12">
+              <div class="column col-3 col-sm-12">
                 <label class="form-label" for="input-controlChannel">Control Channel</label>
               </div>
-              <div class="col-9 col-sm-12">
+              <div class="column col-9 col-sm-12">
                 <input
                   class="form-input constr-field"
                   type="text"

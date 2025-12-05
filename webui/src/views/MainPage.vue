@@ -1,38 +1,45 @@
 <template>
   <div>
     <div class="header-container">
-      <img src="@/assets/img/logo.png" class="img-responsive px-2 py-2 img-center" />
-
-      <!-- Settings Button and Menu -->
-      <div class="settings-container" v-if="tabActive > 0">
-        <button class="btn btn-primary settings-btn" @click="toggleSettingsMenu" ref="settingsButton">
-          <i class="icon icon-more-vert"></i>
-        </button>
-
-        <div v-if="showSettingsMenu" class="settings-menu" @click.stop>
-          <button class="btn btn-link menu-item" @click="downloadMeasurements">
-            <i class="icon icon-download" style="margin-right: 5px"></i>Download Measurements
-          </button>
-          <button class="btn btn-link menu-item" @click="clearMeasurements">
-            <i class="icon icon-delete" style="margin-right: 5px"></i>Clear Measurements
-          </button>
-          <button class="btn btn-link menu-item" @click="showRebootConfirm = true">
-            <i class="icon icon-refresh" style="margin-right: 5px"></i>Reboot
-          </button>
-          <div class="menu-separator"></div>
-          <button class="btn btn-link menu-item" @click="showFactoryResetConfirm = true">
-            <i class="icon icon-cross" style="margin-right: 5px"></i>Factory Reset
-          </button>
-          <div class="menu-separator"></div>
+      <div class="container">
+        <div class="columns">
+          <div class="column col-10">
+            <img src="@/assets/img/logo.png" class="img-responsive px-2" />
+          </div>
+          <div class="column col-2" style="display: flex; justify-content: flex-end; align-items: center">
+            <!-- Settings Button and Menu -->
+            <div class="settings-container" :style="{ height: '100%', margin: '0' }" v-if="tabActive > 0">
+              <button
+                class="btn settings-btn"
+                :style="{ height: '100%', margin: '0' }"
+                @click="toggleSettingsMenu"
+                ref="settingsButton"
+              >
+                <i class="icon icon-more-vert"></i>
+              </button>
+            </div>
+          </div>
+          <div v-if="showSettingsMenu" class="settings-menu" @click.stop>
+            <button class="btn btn-link menu-item" @click="downloadMeasurements">
+              <i class="icon icon-download" style="margin-right: 5px"></i>Download Measurements
+            </button>
+            <button class="btn btn-link menu-item" @click="clearMeasurements">
+              <i class="icon icon-delete" style="margin-right: 5px"></i>Clear Measurements
+            </button>
+            <button class="btn btn-link menu-item" @click="showRebootConfirm = true">
+              <i class="icon icon-refresh" style="margin-right: 5px"></i>Reboot
+            </button>
+            <div class="menu-separator"></div>
+            <button class="btn btn-link menu-item" @click="showFactoryResetConfirm = true">
+              <i class="icon icon-cross" style="margin-right: 5px"></i>Factory Reset
+            </button>
+            <div class="menu-separator"></div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="panel panel-custom">
-      <div class="panel-header" v-if="tabActive === 1">
-        <div class="panel-title text-center">Welcome to insigh.io device configuration.</div>
-      </div>
-
       <div class="columns">
         <div class="panel-nav col-12 hide-sm">
           <br />
@@ -322,16 +329,22 @@ export default {
   align-items: flex-start;
 }
 
-.settings-container {
+/* .settings-container {
   position: relative;
   margin-top: 1rem;
   margin-right: 1rem;
-}
+} */
+
+/* .settings-btn {
+  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.25rem;
+}  */
 
 .settings-btn {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
-  border-radius: 0.25rem;
+  border: none;
 }
 
 .settings-menu {
@@ -395,9 +408,9 @@ export default {
     align-items: center;
   }
 
-  .settings-container {
+  /* .settings-container {
     margin: 0.5rem 0;
-  }
+  } */
 
   .settings-menu {
     right: auto;
