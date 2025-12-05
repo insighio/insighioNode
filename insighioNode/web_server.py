@@ -466,6 +466,37 @@ def start(timeoutMs=120000):
 
         machine.reset()
 
+    @app.route("/clear_measurements", methods=["POST"])
+    async def clear_measurements(req, resp):
+        logging.debug("[web-server]: /clear_measurements")
+        resp.code = 200
+        resp.add_access_control_headers()
+
+        import utils
+
+        utils.deleteFlagFile("/measurements.log")
+
+        await resp._send_headers()
+        await resp.send("")
+
+    @app.route("/factory_reset", methods=["POST"])
+    async def factory_reset(req, resp):
+        logging.debug("[web-server]: /factory_reset")
+        resp.code = 200
+        resp.add_access_control_headers()
+
+        import utils
+
+        utils.deleteFile("/package.md5")
+        utils.writeToFlagFile("/ota_applied_flag", "")
+
+        await resp._send_headers()
+        await resp.send("")
+
+        import machine
+
+        machine.reset()
+
     # @app.route("/saved_meas", methods=["GET"])
     # async def download_saved_meas(req, resp):
     #     logging.debug("[web-server]: /saved_meas")

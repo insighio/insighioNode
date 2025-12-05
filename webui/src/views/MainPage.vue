@@ -13,12 +13,15 @@
           <button class="btn btn-link menu-item" @click="downloadMeasurements">
             <i class="icon icon-download" style="margin-right: 5px"></i>Download Measurements
           </button>
+          <button class="btn btn-link menu-item" @click="clearMeasurements">
+            <i class="icon icon-delete" style="margin-right: 5px"></i>Clear Measurements
+          </button>
           <button class="btn btn-link menu-item" @click="showRebootConfirm = true">
             <i class="icon icon-refresh" style="margin-right: 5px"></i>Reboot
           </button>
           <div class="menu-separator"></div>
           <button class="btn btn-link menu-item" @click="showFactoryResetConfirm = true">
-            <i class="icon icon-delete" style="margin-right: 5px"></i>Factory Reset
+            <i class="icon icon-cross" style="margin-right: 5px"></i>Factory Reset
           </button>
           <div class="menu-separator"></div>
         </div>
@@ -228,11 +231,33 @@ export default {
         alert("Error downloading measurements. Please check your connection and try again.")
       }
     },
+    async clearMeasurements() {
+      try {
+        this.showSettingsMenu = false
+        const response = await fetch("http://192.168.4.1" + "/clear_measurements", {
+          method: "POST",
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json"
+          }
+        })
+        if (response.ok) {
+          alert("Measurements cleared successfully.")
+          console.log("Measurements cleared successfully")
+        } else {
+          console.error("Failed to clear measurements:", response.statusText)
+          alert("Failed to clear measurements. Please try again.")
+        }
+      } catch (error) {
+        console.error("Error clearing measurements:", error)
+        alert("Error clearing measurements. Please check your connection and try again.")
+      }
+    },
     async factoryReset() {
       this.isResetting = true
 
       try {
-        const response = await fetch("http://192.168.4.1" + "/api/factory_reset", {
+        const response = await fetch("http://192.168.4.1" + "/factory_reset", {
           method: "POST",
           headers: {
             Accept: "application/json, text/plain, */*",
