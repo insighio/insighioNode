@@ -107,7 +107,7 @@ class TransferProtocolModemAT(TransferProtocol):
             return None
 
         topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
-        return self.modem_instance.mqtt_get_message(topic, 10000)
+        return self.modem_instance.mqtt_get_message(topic, 5000)
 
     def clear_retained(self, topic):
         logging.info("About to clear retained message of topic: " + topic)
