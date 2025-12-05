@@ -124,14 +124,14 @@ class ModemBG600(modem_base.Modem):
             self.reset_uart()
             self.send_at_cmd('AT+QGPSCFG="priority",1,0')
             self._last_prioritization_is_gnss = False
-            sleep_ms(1000)
+            sleep_ms(100)
 
     def prioritizeGNSS(self):
         if self._last_prioritization_is_gnss is None or self._last_prioritization_is_gnss == False:
             self.reset_uart()
             self.send_at_cmd('AT+QGPSCFG="priority",0,0')
             self._last_prioritization_is_gnss = True
-            sleep_ms(1000)
+            sleep_ms(100)
 
     def connect(self, timeoutms=30000):
         for i in range(0, 5):
@@ -290,7 +290,7 @@ class ModemBG600(modem_base.Modem):
             elif reg_match and reg_match.group(1) == "2":  # already opened
                 self.mqtt_disconnect()
                 # self._mqtt_client_id += 1
-                sleep_ms(2500)
+                sleep_ms(1000)
 
             # +QIURC: "pdpdeact",1
             elif self._match_regex(r'\+QIURC:\s*"pdpdeact",1', lines):  # check for pdpdeact message

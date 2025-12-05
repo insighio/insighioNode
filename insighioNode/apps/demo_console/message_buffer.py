@@ -44,7 +44,6 @@ def store_measurement(measurements, force_store=False):
         data = json.dumps(measurements) + "\n"
         with mutex:
             utils.appendToFlagFile(storage_file_name, data)
-            logging.debug("Measurement stored: " + str(measurements))
             return True
     return False
 

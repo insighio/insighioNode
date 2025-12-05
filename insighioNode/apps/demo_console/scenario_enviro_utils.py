@@ -143,7 +143,8 @@ def ads_init():
 def io_expander_power_on_sdi12_sensors():
     logging.debug("io_expander_power_on_sdi12_sensors - power on SDI12 sensors")
     _i2c.writeto_mem(_io_expander_addr, 1, b"\x02")
-    sleep_ms(500)
+    if not cfg.get("_LOW_LATENCY_MODE_ON"):
+        sleep_ms(500)
 
 
 def io_expander_power_off_sdi12_sensors():
@@ -154,7 +155,8 @@ def io_expander_power_off_sdi12_sensors():
 def io_expander_power_on_modbus():
     logging.debug("io_expander_power_on_modbus - power on MODBUS sensors")
     _i2c.writeto_mem(_io_expander_addr, 1, b"\x01")
-    sleep_ms(500)
+    if not cfg.get("_LOW_LATENCY_MODE_ON"):
+        sleep_ms(500)
 
 
 def io_expander_power_off_modbus():
@@ -165,7 +167,8 @@ def io_expander_power_off_modbus():
 def io_expander_power_on_ads_sensors():
     logging.debug("io_expander_power_on_ads_sensors - power on ADS sensors")
     _i2c.writeto_mem(_io_expander_addr, 1, b"\x04")
-    sleep_ms(500)
+    if not cfg.get("_LOW_LATENCY_MODE_ON"):
+        sleep_ms(500)
 
 
 def io_expander_power_off_adc_sensors():
@@ -289,7 +292,8 @@ def execute_sdi12_measurements(measurements):
         for sensor in sensor_list:
             read_sdi12_sensor(sdi12, measurements, sensor)
             wdt_reset()
-            sleep_ms(500)
+            if not cfg.get("_LOW_LATENCY_MODE_ON"):
+                sleep_ms(500)
     except Exception as e:
         set_value(measurements, "sdi12_e", "{}".format(e), None)
         logging.exception(e, "Exception while reading SDI-12 data")
@@ -425,7 +429,8 @@ def execute_modbus_measurements(measurements):
 
         inst = modbus.init_instance(rtu_pins, baudrate, data_bits, parity, stop_bits)
 
-        sleep_ms(2500)  # cfg.get("_SDI12_WARM_UP_TIME_MSEC"))  # warmup time
+        if not cfg.get("_LOW_LATENCY_MODE_ON"):
+            sleep_ms(2500)  # cfg.get("_SDI12_WARM_UP_TIME_MSEC"))  # warmup time
 
         for sensor in sensor_list:
             wdt_reset()
