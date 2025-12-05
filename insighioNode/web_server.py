@@ -226,6 +226,55 @@ class DeviceMeasurements:
             return {}, 500
 
 
+class StoredMeasurements:
+    def get(self, data):
+        logging.debug("[web-server][GET]: /saved_meas")
+        import utils
+        from external.kpn_senml.senml_pack_json import SenmlPackJson
+        from external.kpn_senml.senml_record import SenmlRecord
+
+        stored_measurements_str = utils.readFromFlagFile("/measurements.log")
+        if stored_measurements_str is None:
+            stored_measurements_str = ""
+
+        device_id = get_device_id()[0]
+        measurement_list = []
+        try:
+            import ujson
+            import utime
+
+            for line in stored_measurements_str.split("\n"):
+                if not line:
+                    continue
+
+                message = SenmlPackJson((device_id + "-") if device_id is not None else None)
+                data = ujson.loads(line)
+                if "diff_dt" in data:
+                    time_diff = utime.ticks_diff(utime.ticks_ms(), data["diff_dt"]["value"])
+                    if time_diff > 0:
+                        data["time_diff"] = {"value": time_diff}
+                    else:
+                        data["time_diff"] = {"value": 0}
+                    del data["diff_dt"]
+                if "dt" in data:
+                    message.base_time = data["dt"]["value"]
+
+                for key in data:
+                    if isinstance(data[key], dict):
+                        if "unit" in data[key]:
+                            message.add(SenmlRecord(key, unit=data[key]["unit"], value=data[key]["value"]))
+                        elif key != "dt":
+                            message.add(SenmlRecord(key, value=data[key]["value"]))
+                    elif data[key] is not None:
+                        message.add(SenmlRecord(key, value=data[key]))
+
+                measurement_list.append(message.to_json())
+        except Exception as e:
+            logging.exception(e, "error parsing stored measurements")
+            measurement_list = []
+        return {"measurements": measurement_list}, 200
+
+
 class WiFiList:
     def get(self, data):
         result = {}
@@ -350,7 +399,7 @@ def start(timeoutMs=120000):
             await resp.send_file("www/index.html")
 
     @app.route("/<fn>")
-    async def httpfiles(req, resp, fn):
+    async def httpfiles_main(req, resp, fn):
         # Just send file
         logging.debug("[web-server]: /{}".format(fn))
 
@@ -367,7 +416,7 @@ def start(timeoutMs=120000):
             await resp.send_file("www/{}".format(fn), content_type=get_content_type(fn))
 
     @app.route("/assets/<fn>")
-    async def httpfiles(req, resp, fn):
+    async def httpfiles_assets(req, resp, fn):
         # Just send file
         logging.debug("[web-server]: /assets/{}".format(fn))
 
@@ -417,6 +466,21 @@ def start(timeoutMs=120000):
 
         machine.reset()
 
+    # @app.route("/saved_meas", methods=["GET"])
+    # async def download_saved_meas(req, resp):
+    #     logging.debug("[web-server]: /saved_meas")
+
+    #     # Add cache-busting headers
+    #     resp.add_header("Cache-Control", "no-cache, no-store, must-revalidate")
+    #     resp.add_header("Pragma", "no-cache")
+    #     resp.add_header("Expires", "0")
+
+    #     file_path = "/measurements.log"
+    #     if utils.existsFile("/data"):
+    #         file_path = "/data/measurements.log"
+
+    #     await resp.send_file(file_path, content_type="")
+
     app.add_resource(Settings, "/settings")
     app.add_resource(RawWeightIdle, "/raw-weight-idle")
     # app.add_resource(RawWeight, '/raw-weight')
@@ -426,6 +490,7 @@ def start(timeoutMs=120000):
     app.add_resource(Version, "/version")
     app.add_resource(WiFiList, "/update_wifi_list")
     app.add_resource(DeviceMeasurements, "/device_measurements")
+    app.add_resource(StoredMeasurements, "/saved_meas")
 
     try:
         uasyncio.run(server_loop(app, timeoutMs))
