@@ -141,8 +141,18 @@ def get_measurements(cfg_dummy=None):
 
             scenario_accel_utils.shield_accel_measurements(measurements)
             delete_pulse_counter_state()
-        else:  # if shield_name == cfg.get("_CONST_SHIELD_DIG_ANALOG"):
-            default_board_measurements(measurements)
+        elif shield_name == cfg.get("_CONST_SHIELD_DIG_ANALOG"):
+            from . import scenario_digital_adc_utils
+
+            scenario_digital_adc_utils.shield_measurements(measurements)
+            delete_pulse_counter_state()
+        elif shield_name == cfg.get("_CONST_SHIELD_SCALE"):
+            from . import scenario_digital_adc_utils
+            scenario_digital_adc_utils.shield_measurements(measurements)
+
+            from . import scenario_scale_utils
+            scenario_scale_utils.shield_measurements(measurements)
+
             delete_pulse_counter_state()
 
         if cfg.get("_MEAS_KEYVALUE"):
@@ -178,12 +188,6 @@ def read_battery_voltage():
     device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
     gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
     return vbatt
-
-
-def default_board_measurements(measurements):
-    from . import scenario_digital_adc_utils
-
-    scenario_digital_adc_utils.get_measurements(measurements)
 
 
 def add_explicit_key_values(measurements):

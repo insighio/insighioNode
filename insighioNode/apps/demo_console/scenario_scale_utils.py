@@ -8,6 +8,12 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from .dictionary_utils import set_value_float
 
 
+def shield_measurements(measurements):
+    if cfg.get("_MEAS_SCALE_ENABLED"):
+        read_scale(measurements)
+    read_scale_shield_temperature(measurements)
+
+
 def read_scale(measurements):
     weight_on_pin = cfg.get("_UC_IO_WEIGHT_ON")
 

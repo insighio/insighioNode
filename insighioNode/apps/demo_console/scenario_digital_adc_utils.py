@@ -5,7 +5,7 @@ from external.kpn_senml.senml_unit import SenmlUnits, SenmlSecondaryUnits
 from .dictionary_utils import set_value, set_value_int, set_value_float
 
 
-def get_measurements(measurements):
+def shield_measurements(measurements):
     # up to 2 I2C sensors
     meas_key_name = None
 
@@ -31,11 +31,6 @@ def get_measurements(measurements):
         if meas_key is not None and pin is not None and meas_key != cfg.get("_CONST_MEAS_DISABLED"):
             logging.debug("Getting measurement for [{}] from sensor [{}] @ pin [{}]".format(meas_key_name, meas_key, pin))
             read_analog_digital_sensor(pin, meas_key, measurements, "adp" + str(n), transformation)
-
-    if cfg.get("_SELECTED_SHIELD") == cfg.get("_CONST_SHIELD_SCALE"):
-        if cfg.get("_MEAS_SCALE_ENABLED"):
-            read_scale(measurements)
-        read_scale_shield_temperature(measurements)
 
 
 def read_i2c_sensor(i2c_sda_pin, i2c_scl_pin, sensor_name, measurements):
