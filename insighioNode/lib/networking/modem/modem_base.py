@@ -29,8 +29,26 @@ class Modem:
         self.modem_power_key = power_key
 
     def reset_uart(self):
-        self.uart = UART(1, 115200, tx=self.modem_tx, rx=self.modem_rx)
-        self.uart.init(115200, bits=8, parity=None, stop=1, tx=self.modem_tx, rx=self.modem_rx, timeout=500, timeout_char=1000)
+        # Add type checking and conversion
+        if isinstance(self.modem_tx, str):
+            self.modem_tx = int(self.modem_tx)
+        if isinstance(self.modem_rx, str):
+            self.modem_rx = int(self.modem_rx)
+        logging.debug("tx: {}, rx:{}".format(self.modem_tx, self.modem_rx))
+
+        # Ensure pins are integers
+        tx_pin = int(self.modem_tx) if self.modem_tx is not None else None
+        rx_pin = int(self.modem_rx) if self.modem_rx is not None else None
+
+        if tx_pin is None or rx_pin is None:
+            raise ValueError(f"Invalid UART pins: tx={tx_pin}, rx={rx_pin}")
+
+        # MicroPython 1.26.1 on ESP32-S3 requires separate UART initialization
+        # Initialize UART with minimal parameters first, then configure pins
+        logging.debug("Initializing UART with separate init call (MicroPython 1.26.1 compatibility)")
+        self.uart = UART(1, baudrate=115200)
+        self.uart.init(tx=tx_pin, rx=rx_pin)
+        logging.debug("UART initialization successful")
 
     def has_data_over_ppp(self):
         return self.data_over_ppp
@@ -332,8 +350,9 @@ class Modem:
                 for line in lines:
                     match_res = ure.search(regex_creg, line)
                     if match_res is not None:
-                        self.lac = int("0x" + match_res.group(1))
-                        self.ci = int("0x" + match_res.group(2))
+                        logging.debug("LAC: {}, CI: {}".format(match_res.group(1), match_res.group(2)))
+                        self.lac = int(match_res.group(1), 16)
+                        self.ci = int(match_res.group(2), 16)
                         break
         return (self.lac, self.ci)
 

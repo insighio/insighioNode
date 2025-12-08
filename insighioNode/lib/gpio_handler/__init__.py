@@ -18,16 +18,24 @@ def get_input_voltage(pin, voltage_divider=1, attn=ADC.ATTN_11DB, measurement_cy
     adc.width(adc_width)
 
     try:
-        if major_version == 1 and minor_version < 18:
-            adc.init(attn, adc_width)
-        elif major_version == 1 and minor_version >= 18:
+        if major_version == 1 and minor_version >= 18 and minor_version <= 18:
             adc.init_mp(atten=attn)
-        return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
+        else:
+            adc.init(atten=attn)
+
+    #    return adc.read_voltage(_NUM_ADC_READINGS) * voltage_divider
     except Exception as e:
         logging.exception(e, "unable to read: pin: {}".format(pin))
         pass
 
-    logging.debug("fallback ADC without calibration")
+    if major_version == 1 and minor_version >= 18 and minor_version >= 26:
+        running_avg = 0.0
+        for i in range(0, measurement_cycles):
+            running_avg = (i / (i + 1)) * running_avg + float(adc.read_uv()) / (i + 1)
+
+        return (running_avg / 1000) * voltage_divider
+
+    #    logging.debug("fallback ADC without calibration")
 
     attn_factor = 1
     if attn == ADC.ATTN_11DB:
