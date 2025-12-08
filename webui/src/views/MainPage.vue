@@ -216,6 +216,14 @@ export default {
 
         if (response.ok) {
           const data = await response.json()
+          this.insighio_id = this.$cookies.get("insighio-id")
+          this.insighio_key = this.$cookies.get("insighio-key")
+          this.insighio_channel = this.$cookies.get("insighio-channel")
+          data.keys = {
+            insighio_id: this.insighio_id,
+            insighio_key: this.insighio_key,
+            insighio_channel: this.insighio_channel
+          }
 
           // Create a downloadable file
           const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
