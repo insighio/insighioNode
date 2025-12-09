@@ -262,7 +262,7 @@ class ModemBG600(modem_base.Modem):
     def deactivate_context(self):
         self.send_at_cmd("AT+QIDEACT=1")
 
-    def mqtt_connect(self, server_ip, server_port, username, password, keepalive=120):
+    def mqtt_connect(self, server_ip, server_port, username, password, keepalive=120, device_id=get_device_id()[0]):
         (context_activated, _) = self.send_at_cmd('AT+QMTCFG="pdpcid",1')
         if not context_activated:
             return False
@@ -303,7 +303,7 @@ class ModemBG600(modem_base.Modem):
             while retry < max_retries:
                 retry += 1
                 (mqtt_connected, _) = self.send_at_cmd(
-                    'AT+QMTCONN={},"{}","{}","{}"'.format(self._mqtt_client_id, get_device_id()[0], username, password),
+                    'AT+QMTCONN={},"{}","{}","{}"'.format(self._mqtt_client_id, device_id, username, password),
                     15000,
                     r"\+QMTCONN:\s+{},0,0".format(self._mqtt_client_id),
                 )

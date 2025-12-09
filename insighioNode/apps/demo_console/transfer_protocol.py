@@ -56,6 +56,7 @@ class TransferProtocolModemAT(TransferProtocol):
             self.protocol_config.thing_id,
             self.protocol_config.thing_token,
             self.protocol_config.keepalive,
+            self.protocol_config.client_name
         )
         return self.connected
 

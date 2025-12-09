@@ -109,10 +109,13 @@ def connect(cfg):
         modem_model = modem_instance.get_model()
         if modem_model and "bg600" in modem_model:
             transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
+            transfer_client.protocol_config.client_name = "{}_cell_at".format(cfg.get("device_id")[0])
         elif cfg.protocol == "coap":
             transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
+            transfer_client.protocol_config.client_name = "{}_cell_coap".format(cfg.get("device_id")[0])
         elif cfg.protocol == "mqtt":
             transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
+            transfer_client.protocol_config.client_name = "{}_cell_mqtt".format(cfg.get("device_id")[0])
         else:
             transfer_client = None
 
