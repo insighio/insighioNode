@@ -271,7 +271,10 @@ def init_gpio(gpio_num, ulp=None):
         from esp32 import ULP
 
         ulp = ULP()
-    ulp.init_gpio(gpio_num)
+    try:
+        ulp.init_gpio(gpio_num)
+    except:
+        logging.debug("ulp.init_gpio not supported on this firmware")
 
 
 def value(start=0):
