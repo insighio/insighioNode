@@ -69,17 +69,37 @@ class HttpClient:
                 headers_cont += b"{}: {}\r\n".format(k, _headers[k])
             return headers_cont
 
+        ssl_module_loaded = False
+        proto = ''
+        dummy = ''
+        host = ''
+        path = ''
         try:
             proto, dummy, host, path = url.split("/", 3)
         except ValueError:
             proto, dummy, host = url.split("/", 2)
             path = ""
+
+        print("proto: {}, dummy: {}, host: {}, path: {}".format(proto, dummy, host, path))
+
         if proto == "http:":
             port = 80
         elif proto == "https:":
-            import ussl
+            try:
+                import ussl
+                ssl_module_loaded = True
+            except:
+                try:
+                    import ssl as ussl
+                    ssl_module_loaded = True
+                except:
+                    pass
 
-            port = 443
+            if not ssl_module_loaded:
+                port = 80
+                proto = "http:"
+            else:
+                port = 443
         else:
             raise ValueError("Unsupported protocol: " + proto)
 

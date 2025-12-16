@@ -8,6 +8,7 @@ import _thread
 import utime
 from uerrno import EINPROGRESS, ETIMEDOUT
 from micropython import const
+import asyncio
 
 # Default short delay for good SynCom throughput (avoid sleep(0) with SynCom).
 _DEFAULT_MS = const(20)
@@ -50,7 +51,7 @@ class MQTTClient:
     def _timeout(self, t):
         return utime.ticks_diff(utime.ticks_ms(), t) > 10000
 
-    def _write(self, bytes_wr, length=0, sock=None):
+    async def _write(self, bytes_wr, length=0, sock=None):
         if sock is None:
             sock = self.sock
         # Wrap bytes in memoryview to avoid copying during slicing
@@ -70,10 +71,10 @@ class MQTTClient:
             if n:
                 t = utime.ticks_ms()
                 bytes_wr = bytes_wr[n:]
-            utime.sleep_ms(_SOCKET_POLL_DELAY)
+            await asyncio.sleep_ms(_SOCKET_POLL_DELAY)
         return True
 
-    def _read(self, n, sock=None):  # OSError caught by superclass
+    async def _read(self, n, sock=None):  # OSError caught by superclass
         if sock is None:
             sock = self.sock
         # Declare a byte array of size n. That space is needed anyway, better
@@ -100,18 +101,18 @@ class MQTTClient:
                 size += msg_size
                 t = utime.ticks_ms()
                 self.last_rx = utime.ticks_ms()
-            utime.sleep_ms(_SOCKET_POLL_DELAY)
+            await asyncio.sleep_ms(_SOCKET_POLL_DELAY)
         return data
 
-    def _send_str(self, s):
-        self._write(struct.pack("!H", len(s)))
-        self._write(s)
+    async def _send_str(self, s):
+        await self._write(struct.pack("!H", len(s)))
+        await self._write(s)
 
-    def _recv_len(self):
+    async def _recv_len(self):
         n = 0
         sh = 0
         while 1:
-            b = self._read(1)[0]
+            b = (await self._read(1))[0]
             n |= (b & 0x7F) << sh
             if not b & 0x80:
                 return n
@@ -128,7 +129,7 @@ class MQTTClient:
         self.lw_qos = qos
         self.lw_retain = retain
 
-    def connect(self, clean_session=True):
+    async def connect(self, clean_session=True):
         self.sock = socket.socket()
         addr = socket.getaddrinfo(self.server, self.port)[0][-1]
         self.sock.connect(addr)
@@ -160,26 +161,26 @@ class MQTTClient:
             i += 1
         premsg[i] = sz
 
-        self._write(premsg, i + 2)
-        self._write(msg)
+        await self._write(premsg, i + 2)
+        await self._write(msg)
         # print(hex(len(msg)), hexlify(msg, ":"))
-        self._send_str(self.client_id)
+        await self._send_str(self.client_id)
         if self.lw_topic:
-            self._send_str(self.lw_topic)
-            self._send_str(self.lw_msg)
+            await self._send_str(self.lw_topic)
+            await self._send_str(self.lw_msg)
         if self.user is not None:
-            self._send_str(self.user)
-            self._send_str(self.pswd)
-        resp = self._read(4)
+            await self._send_str(self.user)
+            await self._send_str(self.pswd)
+        resp = await self._read(4)
         if resp[3] != 0 or resp[0] != 0x20 or resp[1] != 0x02:
             raise OSError(-1, "Bad CONNACK")  # Bad CONNACK e.g. authentication fail.
 
-    def disconnect(self):
+    async def disconnect(self):
         if self.sock is not None:
             try:
                 with self.lock:
-                    self._write(b"\xe0\0")
-                    utime.sleep_ms(100)
+                    await self._write(b"\xe0\0")
+                    await asyncio.sleep_ms(100)
             except OSError:
                 pass
             self.close()
@@ -188,12 +189,12 @@ class MQTTClient:
         if self.sock is not None:
             self.sock.close()
 
-    def ping(self):
+    async def ping(self):
         with self.lock:
-            self._write(b"\xc0\0")
-        self.wait_msg()
+            await self._write(b"\xc0\0")
+        await self.wait_msg()
 
-    def publish(self, topic, msg, retain=False, qos=0):
+    async def publish(self, topic, msg, retain=False, qos=0):
         with self.lock:
             pkt = bytearray(b"\x30\0\0\0")
             pkt[0] |= qos << 1 | retain
@@ -208,42 +209,42 @@ class MQTTClient:
                 i += 1
             pkt[i] = sz
             # print(hex(len(pkt)), hexlify(pkt, ":"))
-            self._write(pkt, i + 1)
-            self._send_str(topic)
+            await self._write(pkt, i + 1)
+            await self._send_str(topic)
             if qos > 0:
                 self.pid += 1
                 pid = self.pid
                 struct.pack_into("!H", pkt, 0, pid)
-                self._write(pkt, 2)
-            self._write(msg)
+                await self._write(pkt, 2)
+            await self._write(msg)
         if qos == 1:
             while 1:
-                op = self.wait_msg()
+                op = await self.wait_msg()
                 if op == 0x40:
-                    sz = self._read(1)
+                    sz = await self._read(1)
                     if sz != b"\x02":
                         raise OSError(-1, "Invalid PUBACK packet")
-                    rcv_pid = self._read(2)
+                    rcv_pid = await self._read(2)
                     rcv_pid = rcv_pid[0] << 8 | rcv_pid[1]
                     if pid == rcv_pid:
                         return
         elif qos == 2:
             raise OSError(-1, "Invalid qos")
 
-    def subscribe(self, topic, qos=0):
+    async def subscribe(self, topic, qos=0):
         assert self.cb is not None, "Subscribe callback is not set"
         with self.lock:
             pkt = bytearray(b"\x82\0\0\0")
             self.pid += 1
             struct.pack_into("!BH", pkt, 1, 2 + 2 + len(topic) + 1, self.pid)
             # print(hex(len(pkt)), hexlify(pkt, ":"))
-            self._write(pkt)
-            self._send_str(topic)
-            self._write(qos.to_bytes(1, "little"))
+            await self._write(pkt)
+            await self._send_str(topic)
+            await self._write(qos.to_bytes(1, "little"))
         while 1:
-            op = self.wait_msg()
+            op = await self.wait_msg()
             if op == 0x90:  # SUBACK
-                resp = self._read(4)
+                resp = await self._read(4)
                 # print(resp)
                 if resp[1] != pkt[2] or resp[2] != pkt[3]:
                     raise OSError(-1, "Invalid pid in SUBACK packet")
@@ -255,10 +256,10 @@ class MQTTClient:
     # Subscribed messages are delivered to a callback previously
     # set by .set_callback() method. Other (internal) MQTT
     # messages processed internally.
-    def wait_msg(self):
+    async def wait_msg(self):
         with self.lock:
             try:
-                res = self._read(1)
+                res = await self._read(1)
             except OSError as e:
                 raise
             self.sock.setblocking(True)
@@ -267,33 +268,33 @@ class MQTTClient:
             if res == b"":
                 raise OSError(-1)
             if res == b"\xd0":  # PINGRESP
-                self._read(1)
+                await self._read(1)
                 return None
 
             op = res[0]
             if op & 0xF0 != 0x30:
                 return op
-            sz = self._recv_len()
-            topic_len = self._read(2)
+            sz = await self._recv_len()
+            topic_len = await self._read(2)
             topic_len = (topic_len[0] << 8) | topic_len[1]
-            topic = self._read(topic_len)
+            topic = await self._read(topic_len)
             sz -= topic_len + 2
             if op & 6:
-                pid = self._read(2)
+                pid = await self._read(2)
                 pid = pid[0] << 8 | pid[1]
                 sz -= 2
-            msg = self._read(sz)
+            msg = await self._read(sz)
             self.cb(topic, msg)
             if op & 6 == 2:
                 pkt = bytearray(b"\x40\x02\0\0")
                 struct.pack_into("!H", pkt, 2, pid)
-                self._write(pkt)
+                await self._write(pkt)
             elif op & 6 == 4:
                 assert 0
 
     # Checks whether a pending message from server is available.
     # If not, returns immediately with None. Otherwise, does
     # the same processing as wait_msg.
-    def check_msg(self):
+    async def check_msg(self):
         self.sock.setblocking(False)
-        return self.wait_msg()
+        return await self.wait_msg()

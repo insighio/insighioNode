@@ -1,8 +1,9 @@
 from external.umqtt.simple import MQTTClient as uMQTTClient
-from utime import sleep_ms, ticks_ms, ticks_diff
+from utime import sleep_ms, ticks_ms, ticks_diff, ticks_add
 from .mqtt_config import MQTTConfig
 import logging
 import _thread
+import asyncio
 
 
 class MQTTClientCustom:
@@ -54,12 +55,11 @@ class MQTTClientCustom:
             self.lastReceivedMessage["topic"] = topic
             self.lastReceivedMessage["message"] = message
 
-    def __check_msg(self, timeout_ms):
+    async def __check_msg(self, timeout_ms):
         start_time = ticks_ms()
-        end_time = start_time + timeout_ms
-        while ticks_ms() < end_time:
+        while ticks_diff(ticks_ms(), start_time) < timeout_ms:
             try:
-                self.client.check_msg()
+                await self.client.check_msg()
                 with self.mutex:
                     if self.lastReceivedMessage is not None:
                         message = self.lastReceivedMessage.copy()
@@ -67,13 +67,13 @@ class MQTTClientCustom:
                         return message
             except AssertionError:
                 pass
-            sleep_ms(10)
+            await asyncio.sleep_ms(10)
 
         return None
 
-    def __sendMessageEx(self, url, message, qos=0, retained=False):
+    async def __sendMessageEx(self, url, message, qos=0, retained=False):
         try:
-            self.client.publish(url, message, retained, qos)
+            await self.client.publish(url, message, retained, qos)
             # if publish fails, exception is thrown, else return True
             return True
         except Exception as e:
@@ -86,20 +86,20 @@ class MQTTClientCustom:
         except Exception as e:
             logging.exception(e, "Exception while setting last will")
 
-    def connect(self):
+    async def connect(self):
         self.client.set_callback(self.subscribe_callback)
         try:
             logging.debug("Connecting to MQTT...")
             if self._has_connected and not self.clean_session:
                 # Power up. Clear previous session data but subsequently save it.
-                self.client.connect(True)  # Connect with clean session
+                await self.client.connect(True)  # Connect with clean session
                 try:
                     disconnect = b"\xe0\0"
                     with self.client.lock:
-                        self.client._write(disconnect, len(disconnect))  # Force disconnect but keep socket open
+                        await self.client._write(disconnect, len(disconnect))  # Force disconnect but keep socket open
                 except:
                     pass
-            self.client.connect(self.clean_session)
+            await self.client.connect(self.clean_session)
             self._is_connected = True
 
             if not self._has_connected:
@@ -116,28 +116,27 @@ class MQTTClientCustom:
     def is_connected(self):
         return self._is_connected
 
-    def sendMessage(self, message, topic=None, retained=False, require_message_delivery_ack=True):
+    async def sendMessage(self, message, topic=None, retained=False, require_message_delivery_ack=True):
         if topic is None:
             topic = self.messageChannel
-        return self.__sendMessageEx(topic, message, 1 if require_message_delivery_ack else 0, retained)
+        return await self.__sendMessageEx(topic, message, 1 if require_message_delivery_ack else 0, retained)
 
-    def sendControlMessage(self, message, subtopic):
-        return self.sendMessage(message, self.controlChannelGeneric + subtopic, False)
+    async def sendControlMessage(self, message, subtopic):
+        return await self.sendMessage(message, self.controlChannelGeneric + subtopic, False)
 
-    def subscribe_and_get_first_message(self, channel=None):
+    async def subscribe_and_get_first_message(self, channel=None):
         try:
             if channel is None:
                 channel = self.controlChannelGeneric + "/#"
-            self.client.subscribe(channel)
-            return self.__check_msg(5000)
+            await self.client.subscribe(channel)
+            return await self.__check_msg(5000)
         except Exception as e:
             logging.exception(e, "Exception during MQTT subscribe with:")
-            return None
         return None
 
-    def disconnect(self):
+    async def disconnect(self):
         try:
-            self.client.disconnect()
+            await self.client.disconnect()
             self._has_connected = False
             self._is_connected = False
             return True
@@ -145,16 +144,16 @@ class MQTTClientCustom:
             logging.exception(e, "Exception during MQTT disconnect:")
             return False
 
-    def keep_alive_thread(self):
+    async def keep_alive_thread(self):
         while self._has_connected:
             pings_due = ticks_diff(ticks_ms(), self.client.last_rx) // self._ping_interval
             if pings_due >= 4:
                 logging.debug("Reconnect: broker fail.")
                 self._is_connected = False
                 break
-            sleep_ms(self._ping_interval)
+            await asyncio.sleep_ms(self._ping_interval)
             try:
-                self.client.ping()
+                await self.client.ping()
                 logging.debug("Mqtt Ping ok")
             except OSError:
                 logging.debug("Mqtt Ping failed")
