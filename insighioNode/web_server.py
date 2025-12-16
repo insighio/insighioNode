@@ -180,6 +180,34 @@ class ConfigTemp:
             logging.exception(e, "Error applying configuration")
             return {}, 500
 
+    # implement /api/time endpoint get the epoch time from the client
+    # in the form of a JSON object: { "epoch": 1625247600 }
+    # @app.route("/api/time", methods=["POST"])
+
+
+class SystemTime:
+    def post(self, data):
+        logging.debug("[web-server]: /api/time")
+        from machine import RTC
+        from utime import localtime
+
+        ESP32_TIME_OFFSET = 946684800
+
+        try:
+            if "epoch" in data:
+                epoch_time = int(data["epoch"])
+                tm = localtime(epoch_time - ESP32_TIME_OFFSET)
+                rtc = RTC()
+                rtc.datetime((tm[0], tm[1], tm[2], tm[6] + 1, tm[3], tm[4], tm[5], 0))  # year, month, day, weekday, hour, min, sec, ms
+                logging.debug("RTC updated to: {}".format(rtc.datetime()))
+                return {}, 200
+            else:
+                logging.error("No 'epoch' field in request")
+                return {}, 400
+        except Exception as e:
+            logging.exception(e, "Error parsing JSON in /api/time")
+            return {}, 400
+
 
 class DeviceMeasurements:
     # global wlan
@@ -497,6 +525,43 @@ def start(timeoutMs=120000):
 
         machine.reset()
 
+    @app.route("/api/upload_ota", methods=["POST"])
+    async def api_upload_ota(req, resp):
+        # obtain the filename and size from request headers
+        filename = req.headers["Content-Disposition"].split("filename=")[1].strip('"')
+        size = int(req.headers["Content-Length"])
+
+        # sanitize the filename
+        filename = filename.replace("/", "_")
+
+        from apps.demo_console import ota
+
+        if not ota.hasEnoughFreeSpace(int(size)):
+            return "not enough space", 500
+
+        downloaded_file = "/" + filename
+        # write the file to the files directory in 1K chunks
+        with open(downloaded_file, "wb") as f:
+            while size > 0:
+                chunk = await req.stream.read(min(size, 1024))
+                f.write(chunk)
+                size -= len(chunk)
+
+        from . import apply_ota
+
+        applied = apply_ota.do_apply(downloaded_file)
+
+        import utils
+
+        utils.writeToFlagFile("/ota_applied_flag", "done")
+
+        await resp._send_headers()
+        await resp.send("")
+
+        import machine
+
+        machine.reset()
+
     # @app.route("/saved_meas", methods=["GET"])
     # async def download_saved_meas(req, resp):
     #     logging.debug("[web-server]: /saved_meas")
@@ -522,6 +587,7 @@ def start(timeoutMs=120000):
     app.add_resource(WiFiList, "/update_wifi_list")
     app.add_resource(DeviceMeasurements, "/device_measurements")
     app.add_resource(StoredMeasurements, "/saved_meas")
+    app.add_resource(SystemTime, "/api/time")
 
     try:
         uasyncio.run(server_loop(app, timeoutMs))

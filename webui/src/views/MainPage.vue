@@ -20,13 +20,16 @@
             </div>
           </div>
           <div v-if="showSettingsMenu" class="settings-menu" @click.stop>
+            <button class="btn btn-link menu-item" @click="setDeviceSystemTime">
+              <i class="icon icon-time" style="margin-right: 5px"></i>Update System Time
+            </button>
             <button class="btn btn-link menu-item" @click="downloadMeasurements">
               <i class="icon icon-download" style="margin-right: 5px"></i>Download Measurements
             </button>
             <button class="btn btn-link menu-item" @click="clearMeasurements">
               <i class="icon icon-delete" style="margin-right: 5px"></i>Clear Measurements
             </button>
-            <button class="btn btn-link menu-item" @click="showRebootConfirm = true">
+            <button class="btn btn-link menu-item" @click="doShowRebootConfirm">
               <i class="icon icon-refresh" style="margin-right: 5px"></i>Reboot
             </button>
             <div class="menu-separator"></div>
@@ -301,6 +304,7 @@ export default {
     },
     requestReboot() {
       this.isRebooting = true
+      this.showSettingsMenu = false
 
       fetch("http://192.168.4.1" + "/reboot", {
         method: "POST",
@@ -313,6 +317,7 @@ export default {
         .then((res) => {
           console.log(res)
           this.isRebooting = false
+          this.showRebootConfirm = false
           this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
           this.tabActive = 0
           this.$cookies.set("activeTab", this.tabActive)
@@ -320,7 +325,41 @@ export default {
         .catch((err) => {
           console.log("error rebooting: ", err)
           this.isRebooting = false
+          this.showRebootConfirm = false
         })
+    },
+    setDeviceSystemTime() {
+      // get browser time and send it to /api/time as HTTP post
+      this.showSettingsMenu = false
+      const now = new Date()
+      const timestamp = Math.floor(now.getTime() / 1000)
+      const bodyLocal = JSON.stringify({ epoch: timestamp })
+      fetch("http://192.168.4.1/api/time", {
+        method: "POST",
+        headers: {
+          Accept: "application/json, text/plain, */*",
+          "Content-Type": "application/json",
+          "Content-Length": bodyLocal.length.toString()
+        },
+        body: bodyLocal
+      })
+        .then((res) => {
+          if (res.ok) {
+            alert("Device system time updated successfully.")
+            console.log("Device system time updated successfully.")
+          } else {
+            alert("Failed to update device system time. Please try again.")
+            console.error("Failed to update device system time:", res.statusText)
+          }
+        })
+        .catch((err) => {
+          console.log("error setting device time: ", err)
+          alert("Error updating device system time. Please check your connection and try again.")
+        })
+    },
+    doShowRebootConfirm() {
+      this.showRebootConfirm = true
+      this.showSettingsMenu = false
     }
   },
   setup() {
