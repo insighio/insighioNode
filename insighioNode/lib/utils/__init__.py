@@ -5,6 +5,7 @@ import uos
 key_value_storage = esp32.NVS("insighio")
 
 _DATA_DIR = "/data"
+_CHUNK_SIZE = 4096  # 4KB chunks for file operations
 
 
 def list_files_recursive(folder):
@@ -47,12 +48,13 @@ def data_partition_in_use():
 def copyFile(source, destination):
     try:
         logging.debug("copyFile: " + source + ", " + destination)
-        in_file = open(source, "r")
-        out_file = open(destination, "w")
-        contents = in_file.read()
-        out_file.write(contents)
-        in_file.close()
-        out_file.close()
+        with open(source, "rb") as in_file:
+            with open(destination, "wb") as out_file:
+                while True:
+                    chunk = in_file.read(_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
         return True
     except Exception as e:
         logging.exception(e, "Error copying file [{}] to [{}]".format(source, destination))
@@ -69,16 +71,28 @@ def renameFile(source, destination):
         return False
 
 
-def readFromFile(source):
+def readFromFile(source, chunked=False):
     try:
         logging.debug("readFromFile: " + source)
-        f = open(source, "r")
-        contents = f.read()
-        f.close()
-        return contents
+        if chunked:
+            # Return a generator for large files
+            def chunk_generator():
+                with open(source, "rb") as f:
+                    while True:
+                        chunk = f.read(_CHUNK_SIZE)
+                        if not chunk:
+                            break
+                        yield chunk
+
+            return chunk_generator()
+        else:
+            # Return the entire file contents as a string
+            with open(source, "r") as f:
+                contents = f.read()
+            return contents
     except Exception as e:
-        logging.error("Error reading file [{}]".format(source))
-        return ""
+        logging.exception(e, "Error reading file [{}]".format(source))
+        return "" if not chunked else iter([])
 
 
 def appendToFile(destination, content):
@@ -110,10 +124,11 @@ def countFileLines(source):
     lines = 0
     try:
         logging.debug("countFileLines: " + source)
-        with open(source) as f:
-            lines = len(f.readlines())
-    except:
-        pass
+        with open(source, "r") as f:
+            for line in f:
+                lines += 1
+    except Exception as e:
+        logging.exception(e, "Error counting lines in file [{}]".format(source))
 
     return lines
 
