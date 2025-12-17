@@ -14,18 +14,25 @@
             <button class="btn" :disabled="disableButtons" @click="operationSelected('LoRa')">LoRa</button>
             <button class="btn" :disabled="disableButtons" @click="operationSelected('Satellite')">Satellite</button>
           </div>
-          <div v-if="evaluatedNetwork === 'wifi'">
-            <NetworkWifi @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
-          </div>
-          <div v-else-if="evaluatedNetwork === 'cellular'">
-            <NetworkCellular @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
-          </div>
-          <div v-else-if="evaluatedNetwork === 'lora'">
-            <NetworkLoRa @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
-          </div>
-          <div v-else-if="evaluatedNetwork === 'satellite'">
-            <NetworkSatAstro @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
-          </div>
+          <br />
+          <!-- check box with the option "No Network"-->
+          <label class="form-checkbox">
+            <input type="checkbox" v-model="noNetworkSelected" :disabled="disableButtons" />
+            <i class="form-icon"></i>
+            No Network
+          </label>
+        </div>
+        <div v-if="evaluatedNetwork === 'wifi'">
+          <NetworkWifi @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
+        </div>
+        <div v-else-if="evaluatedNetwork === 'cellular'">
+          <NetworkCellular @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
+        </div>
+        <div v-else-if="evaluatedNetwork === 'lora'">
+          <NetworkLoRa @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
+        </div>
+        <div v-else-if="evaluatedNetwork === 'satellite'">
+          <NetworkSatAstro @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
         </div>
       </div>
       <br />
