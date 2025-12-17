@@ -428,7 +428,11 @@ def executeNetworkDisconnect():
         from . import cellular as network
     elif selected_network == "satellite":
         from . import satellite as network
-    network.deinit()
+
+    try:
+        network.deinit()
+    except Exception as e:
+        logging.error("No network?")
 
 
 def executeDeviceStatisticsUpload(cfg, network):

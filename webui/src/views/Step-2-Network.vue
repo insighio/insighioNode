@@ -115,6 +115,7 @@ export default {
           this.settingsAcquired = true
 
           this.activeNetwork = this.$cookies.get("network")
+          this.noNetworkSelected = this.activeNetwork === undefined || this.activeNetwork === null
 
           // Highlight the corresponding button based on activeNetwork value
           this.$nextTick(() => {

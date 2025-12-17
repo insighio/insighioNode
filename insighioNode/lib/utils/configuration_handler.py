@@ -416,6 +416,8 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         contents += "\n" + get_file_config(app_path + "/templ/lora_config_templ.py", keyValuePairDictionary)
     elif operation == "satellite":
         contents += "\n" + get_file_config(app_path + "/templ/satellite_config_templ.py", keyValuePairDictionary)
+    else:
+        contents += "\n" + get_file_config(app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary)
 
     # create new
     utils.writeToFile(config_file_explicit, contents)

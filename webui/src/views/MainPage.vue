@@ -20,7 +20,7 @@
             </div>
           </div>
           <div v-if="showSettingsMenu" class="settings-menu" @click.stop>
-            <button class="btn btn-link menu-item" @click="setDeviceSystemTime">
+            <button class="btn btn-link menu-item" @click="updateDeviceSystemTime">
               <i class="icon icon-time" style="margin-right: 5px"></i>Update System Time
             </button>
             <button class="btn btn-link menu-item" @click="downloadMeasurements">
@@ -46,6 +46,8 @@
       <div class="columns">
         <div class="panel-nav col-12 hide-sm">
           <br />
+
+          <div class="toast" v-if="showToast">{{ toastMessage }}</div>
 
           <ul class="step">
             <li v-for="tab in tabs" class="step-item" :key="tab" :class="{ active: tabActive === tabs.indexOf(tab) }">
@@ -153,7 +155,9 @@ export default {
       showFactoryResetConfirm: false,
       showRebootConfirm: false,
       isResetting: false,
-      isRebooting: false
+      isRebooting: false,
+      showToast: false,
+      toastMessage: ""
     }
   },
   mounted() {
@@ -183,7 +187,9 @@ export default {
       this.$cookies.set("activeTab", this.tabActive)
 
       console.log("goToNextStep: ", this.tabActive)
-      //networkTech
+      if (this.tabActive === 1) {
+        this.updateDeviceSystemTime()
+      }
     },
     goToPreviousStep() {
       this.tabActive -= 1
@@ -191,6 +197,9 @@ export default {
       this.$cookies.set("activeTab", this.tabActive)
 
       console.log("goToPrevStep: ", this.tabActive)
+      if (this.tabActive === 1) {
+        this.updateDeviceSystemTime()
+      }
     },
     goToStart() {
       this.tabActive = 1
@@ -328,7 +337,7 @@ export default {
           this.showRebootConfirm = false
         })
     },
-    setDeviceSystemTime() {
+    updateDeviceSystemTime() {
       // get browser time and send it to /api/time as HTTP post
       this.showSettingsMenu = false
       const now = new Date()
@@ -345,7 +354,12 @@ export default {
       })
         .then((res) => {
           if (res.ok) {
-            alert("Device system time updated successfully.")
+            this.toastMessage = "Device system time updated successfully."
+            this.showToast = true
+            setTimeout(() => {
+              this.showToast = false
+              this.toastMessage = ""
+            }, 3000)
             console.log("Device system time updated successfully.")
           } else {
             alert("Failed to update device system time. Please try again.")
