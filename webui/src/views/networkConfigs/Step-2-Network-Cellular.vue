@@ -34,8 +34,6 @@
         :colsLabel="3"
         :colsInput="9"
       />
-
-      <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
     </div>
   </div>
 </template>
@@ -46,12 +44,11 @@ import SInput from "@/components/SInput.vue"
 import SSelect from "@/components/SSelect.vue"
 import SRadioGroup from "@/components/SRadioGroup.vue"
 import SDivider from "@/components/SDivider.vue"
-import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "NetworkCellular",
   mixins: [CommonTools],
-  components: { SInput, SSelect, SRadioGroup, SDivider, WebuiFooter },
+  components: { SInput, SSelect, SRadioGroup, SDivider },
   data() {
     return {
       // Add your component data here
@@ -120,8 +117,6 @@ export default {
       this.$cookies.set("cell-band", this.cell_band)
       this.$cookies.set("protocol", this.protocol)
       this.$cookies.set("ipversion", this.ipversion)
-
-      this.requestGoNext()
     },
 
     validateMyForm() {
@@ -131,6 +126,7 @@ export default {
       }
 
       this.storeData()
+      this.requestGoNext()
       return true
     }
   }

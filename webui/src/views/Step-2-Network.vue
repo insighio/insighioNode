@@ -9,33 +9,49 @@
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="btn-group btn-group-block img-center">
-            <button class="btn" :disabled="disableButtons" @click="operationSelected('WiFi')">WiFi</button>
-            <button class="btn" :disabled="disableButtons" @click="operationSelected('Cellular')">Cellular</button>
-            <button class="btn" :disabled="disableButtons" @click="operationSelected('LoRa')">LoRa</button>
-            <button class="btn" :disabled="disableButtons" @click="operationSelected('Satellite')">Satellite</button>
+            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('WiFi')">
+              WiFi
+            </button>
+            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('Cellular')">
+              Cellular
+            </button>
+            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('LoRa')">
+              LoRa
+            </button>
+            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('Satellite')">
+              Satellite
+            </button>
           </div>
           <br />
           <!-- check box with the option "No Network"-->
           <label class="form-checkbox">
-            <input type="checkbox" v-model="noNetworkSelected" :disabled="disableButtons" />
+            <input
+              type="checkbox"
+              v-model="noNetworkSelected"
+              :disabled="disableButtons"
+              @click="noNetworkSelectedChanged"
+            />
             <i class="form-icon"></i>
             No Network
           </label>
         </div>
         <div v-if="evaluatedNetwork === 'wifi'">
-          <NetworkWifi @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
+          <NetworkWifi ref="wifiComponent" />
         </div>
         <div v-else-if="evaluatedNetwork === 'cellular'">
-          <NetworkCellular @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
+          <NetworkCellular ref="cellularComponent" />
         </div>
         <div v-else-if="evaluatedNetwork === 'lora'">
-          <NetworkLoRa @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
+          <NetworkLoRa ref="loraComponent" />
         </div>
         <div v-else-if="evaluatedNetwork === 'satellite'">
-          <NetworkSatAstro @goNext="requestGoNext()" @goBack="activeNetwork = undefined" />
+          <NetworkSatAstro ref="satelliteComponent" />
         </div>
       </div>
       <br />
+      <div class="columns">
+        <WebuiFooter :showBackButton="false" @savePressed="handleSave" @backPressed="handleBack" />
+      </div>
     </div>
   </div>
 </template>
@@ -49,6 +65,7 @@ import NetworkWifi from "@/views/networkConfigs/Step-2-Network-Wifi.vue"
 import NetworkCellular from "@/views/networkConfigs/Step-2-Network-Cellular.vue"
 import NetworkLoRa from "@/views/networkConfigs/Step-2-Network-Lora.vue"
 import NetworkSatAstro from "@/views/networkConfigs/Step-2-Network-Sat-Astro.vue"
+import WebuiFooter from "@/components/WebuiFooter.vue"
 
 import CommonTools from "@/components/mixins/CommonTools.vue"
 
@@ -59,7 +76,8 @@ export default {
     NetworkWifi,
     NetworkCellular,
     NetworkLoRa,
-    NetworkSatAstro
+    NetworkSatAstro,
+    WebuiFooter
   },
   computed: {
     evaluatedNetwork() {
@@ -71,7 +89,8 @@ export default {
     return {
       activeNetwork: undefined,
       localLoading: false,
-      settingsAcquired: false
+      settingsAcquired: false,
+      noNetworkSelected: false
     }
   },
   mounted() {
@@ -129,6 +148,47 @@ export default {
 
     operationSelected(operationName) {
       this.activeNetwork = operationName
+    },
+
+    noNetworkSelectedChanged() {
+      setTimeout(() => {
+        console.log("noNetworkSelected changed to:", this.noNetworkSelected)
+        if (this.noNetworkSelected) {
+          this.activeNetwork = undefined
+        }
+      }, 250)
+    },
+
+    handleSave() {
+      // Disable buttons to prevent multiple submissions
+      //this.disableButtonsLocal()
+
+      // call all child components to clear their cookies
+      this.$refs["wifiComponent"]?.clearCookies()
+      this.$refs["cellularComponent"]?.clearCookies()
+      this.$refs["loraComponent"]?.clearCookies()
+      this.$refs["satelliteComponent"]?.clearCookies()
+
+      // Call the active child component's validateMyForm method
+      if (this.noNetworkSelected) {
+        this.requestGoNext()
+      } else {
+        const componentMap = {
+          wifi: "wifiComponent",
+          cellular: "cellularComponent",
+          lora: "loraComponent",
+          satellite: "satelliteComponent"
+        }
+
+        const refName = componentMap[this.evaluatedNetwork]
+        if (refName && this.$refs[refName]) {
+          this.$refs[refName].validateMyForm()
+        }
+      }
+    },
+
+    handleBack() {
+      this.activeNetwork = undefined
     }
   }
 }

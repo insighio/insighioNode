@@ -41,7 +41,6 @@
         :colsInput="9"
       />
     </div>
-    <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>
 
@@ -51,12 +50,11 @@ import SInput from "@/components/SInput.vue"
 import SSelect from "@/components/SSelect.vue"
 import SDivider from "@/components/SDivider.vue"
 import SSwitch from "@/components/SSwitch.vue"
-import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "NetworkLoRa",
   mixins: [CommonTools],
-  components: { SInput, SSelect, SDivider, SSwitch, WebuiFooter },
+  components: { SInput, SSelect, SDivider, SSwitch },
   data() {
     return {
       // Add your component data here
@@ -114,11 +112,10 @@ export default {
       this.$cookies.set("lora-dr", this.lora_dr)
       this.$cookies.set("lora-region", this.lora_region)
       this.$cookies.set("lora-retries", this.lora_retries)
-
-      this.requestGoNext()
     },
     validateMyForm() {
       this.storeData()
+      this.requestGoNext()
       return true
     }
   },

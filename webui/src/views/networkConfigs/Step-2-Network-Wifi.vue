@@ -21,7 +21,6 @@
         :colsLabel="3"
         :colsInput="9"
       />
-      <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
       <div class="text-normal">
         SSIDs in range:
         <button class="btn btn-primary" type="button" @click="updateWifiList()">Refresh</button>
@@ -70,12 +69,11 @@ import { fetchInternal } from "@/js/utils.js"
 import SDivider from "@/components/SDivider.vue"
 import SInput from "@/components/SInput.vue"
 import SRadioGroup from "@/components/SRadioGroup.vue"
-import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "NetworkWifi",
   mixins: [CommonTools],
-  components: { SDivider, SInput, SRadioGroup, WebuiFooter },
+  components: { SDivider, SInput, SRadioGroup },
   data() {
     return {
       // Add your component data here
@@ -133,8 +131,6 @@ export default {
       this.$cookies.set("wifi-ssid", this.wifi_ssid.trim())
       this.$cookies.set("wifi-pass", this.wifi_pass ? this.wifi_pass.trim() : "")
       this.$cookies.set("protocol", this.protocol)
-
-      this.requestGoNext()
     },
     ssidSelected(network) {
       this.wifi_ssid = network.ssid
@@ -149,6 +145,7 @@ export default {
       }
 
       this.storeData()
+      this.requestGoNext()
     }
   }
 }

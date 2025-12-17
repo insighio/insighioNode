@@ -8,7 +8,6 @@
       <SInput label="Password" v-model:value="dev_pass" @update:value="dev_pass = $event" />
       <SInput label="Access Token" v-model:value="dev_token" @update:value="dev_token = $event" />
     </div>
-    <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>
 
@@ -17,12 +16,11 @@ import CommonTools from "@/components/mixins/CommonTools.vue"
 import SSwitch from "@/components/SSwitch.vue"
 import SInput from "@/components/SInput.vue"
 import SDivider from "@/components/SDivider.vue"
-import WebuiFooter from "@/components/WebuiFooter.vue"
 
 export default {
   name: "NetworkSatAstro",
   mixins: [CommonTools],
-  components: { SSwitch, SInput, SDivider, WebuiFooter },
+  components: { SSwitch, SInput, SDivider },
   data() {
     return {
       // Add your component data here
@@ -59,11 +57,10 @@ export default {
       this.$cookies.set("sat-astro-devkit-ssid", this.dev_ssid)
       this.$cookies.set("sat-astro-devkit-pass", this.dev_pass)
       this.$cookies.set("sat-astro-devkit-token", this.dev_token)
-
-      this.requestGoNext()
     },
     validateMyForm() {
       this.storeData()
+      this.requestGoNext()
       return true
     }
   }
