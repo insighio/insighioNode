@@ -209,6 +209,87 @@ class SystemTime:
             return {}, 400
 
 
+class ModemInfo:
+    def post(self, data):
+        logging.debug("[web-server]: /api/modem_info")
+
+        from lib.networking import cellular
+
+        _UC_IO_RADIO_ON = 13
+        _UC_IO_PWRKEY = 10
+        _UC_UART_MODEM_TX = 15
+        _UC_UART_MODEM_RX = 16
+
+        cellular.set_pins(
+            _UC_IO_RADIO_ON,
+            _UC_IO_PWRKEY,
+            _UC_UART_MODEM_TX,
+            _UC_UART_MODEM_RX,
+        )
+
+        # create a dummy configuration
+        class DummyCfg:
+            def __init__(self):
+                self._IP_VERSION = data["IP"]
+                self._CELLULAR_TECHNOLOGY = data["technology"]
+                self._APN = data["apn"]
+                self._MAX_ATTACHMENT_ATTEMPT_TIME_SEC = 120
+                self._MAX_CONNECTION_ATTEMPT_TIME_SEC = 120
+
+        cfg = DummyCfg()
+        status, activation_duration, attachment_duration, connection_duration = cellular.connect(cfg)
+
+        rssi = None
+        rsrp = None
+        rsrq = None
+        if status == cellular.MODEM_CONNECTED:
+            logging.debug("Modem connected successfully")
+            modem_instance = cellular.get_modem_instance()
+            rssi = modem_instance.get_rssi()
+            (rsrp, rsrq) = modem_instance.get_extended_signal_quality()
+            (mcc, mnc) = modem_instance.get_registered_mcc_mnc()
+            tech_id = modem_instance.technology_id
+
+            technology_str = "GSM" if tech_id == 0 else "NBIoT" if tech_id == 9 else "LTE-M" if tech_id == 8 else "Unknown"
+
+        # status_str = {
+        #     cellular.MODEM_NOT_INITIALIZED: "MODEM_NOT_INITIALIZED",
+        #     cellular.MODEM_INITIALIZATION_FAILED: "MODEM_INITIALIZATION_FAILED",
+        #     cellular.MODEM_SIM_NOT_DETECTED: "MODEM_SIM_NOT_DETECTED",
+        #     cellular.MODEM_SIM_PIN_REQUIRED: "MODEM_SIM_PIN_REQUIRED",
+        #     cellular.MODEM_NETWORK_REGISTRATION_FAILED: "MODEM_NETWORK_REGISTRATION_FAILED",
+        #     cellular.MODEM_ACTIVATION_FAILED: "MODEM_ACTIVATION_FAILED",
+        #     cellular.MODEM_CONNECTION_FAILED: "MODEM_CONNECTION_FAILED",
+        #     cellular.MODEM_CONNECTED: "MODEM_CONNECTED",
+        # }
+        status_str = ""
+        if status == cellular.MODEM_DETTACHED:
+            status_str = "detached"
+        elif status == cellular.MODEM_ACTIVATED:
+            status_str = "activated"
+        elif status == cellular.MODEM_ATTACHED:
+            status_str = "attached"
+        elif status == cellular.MODEM_CONNECTED:
+            status_str = "connected"
+        else:
+            status_str = "unknown"
+
+        response_dict = {
+            "status": status_str,
+            "activation_duration": activation_duration,
+            "attachment_duration": attachment_duration,
+            "connection_duration": connection_duration,
+            "rssi": rssi,
+            "rsrp": rsrp,
+            "rsrq": rsrq,
+            "mcc": mcc,
+            "mnc": mnc,
+            "technology": technology_str,
+        }
+
+        return response_dict, 200
+
+
 class DeviceMeasurements:
     # global wlan
 
@@ -562,21 +643,6 @@ def start(timeoutMs=120000):
 
         machine.reset()
 
-    # @app.route("/saved_meas", methods=["GET"])
-    # async def download_saved_meas(req, resp):
-    #     logging.debug("[web-server]: /saved_meas")
-
-    #     # Add cache-busting headers
-    #     resp.add_header("Cache-Control", "no-cache, no-store, must-revalidate")
-    #     resp.add_header("Pragma", "no-cache")
-    #     resp.add_header("Expires", "0")
-
-    #     file_path = "/measurements.log"
-    #     if utils.existsFile("/data"):
-    #         file_path = "/data/measurements.log"
-
-    #     await resp.send_file(file_path, content_type="")
-
     app.add_resource(Settings, "/settings")
     app.add_resource(RawWeightIdle, "/raw-weight-idle")
     # app.add_resource(RawWeight, '/raw-weight')
@@ -588,6 +654,7 @@ def start(timeoutMs=120000):
     app.add_resource(DeviceMeasurements, "/device_measurements")
     app.add_resource(StoredMeasurements, "/saved_meas")
     app.add_resource(SystemTime, "/api/time")
+    app.add_resource(ModemInfo, "/api/modem_info")
 
     try:
         uasyncio.run(server_loop(app, timeoutMs))

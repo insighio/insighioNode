@@ -34,6 +34,64 @@
         :colsLabel="3"
         :colsInput="9"
       />
+      <div class="text-normal">
+        Modem Info:
+        <button class="btn btn-primary" :disabled="localLoading" type="button" @click="updateModemInfo()">
+          Refresh
+        </button>
+        <div v-show="localLoading" class="loading loading-lg"></div>
+      </div>
+      <br />
+      <table class="table table-striped table-hover" v-if="modemInfo.updated">
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Status</td>
+            <td>{{ modemInfo.status }}</td>
+          </tr>
+          <tr>
+            <td>Technology</td>
+            <td>{{ modemInfo.technology }}</td>
+          </tr>
+          <tr>
+            <td>MCC</td>
+            <td>{{ modemInfo.mcc }}</td>
+          </tr>
+          <tr>
+            <td>MNC</td>
+            <td>{{ modemInfo.mnc }}</td>
+          </tr>
+          <tr>
+            <td>RSSI</td>
+            <td>{{ modemInfo.rssi }}</td>
+          </tr>
+          <tr>
+            <td>RSRP</td>
+            <td>{{ modemInfo.rsrp }}</td>
+          </tr>
+          <tr>
+            <td>RSRQ</td>
+            <td>{{ modemInfo.rsrq }}</td>
+          </tr>
+          <tr>
+            <td>Activation Duration (s)</td>
+            <td>{{ modemInfo.activation_duration }}</td>
+          </tr>
+          <tr>
+            <td>Attachment Duration (s)</td>
+            <td>{{ modemInfo.attachment_duration }}</td>
+          </tr>
+          <tr>
+            <td>Connection Duration (s)</td>
+            <td>{{ modemInfo.connection_duration }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -86,7 +144,19 @@ export default {
           label: "IPv4/v6",
           value: "IPV4V6"
         }
-      ]
+      ],
+      localLoading: false,
+      modemInfo: {
+        updated: false,
+        status: "",
+        activation_duration: "",
+        attachment_duration: "",
+        connection_duration: "",
+        technology: "",
+        rssi: "",
+        rsrp: "",
+        rsrq: ""
+      }
     }
   },
   mounted() {
@@ -100,6 +170,42 @@ export default {
       this.cell_tech = this.getValueWithDefaults(this.$cookies.get("cell-tech"), "NBIoT")
       this.cell_apn = this.getValueWithDefaults(this.$cookies.get("cell-apn"), "iot.1nce.net")
       this.cell_band = this.getValueWithDefaults(this.$cookies.get("cell-band"), 20)
+    },
+    async updateModemInfo() {
+      // Implement modem info update if needed
+      if (this.localLoading) return
+
+      this.localLoading = true
+      const bodyLocal = JSON.stringify({ IP: this.ipversion, technology: this.cell_tech, apn: this.cell_apn })
+      try {
+        const rawResponse = await fetch("http://192.168.4.1/api/modem_info", {
+          method: "POST",
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+            "Content-Length": bodyLocal.length.toString()
+          },
+          body: bodyLocal
+        })
+
+        const data = await rawResponse.json()
+        this.modemInfo.status = data.status
+        this.modemInfo.activation_duration = data.activation_duration
+        this.modemInfo.attachment_duration = data.attachment_duration
+        this.modemInfo.connection_duration = data.connection_duration
+        this.modemInfo.rssi = data.rssi
+        this.modemInfo.rsrp = data.rsrp
+        this.modemInfo.rsrq = data.rsrq
+        this.modemInfo.technology = data.technology
+        this.modemInfo.mcc = data.mcc
+        this.modemInfo.mnc = data.mnc
+        this.modemInfo.updated = true
+        this.localLoading = false
+      } catch (error) {
+        console.log("error getting modem error: ", error)
+        this.localLoading = false
+        alert("Error updating modem info. Please check your connection and try again.")
+      }
     },
     clearCookies() {
       this.$cookies.remove("network")
