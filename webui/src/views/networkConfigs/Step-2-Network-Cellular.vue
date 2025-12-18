@@ -34,70 +34,103 @@
         :colsLabel="3"
         :colsInput="9"
       />
-      <div class="text-normal">
-        Modem Info:
-        <button class="btn btn-primary" :disabled="localLoading" type="button" @click="updateModemInfo()">
-          Refresh
-        </button>
-        <div v-show="localLoading" class="loading loading-lg"></div>
+
+      <div class="column col-12"><br /></div>
+      <div class="column col-12 text-normal">
+        Modem Connection:
+        <button class="btn btn-primary" :disabled="localLoading" type="button" @click="updateModemInfo()">Test</button>
+        <div v-show="localLoading" class="loading loading-lg" style="margin-left: 5px"></div>
       </div>
-      <br />
-      <table class="table table-striped table-hover" v-if="modemInfo.updated">
-        <thead>
-          <tr>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Status</td>
-            <td>{{ modemInfo.status }}</td>
-          </tr>
-          <tr>
-            <td>Technology</td>
-            <td>{{ modemInfo.technology }}</td>
-          </tr>
-          <tr>
-            <td>MCC</td>
-            <td>{{ modemInfo.mcc }}</td>
-          </tr>
-          <tr>
-            <td>MNC</td>
-            <td>{{ modemInfo.mnc }}</td>
-          </tr>
-          <tr>
-            <td>Signal Quality</td>
-            <td>
-              <span :style="'color:' + modemInfo.signal_quality.color">{{ modemInfo.signal_quality.str }}</span>
-            </td>
-          </tr>
-          <tr>
-            <td>RSSI</td>
-            <td>{{ modemInfo.rssi }}</td>
-          </tr>
-          <tr>
-            <td>RSRP</td>
-            <td>{{ modemInfo.rsrp }}</td>
-          </tr>
-          <tr>
-            <td>RSRQ</td>
-            <td>{{ modemInfo.rsrq }}</td>
-          </tr>
-          <tr>
-            <td>Activation Duration (s)</td>
-            <td>{{ modemInfo.activation_duration }}</td>
-          </tr>
-          <tr>
-            <td>Attachment Duration (s)</td>
-            <td>{{ modemInfo.attachment_duration }}</td>
-          </tr>
-          <tr>
-            <td>Connection Duration (s)</td>
-            <td>{{ modemInfo.connection_duration }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="column col-12"><br /></div>
+
+      <div class="column col-12">
+        <div v-if="modemInfo.updated" class="card" style="padding: 0.8rem">
+          <div class="card-header">
+            <div class="card-title h5">Modem Information</div>
+          </div>
+          <div class="card-body" style="padding: 0.4rem 0">
+            <!-- Connection Status Section -->
+            <div style="margin-bottom: 1rem">
+              <div class="text-bold text-primary" style="margin-bottom: 0.5rem">Connection Status</div>
+              <table class="table" style="margin-bottom: 0">
+                <tbody>
+                  <tr>
+                    <td style="width: 40%; font-weight: 500">Status</td>
+                    <td>
+                      <span class="label" :class="modemInfo.status === 'connected' ? 'label-success' : 'label-warning'">
+                        {{ modemInfo.status }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500">Technology</td>
+                    <td>
+                      <strong>{{ modemInfo.technology }}</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500">MCC / MNC</td>
+                    <td>{{ modemInfo.mcc }} / {{ modemInfo.mnc }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Signal Quality Section -->
+            <div style="margin-bottom: 1rem">
+              <div class="text-bold text-primary" style="margin-bottom: 0.5rem">Signal Quality</div>
+              <table class="table" style="margin-bottom: 0">
+                <tbody>
+                  <tr>
+                    <td style="width: 40%; font-weight: 500">Quality</td>
+                    <td>
+                      <span
+                        class="label"
+                        :style="'background-color:' + modemInfo.signal_quality.color + '; color: white;'"
+                      >
+                        {{ modemInfo.signal_quality.str }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500">RSSI</td>
+                    <td>{{ modemInfo.rssi }} dBm</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500">RSRP</td>
+                    <td>{{ modemInfo.rsrp }} dBm</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500">RSRQ</td>
+                    <td>{{ modemInfo.rsrq }} dB</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Connection Timing Section -->
+            <div>
+              <div class="text-bold text-primary" style="margin-bottom: 0.5rem">Connection Timing</div>
+              <table class="table" style="margin-bottom: 0">
+                <tbody>
+                  <tr>
+                    <td style="width: 40%; font-weight: 500">Activation</td>
+                    <td>{{ modemInfo.activation_duration }} s</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500">Attachment</td>
+                    <td>{{ modemInfo.attachment_duration }} s</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 500">Connection</td>
+                    <td>{{ modemInfo.connection_duration }} s</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
