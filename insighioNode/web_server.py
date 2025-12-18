@@ -342,29 +342,46 @@ class StoredMeasurements:
         from external.kpn_senml.senml_pack_json import SenmlPackJson
         from external.kpn_senml.senml_record import SenmlRecord
 
-        stored_measurements_str = utils.readFromFlagFile("/measurements.log")
-        if stored_measurements_str is None:
-            stored_measurements_str = ""
+        # Helper function to read file line by line from chunks
+        def read_lines_from_file(file_path):
+            """Generator that yields lines from a file, reading in chunks for memory efficiency"""
+            try:
+                if not utils.existsFlagFile(file_path):
+                    return
 
-        device_id = get_device_id()[0]
-        measurement_list = []
-        try:
-            import ujson
-            import utime
+                # Read file in chunks
+                chunks = utils.readFromFile(utils.decorateFlagPath(file_path), chunked=True)
+                partial_line = ""
 
-            for line in stored_measurements_str.split("\n"):
-                if not line:
-                    continue
+                for chunk in chunks:
+                    chunk_str = chunk.decode("utf-8") if isinstance(chunk, bytes) else chunk
+                    lines = (partial_line + chunk_str).split("\n")
+                    partial_line = lines[-1]  # Save incomplete line for next iteration
+
+                    for line in lines[:-1]:  # Yield all complete lines
+                        if line.strip():
+                            yield line.strip()
+
+                # Yield remaining partial line if any
+                if partial_line.strip():
+                    yield partial_line.strip()
+            except Exception as e:
+                logging.exception(e, "Error reading file: {}".format(file_path))
+
+        def parse_measurement_line(line, device_id):
+            """Parse a single measurement line and return JSON representation"""
+            try:
+                import ujson
+                import utime
 
                 message = SenmlPackJson((device_id + "-") if device_id is not None else None)
                 data = ujson.loads(line)
+
                 if "diff_dt" in data:
                     time_diff = utime.ticks_diff(utime.ticks_ms(), data["diff_dt"]["value"])
-                    if time_diff > 0:
-                        data["time_diff"] = {"value": time_diff}
-                    else:
-                        data["time_diff"] = {"value": 0}
+                    data["time_diff"] = {"value": max(0, time_diff)}
                     del data["diff_dt"]
+
                 if "dt" in data:
                     message.base_time = data["dt"]["value"]
 
@@ -377,10 +394,41 @@ class StoredMeasurements:
                     elif data[key] is not None:
                         message.add(SenmlRecord(key, value=data[key]))
 
-                measurement_list.append(message.to_json())
+                return message.to_json()
+            except Exception as e:
+                logging.exception(e, "Error parsing measurement line")
+                return None
+
+        device_id = get_device_id()[0]
+        measurement_list = []
+
+        try:
+            import gc
+
+            # Process unfinished upload measurements first
+            for line in read_lines_from_file("/measurements.log.up"):
+                result = parse_measurement_line(line, device_id)
+                if result:
+                    measurement_list.append(result)
+
+                # Periodically collect garbage for large files
+                if len(measurement_list) % 50 == 0:
+                    gc.collect()
+
+            # Process main measurements log
+            for line in read_lines_from_file("/measurements.log"):
+                result = parse_measurement_line(line, device_id)
+                if result:
+                    measurement_list.append(result)
+
+                # Periodically collect garbage for large files
+                if len(measurement_list) % 50 == 0:
+                    gc.collect()
+
         except Exception as e:
             logging.exception(e, "error parsing stored measurements")
             measurement_list = []
+
         return {"measurements": measurement_list}, 200
 
 
