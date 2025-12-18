@@ -67,6 +67,12 @@
             <td>{{ modemInfo.mnc }}</td>
           </tr>
           <tr>
+            <td>Signal Quality</td>
+            <td>
+              <span :style="'color:' + modemInfo.signal_quality.color">{{ modemInfo.signal_quality.str }}</span>
+            </td>
+          </tr>
+          <tr>
             <td>RSSI</td>
             <td>{{ modemInfo.rssi }}</td>
           </tr>
@@ -153,6 +159,9 @@ export default {
         attachment_duration: "",
         connection_duration: "",
         technology: "",
+        signal_quality: {},
+        mcc: "",
+        mnc: "",
         rssi: "",
         rsrp: "",
         rsrq: ""
@@ -196,6 +205,7 @@ export default {
         this.modemInfo.rssi = data.rssi
         this.modemInfo.rsrp = data.rsrp
         this.modemInfo.rsrq = data.rsrq
+        this.modemInfo.signal_quality = this.get_signal_quality(data.rssi, data.rsrp, data.rsrq, data.technology)
         this.modemInfo.technology = data.technology
         this.modemInfo.mcc = data.mcc
         this.modemInfo.mnc = data.mnc
@@ -206,6 +216,26 @@ export default {
         this.localLoading = false
         alert("Error updating modem info. Please check your connection and try again.")
       }
+    },
+    get_signal_quality(rssi, rsrp, rsrq, technology) {
+      // Implement signal quality calculation if needed
+      if (technology === "GSM") {
+        if (rssi >= -70) return { str: "Excellent", color: "green" }
+        else if (rssi >= -85) return { str: "Good", color: "#6ACE61" }
+        else if (rssi >= -100) return { str: "Fair", color: "#F7BA30" }
+        else return { str: "Bad", color: "#E01B24" }
+      } else if (technology === "NBIoT") {
+        if (rsrp >= -80 && rsrq >= -10) return { str: "Excellent", color: "green" }
+        else if (rsrp >= -90 && rsrq >= -15) return { str: "Good", color: "#6ACE61" }
+        else if (rsrp >= -100 && rsrq < -15) return { str: "Fair", color: "#F7BA30" }
+        else return { str: "Bad", color: "#E01B24" }
+      } else if (technology === "LTE-M") {
+        if (rsrp >= -75) return { str: "Excellent", color: "green" }
+        else if (rsrp >= -85) return { str: "Good", color: "#6ACE61" }
+        else if (rsrp >= -98) return { str: "Fair", color: "#F7BA30" }
+        else return { str: "Bad", color: "#E01B24" }
+      }
+      return "Unknown"
     },
     clearCookies() {
       this.$cookies.remove("network")
