@@ -94,17 +94,7 @@ export default {
 
       //detectBoardChange(enableNavigationButtons)
     },
-    clearCookies() {
-      this.$cookies.remove("lora-adr")
-      this.$cookies.remove("lora-confirmed")
-      this.$cookies.remove("lora-dr")
-      this.$cookies.remove("lora-region")
-      this.$cookies.remove("lora-retries")
-      this.$cookies.remove("network")
-      this.$cookies.remove("protocol")
-    },
     storeData() {
-      this.clearCookies()
       this.$cookies.set("network", "lora")
 
       this.$cookies.set("lora-adr", this.boolToPyStr(this.lora_adr))
@@ -115,7 +105,6 @@ export default {
     },
     validateMyForm() {
       this.storeData()
-      this.requestGoNext()
       return true
     }
   },

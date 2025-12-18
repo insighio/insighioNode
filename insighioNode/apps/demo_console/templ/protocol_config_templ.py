@@ -15,7 +15,8 @@ def get_protocol_config():
         protocol_config = coap_config.CoAPConfig()
         protocol_config.server_port = 5683
         protocol_config.use_custom_socket = _IP_VERSION == "IPV6"
-    elif protocol: #== "mqtt":
+        #elif protocol: == "mqtt":
+    else:
         from protocols import mqtt_config
 
         protocol_config = mqtt_config.MQTTConfig()

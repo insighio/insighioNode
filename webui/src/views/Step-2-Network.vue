@@ -159,16 +159,38 @@ export default {
         }
       }, 250)
     },
+    clearCookies() {
+      const cookieKeys = [
+        "cell-apn",
+        "cell-band",
+        "cell-tech",
+        "ipversion",
+        "lora-adr",
+        "lora-confirmed",
+        "lora-dr",
+        "lora-region",
+        "lora-retries",
+        "network",
+        "protocol",
+        "sat-astro-devkit-en",
+        "sat-astro-devkit-pass",
+        "sat-astro-devkit-ssid",
+        "sat-astro-devkit-token",
+        "wifi-pass",
+        "wifi-ssid"
+      ]
 
+      cookieKeys.forEach((key) => {
+        console.log("Removing cookie:", key)
+        this.$cookies.remove(key)
+      })
+    },
     handleSave() {
       // Disable buttons to prevent multiple submissions
-      //this.disableButtonsLocal()
+      this.disableButtonsLocal()
 
       // call all child components to clear their cookies
-      this.$refs["wifiComponent"]?.clearCookies()
-      this.$refs["cellularComponent"]?.clearCookies()
-      this.$refs["loraComponent"]?.clearCookies()
-      this.$refs["satelliteComponent"]?.clearCookies()
+      this.clearCookies()
 
       // Call the active child component's validateMyForm method
       if (this.noNetworkSelected) {
@@ -183,7 +205,13 @@ export default {
 
         const refName = componentMap[this.evaluatedNetwork]
         if (refName && this.$refs[refName]) {
-          this.$refs[refName].validateMyForm()
+          const validated = this.$refs[refName].validateMyForm()
+          console.log("validated:", validated)
+          if (validated) {
+            this.requestGoNext()
+          } else {
+            this.enableButtonsLocal()
+          }
         }
       }
     },

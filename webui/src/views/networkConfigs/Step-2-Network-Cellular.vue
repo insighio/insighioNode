@@ -316,16 +316,7 @@ export default {
       else if (rsrq >= -20) return { str: "Fair", color: "#F7BA30" }
       else return { str: "Bad", color: "#E01B24" }
     },
-    clearCookies() {
-      this.$cookies.remove("network")
-      this.$cookies.remove("cell-apn")
-      this.$cookies.remove("cell-band")
-      this.$cookies.remove("protocol")
-      this.$cookies.remove("cell-tech")
-      this.$cookies.remove("ipversion")
-    },
     storeData() {
-      this.clearCookies()
       this.$cookies.set("network", "cellular")
       this.$cookies.set("cell-tech", this.cell_tech)
       this.$cookies.set("cell-apn", this.cell_apn.trim())
@@ -341,7 +332,6 @@ export default {
       }
 
       this.storeData()
-      this.requestGoNext()
       return true
     }
   }

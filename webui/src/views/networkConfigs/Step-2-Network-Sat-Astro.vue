@@ -41,16 +41,7 @@ export default {
 
       this.dev_enable = this.strToJSValue(this.$cookies.get("sat-astro-devkit-en"), false)
     },
-    clearCookies() {
-      this.$cookies.remove("sat-astro-devkit-en")
-      this.$cookies.remove("sat-astro-devkit-ssid")
-      this.$cookies.remove("sat-astro-devkit-pass")
-      this.$cookies.remove("sat-astro-devkit-token")
-      this.$cookies.remove("network")
-    },
     storeData() {
-      this.clearCookies()
-
       this.$cookies.set("network", "satellite")
 
       this.$cookies.set("sat-astro-devkit-en", this.boolToPyStr(this.dev_enable))
@@ -60,7 +51,6 @@ export default {
     },
     validateMyForm() {
       this.storeData()
-      this.requestGoNext()
       return true
     }
   }

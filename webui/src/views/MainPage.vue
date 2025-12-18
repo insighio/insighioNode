@@ -15,22 +15,25 @@
                 @click="toggleSettingsMenu"
                 ref="settingsButton"
               >
-                <i class="icon icon-more-vert"></i>
+                <!--i class="icon icon-more-vert"></i-->
+                <i class="icon icon-menu"></i>
               </button>
             </div>
           </div>
           <div v-if="showSettingsMenu" class="settings-menu" @click.stop>
-            <button class="btn btn-link menu-item" @click="updateDeviceSystemTime">
-              <i class="icon icon-time" style="margin-right: 5px"></i>Update System Time
-            </button>
             <button class="btn btn-link menu-item" @click="downloadMeasurements">
               <i class="icon icon-download" style="margin-right: 5px"></i>Download Measurements
             </button>
             <button class="btn btn-link menu-item" @click="clearMeasurements">
               <i class="icon icon-delete" style="margin-right: 5px"></i>Clear Measurements
             </button>
+            <div class="menu-separator"></div>
+            <button class="btn btn-link menu-item" @click="resetSession">
+              <i class="icon icon-refresh" style="margin-right: 5px"></i>Reset Session
+            </button>
+            <div class="menu-separator"></div>
             <button class="btn btn-link menu-item" @click="doShowRebootConfirm">
-              <i class="icon icon-refresh" style="margin-right: 5px"></i>Reboot
+              <i class="icon icon-shutdown" style="margin-right: 5px"></i>Reboot
             </button>
             <div class="menu-separator"></div>
             <button class="btn btn-link menu-item" @click="showFactoryResetConfirm = true">
@@ -359,7 +362,7 @@ export default {
             setTimeout(() => {
               this.showToast = false
               this.toastMessage = ""
-            }, 3000)
+            }, 2000)
             console.log("Device system time updated successfully.")
           } else {
             alert("Failed to update device system time. Please try again.")
@@ -374,6 +377,18 @@ export default {
     doShowRebootConfirm() {
       this.showRebootConfirm = true
       this.showSettingsMenu = false
+    },
+    resetSession() {
+      this.showSettingsMenu = false
+      this.$nextTick(() => {
+        if (confirm("Are you sure you want to reset the session? All unsaved configuration will be lost.")) {
+          this.$cookies.keys().forEach((cookie) => {
+            console.log("removing cookie: ", cookie, ", res:", this.$cookies.remove(cookie))
+          })
+          this.tabActive = 0
+          this.$cookies.set("activeTab", this.tabActive)
+        }
+      })
     }
   },
   setup() {

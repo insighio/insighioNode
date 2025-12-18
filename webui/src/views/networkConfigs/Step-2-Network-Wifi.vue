@@ -99,12 +99,6 @@ export default {
   },
   methods: {
     // Add your component methods here
-    clearCookies() {
-      this.$cookies.remove("network")
-      this.$cookies.remove("wifi-pass")
-      this.$cookies.remove("wifi-ssid")
-      this.$cookies.remove("protocol")
-    },
     initializeValues() {
       this.protocol = this.getValueWithDefaults(this.$cookies.get("protocol"), "mqtt")
       this.wifi_ssid = this.$cookies.get("wifi-ssid")
@@ -124,8 +118,6 @@ export default {
         })
     },
     storeData() {
-      this.clearCookies()
-
       //wifi
       this.$cookies.set("network", "wifi")
       this.$cookies.set("wifi-ssid", this.wifi_ssid.trim())
@@ -141,11 +133,11 @@ export default {
     validateMyForm() {
       if (!this.wifi_ssid) {
         alert("please fill SSID info")
-        return
+        return false
       }
 
       this.storeData()
-      this.requestGoNext()
+      return true
     }
   }
 }
