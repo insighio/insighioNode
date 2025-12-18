@@ -15,6 +15,24 @@
         :colsInput="9"
       />
 
+      <SDivider label="Optional Configuration" />
+      <label class="form-checkbox">
+        <input type="checkbox" v-model="cell_mcc_mnc_enabled" :disabled="disableButtons" />
+        <i class="form-icon"></i>
+        Enable Operator Preference
+      </label>
+      <div class="accordion col-12">
+        <SInput
+          v-if="cell_mcc_mnc_enabled"
+          label="MMC/MNC"
+          v-model:value="cell_mcc_mnc"
+          inputType="number"
+          @update:value="cell_mcc_mnc = $event"
+          :colsLabel="3"
+          :colsInput="9"
+        />
+      </div>
+
       <SDivider label="Generic Configuration" />
 
       <SRadioGroup
@@ -57,7 +75,16 @@
                   <tr>
                     <td style="width: 40%; font-weight: 500">Status</td>
                     <td>
-                      <span class="label" :class="modemInfo.status === 'connected' ? 'label-success' : 'label-warning'">
+                      <span
+                        class="label"
+                        :class="
+                          modemInfo.status === 'connected'
+                            ? 'label-success'
+                            : modemInfo.status === 'disconnected'
+                              ? 'label-error'
+                              : 'label-warning'
+                        "
+                      >
                         {{ modemInfo.status }}
                       </span>
                     </td>
@@ -110,31 +137,37 @@
                   <tr>
                     <td style="font-weight: 500">RSRP</td>
                     <td>
-                      <div>{{ modemInfo.rsrp }} dBm</div>
-                      <div class="bar" style="height: 8px; margin-top: 4px">
-                        <div
-                          class="bar-item"
-                          :style="{
-                            width: getSignalPercentage(modemInfo.rsrp, -120, -5) + '%',
-                            backgroundColor: get_rsrp_quality(modemInfo.rsrp).color
-                          }"
-                        ></div>
+                      <div v-if="modemInfo.technology !== 'GSM'">
+                        <div>{{ modemInfo.rsrp }} dBm</div>
+                        <div class="bar" style="height: 8px; margin-top: 4px">
+                          <div
+                            class="bar-item"
+                            :style="{
+                              width: getSignalPercentage(modemInfo.rsrp, -120, -5) + '%',
+                              backgroundColor: get_rsrp_quality(modemInfo.rsrp).color
+                            }"
+                          ></div>
+                        </div>
                       </div>
+                      <div v-else>N/A</div>
                     </td>
                   </tr>
                   <tr>
                     <td style="font-weight: 500">RSRQ</td>
                     <td>
-                      <div>{{ modemInfo.rsrq }} dB</div>
-                      <div class="bar" style="height: 8px; margin-top: 4px">
-                        <div
-                          class="bar-item"
-                          :style="{
-                            width: getSignalPercentage(modemInfo.rsrq, -20, 20) + '%',
-                            backgroundColor: get_rsrq_quality(modemInfo.rsrq).color
-                          }"
-                        ></div>
+                      <div v-if="modemInfo.technology !== 'GSM'">
+                        <div>{{ modemInfo.rsrq }} dB</div>
+                        <div class="bar" style="height: 8px; margin-top: 4px">
+                          <div
+                            class="bar-item"
+                            :style="{
+                              width: getSignalPercentage(modemInfo.rsrq, -20, 20) + '%',
+                              backgroundColor: get_rsrq_quality(modemInfo.rsrq).color
+                            }"
+                          ></div>
+                        </div>
                       </div>
+                      <div v-else>N/A</div>
                     </td>
                   </tr>
                 </tbody>
@@ -148,15 +181,15 @@
                 <tbody>
                   <tr>
                     <td style="width: 40%; font-weight: 500">Activation</td>
-                    <td>{{ modemInfo.activation_duration }} s</td>
+                    <td>{{ modemInfo.activation_duration }} ms</td>
                   </tr>
                   <tr>
                     <td style="font-weight: 500">Attachment</td>
-                    <td>{{ modemInfo.attachment_duration }} s</td>
+                    <td>{{ modemInfo.attachment_duration }} ms</td>
                   </tr>
                   <tr>
                     <td style="font-weight: 500">Connection</td>
-                    <td>{{ modemInfo.connection_duration }} s</td>
+                    <td>{{ modemInfo.connection_duration }} ms</td>
                   </tr>
                 </tbody>
               </table>
@@ -187,6 +220,8 @@ export default {
       cell_tech: "NBIoT",
       cell_apn: "iot.1nce.net",
       cell_band: 20,
+      cell_mcc_mnc: "20201",
+      cell_mcc_mnc_enabled: false,
       cell_tech_options: [
         { value: "GSM", label: "GSM" },
         { value: "NBIoT", label: "NBIoT" },
@@ -245,13 +280,20 @@ export default {
       this.cell_tech = this.getValueWithDefaults(this.$cookies.get("cell-tech"), "NBIoT")
       this.cell_apn = this.getValueWithDefaults(this.$cookies.get("cell-apn"), "iot.1nce.net")
       this.cell_band = this.getValueWithDefaults(this.$cookies.get("cell-band"), 20)
+      this.cell_mcc_mnc = this.getValueWithDefaults(this.$cookies.get("cell-mcc-mnc"), "20201")
+      this.cell_mcc_mnc_enabled = this.getValueWithDefaults(this.$cookies.get("cell-mcc-mnc"), null) !== null
     },
     async updateModemInfo() {
       // Implement modem info update if needed
       if (this.localLoading) return
 
       this.localLoading = true
-      const bodyLocal = JSON.stringify({ IP: this.ipversion, technology: this.cell_tech, apn: this.cell_apn })
+      const bodyLocal = JSON.stringify({
+        IP: this.ipversion,
+        technology: this.cell_tech,
+        apn: this.cell_apn,
+        mcc_mnc: this.cell_mcc_mnc_enabled ? this.cell_mcc_mnc : null
+      })
       try {
         const rawResponse = await fetch("http://192.168.4.1/api/modem_info", {
           method: "POST",
@@ -323,6 +365,11 @@ export default {
       this.$cookies.set("cell-band", this.cell_band)
       this.$cookies.set("protocol", this.protocol)
       this.$cookies.set("ipversion", this.ipversion)
+      if (this.cell_mcc_mnc_enabled) {
+        this.$cookies.set("cell-mcc-mnc", this.cell_mcc_mnc)
+      } else {
+        this.$cookies.remove("cell-mcc-mnc")
+      }
     },
 
     validateMyForm() {

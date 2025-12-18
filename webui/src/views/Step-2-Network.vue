@@ -164,6 +164,7 @@ export default {
         "cell-apn",
         "cell-band",
         "cell-tech",
+        "cell-mcc-mnc",
         "ipversion",
         "lora-adr",
         "lora-confirmed",

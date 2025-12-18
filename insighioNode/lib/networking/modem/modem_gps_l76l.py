@@ -60,7 +60,7 @@ class ModemGPSL76L(modem_base.Modem):
     def set_operator_selection(self, technology):
         pass
 
-    def init(self, ip_version=None, apn=None, technology=None):
+    def init(self, ip_version=None, apn=None, technology=None, mcc_mnc=None):
         self.i2c_obj.writeto_mem(self.gps_i2c_addr, 0, b"$PMTK353,1,0,1,0,0*2B")  # enable GPS and Galileo
         sleep_ms(10)
         self.i2c_obj.readfrom_mem(self.gps_i2c_addr, 0, 255)

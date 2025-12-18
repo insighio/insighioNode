@@ -97,16 +97,18 @@ class Modem:
     def wait_for_modem_power_off(self):
         pass
 
-    def set_operator_selection(self, technology):
+    def set_operator_selection(self, technology, mcc_mnc=None):
         (status, lines) = self.send_at_cmd("AT+COPS?")
         lines = "\n".join(lines)
 
         expected_configuration = "0"  # operator automatic selection
         command = "AT+COPS=0"
 
-        if technology.lower() == "nbiot":
+        if technology.lower() == "nbiot" or mcc_mnc is not None:
+            if mcc_mnc is None:
+                mcc_mnc = 20201
             expected_configuration = "1"  # operator locking
-            command = "AT+COPS=4,2,20201"
+            command = "AT+COPS=4,2,{}".format(mcc_mnc)
 
         operator_regex = r"\+COPS:\s*(\d).*"
         match = ure.search(operator_regex, lines)
@@ -114,9 +116,13 @@ class Modem:
             logging.debug("Operator selection already configured")
             return
 
+        self.send_at_cmd("AT+CFUN=0")  # set phone functionality to minimum
+        sleep_ms(5000)
         self.send_at_cmd(command, 180000)
+        self.send_at_cmd("AT+CFUN=1")  # set phone functionality to full
+        sleep_ms(5000)
 
-    def init(self, ip_version, apn, technology):
+    def init(self, ip_version, apn, technology, mcc_mnc=None):
         if not self.is_alive():
             return False
 
@@ -136,7 +142,7 @@ class Modem:
         self.send_at_cmd('AT+CGDCONT=1,"' + ip_version + '","' + apn + '"')
 
         self.set_technology(technology)
-        self.set_operator_selection(technology)
+        self.set_operator_selection(technology, mcc_mnc)
 
         # disable command echo
         self.send_at_cmd("ATE0")

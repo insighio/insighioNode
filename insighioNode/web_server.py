@@ -230,13 +230,19 @@ class ModemInfo:
         # create a dummy configuration
         class DummyCfg:
             def __init__(self):
+                print("data: {}".format(data))
                 self._IP_VERSION = data["IP"]
                 self._CELLULAR_TECHNOLOGY = data["technology"]
                 self._APN = data["apn"]
+                try:
+                    self._CELLULAR_MCC_MNC = data["mcc_mnc"]
+                except Exception:
+                    self._CELLULAR_MCC_MNC = None
                 self._MAX_ATTACHMENT_ATTEMPT_TIME_SEC = 120
                 self._MAX_CONNECTION_ATTEMPT_TIME_SEC = 120
 
         cfg = DummyCfg()
+        print("_CELLULAR_MCC_MNC: {}".format(cfg._CELLULAR_MCC_MNC))
         status, activation_duration, attachment_duration, connection_duration = cellular.connect(cfg)
 
         rssi = None
@@ -251,6 +257,14 @@ class ModemInfo:
             tech_id = modem_instance.technology_id
 
             technology_str = "GSM" if tech_id == 0 else "NBIoT" if tech_id == 9 else "LTE-M" if tech_id == 8 else "Unknown"
+        else:
+            logging.debug("Modem connection failed with status: {}".format(status))
+            rssi = -120
+            rsrp = -141
+            rsrq = -20
+            mcc = 0
+            mnc = 0
+            technology_str = "Unknown"
 
         # status_str = {
         #     cellular.MODEM_NOT_INITIALIZED: "MODEM_NOT_INITIALIZED",
@@ -264,7 +278,7 @@ class ModemInfo:
         # }
         status_str = ""
         if status == cellular.MODEM_DETTACHED:
-            status_str = "detached"
+            status_str = "disconnected"
         elif status == cellular.MODEM_ACTIVATED:
             status_str = "activated"
         elif status == cellular.MODEM_ATTACHED:
@@ -333,61 +347,6 @@ class DeviceMeasurements:
         except Exception as e:
             logging.exception(e, "Error applying configuration")
             return {}, 500
-
-
-# class StoredMeasurements:
-#     async def get(self, req, resp):
-#         """Stream raw measurement data directly to client without parsing"""
-#         logging.debug("[web-server][GET]: /saved_meas")
-#         import utils
-#         import ujson
-
-#         try:
-#             # Set response headers for streaming download
-#             resp.add_header("Content-Type", "application/octet-stream")
-#             resp.add_header("Content-Disposition", 'attachment; filename="measurements.log"')
-
-#             logging.debug("start_html: before")
-#             await resp.start_html()
-#             logging.debug("start_html: after")
-
-#             # Helper to stream file chunks
-#             async def stream_file(file_path):
-#                 """Stream file content in chunks"""
-#                 try:
-#                     if not utils.existsFlagFile(file_path):
-#                         return
-
-#                     full_path = utils.decorateFlagPath(file_path)
-#                     chunks = utils.readFromFile(full_path, chunked=True)
-
-#                     for chunk in chunks:
-#                         chunk_bytes = chunk if isinstance(chunk, bytes) else chunk.encode("utf-8")
-#                         await resp.send(chunk_bytes)
-
-#                 except Exception as e:
-#                     logging.exception(e, "Error streaming file: {}".format(file_path))
-
-#             # Stream metadata header (device ID and keys placeholder)
-#             device_id = get_device_id()[0]
-#             header = {"device_id": device_id, "format": "newline-delimited-json"}
-#             await resp.send(("### METADATA ###\n" + ujson.dumps(header) + "\n### DATA ###\n").encode("utf-8"))
-
-#             # Stream unfinished upload measurements first
-#             logging.debug("About to upload measurements.log.up")
-#             await stream_file("/measurements.log.up")
-
-#             # Add separator if both files exist
-#             if utils.existsFlagFile("/measurements.log.up") and utils.existsFlagFile("/measurements.log"):
-#                 await resp.send(b"\n")
-
-#             # Stream main measurements log
-#             logging.debug("About to upload measurements.log")
-#             await stream_file("/measurements.log")
-
-#         except Exception as e:
-#             logging.exception(e, "Error streaming measurements")
-#             await resp.error(500)
 
 
 class WiFiList:

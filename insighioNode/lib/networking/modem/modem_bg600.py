@@ -23,8 +23,8 @@ class ModemBG600(modem_base.Modem):
         (status, _) = self.send_at_cmd("", 10000, "APP RDY")
         return status
 
-    def init(self, ip_version, apn, technology):
-        status = super().init(ip_version, apn, technology)
+    def init(self, ip_version, apn, technology, mcc_mnc=None):
+        status = super().init(ip_version, apn, technology, mcc_mnc)
         return status
 
     def reset_to_factory(self):

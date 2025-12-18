@@ -136,7 +136,13 @@ def connect(cfg):
     try:
         logging.debug("Initializing modem")
         modemInst = get_modem_instance()
-        modemInst.init(cfg._IP_VERSION, cfg._APN, cfg._CELLULAR_TECHNOLOGY)
+        mcc_mnc = None
+        try:
+            mcc_mnc = cfg._CELLULAR_MCC_MNC
+        except Exception:
+            pass
+
+        modemInst.init(cfg._IP_VERSION, cfg._APN, cfg._CELLULAR_TECHNOLOGY, mcc_mnc)
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
