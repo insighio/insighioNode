@@ -219,6 +219,47 @@ export default {
         this.showSettingsMenu = false
       }
     },
+    convertJSONObjectToSenmlObject(deviceId, jsonObj) {
+      const senmlObj = []
+      let baseTime = undefined
+
+      for (const key in jsonObj) {
+        const measObj = {}
+
+        if (key === "dt") {
+          baseTime = jsonObj[key]["value"]
+          continue
+        }
+
+        measObj["n"] = key
+
+        if (jsonObj[key]["unit"]) {
+          measObj["u"] = jsonObj[key]["unit"]
+        }
+
+        let v = jsonObj[key]["value"]
+        if (v !== undefined) {
+          if (typeof v === "number") {
+            measObj["v"] = parseFloat(jsonObj[key]["value"])
+          } else if (typeof v === "boolean") {
+            measObj["vb"] = jsonObj[key]["value"] === true || jsonObj[key]["value"] === "true"
+          } else if (typeof v === "string") {
+            measObj["vs"] = jsonObj[key]["value"]
+          }
+        }
+
+        senmlObj.push(measObj)
+      }
+
+      if (senmlObj.length > 0) {
+        senmlObj[0]["bn"] = deviceId
+        if (baseTime !== undefined) {
+          senmlObj[0]["bt"] = baseTime
+        }
+      }
+
+      return senmlObj
+    },
     async downloadMeasurements() {
       try {
         this.showSettingsMenu = false
@@ -265,7 +306,7 @@ export default {
               .filter((line) => line.trim())
               .map((line) => {
                 try {
-                  return JSON.parse(line)
+                  return this.convertJSONObjectToSenmlObject(metadata.device_id, JSON.parse(line))
                 } catch (e) {
                   return null
                 }
@@ -274,7 +315,8 @@ export default {
           }
 
           // Create downloadable file
-          const blob = new Blob([JSON.stringify(fileContent, null, 2)], { type: "application/json" })
+          //const blob = new Blob([JSON.stringify(fileContent, null, 2)], { type: "application/json" })
+          const blob = new Blob([JSON.stringify(fileContent)], { type: "application/json" })
           const url = window.URL.createObjectURL(blob)
           const a = document.createElement("a")
           a.href = url
