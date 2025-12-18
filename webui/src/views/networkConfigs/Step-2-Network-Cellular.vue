@@ -94,15 +94,48 @@
                   </tr>
                   <tr>
                     <td style="font-weight: 500">RSSI</td>
-                    <td>{{ modemInfo.rssi }} dBm</td>
+                    <td>
+                      <div>{{ modemInfo.rssi }} dBm</div>
+                      <div class="bar" style="height: 8px; margin-top: 4px">
+                        <div
+                          class="bar-item"
+                          :style="{
+                            width: getSignalPercentage(modemInfo.rssi, -120, -50) + '%',
+                            backgroundColor: get_rssi_quality(modemInfo.rssi).color
+                          }"
+                        ></div>
+                      </div>
+                    </td>
                   </tr>
                   <tr>
                     <td style="font-weight: 500">RSRP</td>
-                    <td>{{ modemInfo.rsrp }} dBm</td>
+                    <td>
+                      <div>{{ modemInfo.rsrp }} dBm</div>
+                      <div class="bar" style="height: 8px; margin-top: 4px">
+                        <div
+                          class="bar-item"
+                          :style="{
+                            width: getSignalPercentage(modemInfo.rsrp, -120, -5) + '%',
+                            backgroundColor: get_rsrp_quality(modemInfo.rsrp).color
+                          }"
+                        ></div>
+                      </div>
+                    </td>
                   </tr>
                   <tr>
                     <td style="font-weight: 500">RSRQ</td>
-                    <td>{{ modemInfo.rsrq }} dB</td>
+                    <td>
+                      <div>{{ modemInfo.rsrq }} dB</div>
+                      <div class="bar" style="height: 8px; margin-top: 4px">
+                        <div
+                          class="bar-item"
+                          :style="{
+                            width: getSignalPercentage(modemInfo.rsrq, -20, 20) + '%',
+                            backgroundColor: get_rsrq_quality(modemInfo.rsrq).color
+                          }"
+                        ></div>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -250,25 +283,38 @@ export default {
         alert("Error updating modem info. Please check your connection and try again.")
       }
     },
+    getSignalPercentage(value, min, max) {
+      const percentage = ((value - min) / (max - min)) * 100
+      return Math.max(0, Math.min(100, percentage))
+    },
     get_signal_quality(rssi, rsrp, rsrq, technology) {
       // Implement signal quality calculation if needed
       if (technology === "GSM") {
-        if (rssi >= -70) return { str: "Excellent", color: "green" }
-        else if (rssi >= -85) return { str: "Good", color: "#6ACE61" }
-        else if (rssi >= -100) return { str: "Fair", color: "#F7BA30" }
-        else return { str: "Bad", color: "#E01B24" }
+        return this.get_rssi_quality(rssi)
       } else if (technology === "NBIoT") {
-        if (rsrp >= -80 && rsrq >= -10) return { str: "Excellent", color: "green" }
-        else if (rsrp >= -90 && rsrq >= -15) return { str: "Good", color: "#6ACE61" }
-        else if (rsrp >= -100 && rsrq < -15) return { str: "Fair", color: "#F7BA30" }
-        else return { str: "Bad", color: "#E01B24" }
+        return this.get_rsrp_quality(rsrp)
       } else if (technology === "LTE-M") {
-        if (rsrp >= -75) return { str: "Excellent", color: "green" }
-        else if (rsrp >= -85) return { str: "Good", color: "#6ACE61" }
-        else if (rsrp >= -98) return { str: "Fair", color: "#F7BA30" }
-        else return { str: "Bad", color: "#E01B24" }
+        return this.get_rsrq_quality(rsrq)
       }
       return "Unknown"
+    },
+    get_rssi_quality(rssi) {
+      if (rssi >= -70) return { str: "Excellent", color: "green" }
+      else if (rssi >= -85) return { str: "Good", color: "#6ACE61" }
+      else if (rssi >= -100) return { str: "Fair", color: "#F7BA30" }
+      else return { str: "Bad", color: "#E01B24" }
+    },
+    get_rsrp_quality(rsrp) {
+      if (rsrp >= -80) return { str: "Excellent", color: "green" }
+      else if (rsrp >= -90) return { str: "Good", color: "#6ACE61" }
+      else if (rsrp >= -100) return { str: "Fair", color: "#F7BA30" }
+      else return { str: "Bad", color: "#E01B24" }
+    },
+    get_rsrq_quality(rsrq) {
+      if (rsrq >= -10) return { str: "Excellent", color: "green" }
+      else if (rsrq >= -15) return { str: "Good", color: "#6ACE61" }
+      else if (rsrq >= -20) return { str: "Fair", color: "#F7BA30" }
+      else return { str: "Bad", color: "#E01B24" }
     },
     clearCookies() {
       this.$cookies.remove("network")
