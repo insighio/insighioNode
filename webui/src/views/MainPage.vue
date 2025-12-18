@@ -222,26 +222,59 @@ export default {
     async downloadMeasurements() {
       try {
         this.showSettingsMenu = false
-        const response = await fetch("http://192.168.4.1" + "/saved_meas", {
-          method: "GET",
-          headers: {
-            Accept: "application/json"
-          }
+
+        // Fetch the streamed measurements file
+        const response = await fetch("http://192.168.4.1/api/saved_meas", {
+          method: "GET"
         })
 
         if (response.ok) {
-          const data = await response.json()
-          this.insighio_id = this.$cookies.get("insighio-id")
-          this.insighio_key = this.$cookies.get("insighio-key")
-          this.insighio_channel = this.$cookies.get("insighio-channel")
-          data.keys = {
-            insighio_id: this.insighio_id,
-            insighio_key: this.insighio_key,
-            insighio_channel: this.insighio_channel
+          // Get the raw text content
+          const textContent = await response.text()
+
+          // Parse metadata and data
+          const metadataMatch = textContent.match(/### METADATA ###\n(.+?)\n### DATA ###\n/s)
+          let metadata = { device_id: "unknown" }
+          let dataContent = textContent
+
+          if (metadataMatch) {
+            try {
+              metadata = JSON.parse(metadataMatch[1])
+              dataContent = textContent.substring(metadataMatch[0].length)
+            } catch (e) {
+              console.warn("Could not parse metadata:", e)
+            }
           }
 
-          // Create a downloadable file
-          const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+          // Get API keys from cookies
+          const insighio_id = this.$cookies.get("insighio-id")
+          const insighio_key = this.$cookies.get("insighio-key")
+          const insighio_channel = this.$cookies.get("insighio-channel")
+
+          // Create final file content with metadata
+          const fileContent = {
+            device_id: metadata.device_id,
+            //format: metadata.format || "newline-delimited-json",
+            keys: {
+              insighio_id: insighio_id,
+              insighio_key: insighio_key,
+              insighio_channel: insighio_channel
+            },
+            measurements: dataContent
+              .split("\n")
+              .filter((line) => line.trim())
+              .map((line) => {
+                try {
+                  return JSON.parse(line)
+                } catch (e) {
+                  return null
+                }
+              })
+              .filter((item) => item !== null)
+          }
+
+          // Create downloadable file
+          const blob = new Blob([JSON.stringify(fileContent, null, 2)], { type: "application/json" })
           const url = window.URL.createObjectURL(blob)
           const a = document.createElement("a")
           a.href = url

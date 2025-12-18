@@ -335,101 +335,59 @@ class DeviceMeasurements:
             return {}, 500
 
 
-class StoredMeasurements:
-    def get(self, data):
-        logging.debug("[web-server][GET]: /saved_meas")
-        import utils
-        from external.kpn_senml.senml_pack_json import SenmlPackJson
-        from external.kpn_senml.senml_record import SenmlRecord
+# class StoredMeasurements:
+#     async def get(self, req, resp):
+#         """Stream raw measurement data directly to client without parsing"""
+#         logging.debug("[web-server][GET]: /saved_meas")
+#         import utils
+#         import ujson
 
-        # Helper function to read file line by line from chunks
-        def read_lines_from_file(file_path):
-            """Generator that yields lines from a file, reading in chunks for memory efficiency"""
-            try:
-                if not utils.existsFlagFile(file_path):
-                    return
+#         try:
+#             # Set response headers for streaming download
+#             resp.add_header("Content-Type", "application/octet-stream")
+#             resp.add_header("Content-Disposition", 'attachment; filename="measurements.log"')
 
-                # Read file in chunks
-                chunks = utils.readFromFile(utils.decorateFlagPath(file_path), chunked=True)
-                partial_line = ""
+#             logging.debug("start_html: before")
+#             await resp.start_html()
+#             logging.debug("start_html: after")
 
-                for chunk in chunks:
-                    chunk_str = chunk.decode("utf-8") if isinstance(chunk, bytes) else chunk
-                    lines = (partial_line + chunk_str).split("\n")
-                    partial_line = lines[-1]  # Save incomplete line for next iteration
+#             # Helper to stream file chunks
+#             async def stream_file(file_path):
+#                 """Stream file content in chunks"""
+#                 try:
+#                     if not utils.existsFlagFile(file_path):
+#                         return
 
-                    for line in lines[:-1]:  # Yield all complete lines
-                        if line.strip():
-                            yield line.strip()
+#                     full_path = utils.decorateFlagPath(file_path)
+#                     chunks = utils.readFromFile(full_path, chunked=True)
 
-                # Yield remaining partial line if any
-                if partial_line.strip():
-                    yield partial_line.strip()
-            except Exception as e:
-                logging.exception(e, "Error reading file: {}".format(file_path))
+#                     for chunk in chunks:
+#                         chunk_bytes = chunk if isinstance(chunk, bytes) else chunk.encode("utf-8")
+#                         await resp.send(chunk_bytes)
 
-        def parse_measurement_line(line, device_id):
-            """Parse a single measurement line and return JSON representation"""
-            try:
-                import ujson
-                import utime
+#                 except Exception as e:
+#                     logging.exception(e, "Error streaming file: {}".format(file_path))
 
-                message = SenmlPackJson((device_id + "-") if device_id is not None else None)
-                data = ujson.loads(line)
+#             # Stream metadata header (device ID and keys placeholder)
+#             device_id = get_device_id()[0]
+#             header = {"device_id": device_id, "format": "newline-delimited-json"}
+#             await resp.send(("### METADATA ###\n" + ujson.dumps(header) + "\n### DATA ###\n").encode("utf-8"))
 
-                if "diff_dt" in data:
-                    time_diff = utime.ticks_diff(utime.ticks_ms(), data["diff_dt"]["value"])
-                    data["time_diff"] = {"value": max(0, time_diff)}
-                    del data["diff_dt"]
+#             # Stream unfinished upload measurements first
+#             logging.debug("About to upload measurements.log.up")
+#             await stream_file("/measurements.log.up")
 
-                if "dt" in data:
-                    message.base_time = data["dt"]["value"]
+#             # Add separator if both files exist
+#             if utils.existsFlagFile("/measurements.log.up") and utils.existsFlagFile("/measurements.log"):
+#                 await resp.send(b"\n")
 
-                for key in data:
-                    if isinstance(data[key], dict):
-                        if "unit" in data[key]:
-                            message.add(SenmlRecord(key, unit=data[key]["unit"], value=data[key]["value"]))
-                        elif key != "dt":
-                            message.add(SenmlRecord(key, value=data[key]["value"]))
-                    elif data[key] is not None:
-                        message.add(SenmlRecord(key, value=data[key]))
+#             # Stream main measurements log
+#             logging.debug("About to upload measurements.log")
+#             await stream_file("/measurements.log")
 
-                return message.to_json()
-            except Exception as e:
-                logging.exception(e, "Error parsing measurement line")
-                return None
-
-        device_id = get_device_id()[0]
-        measurement_list = []
-
-        try:
-            import gc
-
-            # Process unfinished upload measurements first
-            for line in read_lines_from_file("/measurements.log.up"):
-                result = parse_measurement_line(line, device_id)
-                if result:
-                    measurement_list.append(result)
-
-                # Periodically collect garbage for large files
-                if len(measurement_list) % 50 == 0:
-                    gc.collect()
-
-            # Process main measurements log
-            for line in read_lines_from_file("/measurements.log"):
-                result = parse_measurement_line(line, device_id)
-                if result:
-                    measurement_list.append(result)
-
-                # Periodically collect garbage for large files
-                if len(measurement_list) % 50 == 0:
-                    gc.collect()
-
-        except Exception as e:
-            logging.exception(e, "error parsing stored measurements")
-            measurement_list = []
-
-        return {"measurements": measurement_list}, 200
+#         except Exception as e:
+#             logging.exception(e, "Error streaming measurements")
+#             await resp.error(500)
 
 
 class WiFiList:
@@ -691,6 +649,60 @@ def start(timeoutMs=120000):
 
         machine.reset()
 
+    @app.route("/api/saved_meas", methods=["GET"])
+    async def api_saved_meas(req, resp):
+        """Stream raw measurement data directly to client without parsing"""
+        logging.debug("[web-server][GET]: /saved_meas")
+        import utils
+        import ujson
+
+        try:
+            # Set response headers for streaming download
+            resp.add_header("Content-Type", "application/octet-stream")
+            resp.add_header("Content-Disposition", 'attachment; filename="measurements.log"')
+
+            logging.debug("start_html: before")
+            await resp.start_html()
+            logging.debug("start_html: after")
+
+            # Helper to stream file chunks
+            async def stream_file(file_path):
+                """Stream file content in chunks"""
+                try:
+                    if not utils.existsFlagFile(file_path):
+                        return
+
+                    full_path = utils.decorateFlagPath(file_path)
+                    chunks = utils.readFromFile(full_path, chunked=True)
+
+                    for chunk in chunks:
+                        chunk_bytes = chunk if isinstance(chunk, bytes) else chunk.encode("utf-8")
+                        await resp.send(chunk_bytes)
+
+                except Exception as e:
+                    logging.exception(e, "Error streaming file: {}".format(file_path))
+
+            # Stream metadata header (device ID and keys placeholder)
+            device_id = get_device_id()[0]
+            header = {"device_id": device_id, "format": "newline-delimited-json"}
+            await resp.send(("### METADATA ###\n" + ujson.dumps(header) + "\n### DATA ###\n").encode("utf-8"))
+
+            # Stream unfinished upload measurements first
+            logging.debug("About to upload measurements.log.up")
+            await stream_file("/measurements.log.up")
+
+            # Add separator if both files exist
+            if utils.existsFlagFile("/measurements.log.up") and utils.existsFlagFile("/measurements.log"):
+                await resp.send(b"\n")
+
+            # Stream main measurements log
+            logging.debug("About to upload measurements.log")
+            await stream_file("/measurements.log")
+
+        except Exception as e:
+            logging.exception(e, "Error streaming measurements")
+            await resp.error(500)
+
     app.add_resource(Settings, "/settings")
     app.add_resource(RawWeightIdle, "/raw-weight-idle")
     # app.add_resource(RawWeight, '/raw-weight')
@@ -700,7 +712,7 @@ def start(timeoutMs=120000):
     app.add_resource(Version, "/version")
     app.add_resource(WiFiList, "/update_wifi_list")
     app.add_resource(DeviceMeasurements, "/device_measurements")
-    app.add_resource(StoredMeasurements, "/saved_meas")
+    # app.add_resource(StoredMeasurements, "/saved_meas")
     app.add_resource(SystemTime, "/api/time")
     app.add_resource(ModemInfo, "/api/modem_info")
 
