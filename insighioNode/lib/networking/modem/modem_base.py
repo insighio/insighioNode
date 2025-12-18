@@ -119,8 +119,8 @@ class Modem:
         self.send_at_cmd("AT+CFUN=0")  # set phone functionality to minimum
         sleep_ms(5000)
         self.send_at_cmd(command, 180000)
-        self.send_at_cmd("AT+CFUN=1")  # set phone functionality to full
-        sleep_ms(5000)
+        self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
+        self.send_at_cmd("ATE0")
 
     def init(self, ip_version, apn, technology, mcc_mnc=None):
         if not self.is_alive():
