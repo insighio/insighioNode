@@ -226,12 +226,11 @@ class Modem:
                         if group_val == "1" or group_val == "5":
                             return True
                         elif group_val == "3":
-                            return False
+                            current_state = _STATE_CHECK_COPS
                         elif group_val == "2":
                             current_state = _STATE_CHECK_CREG
                         elif group_val == "0" and current_state == _STATE_CHECK_CREG:
                             current_state = _STATE_CHECK_COPS
-                            self.send_at_cmd("AT+COPS=3,2")
             elif current_state == _STATE_CHECK_COPS:
                 (mcc, mnc) = self.get_registered_mcc_mnc()
                 if mcc is not None and mnc is not None:
