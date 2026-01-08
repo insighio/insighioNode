@@ -52,7 +52,7 @@ from machine import Timer
 
 _pulse_counter_thread_started = None
 _thread_lock = _thread.allocate_lock()
-DEBOUNCE_TIME_LOW_FREQ_US = 1000  # Debounce period in microseconds for low frequency signals
+DEBOUNCE_TIME_LOW_FREQ_US = 5000  # Debounce period in microseconds for low frequency signals
 DEBOUNCE_TIME_HIGH_FREQ_US = 500  # Debounce period in microseconds for high frequency signals
 
 pcnt_1_debounce_timer = Timer(1)
@@ -61,10 +61,11 @@ pcnt_1_filtered_edges = 0
 pcnt_1_last_interrupt_time = utime.ticks_us()
 pcnt_1_pending_edge = False
 pcnt_1_pin = None
+pcnt_1_adc = None
 pcnt_1_readings = 0
 pcnt_1_triggered_edge_level = None
 pcnt_1_voltage_max = 0
-pcnt_1_voltage_min = 0
+pcnt_1_voltage_min = 3300
 
 pcnt_2_debounce_timer = Timer(2)
 pcnt_2_edge_count = 0
@@ -75,7 +76,7 @@ pcnt_2_pin = None
 pcnt_2_readings = 0
 pcnt_2_triggered_edge_level = None
 pcnt_2_voltage_max = 0
-pcnt_2_voltage_min = 0
+pcnt_2_voltage_min = 3300
 
 pcnt_last_run_timestamp_ms = 0
 
@@ -630,10 +631,11 @@ def read_adc_sensor(measurements, sensor):
 def get_pulse_counter_filter_us(config, index, is_high_freq):
     filter_threshold_us = 500  # default
 
-    if is_high_freq:
-        filter_threshold_us = _get(config[index], "filterUs") if config and len(config) > index else DEBOUNCE_TIME_HIGH_FREQ_US
-    else:
-        filter_threshold_us = _get(config[index], "filterUs") if config and len(config) > index else DEBOUNCE_TIME_LOW_FREQ_US
+    filter_threshold_us = (
+        _get(config[index], "filterUs")
+        if config and len(config) > index
+        else (DEBOUNCE_TIME_HIGH_FREQ_US if is_high_freq else DEBOUNCE_TIME_LOW_FREQ_US)
+    )
 
     try:
         filter_threshold_us = int(filter_threshold_us)
@@ -659,7 +661,11 @@ def execute_pulse_counter_measurements(measurements):
     global pcnt_1_last_interrupt_time
     global pcnt_1_pending_edge
     global pcnt_1_pin
+    global pcnt_1_adc
     global pcnt_1_triggered_edge_level
+    global pcnt_1_voltage_min
+    global pcnt_1_voltage_max
+    global pcnt_1_readings
     global pcnt_2_debounce_timer
     global pcnt_2_edge_count
     global pcnt_2_filtered_edges
@@ -668,6 +674,9 @@ def execute_pulse_counter_measurements(measurements):
     global pcnt_2_pin
     global pcnt_2_triggered_edge_level
     global pcnt_last_run_timestamp_ms
+    global pcnt_2_voltage_min
+    global pcnt_2_voltage_max
+    global pcnt_2_readings
 
     logging.info("Starting Pulse Counter measurements")
 
@@ -704,8 +713,10 @@ def execute_pulse_counter_measurements(measurements):
     pcnt_method_1 = _pulse_counter_config[0].get("method") if _pulse_counter_config and len(_pulse_counter_config) > 0 else "interrupt"
     pcnt_method_2 = _pulse_counter_config[1].get("method") if _pulse_counter_config and len(_pulse_counter_config) > 1 else "interrupt"
 
+    _PCNT_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
+
     if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
-        from machine import freq, Pin
+        from machine import freq, Pin, ADC
 
         freq(240000000)
 
@@ -720,39 +731,121 @@ def execute_pulse_counter_measurements(measurements):
         pcnt_2_enabled = _pulse_counter_config[1].get("enabled")
         pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
 
+        temp_adc_1 = ADC(Pin(pcnt_1_gpio))
+        temp_adc_1.atten(ADC.ATTN_11DB)
+        temp_adc_1.width(ADC.WIDTH_12BIT)
+
+        temp_adc_2 = ADC(Pin(pcnt_2_gpio))
+        temp_adc_2.atten(ADC.ATTN_11DB)
+        temp_adc_2.width(ADC.WIDTH_12BIT)
+
         # from micropython import schedule
 
         def pcnt_1_timer_callback(timer):
             global pcnt_1_edge_count, pcnt_1_pending_edge
             global pcnt_1_triggered_edge_level
             global pcnt_1_filtered_edges
+            global pcnt_1_voltage_min
+            global pcnt_1_voltage_max
+            global pcnt_1_pin
 
-            if pcnt_1_triggered_edge_level != pcnt_1_pin.value():
-                # Glitch - pin returned to original state before timer expired
+            # Disable interrupt temporarily
+            pcnt_1_pin.irq(handler=None)
+
+            v = temp_adc_1.read_voltage(1)
+
+            edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+            if edge_level is None:
+                edge_level = detect_stable_edge(temp_adc_1)
+            # Explicitly delete ADC
+            # del temp_adc
+
+            # Re-enable interrupt on existing pin object
+            pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
+            pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
+
+            # print(f"pcnt_1_timer_callback: voltage={v}, edge_level={edge_level}")
+            if _PCNT_DEBUG_ON:
+                if v < pcnt_1_voltage_min:
+                    pcnt_1_voltage_min = v
+                if v > pcnt_1_voltage_max:
+                    pcnt_1_voltage_max = v
+
+            if pcnt_1_triggered_edge_level != edge_level:
+                # noise - pin returned to original state before timer expired
                 pcnt_1_filtered_edges += 1
             else:
                 pcnt_1_edge_count += 1
             pcnt_1_pending_edge = False
+            pcnt_1_triggered_edge_level = None
 
         def pcnt_2_timer_callback(timer):
             global pcnt_2_edge_count, pcnt_2_pending_edge
             global pcnt_2_triggered_edge_level
             global pcnt_2_filtered_edges
+            global pcnt_2_voltage_min
+            global pcnt_2_voltage_max
+            global pcnt_2_pin
 
-            # if debounce filtered the whole pulse due to delayed interrupts,
-            # count an extra edge if the pin level is different than the triggered edge level
-            if pcnt_2_triggered_edge_level != pcnt_2_pin.value():
-                # Glitch - pin returned to original state before timer expired
+            # Disable interrupt temporarily
+            pcnt_2_pin.irq(handler=None)
+
+            v = temp_adc_2.read_voltage(1)
+
+            edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+            if edge_level is None:
+                edge_level = detect_stable_edge(temp_adc_2)
+
+            # Explicitly delete ADC
+            # del temp_adc
+
+            # Re-enable interrupt on existing pin object
+            pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
+            pcnt_2_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_2_interrupt)
+
+            if _PCNT_DEBUG_ON:
+                if v < pcnt_2_voltage_min:
+                    pcnt_2_voltage_min = v
+                if v > pcnt_2_voltage_max:
+                    pcnt_2_voltage_max = v
+
+            if pcnt_2_triggered_edge_level != edge_level:
+                # noise - pin returned to original state before timer expired
                 pcnt_2_filtered_edges += 1
             else:
                 pcnt_2_edge_count += 1
             pcnt_2_pending_edge = False
+            pcnt_2_triggered_edge_level = None
 
         # def pcnt_1_interrupt_process(pin):
         def pcnt_1_interrupt(pin):
             global pcnt_1_last_interrupt_time, pcnt_1_edge_count
             global pcnt_1_debounce_timer, pcnt_1_pending_edge, pcnt_1_filtered_edges
             global pcnt_1_triggered_edge_level
+            global pcnt_1_voltage_min, pcnt_1_voltage_max
+            global pcnt_1_pin
+            global pcnt_1_readings
+
+            # Disable interrupt temporarily
+            pcnt_1_pin.irq(handler=None)
+
+            v = temp_adc_1.read_voltage(1)
+
+            edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+            if edge_level is None:
+                edge_level = detect_stable_edge(temp_adc_1)
+
+            # Re-enable interrupt on existing pin object
+            pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
+            pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
+
+            if _PCNT_DEBUG_ON:
+                pcnt_1_readings += 1
+                if v < pcnt_1_voltage_min:
+                    pcnt_1_voltage_min = v
+                if v > pcnt_1_voltage_max:
+                    pcnt_1_voltage_max = v
+            # print(f"pcnt_1_interrupt: voltage={v}, edge_level={edge_level}")
 
             if pcnt_1_high_freq:
                 current_time = utime.ticks_us()
@@ -761,13 +854,13 @@ def execute_pulse_counter_measurements(measurements):
                 if utime.ticks_diff(current_time, pcnt_1_last_interrupt_time) > pcnt_1_filter_threshold_us:
                     pcnt_1_edge_count += 1
                     # print("pcnt1 high")
-                    if pcnt_1_triggered_edge_level == pin.value():
+                    if pcnt_1_triggered_edge_level == edge_level:
                         pcnt_1_edge_count += 1
                         # print("pcnt1 high extra")
                 else:
                     pcnt_1_filtered_edges += 1
                 pcnt_1_last_interrupt_time = current_time
-                pcnt_1_triggered_edge_level = pin.value()
+                pcnt_1_triggered_edge_level = edge_level
             else:
                 if pcnt_1_pending_edge:
                     # Already have a pending edge, this is noise/bounce
@@ -777,7 +870,7 @@ def execute_pulse_counter_measurements(measurements):
                 else:
                     # First edge detected, start debounce timer
                     pcnt_1_pending_edge = True
-                    pcnt_1_triggered_edge_level = pin.value()
+                    pcnt_1_triggered_edge_level = edge_level
                 pcnt_1_debounce_timer.init(mode=Timer.ONE_SHOT, period=pcnt_1_filter_threshold_us // 1000, callback=pcnt_1_timer_callback)
 
         # def pcnt_2_interrupt_process(pin):
@@ -785,6 +878,29 @@ def execute_pulse_counter_measurements(measurements):
             global pcnt_2_last_interrupt_time, pcnt_2_edge_count
             global pcnt_2_debounce_timer, pcnt_2_pending_edge, pcnt_2_filtered_edges
             global pcnt_2_triggered_edge_level
+            global pcnt_2_voltage_min, pcnt_2_voltage_max
+            global pcnt_2_pin
+            global pcnt_2_readings
+
+            # Disable interrupt temporarily
+            pcnt_2_pin.irq(handler=None)
+
+            v = temp_adc_2.read_voltage(1)
+
+            edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+            if edge_level is None:
+                edge_level = detect_stable_edge(temp_adc_2)
+
+            # Re-enable interrupt on existing pin object
+            pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
+            pcnt_2_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_2_interrupt)
+
+            if _PCNT_DEBUG_ON:
+                pcnt_2_readings += 1
+                if v < pcnt_2_voltage_min:
+                    pcnt_2_voltage_min = v
+                if v > pcnt_2_voltage_max:
+                    pcnt_2_voltage_max = v
 
             if pcnt_2_high_freq:
                 current_time = utime.ticks_us()
@@ -792,13 +908,14 @@ def execute_pulse_counter_measurements(measurements):
                 # Debounce check (500 microseconds = 0.5ms)
                 if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > pcnt_2_filter_threshold_us:
                     pcnt_2_edge_count += 1
-                    if pcnt_2_triggered_edge_level == pin.value():
+                    # print("pcnt1 high")
+                    if pcnt_2_triggered_edge_level == edge_level:
                         pcnt_2_edge_count += 1
+                        # print("pcnt1 high extra")
                 else:
                     pcnt_2_filtered_edges += 1
-
                 pcnt_2_last_interrupt_time = current_time
-                pcnt_2_triggered_edge_level = pin.value()
+                pcnt_2_triggered_edge_level = edge_level
             else:
                 if pcnt_2_pending_edge:
                     # Already have a pending edge, this is noise/bounce
@@ -808,8 +925,7 @@ def execute_pulse_counter_measurements(measurements):
                 else:
                     # First edge detected, start debounce timer
                     pcnt_2_pending_edge = True
-                    pcnt_2_triggered_edge_level = pin.value()
-                # pcnt_2_debounce_timer.deinit()
+                    pcnt_2_triggered_edge_level = edge_level
                 pcnt_2_debounce_timer.init(mode=Timer.ONE_SHOT, period=pcnt_2_filter_threshold_us // 1000, callback=pcnt_2_timer_callback)
 
         if pcnt_1_enabled and pcnt_1_gpio:
@@ -817,6 +933,9 @@ def execute_pulse_counter_measurements(measurements):
             if pcnt_1_pin is not None:
                 pcnt_1_pin.irq(handler=None)  # disable previous irqs
             pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
+            pcnt_1_voltage_min = 3300
+            pcnt_1_voltage_max = 0
+            pcnt_1_readings = 0
             pcnt_1_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
         else:
             pcnt_1_pin = None
@@ -826,6 +945,9 @@ def execute_pulse_counter_measurements(measurements):
             if pcnt_2_pin is not None:
                 pcnt_2_pin.irq(handler=None)  # disable previous irqs
             pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
+            pcnt_2_voltage_min = 3300
+            pcnt_2_voltage_max = 0
+            pcnt_2_readings = 0
             pcnt_2_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_2_interrupt)
         else:
             pcnt_2_pin = None
@@ -844,7 +966,7 @@ def execute_pulse_counter_measurements(measurements):
                 set_value_float(measurements, "pcnt_period_s_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
                 set_value_float(measurements, "pcnt_count_formula_{}".format(id), 0)
                 # Add filtered edge count for debugging
-                if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
+                if _PCNT_DEBUG_ON:
                     set_value_int(measurements, "pcnt_filtered_edges_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
     else:
         time_diff = -1
@@ -871,6 +993,7 @@ def execute_pulse_counter_measurements(measurements):
             if _get(sensor, "enabled"):
                 id = sensor.get("id")
                 filtered_count = pcnt_1_filtered if id == 1 else pcnt_2_filtered
+                method = pcnt_method_1 if id == 1 else pcnt_method_2
                 store_pulse_counter_measurements(
                     measurements,
                     id,
@@ -879,7 +1002,7 @@ def execute_pulse_counter_measurements(measurements):
                     _get(sensor, "formula"),
                     filtered_count,
                     pcnt_1_readings if id == 1 else pcnt_2_readings,
-                    filtered_count,
+                    method,
                 )
 
 
@@ -895,27 +1018,25 @@ def store_pulse_counter_measurements(
     if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
 
         set_value_int(measurements, "pcnt_filtered_edges_{}".format(id), filtered_edges_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-        if method == "adc":
-
-            set_value_int(measurements, "pcnt_readings_{}".format(id), readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
-            try:
-                set_value_float(
-                    measurements,
-                    "pcnt_voltage_min_{}".format(id),
-                    (pcnt_1_voltage_min if id == 1 else pcnt_2_voltage_min) / 1000.0,
-                    SenmlUnits.SENML_UNIT_VOLT,
-                )
-            except Exception as e:
-                logging.error("Error setting pcnt_voltage_min_{}: {}".format(id, e))
-            try:
-                set_value_float(
-                    measurements,
-                    "pcnt_voltage_max_{}".format(id),
-                    (pcnt_1_voltage_max if id == 1 else pcnt_2_voltage_max) / 1000.0,
-                    SenmlUnits.SENML_UNIT_VOLT,
-                )
-            except Exception as e:
-                logging.error("Error setting pcnt_voltage_max_{}: {}".format(id, e))
+        set_value_int(measurements, "pcnt_readings_{}".format(id), readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
+        try:
+            set_value_float(
+                measurements,
+                "pcnt_voltage_min_{}".format(id),
+                (pcnt_1_voltage_min if id == 1 else pcnt_2_voltage_min) / 1000.0,
+                SenmlUnits.SENML_UNIT_VOLT,
+            )
+        except Exception as e:
+            logging.error("Error setting pcnt_voltage_min_{}: {}".format(id, e))
+        try:
+            set_value_float(
+                measurements,
+                "pcnt_voltage_max_{}".format(id),
+                (pcnt_1_voltage_max if id == 1 else pcnt_2_voltage_max) / 1000.0,
+                SenmlUnits.SENML_UNIT_VOLT,
+            )
+        except Exception as e:
+            logging.error("Error setting pcnt_voltage_max_{}: {}".format(id, e))
 
     calculated_value = 0
 
@@ -1060,13 +1181,13 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
     pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else 0
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
-    pcnt_1_voltage_min = None
-    pcnt_1_voltage_max = None
+    pcnt_1_voltage_min = 3300
+    pcnt_1_voltage_max = 0
 
     pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else 0
     pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
-    pcnt_2_voltage_min = None
-    pcnt_2_voltage_max = None
+    pcnt_2_voltage_min = 3300
+    pcnt_2_voltage_max = 0
 
     try:
         print(">>>> Started")
