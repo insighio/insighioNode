@@ -735,7 +735,7 @@ def execute_pulse_counter_measurements(measurements):
             global pcnt_1_voltage_min
             global pcnt_1_voltage_max
             global pcnt_1_pin
-            global pcnt_1_ignore_next_irq
+            # global pcnt_1_ignore_next_irq
 
             # Disable interrupt temporarily
             pcnt_1_pin.irq(handler=None)
@@ -754,21 +754,22 @@ def execute_pulse_counter_measurements(measurements):
             del temp_adc
 
             # Set flag before re-enabling
-            pcnt_1_ignore_next_irq = True
+            # pcnt_1_ignore_next_irq = True
 
             # Re-enable interrupt on existing pin object
             pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
-            if edge_level == 1:
-                pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
-            else:
-                pcnt_1_pin.irq(trigger=Pin.IRQ_RISING, handler=pcnt_1_interrupt)
+            pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
+            # if edge_level == 1:
+            #     pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
+            # else:
+            #     pcnt_1_pin.irq(trigger=Pin.IRQ_RISING, handler=pcnt_1_interrupt)
 
-            if pcnt_1_voltage_min is None or v < pcnt_1_voltage_min:
+            if v < pcnt_1_voltage_min:
                 pcnt_1_voltage_min = v
-            if pcnt_1_voltage_max is None or v > pcnt_1_voltage_max:
+            if v > pcnt_1_voltage_max:
                 pcnt_1_voltage_max = v
 
-            print(f"pcnt_1_timer_callback: voltage={v}, edge_level={edge_level}")
+            # print(f"pcnt_1_timer_callback: voltage={v}, edge_level={edge_level}")
 
             if pcnt_1_triggered_edge_level != edge_level:
                 # Glitch - pin returned to original state before timer expired
@@ -798,13 +799,13 @@ def execute_pulse_counter_measurements(measurements):
             global pcnt_1_debounce_timer, pcnt_1_pending_edge, pcnt_1_filtered_edges
             global pcnt_1_triggered_edge_level
             global pcnt_1_voltage_min, pcnt_1_voltage_max
-            global pcnt_1_ignore_next_irq
+            # global pcnt_1_ignore_next_irq
             global pcnt_1_pin
 
             # Ignore spurious interrupt after reconfiguration
-            if pcnt_1_ignore_next_irq:
-                pcnt_1_ignore_next_irq = False
-                return
+            # if pcnt_1_ignore_next_irq:
+            #     pcnt_1_ignore_next_irq = False
+            #     return
 
             # Disable interrupt temporarily
             pcnt_1_pin.irq(handler=None)
@@ -823,20 +824,21 @@ def execute_pulse_counter_measurements(measurements):
             del temp_adc
 
             # Set flag before re-enabling
-            pcnt_1_ignore_next_irq = True
+            # pcnt_1_ignore_next_irq = True
 
             # Re-enable interrupt on existing pin object
             pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
-            if edge_level == 1:
-                pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
-            else:
-                pcnt_1_pin.irq(trigger=Pin.IRQ_RISING, handler=pcnt_1_interrupt)
+            pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
+            # if edge_level == 1:
+            #     pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
+            # else:
+            #     pcnt_1_pin.irq(trigger=Pin.IRQ_RISING, handler=pcnt_1_interrupt)
 
-            if pcnt_1_voltage_min is None or v < pcnt_1_voltage_min:
+            if v < pcnt_1_voltage_min:
                 pcnt_1_voltage_min = v
-            if pcnt_1_voltage_max is None or v > pcnt_1_voltage_max:
+            if v > pcnt_1_voltage_max:
                 pcnt_1_voltage_max = v
-            print(f"pcnt_1_interrupt: voltage={v}, edge_level={edge_level}")
+            # print(f"pcnt_1_interrupt: voltage={v}, edge_level={edge_level}")
 
             if pcnt_1_high_freq:
                 current_time = utime.ticks_us()
@@ -901,8 +903,8 @@ def execute_pulse_counter_measurements(measurements):
             if pcnt_1_pin is not None:
                 pcnt_1_pin.irq(handler=None)  # disable previous irqs
             pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
-            pcnt_1_voltage_min = None
-            pcnt_1_voltage_max = None
+            pcnt_1_voltage_min = 3300
+            pcnt_1_voltage_max = 0
             pcnt_1_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
         else:
             pcnt_1_pin = None
@@ -1147,13 +1149,13 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
     pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else 0
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
-    pcnt_1_voltage_min = None
-    pcnt_1_voltage_max = None
+    pcnt_1_voltage_min = 3300
+    pcnt_1_voltage_max = 0
 
     pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else 0
     pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
-    pcnt_2_voltage_min = None
-    pcnt_2_voltage_max = None
+    pcnt_2_voltage_min = 3300
+    pcnt_2_voltage_max = 0
 
     try:
         print(">>>> Started")
