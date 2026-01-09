@@ -774,8 +774,10 @@ def execute_pulse_counter_measurements(measurements):
             if pcnt_1_triggered_edge_level != edge_level:
                 # noise - pin returned to original state before timer expired
                 pcnt_1_filtered_edges += 1
+                # print("pcnt 1 low filtered")
             else:
                 pcnt_1_edge_count += 1
+                # print("pcnt 1 low")
             pcnt_1_pending_edge = False
             pcnt_1_triggered_edge_level = None
 
@@ -812,8 +814,10 @@ def execute_pulse_counter_measurements(measurements):
             if pcnt_2_triggered_edge_level != edge_level:
                 # noise - pin returned to original state before timer expired
                 pcnt_2_filtered_edges += 1
+                # print("pcnt 2 low - filtered")
             else:
                 pcnt_2_edge_count += 1
+                # print("pcnt 2 low")
             pcnt_2_pending_edge = False
             pcnt_2_triggered_edge_level = None
 
@@ -859,6 +863,7 @@ def execute_pulse_counter_measurements(measurements):
                         # print("pcnt1 high extra")
                 else:
                     pcnt_1_filtered_edges += 1
+                    # print("pcnt1 high filtered")
                 pcnt_1_last_interrupt_time = current_time
                 pcnt_1_triggered_edge_level = edge_level
             else:
@@ -866,6 +871,7 @@ def execute_pulse_counter_measurements(measurements):
                     # Already have a pending edge, this is noise/bounce
                     # with _thread_lock:
                     pcnt_1_filtered_edges += 1
+                    # print("pcnt 1 low - filtered")
                     # Reset the timer to extend the debounce period
                 else:
                     # First edge detected, start debounce timer
@@ -908,12 +914,13 @@ def execute_pulse_counter_measurements(measurements):
                 # Debounce check (500 microseconds = 0.5ms)
                 if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > pcnt_2_filter_threshold_us:
                     pcnt_2_edge_count += 1
-                    # print("pcnt1 high")
+                    # print("pcnt2 high")
                     if pcnt_2_triggered_edge_level == edge_level:
                         pcnt_2_edge_count += 1
-                        # print("pcnt1 high extra")
+                        # print("pcnt2 high extra")
                 else:
                     pcnt_2_filtered_edges += 1
+                    # print("pcnt2 high filtered")
                 pcnt_2_last_interrupt_time = current_time
                 pcnt_2_triggered_edge_level = edge_level
             else:
@@ -921,7 +928,7 @@ def execute_pulse_counter_measurements(measurements):
                     # Already have a pending edge, this is noise/bounce
                     # with _thread_lock:
                     pcnt_2_filtered_edges += 1
-                    # Reset the timer to extend the debounce period
+                    # print("pcnt 2 low - filtered")
                 else:
                     # First edge detected, start debounce timer
                     pcnt_2_pending_edge = True
@@ -987,7 +994,7 @@ def execute_pulse_counter_measurements(measurements):
             if _get(sensor, "enabled"):
                 id = sensor.get("id")
                 filtered_count = pcnt_1_filtered if id == 1 else pcnt_2_filtered
-                method = pcnt_method_1 if id == 1 else pcnt_method_2
+                # method = pcnt_method_1 if id == 1 else pcnt_method_2
                 v_min = pcnt_1_voltage_min if id == 1 else pcnt_2_voltage_min
                 v_max = pcnt_1_voltage_max if id == 1 else pcnt_2_voltage_max
                 store_pulse_counter_measurements(
@@ -1001,6 +1008,13 @@ def execute_pulse_counter_measurements(measurements):
                     v_min,
                     v_max,
                 )
+
+        pcnt_1_voltage_min = 3300
+        pcnt_1_voltage_max = 0
+        pcnt_1_readings = 0
+        pcnt_2_voltage_min = 3300
+        pcnt_2_voltage_max = 0
+        pcnt_2_readings = 0
 
 
 def store_pulse_counter_measurements(
