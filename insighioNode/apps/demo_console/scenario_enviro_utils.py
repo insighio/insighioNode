@@ -16,6 +16,8 @@ import utime
 from math import ceil
 from device_info import wdt_reset
 
+_PCNT_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
+
 _i2c = None
 _io_expander_addr = None
 
@@ -713,8 +715,6 @@ def execute_pulse_counter_measurements(measurements):
     pcnt_method_1 = _pulse_counter_config[0].get("method") if _pulse_counter_config and len(_pulse_counter_config) > 0 else "interrupt"
     pcnt_method_2 = _pulse_counter_config[1].get("method") if _pulse_counter_config and len(_pulse_counter_config) > 1 else "interrupt"
 
-    _PCNT_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
-
     if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
         from machine import freq, Pin, ADC
 
@@ -933,9 +933,6 @@ def execute_pulse_counter_measurements(measurements):
             if pcnt_1_pin is not None:
                 pcnt_1_pin.irq(handler=None)  # disable previous irqs
             pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
-            pcnt_1_voltage_min = 3300
-            pcnt_1_voltage_max = 0
-            pcnt_1_readings = 0
             pcnt_1_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
         else:
             pcnt_1_pin = None
@@ -945,9 +942,6 @@ def execute_pulse_counter_measurements(measurements):
             if pcnt_2_pin is not None:
                 pcnt_2_pin.irq(handler=None)  # disable previous irqs
             pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
-            pcnt_2_voltage_min = 3300
-            pcnt_2_voltage_max = 0
-            pcnt_2_readings = 0
             pcnt_2_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_2_interrupt)
         else:
             pcnt_2_pin = None
@@ -994,6 +988,8 @@ def execute_pulse_counter_measurements(measurements):
                 id = sensor.get("id")
                 filtered_count = pcnt_1_filtered if id == 1 else pcnt_2_filtered
                 method = pcnt_method_1 if id == 1 else pcnt_method_2
+                v_min = pcnt_1_voltage_min if id == 1 else pcnt_2_voltage_min
+                v_max = pcnt_1_voltage_max if id == 1 else pcnt_2_voltage_max
                 store_pulse_counter_measurements(
                     measurements,
                     id,
@@ -1002,12 +998,13 @@ def execute_pulse_counter_measurements(measurements):
                     _get(sensor, "formula"),
                     filtered_count,
                     pcnt_1_readings if id == 1 else pcnt_2_readings,
-                    method,
+                    v_min,
+                    v_max,
                 )
 
 
 def store_pulse_counter_measurements(
-    measurements, id, edge_cnt, time_diff_from_prev, formula, filtered_edges_cnt, readings_cnt, method=None
+    measurements, id, edge_cnt, time_diff_from_prev, formula, filtered_edges_cnt, readings_cnt, v_min, v_max
 ):
     pulse_cnt = ceil(edge_cnt / 2)
 
@@ -1015,7 +1012,7 @@ def store_pulse_counter_measurements(
     set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND, 3)
 
-    if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
+    if _PCNT_DEBUG_ON:
 
         set_value_int(measurements, "pcnt_filtered_edges_{}".format(id), filtered_edges_cnt, SenmlUnits.SENML_UNIT_COUNTER)
         set_value_int(measurements, "pcnt_readings_{}".format(id), readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
@@ -1023,7 +1020,7 @@ def store_pulse_counter_measurements(
             set_value_float(
                 measurements,
                 "pcnt_voltage_min_{}".format(id),
-                (pcnt_1_voltage_min if id == 1 else pcnt_2_voltage_min) / 1000.0,
+                (v_min / 1000.0) if readings_cnt > 0 else 0,
                 SenmlUnits.SENML_UNIT_VOLT,
             )
         except Exception as e:
@@ -1032,7 +1029,7 @@ def store_pulse_counter_measurements(
             set_value_float(
                 measurements,
                 "pcnt_voltage_max_{}".format(id),
-                (pcnt_1_voltage_max if id == 1 else pcnt_2_voltage_max) / 1000.0,
+                (v_max / 1000.0) if readings_cnt > 0 else 0,
                 SenmlUnits.SENML_UNIT_VOLT,
             )
         except Exception as e:
