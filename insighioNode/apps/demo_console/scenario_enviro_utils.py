@@ -61,6 +61,7 @@ pcnt_1_debounce_timer = Timer(1)
 pcnt_1_edge_count = 0
 pcnt_1_filtered_edges = 0
 pcnt_1_last_interrupt_time = utime.ticks_us()
+pcnt_1_last_interrupt_edge_level = None
 pcnt_1_pending_edge = False
 pcnt_1_pin = None
 pcnt_1_adc = None
@@ -73,6 +74,7 @@ pcnt_2_debounce_timer = Timer(2)
 pcnt_2_edge_count = 0
 pcnt_2_filtered_edges = 0
 pcnt_2_last_interrupt_time = utime.ticks_us()
+pcnt_2_last_interrupt_edge_level = None
 pcnt_2_pending_edge = False
 pcnt_2_pin = None
 pcnt_2_readings = 0
@@ -108,9 +110,12 @@ def _deinitialize_i2c():
 
 
 def _exec_i2c_op(func):
-    _initialize_i2c()
-    func()
-    _deinitialize_i2c()
+    try:
+        _initialize_i2c()
+        func()
+        _deinitialize_i2c()
+    except Exception as e:
+        logging.exception(e, "error")
 
 
 def io_expander_init():
@@ -668,10 +673,12 @@ def execute_pulse_counter_measurements(measurements):
     global pcnt_1_voltage_min
     global pcnt_1_voltage_max
     global pcnt_1_readings
+    global pcnt_1_last_interrupt_edge_level
     global pcnt_2_debounce_timer
     global pcnt_2_edge_count
     global pcnt_2_filtered_edges
     global pcnt_2_last_interrupt_time
+    global pcnt_2_last_interrupt_edge_level
     global pcnt_2_pending_edge
     global pcnt_2_pin
     global pcnt_2_triggered_edge_level
@@ -715,245 +722,282 @@ def execute_pulse_counter_measurements(measurements):
     pcnt_method_1 = _pulse_counter_config[0].get("method") if _pulse_counter_config and len(_pulse_counter_config) > 0 else "interrupt"
     pcnt_method_2 = _pulse_counter_config[1].get("method") if _pulse_counter_config and len(_pulse_counter_config) > 1 else "interrupt"
 
-    if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
-        from machine import freq, Pin, ADC
-
-        freq(240000000)
-
-        pcnt_1_high_freq = _pulse_counter_config[0].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 0 else False
-        pcnt_2_high_freq = _pulse_counter_config[1].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 1 else False
-
-        pcnt_1_filter_threshold_us = get_pulse_counter_filter_us(_pulse_counter_config, 0, pcnt_1_high_freq)
-        pcnt_2_filter_threshold_us = get_pulse_counter_filter_us(_pulse_counter_config, 1, pcnt_2_high_freq)
-
-        pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
-        pcnt_1_gpio = _pulse_counter_config[0].get("gpio")
-        pcnt_2_enabled = _pulse_counter_config[1].get("enabled")
-        pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
-
-        temp_adc_1 = ADC(Pin(pcnt_1_gpio))
-        temp_adc_1.atten(ADC.ATTN_11DB)
-        temp_adc_1.width(ADC.WIDTH_12BIT)
-
-        temp_adc_2 = ADC(Pin(pcnt_2_gpio))
-        temp_adc_2.atten(ADC.ATTN_11DB)
-        temp_adc_2.width(ADC.WIDTH_12BIT)
-
-        # from micropython import schedule
-
-        def pcnt_1_timer_callback(timer):
-            global pcnt_1_edge_count, pcnt_1_pending_edge
-            global pcnt_1_triggered_edge_level
-            global pcnt_1_filtered_edges
-            global pcnt_1_voltage_min
-            global pcnt_1_voltage_max
-            global pcnt_1_pin
-
-            # Disable interrupt temporarily
-            pcnt_1_pin.irq(handler=None)
-
-            v = temp_adc_1.read_voltage(1)
-
-            edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
-            if edge_level is None:
-                edge_level = detect_stable_edge(temp_adc_1)
-            # Explicitly delete ADC
-            # del temp_adc
-
-            # Re-enable interrupt on existing pin object
-            pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
-            pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
-
-            # print(f"pcnt_1_timer_callback: voltage={v}, edge_level={edge_level}")
-            if _PCNT_DEBUG_ON:
-                if v < pcnt_1_voltage_min:
-                    pcnt_1_voltage_min = v
-                if v > pcnt_1_voltage_max:
-                    pcnt_1_voltage_max = v
-
-            if pcnt_1_triggered_edge_level != edge_level:
-                # noise - pin returned to original state before timer expired
-                pcnt_1_filtered_edges += 1
-                # print("pcnt 1 low filtered")
-            else:
-                pcnt_1_edge_count += 1
-                # print("pcnt 1 low")
-            pcnt_1_pending_edge = False
-            pcnt_1_triggered_edge_level = None
-
-        def pcnt_2_timer_callback(timer):
-            global pcnt_2_edge_count, pcnt_2_pending_edge
-            global pcnt_2_triggered_edge_level
-            global pcnt_2_filtered_edges
-            global pcnt_2_voltage_min
-            global pcnt_2_voltage_max
-            global pcnt_2_pin
-
-            # Disable interrupt temporarily
-            pcnt_2_pin.irq(handler=None)
-
-            v = temp_adc_2.read_voltage(1)
-
-            edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
-            if edge_level is None:
-                edge_level = detect_stable_edge(temp_adc_2)
-
-            # Explicitly delete ADC
-            # del temp_adc
-
-            # Re-enable interrupt on existing pin object
-            pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
-            pcnt_2_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_2_interrupt)
-
-            if _PCNT_DEBUG_ON:
-                if v < pcnt_2_voltage_min:
-                    pcnt_2_voltage_min = v
-                if v > pcnt_2_voltage_max:
-                    pcnt_2_voltage_max = v
-
-            if pcnt_2_triggered_edge_level != edge_level:
-                # noise - pin returned to original state before timer expired
-                pcnt_2_filtered_edges += 1
-                # print("pcnt 2 low - filtered")
-            else:
-                pcnt_2_edge_count += 1
-                # print("pcnt 2 low")
-            pcnt_2_pending_edge = False
-            pcnt_2_triggered_edge_level = None
-
-        # def pcnt_1_interrupt_process(pin):
-        def pcnt_1_interrupt(pin):
-            global pcnt_1_last_interrupt_time, pcnt_1_edge_count
-            global pcnt_1_debounce_timer, pcnt_1_pending_edge, pcnt_1_filtered_edges
-            global pcnt_1_triggered_edge_level
-            global pcnt_1_voltage_min, pcnt_1_voltage_max
-            global pcnt_1_pin
-            global pcnt_1_readings
-
-            # Disable interrupt temporarily
-            pcnt_1_pin.irq(handler=None)
-
-            v = temp_adc_1.read_voltage(1)
-
-            edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
-            if edge_level is None:
-                edge_level = detect_stable_edge(temp_adc_1)
-
-            # Re-enable interrupt on existing pin object
-            pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
-            pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
-
-            if _PCNT_DEBUG_ON:
-                pcnt_1_readings += 1
-                if v < pcnt_1_voltage_min:
-                    pcnt_1_voltage_min = v
-                if v > pcnt_1_voltage_max:
-                    pcnt_1_voltage_max = v
-            # print(f"pcnt_1_interrupt: voltage={v}, edge_level={edge_level}")
-
-            if pcnt_1_high_freq:
-                current_time = utime.ticks_us()
-
-                # Debounce check (500 microseconds = 0.5ms)
-                if utime.ticks_diff(current_time, pcnt_1_last_interrupt_time) > pcnt_1_filter_threshold_us:
-                    pcnt_1_edge_count += 1
-                    # print("pcnt1 high")
-                    if pcnt_1_triggered_edge_level == edge_level:
-                        pcnt_1_edge_count += 1
-                        # print("pcnt1 high extra")
-                else:
-                    pcnt_1_filtered_edges += 1
-                    # print("pcnt1 high filtered")
-                pcnt_1_last_interrupt_time = current_time
-                pcnt_1_triggered_edge_level = edge_level
-            else:
-                if pcnt_1_pending_edge:
-                    # Already have a pending edge, this is noise/bounce
-                    # with _thread_lock:
-                    pcnt_1_filtered_edges += 1
-                    # print("pcnt 1 low - filtered")
-                    # Reset the timer to extend the debounce period
-                else:
-                    # First edge detected, start debounce timer
-                    pcnt_1_pending_edge = True
-                    pcnt_1_triggered_edge_level = edge_level
-                pcnt_1_debounce_timer.init(mode=Timer.ONE_SHOT, period=pcnt_1_filter_threshold_us // 1000, callback=pcnt_1_timer_callback)
-
-        # def pcnt_2_interrupt_process(pin):
-        def pcnt_2_interrupt(pin):
-            global pcnt_2_last_interrupt_time, pcnt_2_edge_count
-            global pcnt_2_debounce_timer, pcnt_2_pending_edge, pcnt_2_filtered_edges
-            global pcnt_2_triggered_edge_level
-            global pcnt_2_voltage_min, pcnt_2_voltage_max
-            global pcnt_2_pin
-            global pcnt_2_readings
-
-            # Disable interrupt temporarily
-            pcnt_2_pin.irq(handler=None)
-
-            v = temp_adc_2.read_voltage(1)
-
-            edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
-            if edge_level is None:
-                edge_level = detect_stable_edge(temp_adc_2)
-
-            # Re-enable interrupt on existing pin object
-            pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
-            pcnt_2_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_2_interrupt)
-
-            if _PCNT_DEBUG_ON:
-                pcnt_2_readings += 1
-                if v < pcnt_2_voltage_min:
-                    pcnt_2_voltage_min = v
-                if v > pcnt_2_voltage_max:
-                    pcnt_2_voltage_max = v
-
-            if pcnt_2_high_freq:
-                current_time = utime.ticks_us()
-
-                # Debounce check (500 microseconds = 0.5ms)
-                if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > pcnt_2_filter_threshold_us:
-                    pcnt_2_edge_count += 1
-                    # print("pcnt2 high")
-                    if pcnt_2_triggered_edge_level == edge_level:
-                        pcnt_2_edge_count += 1
-                        # print("pcnt2 high extra")
-                else:
-                    pcnt_2_filtered_edges += 1
-                    # print("pcnt2 high filtered")
-                pcnt_2_last_interrupt_time = current_time
-                pcnt_2_triggered_edge_level = edge_level
-            else:
-                if pcnt_2_pending_edge:
-                    # Already have a pending edge, this is noise/bounce
-                    # with _thread_lock:
-                    pcnt_2_filtered_edges += 1
-                    # print("pcnt 2 low - filtered")
-                else:
-                    # First edge detected, start debounce timer
-                    pcnt_2_pending_edge = True
-                    pcnt_2_triggered_edge_level = edge_level
-                pcnt_2_debounce_timer.init(mode=Timer.ONE_SHOT, period=pcnt_2_filter_threshold_us // 1000, callback=pcnt_2_timer_callback)
-
-        if pcnt_1_enabled and pcnt_1_gpio:
-            logging.debug("pcnt_1_filter_threshold_us: {}".format(pcnt_1_filter_threshold_us))
-            if pcnt_1_pin is not None:
-                pcnt_1_pin.irq(handler=None)  # disable previous irqs
-            pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
-            pcnt_1_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
-        else:
-            pcnt_1_pin = None
-
-        if pcnt_2_enabled and pcnt_2_gpio:
-            logging.debug("pcnt_2_filter_threshold_us: {}".format(pcnt_2_filter_threshold_us))
-            if pcnt_2_pin is not None:
-                pcnt_2_pin.irq(handler=None)  # disable previous irqs
-            pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
-            pcnt_2_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_2_interrupt)
-        else:
-            pcnt_2_pin = None
-
     if _pulse_counter_thread_started is None:
+
+        if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
+            from machine import freq, Pin, ADC
+
+            freq(240000000)
+
+            pcnt_1_high_freq = (
+                _pulse_counter_config[0].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 0 else False
+            )
+            pcnt_2_high_freq = (
+                _pulse_counter_config[1].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 1 else False
+            )
+
+            pcnt_1_filter_threshold_us = get_pulse_counter_filter_us(_pulse_counter_config, 0, pcnt_1_high_freq)
+            pcnt_2_filter_threshold_us = get_pulse_counter_filter_us(_pulse_counter_config, 1, pcnt_2_high_freq)
+
+            pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
+            pcnt_1_gpio = _pulse_counter_config[0].get("gpio")
+            pcnt_2_enabled = _pulse_counter_config[1].get("enabled")
+            pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
+
+            temp_adc_1 = ADC(Pin(pcnt_1_gpio))
+            temp_adc_1.atten(ADC.ATTN_11DB)
+            temp_adc_1.width(ADC.WIDTH_12BIT)
+
+            temp_adc_2 = ADC(Pin(pcnt_2_gpio))
+            temp_adc_2.atten(ADC.ATTN_11DB)
+            temp_adc_2.width(ADC.WIDTH_12BIT)
+
+            v = temp_adc_1.read_voltage(1)
+
+            pcnt_1_last_interrupt_edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+            if pcnt_1_last_interrupt_edge_level is None:
+                pcnt_1_last_interrupt_edge_level = detect_stable_edge(temp_adc_1)
+
+            v = temp_adc_2.read_voltage(1)
+            pcnt_2_last_interrupt_edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+            if pcnt_2_last_interrupt_edge_level is None:
+                pcnt_2_last_interrupt_edge_level = detect_stable_edge(temp_adc_2)
+
+            # from micropython import schedule
+
+            def pcnt_1_timer_callback(timer):
+                global pcnt_1_edge_count, pcnt_1_pending_edge
+                global pcnt_1_triggered_edge_level
+                global pcnt_1_filtered_edges
+                global pcnt_1_voltage_min
+                global pcnt_1_voltage_max
+                global pcnt_1_pin
+                global pcnt_1_last_interrupt_edge_level
+
+                # Disable interrupt temporarily
+                pcnt_1_pin.irq(handler=None)
+
+                v = temp_adc_1.read_voltage(1)
+
+                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+                if edge_level is None:
+                    edge_level = detect_stable_edge(temp_adc_1)
+                # Explicitly delete ADC
+                # del temp_adc
+
+                # Re-enable interrupt on existing pin object
+                pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
+                pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
+
+                print(f"pcnt_1_timer_callback: voltage={v}, edge_level={edge_level}")
+                if _PCNT_DEBUG_ON:
+                    if v < pcnt_1_voltage_min:
+                        pcnt_1_voltage_min = v
+                    if v > pcnt_1_voltage_max:
+                        pcnt_1_voltage_max = v
+
+                if pcnt_1_triggered_edge_level != edge_level:
+                    # noise - pin returned to original state before timer expired
+                    pcnt_1_filtered_edges += 1
+                    print("pcnt 1 low filtered")
+                else:
+                    pcnt_1_edge_count += 1
+                    print("pcnt 1 low")
+                pcnt_1_pending_edge = False
+                pcnt_1_triggered_edge_level = None
+
+            def pcnt_2_timer_callback(timer):
+                global pcnt_2_edge_count, pcnt_2_pending_edge
+                global pcnt_2_triggered_edge_level
+                global pcnt_2_filtered_edges
+                global pcnt_2_voltage_min
+                global pcnt_2_voltage_max
+                global pcnt_2_pin
+
+                # Disable interrupt temporarily
+                pcnt_2_pin.irq(handler=None)
+
+                v = temp_adc_2.read_voltage(1)
+
+                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+                if edge_level is None:
+                    edge_level = detect_stable_edge(temp_adc_2)
+
+                # Explicitly delete ADC
+                # del temp_adc
+
+                # Re-enable interrupt on existing pin object
+                pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
+                pcnt_2_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_2_interrupt)
+
+                if _PCNT_DEBUG_ON:
+                    if v < pcnt_2_voltage_min:
+                        pcnt_2_voltage_min = v
+                    if v > pcnt_2_voltage_max:
+                        pcnt_2_voltage_max = v
+
+                if pcnt_2_triggered_edge_level != edge_level:
+                    # noise - pin returned to original state before timer expired
+                    pcnt_2_filtered_edges += 1
+                    print("pcnt 2 low - filtered")
+                else:
+                    pcnt_2_edge_count += 1
+                    print("pcnt 2 low")
+                pcnt_2_pending_edge = False
+                pcnt_2_triggered_edge_level = None
+
+            # def pcnt_1_interrupt_process(pin):
+            def pcnt_1_interrupt(pin):
+                global pcnt_1_last_interrupt_time, pcnt_1_edge_count
+                global pcnt_1_debounce_timer, pcnt_1_pending_edge, pcnt_1_filtered_edges
+                global pcnt_1_triggered_edge_level
+                global pcnt_1_voltage_min, pcnt_1_voltage_max
+                global pcnt_1_pin
+                global pcnt_1_readings
+                global pcnt_1_last_interrupt_edge_level
+
+                # Disable interrupt temporarily
+                pcnt_1_pin.irq(handler=None)
+
+                v = temp_adc_1.read_voltage(1)
+
+                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+                if edge_level is None:
+                    edge_level = detect_stable_edge(temp_adc_1)
+
+                # Re-enable interrupt on existing pin object
+                pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
+                pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
+
+                if edge_level == pcnt_1_last_interrupt_edge_level:
+                    # same edge as last time, likely bounce/noise, ignore
+                    pcnt_1_last_interrupt_edge_level = edge_level
+                    pcnt_1_filtered_edges += 1
+                    print("pcnt_1_interrupt: same edge as last time, ignoring")
+                    return
+                pcnt_1_last_interrupt_edge_level = edge_level
+
+                if _PCNT_DEBUG_ON:
+                    pcnt_1_readings += 1
+                    if v < pcnt_1_voltage_min:
+                        pcnt_1_voltage_min = v
+                    if v > pcnt_1_voltage_max:
+                        pcnt_1_voltage_max = v
+                print(f"pcnt_1_interrupt: voltage={v}, edge_level={edge_level}")
+
+                if pcnt_1_high_freq:
+                    current_time = utime.ticks_us()
+
+                    # Debounce check (500 microseconds = 0.5ms)
+                    if utime.ticks_diff(current_time, pcnt_1_last_interrupt_time) > pcnt_1_filter_threshold_us:
+                        pcnt_1_edge_count += 1
+                        print("pcnt1 high")
+                        if pcnt_1_triggered_edge_level == edge_level:
+                            pcnt_1_edge_count += 1
+                            print("pcnt1 high extra")
+                    else:
+                        pcnt_1_filtered_edges += 1
+                        print("pcnt1 high filtered")
+                    pcnt_1_last_interrupt_time = current_time
+                    pcnt_1_triggered_edge_level = edge_level
+                else:
+                    if pcnt_1_pending_edge:
+                        # Already have a pending edge, this is noise/bounce
+                        # with _thread_lock:
+                        pcnt_1_filtered_edges += 1
+                        print("pcnt 1 low - filtered")
+                        # Reset the timer to extend the debounce period
+                    else:
+                        # First edge detected, start debounce timer
+                        pcnt_1_pending_edge = True
+                        pcnt_1_triggered_edge_level = edge_level
+                    pcnt_1_debounce_timer.init(
+                        mode=Timer.ONE_SHOT, period=pcnt_1_filter_threshold_us // 1000, callback=pcnt_1_timer_callback
+                    )
+
+            # def pcnt_2_interrupt_process(pin):
+            def pcnt_2_interrupt(pin):
+                global pcnt_2_last_interrupt_time, pcnt_2_edge_count
+                global pcnt_2_debounce_timer, pcnt_2_pending_edge, pcnt_2_filtered_edges
+                global pcnt_2_triggered_edge_level
+                global pcnt_2_voltage_min, pcnt_2_voltage_max
+                global pcnt_2_pin
+                global pcnt_2_readings
+                global pcnt_2_last_interrupt_edge_level
+                # Disable interrupt temporarily
+                pcnt_2_pin.irq(handler=None)
+
+                v = temp_adc_2.read_voltage(1)
+
+                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+                if edge_level is None:
+                    edge_level = detect_stable_edge(temp_adc_2)
+
+                # Re-enable interrupt on existing pin object
+                pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
+                pcnt_2_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_2_interrupt)
+
+                if edge_level == pcnt_2_last_interrupt_edge_level:
+                    # same edge as last time, likely bounce/noise, ignore
+                    pcnt_2_last_interrupt_edge_level = edge_level
+                    pcnt_2_filtered_edges += 1
+                    print("pcnt_2_interrupt: same edge as last time, ignoring")
+                    return
+                pcnt_2_last_interrupt_edge_level = edge_level
+
+                if _PCNT_DEBUG_ON:
+                    pcnt_2_readings += 1
+                    if v < pcnt_2_voltage_min:
+                        pcnt_2_voltage_min = v
+                    if v > pcnt_2_voltage_max:
+                        pcnt_2_voltage_max = v
+
+                if pcnt_2_high_freq:
+                    current_time = utime.ticks_us()
+
+                    # Debounce check (500 microseconds = 0.5ms)
+                    if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > pcnt_2_filter_threshold_us:
+                        pcnt_2_edge_count += 1
+                        print("pcnt2 high")
+                        if pcnt_2_triggered_edge_level == edge_level:
+                            pcnt_2_edge_count += 1
+                            print("pcnt2 high extra")
+                    else:
+                        pcnt_2_filtered_edges += 1
+                        print("pcnt2 high filtered")
+                    pcnt_2_last_interrupt_time = current_time
+                    pcnt_2_triggered_edge_level = edge_level
+                else:
+                    if pcnt_2_pending_edge:
+                        # Already have a pending edge, this is noise/bounce
+                        # with _thread_lock:
+                        pcnt_2_filtered_edges += 1
+                        print("pcnt 2 low - filtered")
+                    else:
+                        # First edge detected, start debounce timer
+                        pcnt_2_pending_edge = True
+                        pcnt_2_triggered_edge_level = edge_level
+                    pcnt_2_debounce_timer.init(
+                        mode=Timer.ONE_SHOT, period=pcnt_2_filter_threshold_us // 1000, callback=pcnt_2_timer_callback
+                    )
+
+            if pcnt_1_enabled and pcnt_1_gpio:
+                logging.debug("pcnt_1_filter_threshold_us: {}".format(pcnt_1_filter_threshold_us))
+                if pcnt_1_pin is not None:
+                    pcnt_1_pin.irq(handler=None)  # disable previous irqs
+                pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
+                pcnt_1_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_1_interrupt)
+            else:
+                pcnt_1_pin = None
+
+            if pcnt_2_enabled and pcnt_2_gpio:
+                logging.debug("pcnt_2_filter_threshold_us: {}".format(pcnt_2_filter_threshold_us))
+                if pcnt_2_pin is not None:
+                    pcnt_2_pin.irq(handler=None)  # disable previous irqs
+                pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
+                pcnt_2_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=pcnt_2_interrupt)
+            else:
+                pcnt_2_pin = None
 
         _pulse_counter_thread_started = True
 
