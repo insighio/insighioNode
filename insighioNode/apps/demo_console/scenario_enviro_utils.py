@@ -77,10 +77,18 @@ pcnt_2_last_interrupt_time = utime.ticks_us()
 pcnt_2_last_interrupt_edge_level = None
 pcnt_2_pending_edge = False
 pcnt_2_pin = None
+pcnt_2_adc = None
 pcnt_2_readings = 0
 pcnt_2_triggered_edge_level = None
 pcnt_2_voltage_max = 0
 pcnt_2_voltage_min = 3300
+
+from device_info import get_firmware_version
+
+(major, minor, _, _) = get_firmware_version()
+IS_CUSTOM_MICROPYTHON = major == 1 and (minor >= 18 and minor <= 19)
+
+_IS_ALWAYS_ON = False
 
 pcnt_last_run_timestamp_ms = 0
 
@@ -658,6 +666,27 @@ def get_pulse_counter_filter_us(config, index, is_high_freq):
     return filter_threshold_us
 
 
+def setup_adc_objects_for_pcnt(pcnt_1_gpio, pcnt_2_gpio):
+    global pcnt_1_adc
+    global pcnt_2_adc
+
+    from machine import Pin, ADC
+
+    pcnt_1_adc = None
+
+    if pcnt_1_gpio is not None:
+        pcnt_1_adc = ADC(Pin(pcnt_1_gpio))
+        pcnt_1_adc.atten(ADC.ATTN_11DB)
+        pcnt_1_adc.width(ADC.WIDTH_12BIT)
+
+    pcnt_2_adc = None
+
+    if pcnt_2_gpio is not None:
+        pcnt_2_adc = ADC(Pin(pcnt_2_gpio))
+        pcnt_2_adc.atten(ADC.ATTN_11DB)
+        pcnt_2_adc.width(ADC.WIDTH_12BIT)
+
+
 # [{"id":1,"enabled":false,"formula":"v","highFreq":false},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
 def execute_pulse_counter_measurements(measurements):
     global _pulse_counter_thread_started
@@ -681,6 +710,7 @@ def execute_pulse_counter_measurements(measurements):
     global pcnt_2_last_interrupt_edge_level
     global pcnt_2_pending_edge
     global pcnt_2_pin
+    global pcnt_2_adc
     global pcnt_2_triggered_edge_level
     global pcnt_last_run_timestamp_ms
     global pcnt_2_voltage_min
@@ -725,7 +755,7 @@ def execute_pulse_counter_measurements(measurements):
     if _pulse_counter_thread_started is None:
 
         if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
-            from machine import freq, Pin, ADC
+            from machine import freq, Pin
 
             freq(240000000)
 
@@ -744,24 +774,24 @@ def execute_pulse_counter_measurements(measurements):
             pcnt_2_enabled = _pulse_counter_config[1].get("enabled")
             pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
 
-            temp_adc_1 = ADC(Pin(pcnt_1_gpio))
-            temp_adc_1.atten(ADC.ATTN_11DB)
-            temp_adc_1.width(ADC.WIDTH_12BIT)
+            if not pcnt_1_enabled:
+                pcnt_1_gpio = None
 
-            temp_adc_2 = ADC(Pin(pcnt_2_gpio))
-            temp_adc_2.atten(ADC.ATTN_11DB)
-            temp_adc_2.width(ADC.WIDTH_12BIT)
+            if not pcnt_2_enabled:
+                pcnt_2_gpio = None
 
-            v = temp_adc_1.read_voltage(1)
+            setup_adc_objects_for_pcnt(pcnt_1_gpio, pcnt_2_gpio)
+
+            v = pcnt_1_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
             pcnt_1_last_interrupt_edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
             if pcnt_1_last_interrupt_edge_level is None:
-                pcnt_1_last_interrupt_edge_level = detect_stable_edge(temp_adc_1)
+                pcnt_1_last_interrupt_edge_level = detect_stable_edge(pcnt_1_adc)
 
-            v = temp_adc_2.read_voltage(1)
+            v = pcnt_2_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
             pcnt_2_last_interrupt_edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
             if pcnt_2_last_interrupt_edge_level is None:
-                pcnt_2_last_interrupt_edge_level = detect_stable_edge(temp_adc_2)
+                pcnt_2_last_interrupt_edge_level = detect_stable_edge(pcnt_2_adc)
 
             # from micropython import schedule
 
@@ -777,11 +807,11 @@ def execute_pulse_counter_measurements(measurements):
                 # Disable interrupt temporarily
                 pcnt_1_pin.irq(handler=None)
 
-                v = temp_adc_1.read_voltage(1)
+                v = pcnt_1_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
                 if edge_level is None:
-                    edge_level = detect_stable_edge(temp_adc_1)
+                    edge_level = detect_stable_edge(pcnt_1_adc)
                 # Explicitly delete ADC
                 # del temp_adc
 
@@ -817,11 +847,11 @@ def execute_pulse_counter_measurements(measurements):
                 # Disable interrupt temporarily
                 pcnt_2_pin.irq(handler=None)
 
-                v = temp_adc_2.read_voltage(1)
+                v = pcnt_2_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
 
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
                 if edge_level is None:
-                    edge_level = detect_stable_edge(temp_adc_2)
+                    edge_level = detect_stable_edge(pcnt_2_adc)
 
                 # Explicitly delete ADC
                 # del temp_adc
@@ -859,11 +889,11 @@ def execute_pulse_counter_measurements(measurements):
                 # Disable interrupt temporarily
                 pcnt_1_pin.irq(handler=None)
 
-                v = temp_adc_1.read_voltage(1)
+                v = pcnt_1_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
                 if edge_level is None:
-                    edge_level = detect_stable_edge(temp_adc_1)
+                    edge_level = detect_stable_edge(pcnt_1_adc)
 
                 # Re-enable interrupt on existing pin object
                 pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
@@ -927,11 +957,11 @@ def execute_pulse_counter_measurements(measurements):
                 # Disable interrupt temporarily
                 pcnt_2_pin.irq(handler=None)
 
-                v = temp_adc_2.read_voltage(1)
+                v = pcnt_2_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
 
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
                 if edge_level is None:
-                    edge_level = detect_stable_edge(temp_adc_2)
+                    edge_level = detect_stable_edge(pcnt_2_adc)
 
                 # Re-enable interrupt on existing pin object
                 pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
@@ -1191,23 +1221,13 @@ def pulse_counter_thread(config, execution_period_ms=None):
     logging.debug("pcnt_1_enabled: {}, pcnt_1_gpio: {}, pcnt_1_high_freq: {}".format(pcnt_1_enabled, pcnt_1_gpio, pcnt_1_high_freq))
     logging.debug("pcnt_2_enabled: {}, pcnt_2_gpio: {}, pcnt_2_high_freq: {}".format(pcnt_2_enabled, pcnt_2_gpio, pcnt_2_high_freq))
 
-    from machine import ADC, Pin
+    if not pcnt_1_enabled:
+        pcnt_1_gpio = None
 
-    pcnt_1_adc = None
-    pcnt_2_adc = None
+    if not pcnt_2_enabled:
+        pcnt_2_gpio = None
 
-    if pcnt_1_enabled and pcnt_1_gpio is not None:
-        adc = ADC(Pin(pcnt_1_gpio))
-        adc.atten(ADC.ATTN_11DB)
-        adc_width = ADC.WIDTH_12BIT
-        adc.width(adc_width)
-        pcnt_1_adc = adc
-    if pcnt_2_enabled and pcnt_2_gpio is not None:
-        adc = ADC(Pin(pcnt_2_gpio))
-        adc.atten(ADC.ATTN_11DB)
-        adc_width = ADC.WIDTH_12BIT
-        adc.width(adc_width)
-        pcnt_2_adc = adc
+    setup_adc_objects_for_pcnt(pcnt_1_gpio, pcnt_2_gpio)
 
     with _thread_lock:
         pcnt_last_run_start_timestamp_ms = utime.ticks_ms()
@@ -1259,7 +1279,7 @@ def pulse_counter_thread(config, execution_period_ms=None):
                 next_wdt_reset_time_ms = utime.ticks_add(now, WDT_RESET_INTERVAL_MS)
 
             if pcnt_1_enabled and pcnt_1_adc is not None:
-                v = pcnt_1_adc.read_voltage(1)
+                v = pcnt_1_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
                 if pcnt_1_voltage_min is None or v < pcnt_1_voltage_min:
                     pcnt_1_voltage_min = v
@@ -1294,7 +1314,7 @@ def pulse_counter_thread(config, execution_period_ms=None):
                         pcnt_1_sequential_stable_values_count += 1
 
             if pcnt_2_enabled and pcnt_2_adc is not None:
-                v = pcnt_2_adc.read_voltage(1)
+                v = pcnt_2_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
 
                 if pcnt_2_voltage_min is None or v < pcnt_2_voltage_min:
