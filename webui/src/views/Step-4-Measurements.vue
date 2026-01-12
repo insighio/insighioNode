@@ -9,8 +9,9 @@
             <div class="columns">
               <SDivider label="Available measurements" />
               <SSwitch label="Battery statistics" v-model:value="batteryStats" />
-              <SSwitch label="Board humidity/temperature" v-model:value="boardSense" />
+              <SSwitch label="Board statistics" v-model:value="boardStat" />
               <SSwitch label="Network statistics" v-model:value="networkStat" />
+              <SSwitch label="Board humidity/temperature" v-model:value="boardSense" />
               <SSwitch label="Store measurements if failed connection" v-model:value="storeMeasIfFailedConn" />
               <SSelect
                 label="Temperature unit"
