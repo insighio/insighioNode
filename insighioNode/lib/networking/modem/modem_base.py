@@ -32,7 +32,7 @@ class Modem:
         if self.uart is not None:
             self.uart.deinit()
 
-        self.uart = UART(1, 115200, tx=self.modem_tx, rx=self.modem_rx)
+        self.uart = UART(2, 115200, tx=self.modem_tx, rx=self.modem_rx)
         self.uart.init(115200, bits=8, parity=None, stop=1, tx=self.modem_tx, rx=self.modem_rx, timeout=500, timeout_char=100)
 
     def has_data_over_ppp(self):
