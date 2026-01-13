@@ -52,12 +52,12 @@ def connect(cfg, explicit_protocol=None):
             global transfer_client
             if requested_protocol == "mqtt":
                 transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
-                transfer_client.protocol_config.client_name = "{}_wifi_mqtt".format(cfg.get("device_id")[0])
+                transfer_client.protocol_config.client_name = "{}_wifi_mqtt".format(cfg.get("device_id"))
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
             elif requested_protocol == "coap":
                 transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
-                transfer_client.protocol_config.client_name = "{}_wifi_coap".format(cfg.get("device_id")[0])
+                transfer_client.protocol_config.client_name = "{}_wifi_coap".format(cfg.get("device_id"))
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
             else:
