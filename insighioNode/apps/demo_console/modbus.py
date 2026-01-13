@@ -18,7 +18,7 @@ else:
 
 def init_instance(rtu_pins, baudrate=9600, data_bits=8, parity=None, stop_bits=1):
     global modbus_instance
-    uart_id = 2
+    uart_id = 1
 
     from external.umodbus.serial import Serial as ModbusRTUMaster
 
