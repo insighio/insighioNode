@@ -782,16 +782,16 @@ def execute_pulse_counter_measurements(measurements):
 
             setup_adc_objects_for_pcnt(pcnt_1_gpio, pcnt_2_gpio)
 
-            v = pcnt_1_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+            v = pcnt_1_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
             pcnt_1_last_interrupt_edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
             if pcnt_1_last_interrupt_edge_level is None:
-                pcnt_1_last_interrupt_edge_level = detect_stable_edge(pcnt_1_adc)
+                (pcnt_1_last_interrupt_edge_level, v) = detect_stable_edge(pcnt_1_adc)
 
-            v = pcnt_2_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+            v = pcnt_2_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
             pcnt_2_last_interrupt_edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
             if pcnt_2_last_interrupt_edge_level is None:
-                pcnt_2_last_interrupt_edge_level = detect_stable_edge(pcnt_2_adc)
+                (pcnt_2_last_interrupt_edge_level, v) = detect_stable_edge(pcnt_2_adc)
 
             # from micropython import schedule
 
@@ -807,11 +807,11 @@ def execute_pulse_counter_measurements(measurements):
                 # Disable interrupt temporarily
                 pcnt_1_pin.irq(handler=None)
 
-                v = pcnt_1_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
                 if edge_level is None:
-                    edge_level = detect_stable_edge(pcnt_1_adc)
+                    (edge_level, v) = detect_stable_edge(pcnt_1_adc)
                 # Explicitly delete ADC
                 # del temp_adc
 
@@ -819,7 +819,7 @@ def execute_pulse_counter_measurements(measurements):
                 pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
                 pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
 
-                print(f"pcnt_1_timer_callback: voltage={v}, edge_level={edge_level}")
+                # print(f"pcnt_1_timer_callback: voltage={v}, edge_level={edge_level}")
                 if _PCNT_DEBUG_ON:
                     if v < pcnt_1_voltage_min:
                         pcnt_1_voltage_min = v
@@ -829,10 +829,10 @@ def execute_pulse_counter_measurements(measurements):
                 if pcnt_1_triggered_edge_level != edge_level:
                     # noise - pin returned to original state before timer expired
                     pcnt_1_filtered_edges += 1
-                    print("pcnt 1 low filtered")
+                    # print("pcnt 1 low filtered")
                 else:
                     pcnt_1_edge_count += 1
-                    print("pcnt 1 low")
+                    # print("pcnt 1 low")
                 pcnt_1_pending_edge = False
                 pcnt_1_triggered_edge_level = None
 
@@ -847,11 +847,11 @@ def execute_pulse_counter_measurements(measurements):
                 # Disable interrupt temporarily
                 pcnt_2_pin.irq(handler=None)
 
-                v = pcnt_2_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+                v = pcnt_2_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
 
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
                 if edge_level is None:
-                    edge_level = detect_stable_edge(pcnt_2_adc)
+                    (edge_level, v) = detect_stable_edge(pcnt_2_adc)
 
                 # Explicitly delete ADC
                 # del temp_adc
@@ -869,10 +869,10 @@ def execute_pulse_counter_measurements(measurements):
                 if pcnt_2_triggered_edge_level != edge_level:
                     # noise - pin returned to original state before timer expired
                     pcnt_2_filtered_edges += 1
-                    print("pcnt 2 low - filtered")
+                    # print("pcnt 2 low - filtered")
                 else:
                     pcnt_2_edge_count += 1
-                    print("pcnt 2 low")
+                    # print("pcnt 2 low")
                 pcnt_2_pending_edge = False
                 pcnt_2_triggered_edge_level = None
 
@@ -889,11 +889,11 @@ def execute_pulse_counter_measurements(measurements):
                 # Disable interrupt temporarily
                 pcnt_1_pin.irq(handler=None)
 
-                v = pcnt_1_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
                 if edge_level is None:
-                    edge_level = detect_stable_edge(pcnt_1_adc)
+                    (edge_level, v) = detect_stable_edge(pcnt_1_adc)
 
                 # Re-enable interrupt on existing pin object
                 pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
@@ -903,7 +903,7 @@ def execute_pulse_counter_measurements(measurements):
                     # same edge as last time, likely bounce/noise, ignore
                     pcnt_1_last_interrupt_edge_level = edge_level
                     pcnt_1_filtered_edges += 1
-                    print("pcnt_1_interrupt: same edge as last time, ignoring")
+                    # print("pcnt_1_interrupt: same edge as last time, ignoring")
                     return
                 pcnt_1_last_interrupt_edge_level = edge_level
 
@@ -913,7 +913,7 @@ def execute_pulse_counter_measurements(measurements):
                         pcnt_1_voltage_min = v
                     if v > pcnt_1_voltage_max:
                         pcnt_1_voltage_max = v
-                print(f"pcnt_1_interrupt: voltage={v}, edge_level={edge_level}")
+                # print(f"pcnt_1_interrupt: voltage={v}, edge_level={edge_level}")
 
                 if pcnt_1_high_freq:
                     current_time = utime.ticks_us()
@@ -921,13 +921,13 @@ def execute_pulse_counter_measurements(measurements):
                     # Debounce check (500 microseconds = 0.5ms)
                     if utime.ticks_diff(current_time, pcnt_1_last_interrupt_time) > pcnt_1_filter_threshold_us:
                         pcnt_1_edge_count += 1
-                        print("pcnt1 high")
+                        # print("pcnt1 high")
                         if pcnt_1_triggered_edge_level == edge_level:
                             pcnt_1_edge_count += 1
-                            print("pcnt1 high extra")
+                            # print("pcnt1 high extra")
                     else:
                         pcnt_1_filtered_edges += 1
-                        print("pcnt1 high filtered")
+                        # print("pcnt1 high filtered")
                     pcnt_1_last_interrupt_time = current_time
                     pcnt_1_triggered_edge_level = edge_level
                 else:
@@ -935,7 +935,7 @@ def execute_pulse_counter_measurements(measurements):
                         # Already have a pending edge, this is noise/bounce
                         # with _thread_lock:
                         pcnt_1_filtered_edges += 1
-                        print("pcnt 1 low - filtered")
+                        # print("pcnt 1 low - filtered")
                         # Reset the timer to extend the debounce period
                     else:
                         # First edge detected, start debounce timer
@@ -957,11 +957,11 @@ def execute_pulse_counter_measurements(measurements):
                 # Disable interrupt temporarily
                 pcnt_2_pin.irq(handler=None)
 
-                v = pcnt_2_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+                v = pcnt_2_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
 
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
                 if edge_level is None:
-                    edge_level = detect_stable_edge(pcnt_2_adc)
+                    (edge_level, v) = detect_stable_edge(pcnt_2_adc)
 
                 # Re-enable interrupt on existing pin object
                 pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
@@ -971,7 +971,7 @@ def execute_pulse_counter_measurements(measurements):
                     # same edge as last time, likely bounce/noise, ignore
                     pcnt_2_last_interrupt_edge_level = edge_level
                     pcnt_2_filtered_edges += 1
-                    print("pcnt_2_interrupt: same edge as last time, ignoring")
+                    # print("pcnt_2_interrupt: same edge as last time, ignoring")
                     return
                 pcnt_2_last_interrupt_edge_level = edge_level
 
@@ -988,13 +988,13 @@ def execute_pulse_counter_measurements(measurements):
                     # Debounce check (500 microseconds = 0.5ms)
                     if utime.ticks_diff(current_time, pcnt_2_last_interrupt_time) > pcnt_2_filter_threshold_us:
                         pcnt_2_edge_count += 1
-                        print("pcnt2 high")
+                        # print("pcnt2 high")
                         if pcnt_2_triggered_edge_level == edge_level:
                             pcnt_2_edge_count += 1
-                            print("pcnt2 high extra")
+                            # print("pcnt2 high extra")
                     else:
                         pcnt_2_filtered_edges += 1
-                        print("pcnt2 high filtered")
+                        # print("pcnt2 high filtered")
                     pcnt_2_last_interrupt_time = current_time
                     pcnt_2_triggered_edge_level = edge_level
                 else:
@@ -1002,7 +1002,7 @@ def execute_pulse_counter_measurements(measurements):
                         # Already have a pending edge, this is noise/bounce
                         # with _thread_lock:
                         pcnt_2_filtered_edges += 1
-                        print("pcnt 2 low - filtered")
+                        # print("pcnt 2 low - filtered")
                     else:
                         # First edge detected, start debounce timer
                         pcnt_2_pending_edge = True
@@ -1176,13 +1176,13 @@ def start_counting_thread(execution_period_ms=None):
 def detect_stable_edge(adc_inst):
     cnt = 0
     while cnt < 1000:
-        v = adc_inst.read_voltage(1)
+        v = adc_inst.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else adc_inst.read_uv() / 1000
         detected_edge = 1 if v > V_HIGH else 0 if v < V_LOW else None
         if detected_edge is not None:
-            return detected_edge
+            return (detected_edge, v)
         cnt += 1
         utime.sleep_us(50)
-    return None
+    return (None, 0)
 
 
 def pulse_counter_thread(config, execution_period_ms=None):
@@ -1254,18 +1254,18 @@ def pulse_counter_thread(config, execution_period_ms=None):
     pcnt_1_readings = 0
     pcnt_2_readings = 0
 
-    pcnt_1_previous_input_value = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else 0
+    (pcnt_1_previous_input_value, _) = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else (0, 0)
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
     pcnt_1_voltage_min = 3300
     pcnt_1_voltage_max = 0
 
-    pcnt_2_previous_input_value = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else 0
+    (pcnt_2_previous_input_value, _) = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else (0, 0)
     pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
     pcnt_2_voltage_min = 3300
     pcnt_2_voltage_max = 0
 
     try:
-        print(">>>> Started")
+        # print(">>>> Started")
         WDT_RESET_INTERVAL_MS = 5000
         next_wdt_reset_time_ms = utime.ticks_add(utime.ticks_ms(), WDT_RESET_INTERVAL_MS)
         while _pcnt_active:
@@ -1279,17 +1279,15 @@ def pulse_counter_thread(config, execution_period_ms=None):
                 next_wdt_reset_time_ms = utime.ticks_add(now, WDT_RESET_INTERVAL_MS)
 
             if pcnt_1_enabled and pcnt_1_adc is not None:
-                v = pcnt_1_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+                if edge_level is None:
+                    (edge_level, v) = detect_stable_edge(pcnt_1_adc)
 
                 if pcnt_1_voltage_min is None or v < pcnt_1_voltage_min:
                     pcnt_1_voltage_min = v
                 if pcnt_1_voltage_max is None or v > pcnt_1_voltage_max:
                     pcnt_1_voltage_max = v
-
-                edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
-
-                if edge_level is None:
-                    edge_level = detect_stable_edge(pcnt_1_adc)
 
                 pcnt_1_readings += 1
 
@@ -1314,16 +1312,16 @@ def pulse_counter_thread(config, execution_period_ms=None):
                         pcnt_1_sequential_stable_values_count += 1
 
             if pcnt_2_enabled and pcnt_2_adc is not None:
-                v = pcnt_2_adc.read_voltage(1) if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+                v = pcnt_2_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
                 edge_level = 1 if v > V_HIGH else 0 if v < V_LOW else None
+
+                if edge_level is None:
+                    (edge_level, v) = detect_stable_edge(pcnt_2_adc)
 
                 if pcnt_2_voltage_min is None or v < pcnt_2_voltage_min:
                     pcnt_2_voltage_min = v
                 if pcnt_2_voltage_max is None or v > pcnt_2_voltage_max:
                     pcnt_2_voltage_max = v
-
-                if edge_level is None:
-                    edge_level = detect_stable_edge(pcnt_2_adc)
 
                 pcnt_2_readings += 1
 
@@ -1353,7 +1351,7 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
     pcnt_last_run_pause_timestamp_ms = utime.ticks_ms()
 
-    print(">>>> STOPPED")
+    # print(">>>> STOPPED")
     logging.debug("Pulse counting thread stopped!")
 
 
@@ -1364,7 +1362,7 @@ def execute_formula(measurements, name, raw_value, formula):
         to_execute = "v_transformed=({})".format(formula)
         namespace = {}
         exec(to_execute, namespace)
-        print("namespace: " + str(namespace))
+        # print("namespace: " + str(namespace))
         set_value_float(measurements, name + "_formula", namespace["v_transformed"])
     except Exception as e:
         logging.exception(e, "formula name:{}, raw_value:{}, code:{}".format(name, raw_value, formula))
