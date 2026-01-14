@@ -30,6 +30,27 @@ def timestamp_measurements(measurements, round_seconds=False):
         measurements["diff_dt"] = {"value": utime.ticks_ms()}
 
 
+def update_timestamp_based_on_diff_dt(measurements, round_seconds=False):
+    offset = 946684800
+    epoch = utime.time() + offset
+
+    # Friday, April 15, 2022
+    if "diff_dt" in measurements and "dt" not in measurements:
+        time_diff = utime.ticks_diff(utime.ticks_ms(), measurements["diff_dt"]["value"])
+        if time_diff < 0:
+            time_diff = 0
+
+        if epoch > 1650000000:
+            measurement_timestamp = epoch - time_diff // 1000
+            measurements["dt"] = {
+                "value": measurement_timestamp - (measurement_timestamp % 60 if round_seconds else 0)
+            }  # time offset 1970 -> 2000
+        else:
+            measurements["time_diff"] = {"value": time_diff}
+
+        del measurements["diff_dt"]
+
+
 def store_measurement(measurements, force_store=False):
     global mutex
     # +1 is added to count the current measurement that has not been stored to the file
@@ -105,13 +126,7 @@ def parse_stored_measurements_and_upload(network):
                 continue
 
             data = json.loads(line)
-            if "diff_dt" in data:
-                time_diff = utime.ticks_diff(utime.ticks_ms(), data["diff_dt"]["value"])
-                if time_diff > 0:
-                    data["time_diff"] = {"value": time_diff}
-                else:
-                    data["time_diff"] = {"value": 0}
-                del data["diff_dt"]
+            update_timestamp_based_on_diff_dt(data, True)
 
             message = network.create_message(cfg.get("device_id"), data)
             message_send_status = network.send_message(cfg, message)
