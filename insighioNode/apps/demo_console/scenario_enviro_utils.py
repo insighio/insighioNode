@@ -640,13 +640,11 @@ def read_adc_sensor(measurements, sensor):
 #### Pulse Counter functions #####
 
 
-def get_pulse_counter_filter_us(config, index, is_high_freq):
+def get_pulse_counter_filter_us(config, is_high_freq):
     filter_threshold_us = 500  # default
 
     filter_threshold_us = (
-        _get(config[index], "filterUs")
-        if config and len(config) > index
-        else (DEBOUNCE_TIME_HIGH_FREQ_US if is_high_freq else DEBOUNCE_TIME_LOW_FREQ_US)
+        _get(config, "filterUs") if config else (DEBOUNCE_TIME_HIGH_FREQ_US if is_high_freq else DEBOUNCE_TIME_LOW_FREQ_US)
     )
 
     try:
@@ -684,7 +682,14 @@ def setup_adc_objects_for_pcnt(pcnt_1_gpio, pcnt_2_gpio):
         pcnt_2_adc.width(ADC.WIDTH_12BIT)
 
 
-# [{"id":1,"enabled":false,"formula":"v","highFreq":false},{"id":2,"enabled":false,"formula":"v","highFreq":false}]
+# [{"id":1,"enabled":true,"formula":"v","highFreq":false},{"id":2,"enabled":true,"formula":"v","highFreq":false}]
+def get_pulse_counter_config_object(id):
+    for i in range(len(_pulse_counter_config)):
+        if _pulse_counter_config[i].get("id") == id:
+            return _pulse_counter_config[i]
+    return None
+
+
 def execute_pulse_counter_measurements(measurements):
     global _pulse_counter_thread_started
     global _thread_lock
@@ -731,10 +736,10 @@ def execute_pulse_counter_measurements(measurements):
         logging.debug("cfg: {}".format(cfg.get("_MEAS_PULSECOUNTER")))
         logging.debug("cfg: {}".format(_pulse_counter_config))
 
-        import utils
+        from utils import deleteFlagFile
 
         TIMESTAMP_FLAG_FILE = "/pcnt_last_read_timestamp"
-        utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
+        deleteFlagFile(TIMESTAMP_FLAG_FILE)
         return
 
     for sensor in _pulse_counter_config:
@@ -746,8 +751,11 @@ def execute_pulse_counter_measurements(measurements):
         scenario_pcnt_ulp.execute(measurements, _pulse_counter_config)
         return
 
-    pcnt_method_1 = _pulse_counter_config[0].get("method") if _pulse_counter_config and len(_pulse_counter_config) > 0 else "interrupt"
-    pcnt_method_2 = _pulse_counter_config[1].get("method") if _pulse_counter_config and len(_pulse_counter_config) > 1 else "interrupt"
+    pcnt_config_1 = get_pulse_counter_config_object(1)
+    pcnt_config_2 = get_pulse_counter_config_object(2)
+
+    pcnt_method_1 = pcnt_config_1.get("method") if pcnt_config_1 else "interrupt"
+    pcnt_method_2 = pcnt_config_2.get("method") if pcnt_config_2 else "interrupt"
 
     if _pulse_counter_thread_started is None:
 
@@ -756,21 +764,16 @@ def execute_pulse_counter_measurements(measurements):
 
             freq(240000000)
 
-            pcnt_1_high_freq = (
-                _pulse_counter_config[0].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 0 else False
-            )
-            pcnt_2_high_freq = (
-                _pulse_counter_config[1].get("highFreq") if _pulse_counter_config and len(_pulse_counter_config) > 1 else False
-            )
+            pcnt_1_high_freq = pcnt_config_1.get("highFreq") if pcnt_config_1 else False
+            pcnt_2_high_freq = pcnt_config_2.get("highFreq") if pcnt_config_2 else False
 
-            pcnt_1_filter_threshold_us = get_pulse_counter_filter_us(_pulse_counter_config, 0, pcnt_1_high_freq)
-            pcnt_2_filter_threshold_us = get_pulse_counter_filter_us(_pulse_counter_config, 1, pcnt_2_high_freq)
+            pcnt_1_filter_threshold_us = get_pulse_counter_filter_us(pcnt_config_1, pcnt_1_high_freq)
+            pcnt_2_filter_threshold_us = get_pulse_counter_filter_us(pcnt_config_2, pcnt_2_high_freq)
 
-            pcnt_1_enabled = _pulse_counter_config[0].get("enabled")
-            pcnt_1_gpio = _pulse_counter_config[0].get("gpio")
-            pcnt_2_enabled = _pulse_counter_config[1].get("enabled")
-            pcnt_2_gpio = _pulse_counter_config[1].get("gpio")
-
+            pcnt_1_enabled = pcnt_config_1.get("enabled") if pcnt_config_1 else False
+            pcnt_1_gpio = pcnt_config_1.get("gpio") if pcnt_config_1 else None
+            pcnt_2_enabled = pcnt_config_2.get("enabled") if pcnt_config_2 else False
+            pcnt_2_gpio = pcnt_config_2.get("gpio") if pcnt_config_2 else None
             if not pcnt_1_enabled:
                 pcnt_1_gpio = None
 
@@ -779,8 +782,11 @@ def execute_pulse_counter_measurements(measurements):
 
             setup_adc_objects_for_pcnt(pcnt_1_gpio, pcnt_2_gpio)
 
-            pcnt_1_last_interrupt_edge_level = detect_stable_edge(pcnt_1_adc)
-            pcnt_2_last_interrupt_edge_level = detect_stable_edge(pcnt_2_adc)
+            if pcnt_1_gpio:
+                pcnt_1_last_interrupt_edge_level = detect_stable_edge(pcnt_1_adc)
+
+            if pcnt_2_gpio:
+                pcnt_2_last_interrupt_edge_level = detect_stable_edge(pcnt_2_adc)
 
             # from micropython import schedule
 
@@ -791,7 +797,6 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_1_voltage_min
                 global pcnt_1_voltage_max
                 global pcnt_1_pin
-                global pcnt_1_last_interrupt_edge_level
 
                 v = pcnt_1_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
@@ -834,7 +839,6 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_2_voltage_min
                 global pcnt_2_voltage_max
                 global pcnt_2_pin
-
                 v = pcnt_2_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
 
                 # Disable interrupt temporarily
@@ -1201,8 +1205,11 @@ def pulse_counter_thread(config, execution_period_ms=None):
     global pcnt_2_voltage_min
     global pcnt_2_voltage_max
 
-    pcnt_method_1 = config[0].get("method") if config and len(config) > 0 else "interrupt"
-    pcnt_method_2 = config[1].get("method") if config and len(config) > 1 else "interrupt"
+    pcnt_config_1 = get_pulse_counter_config_object(1)
+    pcnt_config_2 = get_pulse_counter_config_object(2)
+
+    pcnt_method_1 = pcnt_config_1.get("method") if pcnt_config_1 else "interrupt"
+    pcnt_method_2 = pcnt_config_2.get("method") if pcnt_config_2 else "interrupt"
 
     if pcnt_method_1 != "adc" and pcnt_method_2 != "adc":
         logging.debug("Pulse counter thread not started, both methods are not 'adc'")
@@ -1210,12 +1217,12 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
     logging.debug("!!!!!!!!!!!!!!!!!!!!!! Starting pulse counter thread!")
 
-    pcnt_1_enabled = config[0].get("enabled") if config and len(config) > 0 else False
-    pcnt_1_gpio = config[0].get("gpio") if config and len(config) > 0 else False
-    pcnt_1_high_freq = config[0].get("highFreq") if config and len(config) > 0 else False
-    pcnt_2_enabled = config[1].get("enabled") if config and len(config) > 1 else False
-    pcnt_2_gpio = config[1].get("gpio") if config and len(config) > 1 else False
-    pcnt_2_high_freq = config[1].get("highFreq") if config and len(config) > 1 else False
+    pcnt_1_enabled = pcnt_config_1.get("enabled") if pcnt_config_1 else False
+    pcnt_1_gpio = pcnt_config_1.get("gpio") if pcnt_config_1 else False
+    pcnt_1_high_freq = pcnt_config_1.get("highFreq") if pcnt_config_1 else False
+    pcnt_2_enabled = pcnt_config_2.get("enabled") if pcnt_config_2 else False
+    pcnt_2_gpio = pcnt_config_2.get("gpio") if pcnt_config_2 else False
+    pcnt_2_high_freq = pcnt_config_2.get("highFreq") if pcnt_config_2 else False
 
     logging.debug(config)
     logging.debug("pcnt_1_enabled: {}, pcnt_1_gpio: {}, pcnt_1_high_freq: {}".format(pcnt_1_enabled, pcnt_1_gpio, pcnt_1_high_freq))
