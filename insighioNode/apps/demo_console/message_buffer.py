@@ -45,8 +45,8 @@ def update_timestamp_based_on_diff_dt(measurements, round_seconds=False):
             measurements["dt"] = {
                 "value": measurement_timestamp - (measurement_timestamp % 60 if round_seconds else 0)
             }  # time offset 1970 -> 2000
-        else:
-            measurements["time_diff"] = {"value": time_diff}
+
+        measurements["time_diff"] = {"value": time_diff}
 
         del measurements["diff_dt"]
 
