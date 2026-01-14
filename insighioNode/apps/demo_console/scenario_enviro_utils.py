@@ -1286,6 +1286,10 @@ def pulse_counter_thread(config, execution_period_ms=None):
                     edge_level = v & 0x400  # 1023 > < 2048
                     if edge_level:
                         (edge_level, v) = detect_stable_edge(pcnt_1_adc)
+                    else:
+                        edge_level = 0
+                else:
+                    edge_level = 1
 
                 if v < pcnt_1_voltage_min:
                     pcnt_1_voltage_min = v
@@ -1321,6 +1325,10 @@ def pulse_counter_thread(config, execution_period_ms=None):
                     edge_level = v & 0x400  # 1023 > < 2048
                     if edge_level:
                         (edge_level, v) = detect_stable_edge(pcnt_2_adc)
+                    else:
+                        edge_level = 0
+                else:
+                    edge_level = 1
 
                 if v < pcnt_2_voltage_min:
                     pcnt_2_voltage_min = v
