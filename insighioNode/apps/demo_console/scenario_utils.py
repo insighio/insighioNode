@@ -93,6 +93,9 @@ def get_measurements(cfg_dummy=None):
                 set_value(measurements, "i2c_devices", str(i2c_devices))
             except Exception as e:
                 logging.exception(e, "Error getting i2c_devices.")
+
+            set_value(measurements, "is_charging", 1 if device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power) else 0)
+
     except Exception as e:
         logging.exception(e, "unable to measure board sensors")
 
@@ -148,9 +151,11 @@ def get_measurements(cfg_dummy=None):
             delete_pulse_counter_state()
         elif shield_name == cfg.get("_CONST_SHIELD_SCALE"):
             from . import scenario_digital_adc_utils
+
             scenario_digital_adc_utils.shield_measurements(measurements)
 
             from . import scenario_scale_utils
+
             scenario_scale_utils.shield_measurements(measurements)
 
             delete_pulse_counter_state()
