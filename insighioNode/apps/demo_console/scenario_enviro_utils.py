@@ -782,10 +782,10 @@ def execute_pulse_counter_measurements(measurements):
 
             setup_adc_objects_for_pcnt(pcnt_1_gpio, pcnt_2_gpio)
 
-            if pcnt_1_gpio:
+            if pcnt_1_gpio and pcnt_1_last_interrupt_edge_level is None:
                 pcnt_1_last_interrupt_edge_level = detect_stable_edge(pcnt_1_adc)
 
-            if pcnt_2_gpio:
+            if pcnt_2_gpio and pcnt_2_last_interrupt_edge_level is None:
                 pcnt_2_last_interrupt_edge_level = detect_stable_edge(pcnt_2_adc)
 
             # from micropython import schedule
@@ -900,7 +900,7 @@ def execute_pulse_counter_measurements(measurements):
 
                 if edge_level == pcnt_1_last_interrupt_edge_level:
                     # same edge as last time, likely bounce/noise, ignore
-                    pcnt_1_last_interrupt_edge_level = edge_level
+                    # pcnt_1_last_interrupt_edge_level = edge_level
                     pcnt_1_filtered_edges += 1
                     # print("pcnt_1_interrupt: same edge as last time, ignoring")
                     return
