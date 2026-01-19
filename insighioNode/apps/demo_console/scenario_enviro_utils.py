@@ -1073,6 +1073,7 @@ def execute_pulse_counter_measurements(measurements):
                 # method = pcnt_method_1 if id == 1 else pcnt_method_2
                 v_min = pcnt_1_voltage_min if id == 1 else pcnt_2_voltage_min
                 v_max = pcnt_1_voltage_max if id == 1 else pcnt_2_voltage_max
+                readings = pcnt_1_readings if id == 1 else pcnt_2_readings
                 store_pulse_counter_measurements(
                     measurements,
                     id,
@@ -1080,7 +1081,7 @@ def execute_pulse_counter_measurements(measurements):
                     time_diff,
                     _get(sensor, "formula"),
                     filtered_count,
-                    pcnt_1_readings if id == 1 else pcnt_2_readings,
+                    readings,
                     v_min,
                     v_max,
                 )
@@ -1096,7 +1097,11 @@ def execute_pulse_counter_measurements(measurements):
 def store_pulse_counter_measurements(
     measurements, id, edge_cnt, time_diff_from_prev, formula, filtered_edges_cnt, readings_cnt, v_min, v_max
 ):
-    pulse_cnt = ceil(edge_cnt / 2)
+    pulse_cnt = 0
+
+    # avoid counting noise where only one edger has changed over the meas period
+    if readings_cnt > 1:
+        pulse_cnt = ceil(edge_cnt / 2)
 
     set_value_float(measurements, "pcnt_count_{}".format(id), pulse_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
