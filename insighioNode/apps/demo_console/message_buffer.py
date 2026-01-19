@@ -13,40 +13,42 @@ message_buffer_size = cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER")
 
 mutex = _thread.allocate_lock()
 
+_ESP32_SYS_TIME_OFFSET = 946684800
+
 
 def buffered_measurements_count():
     return utils.countFlagFileLines(storage_file_name)
 
 
 def timestamp_measurements(measurements, round_seconds=False):
-    offset = 946684800
-
-    epoch = utime.time() + offset
+    epoch = utime.time() + _ESP32_SYS_TIME_OFFSET
 
     # Friday, April 15, 2022
     if epoch > 1650000000:
         measurements["dt"] = {"value": epoch - (epoch % 60 if round_seconds else 0)}  # time offset 1970 -> 2000
     else:
-        measurements["diff_dt"] = {"value": utime.ticks_ms()}
+        measurements["diff_dt"] = {"value": utime.time()}
 
 
 def update_timestamp_based_on_diff_dt(measurements, round_seconds=False):
-    offset = 946684800
-    epoch = utime.time() + offset
+    epoch = utime.time() + _ESP32_SYS_TIME_OFFSET
 
     # Friday, April 15, 2022
     if "diff_dt" in measurements and "dt" not in measurements:
-        time_diff = utime.ticks_diff(utime.ticks_ms(), measurements["diff_dt"]["value"])
-        if time_diff < 0:
-            time_diff = 0
-
         if epoch > 1650000000:
-            measurement_timestamp = epoch - time_diff // 1000
+            # get time jump offset (seconds)
+            epoch_diff = utils.readFromFlagFile("/epoch_diff")
+            try:
+                epoch_diff = int(epoch_diff)
+            except:
+                epoch_diff = 0
+
+            measurement_timestamp = epoch - (utime.time() - epoch_diff - measurements["diff_dt"]["value"])
             measurements["dt"] = {
                 "value": measurement_timestamp - (measurement_timestamp % 60 if round_seconds else 0)
             }  # time offset 1970 -> 2000
 
-        measurements["time_diff"] = {"value": time_diff}
+        measurements["time_diff"] = {"value": measurements["diff_dt"]["value"]}
 
         del measurements["diff_dt"]
 
