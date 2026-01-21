@@ -906,8 +906,9 @@ def execute_pulse_counter_measurements(measurements):
                     return
                 pcnt_1_last_interrupt_edge_level = edge_level
 
+                pcnt_1_readings += 1
+
                 if _PCNT_DEBUG_ON:
-                    pcnt_1_readings += 1
                     if v < pcnt_1_voltage_min:
                         pcnt_1_voltage_min = v
                     if v > pcnt_1_voltage_max:
@@ -977,8 +978,9 @@ def execute_pulse_counter_measurements(measurements):
                     return
                 pcnt_2_last_interrupt_edge_level = edge_level
 
+                pcnt_2_readings += 1
+
                 if _PCNT_DEBUG_ON:
-                    pcnt_2_readings += 1
                     if v < pcnt_2_voltage_min:
                         pcnt_2_voltage_min = v
                     if v > pcnt_2_voltage_max:
