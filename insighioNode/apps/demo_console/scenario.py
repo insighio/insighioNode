@@ -116,6 +116,8 @@ def executeMeasureAndUploadLoop():
     if light_sleep_on_period is None:
         light_sleep_on_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
 
+    do_round_measurement_timestamp_in_minutes = light_sleep_on_period > 60
+
     if light_sleep_on_period and cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"):
         try:
             # set keepalive timing used for heartbeats in open connections
@@ -131,7 +133,7 @@ def executeMeasureAndUploadLoop():
     while 1:
         measurement_run_start_timestamp = ticks_ms()
         timestamp_obj = {}
-        message_buffer.timestamp_measurements(timestamp_obj, True)
+        message_buffer.timestamp_measurements(timestamp_obj, do_round_measurement_timestamp_in_minutes)
 
         scenario_utils.pause_background_measurements()
 
@@ -150,14 +152,12 @@ def executeMeasureAndUploadLoop():
         if is_first_run:
             set_value_int(measurements, "reset_cause", device_info.get_reset_cause())
 
-        uptime = getUptime()
-
         from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 
         set_value_int(
             measurements,
             "uptime",
-            uptime if is_first_run else (ticks_diff(ticks_ms(), measurement_run_start_timestamp)),
+            getUptime() if is_first_run else (ticks_diff(ticks_ms(), measurement_run_start_timestamp)),
             SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
         )
 
@@ -359,12 +359,10 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         set_value_int(measurements, "config_recovery", 1)
         utils.deleteFlagFile("/config_reverted")
 
-    uptime = getUptime()
-
     set_value_int(
         measurements,
         "uptime",
-        uptime if is_first_run else ticks_diff(uptime, measurement_run_start_timestamp),
+        getUptime() if is_first_run else (ticks_diff(ticks_ms(), measurement_run_start_timestamp)),
         SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
     )
 
@@ -520,7 +518,15 @@ def get_sleep_duration_ms_remaining(sleep_period_s, subtract_measurement_duratio
     uptime = getUptime()
     sleep_period_ms = sleep_period_s * 1000 if sleep_period_s is not None else 600000
     remaining_ms = sleep_period_ms
-    if sleep_period_ms % 60000 == 0:
+
+    _MINIMUM_PERIOD_MS = 60000
+    if sleep_period_ms < _MINIMUM_PERIOD_MS:
+        if sleep_period_ms < 10000:
+            _MINIMUM_PERIOD_MS = 1000
+        else:
+            _MINIMUM_PERIOD_MS = 10000
+
+    if sleep_period_ms % _MINIMUM_PERIOD_MS == 0:
         next_tick_ms = time_ns() // 1000000 - sleep_period_ms
 
         meas_duration_ms = ticks_diff(connection_start_ms, measurement_run_start_timestamp)  # duration of measurement
@@ -537,9 +543,6 @@ def get_sleep_duration_ms_remaining(sleep_period_s, subtract_measurement_duratio
         )
         if remaining_ms <= 0:
             remaining_ms = sleep_period_ms - next_tick_ms % sleep_period_ms
-
-    else:
-        remaining_ms = sleep_period_ms - uptime
 
     if remaining_ms < 0:
         remaining_ms = 1
