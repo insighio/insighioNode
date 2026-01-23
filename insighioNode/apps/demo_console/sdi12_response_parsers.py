@@ -30,8 +30,10 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
                 2.887e-9 * pow(calibratedCountsVWC, 3) - 2.08e-5 * pow(calibratedCountsVWC, 2) + 5.276e-2 * calibratedCountsVWC - 43.39, 2
             )
 
-            set_value_float(measurements, variable_prefix + "_vwc_mineral", VWCmineral * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
-            set_value_float(measurements, variable_prefix + "_vwc_soilless", VWCsoilless * 100, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
+            set_value_float(measurements, variable_prefix + "_vwc_mineral", VWCmineral, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, 2, 100)
+            set_value_float(
+                measurements, variable_prefix + "_vwc_soilless", VWCsoilless, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, 2, 100
+            )
             set_value_float(measurements, variable_prefix + "_vwc_dielectric", VWCdielectric, SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT)
         elif model == "atm14" and command_to_execute == "M":
             if not responseArray or len(responseArray) < 4:
@@ -39,7 +41,7 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
                 return
             try:
                 set_value_float(
-                    measurements, variable_prefix + "_vapor_pressure", float(responseArray[0]) * 1000, SenmlUnits.SENML_UNIT_PASCAL
+                    measurements, variable_prefix + "_vapor_pressure", float(responseArray[0]), SenmlUnits.SENML_UNIT_PASCAL, 2, 1000
                 )
             except Exception as e:
                 pass
@@ -48,14 +50,16 @@ def parse_sensor_meter(model, command_to_execute, address, responseArray, measur
                 set_value_float(
                     measurements,
                     variable_prefix + "_relative_humidity",
-                    float(responseArray[2]) * 100,
+                    float(responseArray[2]),
                     SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT,
+                    2,  # two decimals
+                    100,  # 100 multiplier
                 )
             except Exception as e:
                 pass
             try:
                 set_value_float(
-                    measurements, variable_prefix + "_atmospheric_pressure", float(responseArray[3]) * 1000, SenmlUnits.SENML_UNIT_PASCAL
+                    measurements, variable_prefix + "_atmospheric_pressure", float(responseArray[3]), SenmlUnits.SENML_UNIT_PASCAL, 2, 1000
                 )
             except Exception as e:
                 pass
