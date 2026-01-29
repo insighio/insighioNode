@@ -444,6 +444,8 @@ def execute_modbus_measurements(measurements):
 
         if not cfg.get("_LOW_LATENCY_MODE_ON"):
             sleep_ms(2500)  # cfg.get("_SDI12_WARM_UP_TIME_MSEC"))  # warmup time
+        else:
+            sleep_ms(500)
 
         for sensor in sensor_list:
             wdt_reset()
