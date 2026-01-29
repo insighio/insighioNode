@@ -43,7 +43,8 @@ def update_timestamp_based_on_diff_dt(measurements, round_seconds=False):
             except:
                 epoch_diff = 0
 
-            measurement_timestamp = epoch - (utime.time() - epoch_diff - measurements["diff_dt"]["value"])
+            # need to ensure that epoch_diff is always correct!
+            measurement_timestamp = _ESP32_SYS_TIME_OFFSET + epoch_diff + measurements["diff_dt"]["value"]
             measurements["dt"] = {
                 "value": measurement_timestamp - (measurement_timestamp % 60 if round_seconds else 0)
             }  # time offset 1970 -> 2000
