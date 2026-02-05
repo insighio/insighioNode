@@ -65,7 +65,7 @@ pcnt_1_adc = None
 pcnt_1_readings = 0
 pcnt_1_triggered_edge_level = None
 pcnt_1_voltage_max = 0
-pcnt_1_voltage_min = 3300
+pcnt_1_voltage_min = 3300000
 
 pcnt_2_debounce_timer = Timer(2)
 pcnt_2_edge_count = 0
@@ -78,11 +78,7 @@ pcnt_2_adc = None
 pcnt_2_readings = 0
 pcnt_2_triggered_edge_level = None
 pcnt_2_voltage_max = 0
-pcnt_2_voltage_min = 3300
-
-from device_info import get_firmware_version
-
-_IS_ALWAYS_ON = False
+pcnt_2_voltage_min = 3300000
 
 pcnt_last_run_timestamp_ms = 0
 
@@ -797,14 +793,14 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_1_voltage_max
                 global pcnt_1_pin
 
-                v = int(pcnt_1_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_uv()
 
                 # Disable interrupt temporarily
                 pcnt_1_pin.irq(handler=None)
 
-                edge_level = v & 0x800  # > 2048
+                edge_level = v & 0x200000  # > 2.097.152 microvolts
                 if not edge_level:
-                    edge_level = v & 0x400  # 1023 > < 2048
+                    edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
                         (edge_level, v) = detect_stable_edge(pcnt_1_adc)
                 # Explicitly delete ADC
@@ -838,14 +834,14 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_2_voltage_min
                 global pcnt_2_voltage_max
                 global pcnt_2_pin
-                v = int(pcnt_2_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+                v = pcnt_2_adc.read_uv()
 
                 # Disable interrupt temporarily
                 pcnt_2_pin.irq(handler=None)
 
-                edge_level = v & 0x800  # > 2048
+                edge_level = v & 0x200000  # > 2.097.152 microvolts
                 if not edge_level:
-                    edge_level = v & 0x400  # 1023 > < 2048
+                    edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
                         (edge_level, v) = detect_stable_edge(pcnt_2_adc)
 
@@ -882,14 +878,14 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_1_readings
                 global pcnt_1_last_interrupt_edge_level
 
-                v = int(pcnt_1_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_uv()
 
                 # Disable interrupt temporarily
                 pin.irq(handler=None)
 
-                edge_level = v & 0x800  # > 2048
+                edge_level = v & 0x200000  # > 2.097.152 microvolts
                 if not edge_level:
-                    edge_level = v & 0x400  # 1023 > < 2048
+                    edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
                         (edge_level, v) = detect_stable_edge(pcnt_1_adc)
 
@@ -954,14 +950,14 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_2_readings
                 global pcnt_2_last_interrupt_edge_level
 
-                v = int(pcnt_2_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+                v = pcnt_2_adc.read_uv()
 
                 # Disable interrupt temporarily
                 pin.irq(handler=None)
 
-                edge_level = v & 0x800  # > 2048
+                edge_level = v & 0x200000  # > 2.097.152 microvolts
                 if not edge_level:
-                    edge_level = v & 0x400  # 1023 > < 2048
+                    edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
                         (edge_level, v) = detect_stable_edge(pcnt_2_adc)
 
@@ -1083,14 +1079,14 @@ def execute_pulse_counter_measurements(measurements):
                     _get(sensor, "formula"),
                     filtered_count,
                     readings,
-                    v_min,
-                    v_max,
+                    v_min // 1000,
+                    v_max // 1000,
                 )
 
-        pcnt_1_voltage_min = 3300
+        pcnt_1_voltage_min = 3300000
         pcnt_1_voltage_max = 0
         pcnt_1_readings = 0
-        pcnt_2_voltage_min = 3300
+        pcnt_2_voltage_min = 3300000
         pcnt_2_voltage_max = 0
         pcnt_2_readings = 0
 
@@ -1100,7 +1096,7 @@ def store_pulse_counter_measurements(
 ):
     pulse_cnt = 0
 
-    # avoid counting noise where only one edger has changed over the meas period
+    # avoid counting noise where only one edge has changed over the meas period
     if readings_cnt > 1:
         pulse_cnt = ceil(edge_cnt / 2)
 
@@ -1184,9 +1180,9 @@ def start_counting_thread(execution_period_ms=None):
 def detect_stable_edge(adc_inst):
     cnt = 0
     while cnt < 1000:
-        v = int(adc_inst.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else adc_inst.read_uv() / 1000
-        if not (v & 0x800):  # < 2048
-            if not (v & 0x400):  # < 1023
+        v = adc_inst.read_uv()
+        if not (v & 0x200000):  # < 2.097.152 microvolts
+            if not (v & 0x100000):  # < 1.048.576
                 return (0, v)
         else:
             return (1, v)
@@ -1269,12 +1265,12 @@ def pulse_counter_thread(config, execution_period_ms=None):
 
     (pcnt_1_previous_input_value, _) = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else (0, 0)
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
-    pcnt_1_voltage_min = 3300
+    pcnt_1_voltage_min = 3300000
     pcnt_1_voltage_max = 0
 
     (pcnt_2_previous_input_value, _) = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else (0, 0)
     pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
-    pcnt_2_voltage_min = 3300
+    pcnt_2_voltage_min = 3300000
     pcnt_2_voltage_max = 0
 
     try:
@@ -1292,11 +1288,11 @@ def pulse_counter_thread(config, execution_period_ms=None):
                 next_wdt_reset_time_ms = utime.ticks_add(now, WDT_RESET_INTERVAL_MS)
 
             if pcnt_1_enabled and pcnt_1_adc is not None:
-                v = int(pcnt_1_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_uv()
 
-                edge_level = v & 0x800  # > 2048
+                edge_level = v & 0x200000  # > 2.097.152 microvolts
                 if not edge_level:
-                    edge_level = v & 0x400  # 1023 > < 2048
+                    edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
                         (edge_level, v) = detect_stable_edge(pcnt_1_adc)
                     else:
@@ -1332,10 +1328,11 @@ def pulse_counter_thread(config, execution_period_ms=None):
                         pcnt_1_sequential_stable_values_count += 1
 
             if pcnt_2_enabled and pcnt_2_adc is not None:
-                v = int(pcnt_2_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
-                edge_level = v & 0x800  # > 2048
+                v = pcnt_2_adc.read_uv()
+
+                edge_level = v & 0x200000  # > 2.097.152 microvolts
                 if not edge_level:
-                    edge_level = v & 0x400  # 1023 > < 2048
+                    edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
                         (edge_level, v) = detect_stable_edge(pcnt_2_adc)
                     else:
