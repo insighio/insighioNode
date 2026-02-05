@@ -797,7 +797,7 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_1_voltage_max
                 global pcnt_1_pin
 
-                v = int(pcnt_1_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
                 # Disable interrupt temporarily
                 pcnt_1_pin.irq(handler=None)
@@ -838,7 +838,7 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_2_voltage_min
                 global pcnt_2_voltage_max
                 global pcnt_2_pin
-                v = int(pcnt_2_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+                v = pcnt_2_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
 
                 # Disable interrupt temporarily
                 pcnt_2_pin.irq(handler=None)
@@ -882,7 +882,7 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_1_readings
                 global pcnt_1_last_interrupt_edge_level
 
-                v = int(pcnt_1_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
                 # Disable interrupt temporarily
                 pin.irq(handler=None)
@@ -954,7 +954,7 @@ def execute_pulse_counter_measurements(measurements):
                 global pcnt_2_readings
                 global pcnt_2_last_interrupt_edge_level
 
-                v = int(pcnt_2_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+                v = pcnt_2_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
 
                 # Disable interrupt temporarily
                 pin.irq(handler=None)
@@ -1184,7 +1184,7 @@ def start_counting_thread(execution_period_ms=None):
 def detect_stable_edge(adc_inst):
     cnt = 0
     while cnt < 1000:
-        v = int(adc_inst.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else adc_inst.read_uv() / 1000
+        v = adc_inst.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else adc_inst.read_uv() / 1000
         if not (v & 0x800):  # < 2048
             if not (v & 0x400):  # < 1023
                 return (0, v)
@@ -1292,7 +1292,7 @@ def pulse_counter_thread(config, execution_period_ms=None):
                 next_wdt_reset_time_ms = utime.ticks_add(now, WDT_RESET_INTERVAL_MS)
 
             if pcnt_1_enabled and pcnt_1_adc is not None:
-                v = int(pcnt_1_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
+                v = pcnt_1_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_1_adc.read_uv() / 1000
 
                 edge_level = v & 0x800  # > 2048
                 if not edge_level:
@@ -1332,7 +1332,7 @@ def pulse_counter_thread(config, execution_period_ms=None):
                         pcnt_1_sequential_stable_values_count += 1
 
             if pcnt_2_enabled and pcnt_2_adc is not None:
-                v = int(pcnt_2_adc.read_uv() / 1000)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
+                v = pcnt_2_adc.read_voltage(1)  # if IS_CUSTOM_MICROPYTHON else pcnt_2_adc.read_uv() / 1000
                 edge_level = v & 0x800  # > 2048
                 if not edge_level:
                     edge_level = v & 0x400  # 1023 > < 2048

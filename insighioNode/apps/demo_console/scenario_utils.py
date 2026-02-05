@@ -136,7 +136,12 @@ def get_measurements(cfg_dummy=None):
 
             scenario_advind_utils.shield_measurements(measurements)
         elif shield_name == cfg.get("_CONST_SHIELD_ENVIRO"):
-            from . import scenario_enviro_utils
+            (fw_major, fw_minor, _, _) = device_info.get_firmware_version()
+
+            if fw_major == 1 and fw_minor >= 18 and fw_minor <= 19:
+                from . import scenario_enviro_utils_custom_mpy as scenario_enviro_utils
+            else:
+                from . import scenario_enviro_utils
 
             scenario_enviro_utils.shield_measurements(measurements)
         elif shield_name == cfg.get("_CONST_SHIELD_ACCELEROMETER"):
@@ -149,6 +154,10 @@ def get_measurements(cfg_dummy=None):
 
             scenario_digital_adc_utils.shield_measurements(measurements)
             delete_pulse_counter_state()
+        # elif shield_name == cfg.get("_CONST_SHIELD_PLC_ENERGY"):
+        #     from . import scenario_plc_energy
+
+        #     scenario_plc_energy.shield_measurements(measurements)
         elif shield_name == cfg.get("_CONST_SHIELD_SCALE"):
             from . import scenario_digital_adc_utils
 
