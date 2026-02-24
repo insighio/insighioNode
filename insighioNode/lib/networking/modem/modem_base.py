@@ -116,8 +116,8 @@ class Modem:
             logging.debug("Operator selection already configured")
             return
 
-        self.send_at_cmd("AT+CFUN=0")  # set phone functionality to minimum
-        sleep_ms(5000)
+        # self.send_at_cmd("AT+CFUN=0")  # set phone functionality to minimum
+        # sleep_ms(5000)
         self.send_at_cmd(command, 180000)
         self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
         self.send_at_cmd("ATE0")
