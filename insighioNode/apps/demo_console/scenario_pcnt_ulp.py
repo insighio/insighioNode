@@ -325,13 +325,25 @@ def force_stop_ulp_execution():
 
 def reset_ulp_nuclear():
     """
-    NUCLEAR OPTION: Try EVERY possible mechanism to reset the ULP coprocessor.
-    This attempts to completely nuke the ULP and RTC domain state.
+    Stage 2 of the nuclear reset recovery procedure.
+    
+    This function performs the actual hardware-level ULP reset operations.
+    Called by main.py after detecting 'nuclear' flag.
+    
+    Operations performed:
+    - Force-stop ULP execution
+    - Reset RTC peripherals and clocks
+    - Clear all ULP/RTC_SLOW memory
+    - Reset RTC state machine
+    - Re-initialize clocks for next boot
+    
+    After this completes, main.py will trigger deepsleep (Stage 3).
     """
     import utime
 
     logging.error("=" * 70)
-    logging.error(" NUCLEAR ULP RESET - TRYING ALL MECHANISMS")
+    logging.error(" NUCLEAR ULP RESET - STAGE 2/3: HARDWARE RESET")
+    logging.error(" Performing comprehensive RTC/ULP hardware reset")
     logging.error("=" * 70)
 
     import machine
@@ -502,6 +514,17 @@ def reset_ulp_nuclear():
 
 
 def execute_ulp_reset():
+    """
+    Stage 1 of the nuclear reset recovery procedure.
+    
+    This function initiates a multi-stage reset sequence:
+    1. This function: Sets 'nuclear' flag and triggers soft_reset
+    2. On reboot: main.py detects 'nuclear' flag, runs reset_ulp_nuclear(), then deepsleep
+    3. After deepsleep: main.py does final soft_reset
+    4. Device starts fresh with clean ULP state
+    
+    This complete sequence is REQUIRED for ULP to recover from stuck state.
+    """
     global _reset_in_progress
 
     # Prevent re-entry during reset
@@ -512,10 +535,15 @@ def execute_ulp_reset():
     _reset_in_progress = True
     utils.writeToFlagFile(RESET_IN_PROGRESS_FILE, "1")
 
-    logging.error("Attempting NUCLEAR ULP reset")
+    logging.error("="*70)
+    logging.error(" INITIATING NUCLEAR RESET PROCEDURE (STAGE 1/3)")
+    logging.error(" ULP heartbeat malfunction detected")
+    logging.error(" Device will reboot and perform hardware reset sequence")
+    logging.error("="*70)
 
     utils.writeToFlagFile(LAST_RESET_REASON_FLAG_FILE, "nuclear")
-    machine.soft_reset()  # Perform a full device reset after nuclear reset
+    utime.sleep_ms(100)  # Brief delay to ensure file write completes
+    machine.soft_reset()  # Triggers Stage 2 on reboot
 
 
 def init_ulp(pcnt_cfg):
@@ -933,6 +961,9 @@ def execute(measurements, pcnt_cfg):
             init_ulp(pcnt_cfg)
             _is_after_initialization = True
             _is_first_run = False
+            # Clear any stale heartbeat tracking after fresh initialization
+            utils.writeToFlagFile(HEARTBEAT_FLAG_FILE, "0")
+            utils.writeToFlagFile(HEARTBEAT_CHECKS_FLAG_FILE, "0")
             return
 
         # Check for ULP malfunction before reading values
@@ -940,8 +971,11 @@ def execute(measurements, pcnt_cfg):
         logging.info("ULP status: {}".format(message))
 
         if is_stuck:
-            # Perform reset if ULP is malfunctioning
+            # ULP heartbeat malfunction detected - initiate nuclear reset procedure
+            logging.error("ULP malfunction confirmed: {}".format(message))
             execute_ulp_reset()
+            # Note: execute_ulp_reset() triggers soft_reset, code below won't execute
+            return  # Safety return (though soft_reset prevents reaching here)
 
         read_ulp_values(measurements, pcnt_cfg)
     except Exception as e:

@@ -27,6 +27,7 @@ device_info.blink_led(0x252525)
 
 import utils
 import machine
+import gc
 
 demo_config_exists = False
 try:
@@ -121,15 +122,36 @@ if rstCause == 0 or rstCause == 1 or not demo_config_exists:
     gc.collect()
 
 ####################################################################################
-# Operations after reset affected by previous scenario execution (e.g. nuclear reset)
+# NUCLEAR RESET RECOVERY PROCEDURE (Multi-stage ULP recovery)
+# This 3-stage procedure is REQUIRED for ULP to recover from stuck state:
+#
+# Stage 1: execute_ulp_reset() in scenario_pcnt_ulp.py
+#          - Detects heartbeat malfunction
+#          - Sets 'nuclear' flag
+#          - Triggers soft_reset -> brings us here to Stage 2
+#
+# Stage 2: This section ("nuclear" flag detected)
+#          - Runs reset_ulp_nuclear() to perform hardware RTC/ULP reset
+#          - Clears state files
+#          - Sets 'after_nuclear' flag
+#          - Triggers deepsleep -> brings us to Stage 3
+#
+# Stage 3: This section ("after_nuclear" flag detected)
+#          - Performs final soft_reset
+#          - Device starts fresh with clean ULP state
+#          - ULP can now initialize and run normally
+####################################################################################
 
 last_reset_reason = utils.readFromFlagFile("/last_reset_reason")
 if last_reset_reason == "nuclear":
-    logging.info("Performing nuclear reset...")
+    logging.error("=" * 70)
+    logging.error(" NUCLEAR RESET STAGE 2/3: Performing hardware ULP reset")
+    logging.error("=" * 70)
     from apps.demo_console import scenario_pcnt_ulp
 
     scenario_pcnt_ulp.reset_ulp_nuclear()
 
+    # Clean up state files
     utils.deleteFlagFile(scenario_pcnt_ulp.RESET_IN_PROGRESS_FILE)
     utils.deleteFlagFile(scenario_pcnt_ulp.HEARTBEAT_FLAG_FILE)
     utils.deleteFlagFile(scenario_pcnt_ulp.HEARTBEAT_CHECKS_FLAG_FILE)
@@ -138,12 +160,18 @@ if last_reset_reason == "nuclear":
 
     utils.writeToFlagFile("/last_reset_reason", "after_nuclear")
 
+    logging.error(" STAGE 2 complete. Entering deepsleep before final reset...")
+    logging.error("=" * 70)
     machine.deepsleep(1)
+
 elif last_reset_reason == "after_nuclear":
-    logging.info("Device restarted after nuclear reset, clearing reset reason")
+    logging.error("=" * 70)
+    logging.error(" NUCLEAR RESET STAGE 3/3: Final soft_reset")
+    logging.error(" Device will start fresh with clean ULP state")
+    logging.error("=" * 70)
     utils.deleteFlagFile("/last_reset_reason")
 
-    machine.soft_reset()
+    machine.soft_reset()  # Final reset - ULP will initialize cleanly after this
 
 # in case a temp config has been generated and webserver timeout occurs before
 # deleting it
