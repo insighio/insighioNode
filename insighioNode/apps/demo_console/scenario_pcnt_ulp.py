@@ -4,6 +4,7 @@ import utime
 import logging
 from external.kpn_senml.senml_unit import SenmlUnits
 from .dictionary_utils import set_value_int, set_value_float
+from . import cfg
 
 _is_first_run = True
 _is_after_initialization = False
@@ -15,6 +16,8 @@ HEARTBEAT_FLAG_FILE = "/pcnt_last_heartbeat"
 HEARTBEAT_CHECKS_FLAG_FILE = "/pcnt_last_heartbeat_checks"
 LAST_RESET_REASON_FLAG_FILE = "/last_reset_reason"
 ULP_REQUIRED_WDT_RESET_FLAG_FILE = "/ulp_required_wdt_reset"
+
+_PCNT_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
 
 
 def generate_assembly(
@@ -326,17 +329,17 @@ def force_stop_ulp_execution():
 def reset_ulp_nuclear():
     """
     Stage 2 of the nuclear reset recovery procedure.
-    
+
     This function performs the actual hardware-level ULP reset operations.
     Called by main.py after detecting 'nuclear' flag.
-    
+
     Operations performed:
     - Force-stop ULP execution
     - Reset RTC peripherals and clocks
     - Clear all ULP/RTC_SLOW memory
     - Reset RTC state machine
     - Re-initialize clocks for next boot
-    
+
     After this completes, main.py will trigger deepsleep (Stage 3).
     """
     import utime
@@ -516,13 +519,13 @@ def reset_ulp_nuclear():
 def execute_ulp_reset():
     """
     Stage 1 of the nuclear reset recovery procedure.
-    
+
     This function initiates a multi-stage reset sequence:
     1. This function: Sets 'nuclear' flag and triggers soft_reset
     2. On reboot: main.py detects 'nuclear' flag, runs reset_ulp_nuclear(), then deepsleep
     3. After deepsleep: main.py does final soft_reset
     4. Device starts fresh with clean ULP state
-    
+
     This complete sequence is REQUIRED for ULP to recover from stuck state.
     """
     global _reset_in_progress
@@ -535,11 +538,11 @@ def execute_ulp_reset():
     _reset_in_progress = True
     utils.writeToFlagFile(RESET_IN_PROGRESS_FILE, "1")
 
-    logging.error("="*70)
+    logging.error("=" * 70)
     logging.error(" INITIATING NUCLEAR RESET PROCEDURE (STAGE 1/3)")
     logging.error(" ULP heartbeat malfunction detected")
     logging.error(" Device will reboot and perform hardware reset sequence")
-    logging.error("="*70)
+    logging.error("=" * 70)
 
     utils.writeToFlagFile(LAST_RESET_REASON_FLAG_FILE, "nuclear")
     utime.sleep_ms(100)  # Brief delay to ensure file write completes
@@ -772,6 +775,10 @@ def read_ulp_values(measurements, pcnt_cfg):
 
     logging.debug("ULP timing: now_timestamp: {}, last_timestamp: {}".format(now_timestamp, last_timestamp))
 
+    if _PCNT_DEBUG_ON:
+        # Store heartbeat for malfunction detection on next read
+        set_value_int(measurements, "ulp_heartbeat", heartbeat, SenmlUnits.SENML_UNIT_COUNTER)
+
     if last_timestamp == 0:
         reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters)
         for pcnt in pcnt_cfg:
@@ -781,9 +788,9 @@ def read_ulp_values(measurements, pcnt_cfg):
                 set_value_int(measurements, "pcnt_edge_count_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
                 set_value_float(measurements, "pcnt_period_s_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
                 set_value_float(measurements, "pcnt_count_formula_{}".format(id), 0)
-                logging.debug("================ {} =======================".format(id))
-                logging.debug("========= pcnt_count: ----------------")
-                logging.debug("=============================================")
+                logging.debug("=" * 70)
+                logging.debug("=== ID:{}".format(id))
+                logging.debug("=" * 70)
         return
 
     # execute calculations
@@ -821,9 +828,6 @@ def read_ulp_values(measurements, pcnt_cfg):
             cnt += 1
 
             read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formula, time_diff_from_prev, id)
-
-    # Store heartbeat for malfunction detection on next read
-    set_value_int(measurements, "ulp_heartbeat", heartbeat, SenmlUnits.SENML_UNIT_COUNTER)
 
 
 def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
@@ -926,13 +930,14 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
         pass
 
     logging.debug("   ")
-    logging.debug("================ pcnt {} =======================".format(id))
+    logging.debug("=" * 70)
+    logging.debug("=== ID:{}".format(id))
     logging.debug(
-        "========= pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}, {} pulse/sec".format(
+        "=== pcnt_count: {}, edge_cnt: {}, time_diff_from_prev: {}, calculated_value: {}, {} pulse/sec".format(
             pulse_cnt, edge_cnt, time_diff_from_prev, calculated_value, pulse_cnt / time_diff_from_prev if time_diff_from_prev > 0 else 0
         )
     )
-    logging.debug("=============================================")
+    logging.debug("=" * 70)
 
 
 def execute(measurements, pcnt_cfg):
@@ -958,13 +963,13 @@ def execute(measurements, pcnt_cfg):
             pcnt["highFreq"] = False
     try:
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
+            utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
             init_ulp(pcnt_cfg)
             _is_after_initialization = True
             _is_first_run = False
             # Clear any stale heartbeat tracking after fresh initialization
             utils.writeToFlagFile(HEARTBEAT_FLAG_FILE, "0")
             utils.writeToFlagFile(HEARTBEAT_CHECKS_FLAG_FILE, "0")
-            return
 
         # Check for ULP malfunction before reading values
         is_stuck, message = check_ulp_malfunction()

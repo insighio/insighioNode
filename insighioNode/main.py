@@ -146,7 +146,6 @@ last_reset_reason = utils.readFromFlagFile("/last_reset_reason")
 if last_reset_reason == "nuclear":
     logging.error("=" * 70)
     logging.error(" NUCLEAR RESET STAGE 2/3: Performing hardware ULP reset")
-    logging.error("=" * 70)
     from apps.demo_console import scenario_pcnt_ulp
 
     scenario_pcnt_ulp.reset_ulp_nuclear()
@@ -167,8 +166,6 @@ if last_reset_reason == "nuclear":
 elif last_reset_reason == "after_nuclear":
     logging.error("=" * 70)
     logging.error(" NUCLEAR RESET STAGE 3/3: Final soft_reset")
-    logging.error(" Device will start fresh with clean ULP state")
-    logging.error("=" * 70)
     utils.deleteFlagFile("/last_reset_reason")
 
     machine.soft_reset()  # Final reset - ULP will initialize cleanly after this
