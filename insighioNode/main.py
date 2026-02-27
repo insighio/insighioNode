@@ -26,6 +26,7 @@ device_info.initialize_led()
 device_info.blink_led(0x252525)
 
 import utils
+import machine
 
 demo_config_exists = False
 try:
@@ -42,8 +43,6 @@ except Exception as e:
         utils.deleteFile(CONFIG_FILE + ".prev")
         utils.writeToFlagFile("/config_reverted", "reverted")
         logging.info("Config revert done...")
-
-        import machine
 
         machine.reset()
     else:
@@ -115,11 +114,36 @@ if rstCause == 0 or rstCause == 1 or not demo_config_exists:
     try:
         import web_server
 
-        web_server.start(120000 if demo_config_exists else -1)
+        web_server.start(60000 if demo_config_exists else -1)
         del sys.modules["web_server"]
     except Exception as e:
         logging.debug(e, "web server error")
     gc.collect()
+
+####################################################################################
+# Operations after reset affected by previous scenario execution (e.g. nuclear reset)
+
+last_reset_reason = utils.readFromFlagFile("/last_reset_reason")
+if last_reset_reason == "nuclear":
+    logging.info("Performing nuclear reset...")
+    from apps.demo_console import scenario_pcnt_ulp
+
+    scenario_pcnt_ulp.reset_ulp_nuclear()
+
+    utils.deleteFlagFile(scenario_pcnt_ulp.RESET_IN_PROGRESS_FILE)
+    utils.deleteFlagFile(scenario_pcnt_ulp.HEARTBEAT_FLAG_FILE)
+    utils.deleteFlagFile(scenario_pcnt_ulp.HEARTBEAT_CHECKS_FLAG_FILE)
+    utils.deleteFlagFile(scenario_pcnt_ulp.LAST_RESET_REASON_FLAG_FILE)
+    utils.deleteFlagFile(scenario_pcnt_ulp.ULP_REQUIRED_WDT_RESET_FLAG_FILE)
+
+    utils.writeToFlagFile("/last_reset_reason", "after_nuclear")
+
+    machine.deepsleep(1)
+elif last_reset_reason == "after_nuclear":
+    logging.info("Device restarted after nuclear reset, clearing reset reason")
+    utils.deleteFlagFile("/last_reset_reason")
+
+    machine.soft_reset()
 
 # in case a temp config has been generated and webserver timeout occurs before
 # deleting it
@@ -133,6 +157,8 @@ except:
 try:
     import apps.demo_console.scenario as scenario
 
+    # import apps.demo_console.scenario_ce as scenario
+
     scenario.execute()
 except Exception as e:
     logging.exception(e, "Error executing scenario")
@@ -144,7 +170,5 @@ except Exception as e:
         pass
 
     # TODO: decide whether to factory reset on scenario execution failure
-
-    import machine
 
     machine.reset()
