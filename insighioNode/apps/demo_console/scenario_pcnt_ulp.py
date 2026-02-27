@@ -501,14 +501,29 @@ def reset_ulp_nuclear():
         return False
 
 
-def init_ulp(pcnt_cfg, force_reset=False):
+def execute_ulp_reset():
+    global _reset_in_progress
+
+    # Prevent re-entry during reset
+    if _reset_in_progress:
+        logging.warning("Reset already in progress, skipping")
+        return
+
+    _reset_in_progress = True
+    utils.writeToFlagFile(RESET_IN_PROGRESS_FILE, "1")
+
+    logging.error("Attempting NUCLEAR ULP reset")
+
+    utils.writeToFlagFile(LAST_RESET_REASON_FLAG_FILE, "nuclear")
+    machine.soft_reset()  # Perform a full device reset after nuclear reset
+
+
+def init_ulp(pcnt_cfg):
     """
-    Initialize ULP coprocessor with optional reset.
+    Initialize ULP coprocessor.
 
     Args:
         pcnt_cfg: Pulse counter configuration
-        force_reset: If True, perform reset before initialization
-        reset_level: 0=standard, 1=aggressive, 2=nuclear, 3=watchdog (full device reset)
     """
     from esp32 import ULP
     from external.esp32_ulp import src_to_binary
@@ -521,20 +536,9 @@ def init_ulp(pcnt_cfg, force_reset=False):
         logging.warning("Reset already in progress, skipping")
         return
 
-    if force_reset:
-        _reset_in_progress = True
-        utils.writeToFlagFile(RESET_IN_PROGRESS_FILE, "1")
-
     # Load binary with error handling
     ulp = ULP()
     ulp.set_wakeup_period(0, 0)
-
-    # If force_reset is True, perform hardware reset first
-    if force_reset:
-        logging.error("Attempting NUCLEAR ULP reset")
-
-        utils.writeToFlagFile(LAST_RESET_REASON_FLAG_FILE, "nuclear")
-        machine.soft_reset()  # Perform a full device reset after nuclear reset
 
     load_addr = 0
 
@@ -605,12 +609,7 @@ def init_ulp(pcnt_cfg, force_reset=False):
     logging.info("Setting ULP wakeup period: {} cycles".format(wakeup_period))
     ulp.set_wakeup_period(0, wakeup_period)
 
-    # Extended delay before starting to ensure hardware is stable
-    if force_reset:
-        logging.info("Waiting for hardware stabilization after reset...")
-        utime.sleep_ms(500)  # Much longer delay after reset
-    else:
-        utime.sleep_ms(50)  # Increased from 10ms
+    utime.sleep_ms(50)  # Increased from 10ms
 
     # Start ULP execution
     logging.info("Starting ULP execution at entry address {} words (0x{:04x})...".format(entry_addr, entry_addr))
@@ -933,43 +932,16 @@ def execute(measurements, pcnt_cfg):
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
             init_ulp(pcnt_cfg)
             _is_after_initialization = True
-            # _consecutive_failures = 0
-            # # Clear persisted failure count on fresh boot (not from deep sleep)
-            # utils.writeToFlagFile(CONSECUTIVE_FAILURES_FILE, "0")
-            # else:
-            #     # Load persisted consecutive failures count (survives deep sleep)
-            #     try:
-            #         failures_str = utils.readFromFlagFile(CONSECUTIVE_FAILURES_FILE)
-            #         _consecutive_failures = int(failures_str) if failures_str else 0
-            #     except:
-            #         _consecutive_failures = 0
+            _is_first_run = False
+            return
 
-            # Check for ULP malfunction before reading values
-            is_stuck, message = check_ulp_malfunction()
-            logging.info("ULP status: {}".format(message))
+        # Check for ULP malfunction before reading values
+        is_stuck, message = check_ulp_malfunction()
+        logging.info("ULP status: {}".format(message))
 
-            if is_stuck:
-                # _consecutive_failures += 1
-                # # Persist the failure count immediately
-                # utils.writeToFlagFile(CONSECUTIVE_FAILURES_FILE, str(_consecutive_failures))
-
-                # Perform reset based on level
-                init_ulp(pcnt_cfg, force_reset=True)
-                _is_after_initialization = True
-                set_value_int(measurements, "ulp_reinitialized", 1, SenmlUnits.SENML_UNIT_COUNTER)
-
-                # Reset the heartbeat tracking after reinitialization
-                utils.writeToFlagFile(HEARTBEAT_FLAG_FILE, "0")
-                # Don't read values this cycle, let ULP stabilize
-                _is_first_run = False
-                return
-            # else:
-            #     # ULP is running normally, reset failure counter
-            #     if _consecutive_failures > 0:
-            #         logging.info("ULP recovered! Resetting failure counter (was: {})".format(_consecutive_failures))
-            #         _consecutive_failures = 0
-            #         # Clear persisted failure count
-            #         utils.writeToFlagFile(CONSECUTIVE_FAILURES_FILE, "0")
+        if is_stuck:
+            # Perform reset if ULP is malfunctioning
+            execute_ulp_reset()
 
         read_ulp_values(measurements, pcnt_cfg)
     except Exception as e:
