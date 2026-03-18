@@ -920,6 +920,8 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
     try:
         raw_value = edge_cnt / 2
         formula = formula.replace("v", str(raw_value))
+        if "d" in formula:
+            formula = formula.replace("d", str(time_diff_from_prev))
         to_execute = "v_transformed=({})".format(formula)
         namespace = {}
         exec(to_execute, namespace)

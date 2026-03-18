@@ -190,7 +190,7 @@
                 label="Pulse Counter formula"
                 v-model:value="pc.formula"
                 @update:value="pc.formula = $event"
-                :tooltip="formula_tooltip"
+                :tooltip="formula_pcnt_tooltip"
               />
             </div>
             <div class="column col-2 col-mr-auto"></div>
@@ -355,7 +355,9 @@ export default {
       pulseCounterConfig: [],
       gain_tooltip:
         "defines the voltage range\nof the ADC input\nthe lower the voltage range\n the higher the precision",
-      formula_tooltip: "python script to\ntransform raw value (v)\nfrom millivolt\nto meaningful value\nex: 2*v + v**2"
+      formula_tooltip: "python script to\ntransform raw value (v)\nfrom millivolt\nto meaningful value\nex: 2*v + v**2",
+      formula_pcnt_tooltip:
+        "python script to\ntransform raw value \nfrom pulse count\nto meaningful value\nVariables:\n(v): pulse counts\n(d):time period in seconds\nex: (v/d)*(40/100)"
     }
   },
   methods: {
