@@ -1,4 +1,5 @@
 const unitMap = [
+  { label: "<no unit>", unit: "" },
   { label: "Acceleration", unit: "m/s2" },
   { label: "Ampere", unit: "A" },
   { label: "Ampere hour", unit: "Ah" },
