@@ -40,7 +40,7 @@
               <td>
                 <select v-model="measurement.unit" :id="'unit-' + index">
                   <option v-for="unitObj in unitOptions" :key="unitObj.unit" :value="unitObj.unit">
-                    {{ unitObj.label }}
+                    {{ unitObj.label }} - {{ unitObj.unit }}
                   </option>
                 </select>
               </td>
