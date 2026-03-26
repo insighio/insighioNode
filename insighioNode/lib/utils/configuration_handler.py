@@ -160,6 +160,7 @@ configDict = {
     "_MEAS_ADC": "meas_adc",
     "_MEAS_PULSECOUNTER": "meas_pulseCounter",
     "_SYSTEM_SETTINGS": "system_settings",
+    "_CELLULAR_MCC_MNC": "cell_mcc_mnc",
 }
 
 NoneType = type(None)
