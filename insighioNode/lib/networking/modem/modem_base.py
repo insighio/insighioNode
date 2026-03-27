@@ -104,15 +104,27 @@ class Modem:
         expected_configuration = "0"  # operator automatic selection
         command = "AT+COPS=0"
 
-        if technology.lower() == "nbiot" or mcc_mnc is not None:
-            if mcc_mnc is None:
-                mcc_mnc = 20201
+        if technology.lower() == "nbiot" and mcc_mnc is None:
+            mcc_mnc = "20201"  # backward compatibility
+
+        if mcc_mnc is not None:
             expected_configuration = "1"  # operator locking
             command = "AT+COPS=4,2,{}".format(mcc_mnc)
 
-        operator_regex = r"\+COPS:\s*(\d).*"
+        # examples to be handled
+        # +COPS: 1,2,"20201",0
+        # +COPS: 0
+
+        operator_regex = r'\+COPS:\s*(\d)(,\d+,"(\d+)")?'
         match = ure.search(operator_regex, lines)
-        if match and match.group(1) == expected_configuration:
+        if (
+            match
+            and match.group(1) == expected_configuration
+            and (
+                expected_configuration == "0"
+                or (expected_configuration == "1" and match.group(3) is not None and match.group(3) == mcc_mnc)
+            )
+        ):
             logging.debug("Operator selection already configured")
             return
 
