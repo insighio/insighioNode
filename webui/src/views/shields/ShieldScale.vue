@@ -84,10 +84,11 @@
               <span class="text-bold"
                 ><div v-if="isLoading" class="loading"></div>
                 <progress
+                  v-if="isLoading"
                   class="progress"
                   :value="progressValue"
                   max="30"
-                  style="display: none; margin: auto"
+                  style="margin: auto"
                 ></progress
                 >{{ scaleOffset }}</span
               >
@@ -127,7 +128,18 @@
             <!-- Step 3: Calibration Results -->
             <p class="empty-title h5">Weight Scale Calibration</p>
             <p class="empty-subtitle">
-              Offset: <span class="text-bold">{{ scaleOffset }}</span>
+              Offset:
+              <span class="text-bold"
+                ><div v-if="isLoading" class="loading"></div>
+                <progress
+                  v-if="isLoading"
+                  class="progress"
+                  :value="progressValue"
+                  max="30"
+                  style="display: none; margin: auto"
+                ></progress
+                >{{ scaleOffset }}</span
+              >
             </p>
             <p class="empty-subtitle">
               Measured reference weight: <span class="text-bold">{{ measuredRefWeight }}</span>
@@ -139,10 +151,11 @@
               Current Weight(g):
               <span class="text-bold"
                 ><progress
+                  v-if="isLoading"
                   class="progress"
                   :value="progressValue"
                   max="30"
-                  style="display: none; margin: auto"
+                  style="margin: auto"
                 ></progress
                 >{{ currentWeight }}</span
               >
@@ -294,7 +307,9 @@ export default {
     },
     startCalibration() {
       this.showWizard = true
-      this.currentStep = 1
+
+      if (this.scaleOffset && this.scaleScale) this.currentStep = 3
+      else this.currentStep = 1
     },
     closeWizard() {
       this.showWizard = false
@@ -304,8 +319,10 @@ export default {
         this.getScaleOffset()
       } else if (this.currentStep === 2) {
         // Simulate measuring reference weight
-        this.measuredRefWeight = this.referenceWeight // Replace with actual logic
-        this.scale = 1 // Replace with actual logic
+        // this.measuredRefWeight = this.referenceWeight // Replace with actual logic
+        // this.scale = 1 // Replace with actual logic
+        //scale = (data.raw - offset) / referenceExpectedWeight
+        this.calculateScaleMultiplier()
       }
       this.currentStep++
     },
@@ -325,13 +342,14 @@ export default {
           this.stopProgressAnimation()
         })
     },
+
     calculateScaleMultiplier() {
       this.startProgressAnimation()
       fetch("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
         .then((response) => {
           return response.json()
         })
-        .then(function (data) {
+        .then((data) => {
           var referenceExpectedWeight = this.referenceWeight
           this.scaleScale = (data.raw - this.scaleOffset) / referenceExpectedWeight
           this.stopProgressAnimation()
@@ -354,7 +372,7 @@ export default {
         .then((response) => {
           return response.json()
         })
-        .then(function (data) {
+        .then((data) => {
           this.scaleOffset = data.raw
           this.currentWeight = 0
 
@@ -371,7 +389,7 @@ export default {
         .then((response) => {
           return response.json()
         })
-        .then(function (data) {
+        .then((data) => {
           const offset = parseFloat(this.scaleOffset)
           const scale = parseFloat(this.scaleScale)
           if (scale !== 0) {

@@ -3,6 +3,7 @@ import network
 import sys
 from external import tinyweb
 
+import device_info
 from device_info import get_hw_module_version, get_device_id, get_hw_module_version, set_led_enabled, set_led_color, wdt_reset
 from utime import ticks_ms, ticks_diff, ticks_add
 import logging
