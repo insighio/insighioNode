@@ -9,13 +9,27 @@ from external.kpn_senml.senml_unit import SenmlUnits, SenmlSecondaryUnits
 from .dictionary_utils import set_value, set_value_int, set_value_float
 from . import message_buffer
 
+enableBatteryLifeOptimization = False
+
 
 def device_init():
+    global enableBatteryLifeOptimization
     if (
         device_info.get_hw_module_version() != device_info._CONST_ESP32
         and device_info.get_hw_module_version() != device_info._CONST_ESP32_WROOM
     ):
         device_info.bq_charger_exec(device_info.bq_charger_setup)
+
+        if cfg.get("_SYSTEM_SETTINGS"):
+            import json
+
+            _system_settings = json.loads(cfg._SYSTEM_SETTINGS)
+            if _system_settings and "enableBatteryLifeOptimization" in _system_settings:
+                enableBatteryLifeOptimization = _system_settings["enableBatteryLifeOptimization"]
+                if enableBatteryLifeOptimization:
+                    device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_80_perc)
+                else:
+                    device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_100_perc)
     else:
         gpio_handler.set_pin_value(cfg.get("_UC_IO_LOAD_PWR_SAVE_OFF"), 1)
         gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 1)
@@ -77,6 +91,19 @@ def get_measurements(cfg_dummy=None):
                 vbatt,
                 SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
             )
+
+        if enableBatteryLifeOptimization:
+            BAT_VOLTAGE_RESUME = 3800
+            BAT_VOLTAGE_CUTOFF = 3950
+            if vbatt is not None:
+                if vbatt <= BAT_VOLTAGE_RESUME:
+                    logging.info("Battery voltage low (%d mV), resuming charging", vbatt)
+                    device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+                elif vbatt >= BAT_VOLTAGE_CUTOFF:
+                    logging.info("Battery voltage sufficient (%d mV), stopping charging to preserve battery life", vbatt)
+                    device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+                else:
+                    logging.debug("Battery voltage at %d mV, within thresholds, no action taken", vbatt)
 
         if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
             (mem_alloc, mem_free) = device_info.get_heap_memory()
