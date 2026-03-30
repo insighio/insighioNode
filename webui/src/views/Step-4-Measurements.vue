@@ -95,6 +95,11 @@
                       label="File System Optimization"
                       v-model:value="systemSettings.enableFileSystemOptimization"
                     />
+                    <SSwitch
+                      label="Battery life optimization"
+                      tooltip="Enabling this will charge keep the battery\ncharge around 80% to prolong battery life"
+                      v-model:value="systemSettings.enableBatteryLifeOptimization"
+                    />
                   </div>
                   <br />
                 </div>
@@ -212,11 +217,13 @@ export default {
       ],
       systemDefaultSettings: {
         loggingLevel: "DEBUG",
-        enableFileSystemOptimization: true
+        enableFileSystemOptimization: true,
+        enableBatteryLifeOptimization: false
       },
       systemSettings: {
         loggingLevel: "DEBUG",
-        enableFileSystemOptimization: true
+        enableFileSystemOptimization: true,
+        enableBatteryLifeOptimization: false
       },
       transitionDirection: "slide-left", // Default transition direction
       isMeasurementNamingDialogOpen: false,
