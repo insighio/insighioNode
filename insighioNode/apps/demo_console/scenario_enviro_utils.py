@@ -286,12 +286,21 @@ def execute_sdi12_measurements(measurements):
     from external.microsdi12.microsdi12 import SDI12
 
     sdi12 = None
+    shield_version = "1"  # TODO: autodetect the version based on the  chip-id reading
 
     try:
-        sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
-        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 1)
-        # for 'v3-alpha-v2.6.12-sp34'
-        # sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
+        if shield_version == "1":
+            sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
+            sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 1)
+        elif shield_version == "sp34":
+            sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
+        elif shield_version == "2":
+            UC_IO_SDI_12_TX_ON = cfg.get("_UC_IO_DRV_ON")
+            UC_IO_SDI_12_REG_ON = cfg.get("_UC_IO_RCV_ON")
+            sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), UC_IO_SDI_12_TX_ON, 1)
+            gpio_handler.set_pin_value(UC_IO_SDI_12_REG_ON, 1)  # set SDI-12 regulator always on for v2 shield
+            sdi12.set_data_levels_inverted(True)
+
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
@@ -306,6 +315,10 @@ def execute_sdi12_measurements(measurements):
 
     if sdi12:
         sdi12.close()
+
+    if shield_version == "2":
+        UC_IO_SDI_12_REG_ON = cfg.get("_UC_IO_RCV_ON")
+        gpio_handler.set_pin_value(UC_IO_SDI_12_REG_ON, 0)
 
     _exec_i2c_op(io_expander_power_off_sdi12_sensors)
 
