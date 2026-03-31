@@ -97,7 +97,7 @@
                     />
                     <SSwitch
                       label="Battery life optimization"
-                      tooltip="Enabling this will charge keep the battery\ncharge around 80% to prolong battery life"
+                      :tooltip="batteryLifeOptimizationTooltip"
                       v-model:value="systemSettings.enableBatteryLifeOptimization"
                     />
                   </div>
@@ -228,7 +228,9 @@ export default {
       transitionDirection: "slide-left", // Default transition direction
       isMeasurementNamingDialogOpen: false,
       measurements: [],
-      unitOptions: ["Celsius", "Fahrenheit", "Kelvin"] // Example units
+      unitOptions: ["Celsius", "Fahrenheit", "Kelvin"], // Example units
+      batteryLifeOptimizationTooltip:
+        "Enabling this will charge keep the battery\ncharge around 80% to prolong battery life"
     }
   },
   mounted() {

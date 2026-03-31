@@ -20,16 +20,21 @@ def device_init():
     ):
         device_info.bq_charger_exec(device_info.bq_charger_setup)
 
+        battery_settings_applied = False
         if cfg.get("_SYSTEM_SETTINGS"):
             import json
 
-            _system_settings = json.loads(cfg._SYSTEM_SETTINGS)
+            _system_settings = json.loads(cfg.get("_SYSTEM_SETTINGS"))
             if _system_settings and "enableBatteryLifeOptimization" in _system_settings:
                 enableBatteryLifeOptimization = _system_settings["enableBatteryLifeOptimization"]
+
                 if enableBatteryLifeOptimization:
-                    device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_80_perc)
-                else:
-                    device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_100_perc)
+                    logging.debug("Setting max battery charge to 3.95V")
+                    device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_3950_mv)
+                    battery_settings_applied = True
+
+        if not battery_settings_applied:
+            device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
     else:
         gpio_handler.set_pin_value(cfg.get("_UC_IO_LOAD_PWR_SAVE_OFF"), 1)
         gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 1)
