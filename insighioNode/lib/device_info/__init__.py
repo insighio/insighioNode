@@ -236,13 +236,13 @@ def get_free_flash(partition_path="/"):
     return freesize
 
 
-def bq_charger_exec(bq_func):
+def bq_charger_exec(bq_func, *args, **kwargs):
     from machine import SoftI2C, Pin
 
     status = False
     try:
         i2c = SoftI2C(scl=Pin(38), sda=Pin(39))  # cfg._UC_IO_I2C_SCL, cfg._UC_IO_I2C_SDA
-        status = bq_func(i2c, 0x6B)  # cfg._I2C_BQ_ADDRESS
+        status = bq_func(i2c, 0x6B, *args, **kwargs)  # cfg._I2C_BQ_ADDRESS
     except Exception as e:
         logging.error("No BQ charger detected")
     return status
@@ -251,7 +251,6 @@ def bq_charger_exec(bq_func):
 def bq_charger_setup(i2c, bq_addr):
     logging.debug("Battery: initialization")
     i2c.writeto_mem(bq_addr, 5, b"\x84")
-    i2c.writeto_mem(bq_addr, 0, b"\x22")
 
 
 def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
@@ -272,6 +271,30 @@ def bq_charger_set_charging_on(i2c, bq_addr):
 def bq_charger_set_charging_off(i2c, bq_addr):
     logging.debug("Battery: settings charge off")
     i2c.writeto_mem(bq_addr, 1, b"\x0b")
+
+
+def bq_charger_set_hiz_mode_on(i2c, bq_addr):
+    logging.debug("Battery: settings Hi-Z mode on")
+    i2c.writeto_mem(bq_addr, 0, b"\xa2")
+
+
+def bq_charger_set_hiz_mode_off(i2c, bq_addr):
+    logging.debug("Battery: settings Hi-Z mode off")
+    i2c.writeto_mem(bq_addr, 0, b"\x22")
+
+
+def bq_charger_get_regs(i2c, bq_addr):
+    regs = []
+    for i in range(0, 9):
+        v = i2c.readfrom_mem(bq_addr, i, 1).hex()
+        regs.append(v)
+
+    return regs
+
+
+def bq_charger_set_regs(i2c, bq_addr, regs):
+    for i in range(0, 9):
+        i2c.writeto_mem(bq_addr, i, bytes([regs[i]]))
 
 
 def bq_charger_is_on_external_power(i2c, bq_addr):

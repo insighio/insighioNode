@@ -30,11 +30,27 @@ def device_init():
 
                 if enableBatteryLifeOptimization:
                     logging.debug("Setting max battery charge to 3.95V")
+                    vbatt = read_battery_voltage()
+
                     device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_3950_mv)
+                    device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
+
+                    BAT_VOLTAGE_RESUME = 3800
+                    BAT_VOLTAGE_CUTOFF = 3950
+                    if vbatt is not None:
+                        if vbatt <= BAT_VOLTAGE_RESUME:
+                            logging.info("Battery voltage low (%d mV), resuming charging", vbatt)
+                            device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+                        elif vbatt >= BAT_VOLTAGE_CUTOFF:
+                            logging.info("Battery voltage sufficient (%d mV), stopping charging to preserve battery life", vbatt)
+                            device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+                        else:
+                            logging.debug("Battery voltage at %d mV, within thresholds, no action taken", vbatt)
                     battery_settings_applied = True
 
         if not battery_settings_applied:
             device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
+            device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
     else:
         gpio_handler.set_pin_value(cfg.get("_UC_IO_LOAD_PWR_SAVE_OFF"), 1)
         gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 1)
@@ -96,19 +112,6 @@ def get_measurements(cfg_dummy=None):
                 vbatt,
                 SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
             )
-
-        if enableBatteryLifeOptimization:
-            BAT_VOLTAGE_RESUME = 3800
-            BAT_VOLTAGE_CUTOFF = 3950
-            if vbatt is not None:
-                if vbatt <= BAT_VOLTAGE_RESUME:
-                    logging.info("Battery voltage low (%d mV), resuming charging", vbatt)
-                    device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
-                elif vbatt >= BAT_VOLTAGE_CUTOFF:
-                    logging.info("Battery voltage sufficient (%d mV), stopping charging to preserve battery life", vbatt)
-                    device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
-                else:
-                    logging.debug("Battery voltage at %d mV, within thresholds, no action taken", vbatt)
 
         if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
             (mem_alloc, mem_free) = device_info.get_heap_memory()
@@ -225,13 +228,16 @@ def read_battery_voltage():
     current = None
     gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 1)
 
+    regs = device_info.bq_charger_exec(device_info.bq_charger_get_regs)
+
     device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+    device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
 
     sleep_ms(50)
 
     vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
 
-    device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+    device_info.bq_charger_exec(device_info.bq_charger_set_regs, regs)
     gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
     return vbatt
 
