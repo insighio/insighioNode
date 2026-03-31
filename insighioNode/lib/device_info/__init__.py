@@ -256,17 +256,17 @@ def bq_charger_setup(i2c, bq_addr):
 
 def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
     logging.debug("Battery: max charge 3952mV")
-    i2c.writeto_mem(bq_addr, 4, b"\x72")  # 3.952V -> (3.952 - 3.504) / 0.016 = 28 -> 0b011100 -> reg 0x04 = 0b01110000 = 0x70
+    i2c.writeto_mem(bq_addr, 4, b"\x72")  # 3.952V -> (3.952 - 3.504) / 0.016 = 28 -> 0b011100 -> reg 0x04 = 0b01110010 = 0x72
 
 
 def bq_charger_set_max_charge_4200_mv(i2c, bq_addr):
     logging.debug("Battery: max charge 4208mV")
-    i2c.writeto_mem(bq_addr, 4, b"\x2e")  # Default: 4.208 V
+    i2c.writeto_mem(bq_addr, 4, b"\xb2")  # Default: 4.208 V
 
 
 def bq_charger_set_charging_on(i2c, bq_addr):
     logging.debug("Battery: settings charge on")
-    i2c.writeto_mem(bq_addr, 1, b"\x1b")
+    i2c.writeto_mem(bq_addr, 1, b"\x3b")
 
 
 def bq_charger_set_charging_off(i2c, bq_addr):
