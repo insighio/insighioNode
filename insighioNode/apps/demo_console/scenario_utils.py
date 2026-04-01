@@ -33,7 +33,6 @@ def device_init():
                     vbatt = read_battery_voltage()
 
                     device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_3950_mv)
-                    device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
 
                     BAT_VOLTAGE_RESUME = 3800
                     BAT_VOLTAGE_CUTOFF = 3950
@@ -41,9 +40,11 @@ def device_init():
                         if vbatt <= BAT_VOLTAGE_RESUME:
                             logging.info("Battery voltage low (%d mV), resuming charging", vbatt)
                             device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+                            device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
                         elif vbatt >= BAT_VOLTAGE_CUTOFF:
                             logging.info("Battery voltage sufficient (%d mV), stopping charging to preserve battery life", vbatt)
                             device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+                            device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
                         else:
                             logging.debug("Battery voltage at %d mV, within thresholds, no action taken", vbatt)
                     battery_settings_applied = True
@@ -51,6 +52,7 @@ def device_init():
         if not battery_settings_applied:
             device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
             device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+            device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
     else:
         gpio_handler.set_pin_value(cfg.get("_UC_IO_LOAD_PWR_SAVE_OFF"), 1)
         gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 1)
@@ -231,7 +233,7 @@ def read_battery_voltage():
     regs = device_info.bq_charger_exec(device_info.bq_charger_get_regs)
 
     device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
-    device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
+    # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
 
     sleep_ms(50)
 
