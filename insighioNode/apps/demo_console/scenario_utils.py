@@ -22,6 +22,7 @@ def device_init():
     else:
         device_info.set_led_enabled(False)
 
+
 def execute_battery_setup():
     global enableBatteryLifeOptimization
     if (
@@ -43,10 +44,8 @@ def execute_battery_setup():
                     logging.debug("Setting max battery charge to 3.95V")
                     vbatt = read_battery_voltage()
 
-                    # device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_3950_mv)
-
                     BAT_VOLTAGE_RESUME = 3800
-                    BAT_VOLTAGE_CUTOFF = 4000#3950
+                    BAT_VOLTAGE_CUTOFF = 4000  # 3950
                     if vbatt is not None:
                         if vbatt <= BAT_VOLTAGE_RESUME:
                             logging.info("Battery voltage low (%d mV), resuming charging", vbatt)
@@ -68,6 +67,7 @@ def execute_battery_setup():
     else:
         gpio_handler.set_pin_value(cfg.get("_UC_IO_LOAD_PWR_SAVE_OFF"), 1)
         gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 1)
+
 
 def read_shield_chip_id():
     from machine import Pin, SoftI2C
@@ -175,7 +175,7 @@ def get_measurements(cfg_dummy=None):
             from . import scenario_advind_utils
 
             scenario_advind_utils.shield_measurements(measurements)
-        elif shield_name == cfg.get("_CONST_SHIELD_ENVIRO"):
+        elif shield_name == cfg.get("_CONST_SHIELD_ENVIRO") or shield_name == cfg.get("_CONST_SHIELD_ENVIRO_V2"):
             (fw_major, fw_minor, _, _) = device_info.get_firmware_version()
 
             if fw_major == 1 and fw_minor >= 18 and fw_minor <= 19:
@@ -238,7 +238,7 @@ def read_battery_voltage():
     if is_charging:
         device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
-    #device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
+    # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
 
     sleep_ms(500)
 
@@ -247,7 +247,7 @@ def read_battery_voltage():
     if is_charging:
         device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
 
-    #device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
+    # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
 
     gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
     return vbatt

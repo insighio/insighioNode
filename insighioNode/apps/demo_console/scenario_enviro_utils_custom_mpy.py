@@ -46,6 +46,11 @@ _modbus_struct_format_options = {
     "float": "f",
 }
 
+CONST_SHIELD_V1 = cfg.get("_CONST_SHIELD_ENVIRO")
+CONST_SHIELD_V2 = cfg.get("_CONST_SHIELD_ENVIRO_V2")
+SHIELD_VERSION = cfg.get("_SELECTED_SHIELD")
+
+
 # Add debounce timer variables
 from machine import Timer
 
@@ -79,10 +84,6 @@ pcnt_2_readings = 0
 pcnt_2_triggered_edge_level = None
 pcnt_2_voltage_max = 0
 pcnt_2_voltage_min = 3300
-
-from device_info import get_firmware_version
-
-_IS_ALWAYS_ON = False
 
 pcnt_last_run_timestamp_ms = 0
 
@@ -292,10 +293,20 @@ def execute_sdi12_measurements(measurements):
     sdi12 = None
 
     try:
-        sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
-        sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 1)
-        # for 'v3-alpha-v2.6.12-sp34'
-        # sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
+        if SHIELD_VERSION == CONST_SHIELD_V1:
+            sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
+            sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 1)
+        elif SHIELD_VERSION == "sp34":
+            sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
+        elif SHIELD_VERSION == CONST_SHIELD_V2:
+            sdi12 = SDI12(cfg.get("_UC_IO_SDI_12_TX"), cfg.get("_UC_IO_SDI_12_RX"), None, 1)
+            sdi12.set_dual_direction_pins(cfg.get("_UC_IO_SDI_12_TX_ON"), cfg.get("_UC_IO_SDI_12_RX_ON"), 1, 0, 0, 1)
+            gpio_handler.set_pin_value(cfg.get("_UC_IO_SDI_12_REG_ON"), 1)  # set SDI-12 regulator always on for v2 shield
+            sdi12.set_data_levels_inverted(True)
+        else:
+            logging.error("Unsupported shield version: {}".format(SHIELD_VERSION))
+            return
+
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
@@ -310,6 +321,10 @@ def execute_sdi12_measurements(measurements):
 
     if sdi12:
         sdi12.close()
+
+    if shield_version == CONST_SHIELD_V2:
+        UC_IO_SDI_12_REG_ON = cfg.get("_UC_IO_RCV_ON")
+        gpio_handler.set_pin_value(UC_IO_SDI_12_REG_ON, 0)
 
     _exec_i2c_op(io_expander_power_off_sdi12_sensors)
 
@@ -328,6 +343,7 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
 
         for i in range(0, 3):
             is_active = sdi12.is_active(address)
+            logging.debug("read_sdi12_sensor - is_active: {}".format(is_active))
             if is_active:
                 break
 
@@ -1100,7 +1116,7 @@ def store_pulse_counter_measurements(
 ):
     pulse_cnt = 0
 
-    # avoid counting noise where only one edger has changed over the meas period
+    # avoid counting noise where only one edge has changed over the meas period
     if readings_cnt > 1:
         pulse_cnt = ceil(edge_cnt / 2)
 

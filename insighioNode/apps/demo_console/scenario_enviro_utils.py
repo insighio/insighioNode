@@ -46,6 +46,11 @@ _modbus_struct_format_options = {
     "float": "f",
 }
 
+CONST_SHIELD_V1 = cfg.get("_CONST_SHIELD_ENVIRO")
+CONST_SHIELD_V2 = cfg.get("_CONST_SHIELD_ENVIRO_V2")
+SHIELD_VERSION = cfg.get("_SELECTED_SHIELD")
+
+
 # Add debounce timer variables
 from machine import Timer
 
@@ -286,20 +291,21 @@ def execute_sdi12_measurements(measurements):
     from external.microsdi12.microsdi12 import SDI12
 
     sdi12 = None
-    shield_version = "1"  # TODO: autodetect the version based on the  chip-id reading
 
     try:
-        if shield_version == "1":
+        if SHIELD_VERSION == CONST_SHIELD_V1:
             sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
             sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"), 1, 1, 1, 1)
-        elif shield_version == "sp34":
+        elif SHIELD_VERSION == "sp34":
             sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
-        elif shield_version == "2":
-            UC_IO_SDI_12_TX_ON = cfg.get("_UC_IO_DRV_ON")
-            UC_IO_SDI_12_REG_ON = cfg.get("_UC_IO_RCV_ON")
-            sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), UC_IO_SDI_12_TX_ON, 1)
-            gpio_handler.set_pin_value(UC_IO_SDI_12_REG_ON, 1)  # set SDI-12 regulator always on for v2 shield
+        elif SHIELD_VERSION == CONST_SHIELD_V2:
+            sdi12 = SDI12(cfg.get("_UC_IO_SDI_12_TX"), cfg.get("_UC_IO_SDI_12_RX"), None, 1)
+            sdi12.set_dual_direction_pins(cfg.get("_UC_IO_SDI_12_TX_ON"), cfg.get("_UC_IO_SDI_12_RX_ON"), 1, 0, 0, 1)
+            gpio_handler.set_pin_value(cfg.get("_UC_IO_SDI_12_REG_ON"), 1)  # set SDI-12 regulator always on for v2 shield
             sdi12.set_data_levels_inverted(True)
+        else:
+            logging.error("Unsupported shield version: {}".format(SHIELD_VERSION))
+            return
 
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
@@ -316,7 +322,7 @@ def execute_sdi12_measurements(measurements):
     if sdi12:
         sdi12.close()
 
-    if shield_version == "2":
+    if shield_version == CONST_SHIELD_V2:
         UC_IO_SDI_12_REG_ON = cfg.get("_UC_IO_RCV_ON")
         gpio_handler.set_pin_value(UC_IO_SDI_12_REG_ON, 0)
 
@@ -337,6 +343,7 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
 
         for i in range(0, 3):
             is_active = sdi12.is_active(address)
+            logging.debug("read_sdi12_sensor - is_active: {}".format(is_active))
             if is_active:
                 break
 
