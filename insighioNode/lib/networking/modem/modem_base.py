@@ -398,6 +398,17 @@ class Modem:
 
         return (self.sim_imsi, self.sim_iccid)
 
+    def get_modem_imei(self):
+        self.modem_imei = None
+
+        (status, lines) = self.send_at_cmd("at+gsn")
+        if status:
+            match_res = self._match_regex(r"(\d+)", lines)
+            if match_res is not None:
+                self.modem_imei = match_res.group(1)
+
+        return self.modem_imei
+
     # to be overriden by children
     def set_gps_state(self, poweron=True):
         logging.debug("base modem.set_gps_state is empty")

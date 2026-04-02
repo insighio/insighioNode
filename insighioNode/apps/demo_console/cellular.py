@@ -71,12 +71,16 @@ def update_hw_ids(measurements, is_senml=True, is_json=False):
 
     (imsi, iccid) = modem_instance.get_sim_card_ids()
 
+    modem_imei = modem_instance.get_modem_imei()
+
     if is_senml:
         set_value_int(measurements, "cell_imsi", imsi)
         set_value_int(measurements, "cell_iccid", iccid)
+        set_value_int(measurements, "cell_imei", modem_imei)
     elif is_json:
         measurements["cell_imsi"] = imsi
         measurements["cell_iccid"] = iccid
+        measurements["cell_imei"] = modem_imei
 
 
 # network connection
