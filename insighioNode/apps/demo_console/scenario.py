@@ -136,6 +136,7 @@ def executeMeasureAndUploadLoop():
         message_buffer.timestamp_measurements(timestamp_obj, do_round_measurement_timestamp_in_minutes)
 
         scenario_utils.pause_background_measurements()
+        scenario_utils.execute_battery_setup()
 
         # None: connection not executed
         # False: connection failed

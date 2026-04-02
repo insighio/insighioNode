@@ -13,12 +13,23 @@ enableBatteryLifeOptimization = False
 
 
 def device_init():
+    execute_battery_setup()
+    if cfg.get("_NOTIFICATION_LED_ENABLED"):
+        if cfg.get("_UC_IO_RGB_DIN") and cfg.get("_UC_RGB_VDD"):
+            device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"), cfg.get("_UC_RGB_VDD"), cfg.get("_UC_IO_RGB_DIN"))
+        else:
+            device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"))
+    else:
+        device_info.set_led_enabled(False)
+
+def execute_battery_setup():
     global enableBatteryLifeOptimization
     if (
         device_info.get_hw_module_version() != device_info._CONST_ESP32
         and device_info.get_hw_module_version() != device_info._CONST_ESP32_WROOM
     ):
         device_info.bq_charger_exec(device_info.bq_charger_setup)
+        device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
 
         battery_settings_applied = False
         if cfg.get("_SYSTEM_SETTINGS"):
@@ -32,10 +43,10 @@ def device_init():
                     logging.debug("Setting max battery charge to 3.95V")
                     vbatt = read_battery_voltage()
 
-                    device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_3950_mv)
+                    # device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_3950_mv)
 
                     BAT_VOLTAGE_RESUME = 3800
-                    BAT_VOLTAGE_CUTOFF = 3950
+                    BAT_VOLTAGE_CUTOFF = 4000#3950
                     if vbatt is not None:
                         if vbatt <= BAT_VOLTAGE_RESUME:
                             logging.info("Battery voltage low (%d mV), resuming charging", vbatt)
@@ -50,21 +61,13 @@ def device_init():
                     battery_settings_applied = True
 
         if not battery_settings_applied:
-            device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
+            logging.debug("Battery settings default")
+            # device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
             device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
             device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
     else:
         gpio_handler.set_pin_value(cfg.get("_UC_IO_LOAD_PWR_SAVE_OFF"), 1)
         gpio_handler.set_pin_value(cfg.get("_UC_IO_SENSOR_PWR_SAVE_OFF"), 1)
-
-    if cfg.get("_NOTIFICATION_LED_ENABLED"):
-        if cfg.get("_UC_IO_RGB_DIN") and cfg.get("_UC_RGB_VDD"):
-            device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"), cfg.get("_UC_RGB_VDD"), cfg.get("_UC_IO_RGB_DIN"))
-        else:
-            device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"))
-    else:
-        device_info.set_led_enabled(False)
-
 
 def read_shield_chip_id():
     from machine import Pin, SoftI2C
@@ -131,7 +134,7 @@ def get_measurements(cfg_dummy=None):
             except Exception as e:
                 logging.exception(e, "Error getting i2c_devices.")
 
-            set_value(measurements, "is_charging", 1 if device_info.bq_charger_exec(device_info.bq_charger_is_on_external_power) else 0)
+            set_value(measurements, "is_charging", 1 if device_info.bq_charger_exec(device_info.bq_charger_get_is_charging) else 0)
 
     except Exception as e:
         logging.exception(e, "unable to measure board sensors")
@@ -230,16 +233,22 @@ def read_battery_voltage():
     current = None
     gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 1)
 
-    regs = device_info.bq_charger_exec(device_info.bq_charger_get_regs)
+    is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
 
-    device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
-    # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
+    if is_charging:
+        device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
-    sleep_ms(50)
+    #device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
+
+    sleep_ms(500)
 
     vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
 
-    device_info.bq_charger_exec(device_info.bq_charger_set_regs, regs)
+    if is_charging:
+        device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+
+    #device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
+
     gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
     return vbatt
 

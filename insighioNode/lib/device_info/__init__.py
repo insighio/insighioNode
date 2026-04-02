@@ -244,13 +244,14 @@ def bq_charger_exec(bq_func, *args, **kwargs):
         i2c = SoftI2C(scl=Pin(38), sda=Pin(39))  # cfg._UC_IO_I2C_SCL, cfg._UC_IO_I2C_SDA
         status = bq_func(i2c, 0x6B, *args, **kwargs)  # cfg._I2C_BQ_ADDRESS
     except Exception as e:
-        logging.error("No BQ charger detected")
+        logging.exception(e, "No BQ charger detected")
     return status
 
 
 def bq_charger_setup(i2c, bq_addr):
     logging.debug("Battery: initialization")
     i2c.writeto_mem(bq_addr, 5, b"\x84")
+    i2c.writeto_mem(bq_addr, 2, b"\x20")
 
 
 def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
@@ -273,6 +274,19 @@ def bq_charger_set_charging_off(i2c, bq_addr):
     i2c.writeto_mem(bq_addr, 1, b"\x0b")
 
 
+def bq_charger_get_is_charging_on(i2c, bq_addr):
+    val = i2c.readfrom_mem(bq_addr, 1, 1)
+    logging.debug("BQ charger is charging on: {}".format(ubinascii.hexlify(val)))
+    return (int.from_bytes(val, "big") & 0x30) > 0
+
+
+def bq_charger_get_is_charging(i2c, bq_addr):
+    val = i2c.readfrom_mem(bq_addr, 8, 1)
+    logging.debug("BQ charger state: {}".format(ubinascii.hexlify(val)))
+    is_charging = (int.from_bytes(val, "big") & 0x30) > 0
+    return is_charging
+
+
 def bq_charger_set_hiz_mode_on(i2c, bq_addr):
     logging.debug("Battery: settings Hi-Z mode on")
     i2c.writeto_mem(bq_addr, 0, b"\xa2")
@@ -286,20 +300,21 @@ def bq_charger_set_hiz_mode_off(i2c, bq_addr):
 def bq_charger_get_regs(i2c, bq_addr):
     regs = []
     for i in range(0, 9):
-        v = i2c.readfrom_mem(bq_addr, i, 1).hex()
+        v = i2c.readfrom_mem(bq_addr, i, 1)
         regs.append(v)
 
     return regs
 
 
 def bq_charger_set_regs(i2c, bq_addr, regs):
-    for i in range(0, 9):
-        i2c.writeto_mem(bq_addr, i, bytes([regs[i]]))
+    for i in range(0, 8):
+        i2c.writeto_mem(bq_addr, i, regs[i])
 
 
 def bq_charger_is_on_external_power(i2c, bq_addr):
     val = i2c.readfrom_mem(bq_addr, 8, 1)
     logging.debug("BQ charger state: {}".format(ubinascii.hexlify(val)))
     power_good = (int.from_bytes(val, "big") & 0x4) > 0
-    is_charging = True  # val & 0x30
+    # is_charging = True  # this is the proper, though for some reason it does not work: (int.from_bytes(val, "big") & 0x30) > 0
+    is_charging = (int.from_bytes(val, "big") & 0x30) > 0
     return is_charging and power_good
