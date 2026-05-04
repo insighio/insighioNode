@@ -32,6 +32,7 @@
           :colsInput="9"
         />
 
+        <div class="column col-12"><br /></div>
         <!-- Network Discovery Section -->
         <div class="column col-12" v-if="cell_mcc_mnc_enabled">
           <button class="btn btn-primary" :disabled="discoverLoading" type="button" @click="discoverNetworks()">
@@ -39,10 +40,13 @@
           </button>
           <div
             v-show="discoverLoading"
-            class="loading loading-lg"
-            style="margin-left: 5px; display: inline-block"
-          ></div>
+            style="margin-left: 5px; display: inline-block; width: 200px; vertical-align: middle"
+          >
+            <progress class="progress" :value="discoverProgress" max="180"></progress>
+            <!--span style="margin-left: 5px; font-size: 0.9rem">{{ discoverProgress }} / 180s</span-->
+          </div>
         </div>
+        <div class="column col-12"><br /></div>
 
         <!-- Networks Table -->
         <div class="column col-12" v-if="discoveredNetworks.length > 0">
@@ -57,6 +61,7 @@
                     <th>Status</th>
                     <th>Operator</th>
                     <th>MCC/MNC</th>
+                    <th>Technology</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -77,6 +82,7 @@
                     </td>
                     <td>{{ network.long_name }}</td>
                     <td>{{ network.mcc_mnc }}</td>
+                    <td>{{ getNetworkTechnologyLabel(network.technology_id) }}</td>
                     <td>
                       <button
                         class="btn btn-sm btn-primary"
@@ -114,7 +120,6 @@
         :colsInput="9"
       />
 
-      <div class="column col-12"><br /></div>
       <div class="column col-12 text-normal">
         Modem Connection:
         <button class="btn btn-primary" :disabled="localLoading" type="button" @click="updateModemInfo()">Test</button>
@@ -315,6 +320,8 @@ export default {
       ],
       localLoading: false,
       discoverLoading: false,
+      discoverProgress: 0,
+      discoverProgressInterval: null,
       discoveredNetworks: [],
       modemInfo: {
         updated: false,
@@ -426,6 +433,14 @@ export default {
 
       this.discoverLoading = true
       this.discoveredNetworks = []
+      this.discoverProgress = 0
+
+      // Start progress bar increment
+      this.discoverProgressInterval = setInterval(() => {
+        if (this.discoverProgress < 180 && this.discoverLoading) {
+          this.discoverProgress++
+        }
+      }, 1000)
 
       try {
         const rawResponse = await fetch("http://192.168.4.1/api/modem_nearby_networks", {
@@ -441,11 +456,15 @@ export default {
         } else {
           alert("No networks found")
         }
-        this.discoverLoading = false
       } catch (error) {
         console.log("error discovering networks: ", error)
-        this.discoverLoading = false
         alert("Error discovering networks. Please check your connection and try again.")
+      } finally {
+        this.discoverLoading = false
+        if (this.discoverProgressInterval) {
+          clearInterval(this.discoverProgressInterval)
+          this.discoverProgressInterval = null
+        }
       }
     },
     getNetworkStatusLabel(status) {
@@ -457,6 +476,14 @@ export default {
         3: "Forbidden"
       }
       return statusLabels[status] || "Unknown"
+    },
+    getNetworkTechnologyLabel(technology_id) {
+      const techLabels = {
+        0: "GSM",
+        9: "NBIoT",
+        8: "LTE-M"
+      }
+      return techLabels[technology_id] || technology_id
     },
     selectNetwork(mccMnc) {
       this.cell_mcc_mnc = mccMnc

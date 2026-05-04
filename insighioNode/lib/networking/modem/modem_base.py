@@ -141,7 +141,7 @@ class Modem:
 
         operator_list = []
         # example response: +COPS: (2,"Vodafone IT","Vodafone IT","22210",0),(1,"TIM","TIM","22201",0),(1,"Iliad","Iliad","22250",0),(1,"WindTre","WindTre","22299",0),(1,"Fastweb","Fastweb","22202",0),,(0,1,2,3,4)
-        operator_regex = r'\s*\((\d),"(.*?)","(.*?)","(\d+)",\d\)'
+        operator_regex = r'\s*\((\d),"(.*?)","(.*?)","(\d+)",(\d)\)'
         lines = "\n".join(lines).replace("),(", ")\n(").split("\n")
         for line in lines:
             match = ure.search(operator_regex, line)
@@ -151,6 +151,7 @@ class Modem:
                     "long_name": match.group(2),
                     "short_name": match.group(3),
                     "mcc_mnc": match.group(4),
+                    "technology_id": int(match.group(5)),
                 }
                 operator_list.append(operator_info)
 
