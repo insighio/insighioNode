@@ -50,6 +50,8 @@ CONST_SHIELD_V1 = cfg.get("_CONST_SHIELD_ENVIRO")
 CONST_SHIELD_V2 = cfg.get("_CONST_SHIELD_ENVIRO_V2")
 SHIELD_VERSION = cfg.get("_SELECTED_SHIELD")
 
+SHIELD_VERSION = CONST_SHIELD_V2
+
 
 # Add debounce timer variables
 from machine import Timer

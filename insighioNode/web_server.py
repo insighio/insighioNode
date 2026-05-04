@@ -210,7 +210,7 @@ class SystemTime:
             return {}, 400
 
 
-class ModemInfo:
+class ModemConnectionInfo:
     def post(self, data):
         logging.debug("[web-server]: /api/modem_info")
 
@@ -253,8 +253,8 @@ class ModemInfo:
             logging.debug("Modem connected successfully")
             modem_instance = cellular.get_modem_instance()
             rssi = modem_instance.get_rssi()
-            (rsrp, rsrq) = modem_instance.get_extended_signal_quality()
-            (mcc, mnc) = modem_instance.get_registered_mcc_mnc()
+            rsrp, rsrq = modem_instance.get_extended_signal_quality()
+            mcc, mnc = modem_instance.get_registered_mcc_mnc()
             tech_id = modem_instance.technology_id
 
             technology_str = "GSM" if tech_id == 0 else "NBIoT" if tech_id == 9 else "LTE-M" if tech_id == 8 else "Unknown"
@@ -301,6 +301,36 @@ class ModemInfo:
             "mnc": mnc,
             "technology": technology_str,
         }
+
+        return response_dict, 200
+
+
+class ModemNearbyNetworks:
+    def get(self, data):
+        logging.debug("[web-server]: /api/modem_nearby_networks")
+
+        from lib.networking import cellular
+
+        _UC_IO_RADIO_ON = 13
+        _UC_IO_PWRKEY = 10
+        _UC_UART_MODEM_TX = 15
+        _UC_UART_MODEM_RX = 16
+
+        cellular.set_pins(
+            _UC_IO_RADIO_ON,
+            _UC_IO_PWRKEY,
+            _UC_UART_MODEM_TX,
+            _UC_UART_MODEM_RX,
+        )
+
+        m = cellular.get_modem_instance()
+        if m is None:
+            logging.error("No modem instance available")
+            return {"networks": []}, 200
+
+        operator_list = m.get_operator_list()
+
+        response_dict = {"networks": operator_list}
 
         return response_dict, 200
 
@@ -674,7 +704,8 @@ def start(timeoutMs=120000):
     app.add_resource(DeviceMeasurements, "/device_measurements")
     # app.add_resource(StoredMeasurements, "/saved_meas")
     app.add_resource(SystemTime, "/api/time")
-    app.add_resource(ModemInfo, "/api/modem_info")
+    app.add_resource(ModemConnectionInfo, "/api/modem_info")
+    app.add_resource(ModemNearbyNetworks, "/api/modem_nearby_networks")
 
     try:
         uasyncio.run(server_loop(app, timeoutMs))

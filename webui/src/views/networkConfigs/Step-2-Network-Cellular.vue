@@ -31,6 +31,67 @@
           :colsLabel="3"
           :colsInput="9"
         />
+
+        <!-- Network Discovery Section -->
+        <div class="column col-12" v-if="cell_mcc_mnc_enabled">
+          <button class="btn btn-primary" :disabled="discoverLoading" type="button" @click="discoverNetworks()">
+            Discover Networks
+          </button>
+          <div
+            v-show="discoverLoading"
+            class="loading loading-lg"
+            style="margin-left: 5px; display: inline-block"
+          ></div>
+        </div>
+
+        <!-- Networks Table -->
+        <div class="column col-12" v-if="discoveredNetworks.length > 0">
+          <div class="card" style="padding: 0.8rem; margin-top: 1rem">
+            <div class="card-header">
+              <div class="card-title h5">Available Networks</div>
+            </div>
+            <div class="card-body" style="padding: 0.4rem 0">
+              <table class="table table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Operator</th>
+                    <th>MCC/MNC</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="network in discoveredNetworks" :key="network.mcc_mnc">
+                    <td>
+                      <span
+                        class="label"
+                        :class="{
+                          'label-success': network.status === 2,
+                          'label-primary': network.status === 1,
+                          'label-error': network.status === 3,
+                          'label-default': network.status === 0
+                        }"
+                      >
+                        {{ getNetworkStatusLabel(network.status) }}
+                      </span>
+                    </td>
+                    <td>{{ network.long_name }}</td>
+                    <td>{{ network.mcc_mnc }}</td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-primary"
+                        @click="selectNetwork(network.mcc_mnc)"
+                        :disabled="network.status === 3"
+                      >
+                        Select
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       <SDivider label="Generic Configuration" />
@@ -253,6 +314,8 @@ export default {
         }
       ],
       localLoading: false,
+      discoverLoading: false,
+      discoveredNetworks: [],
       modemInfo: {
         updated: false,
         status: "",
@@ -357,6 +420,46 @@ export default {
       else if (rsrq >= -15) return { str: "Good", color: "#6ACE61" }
       else if (rsrq >= -20) return { str: "Fair", color: "#F7BA30" }
       else return { str: "Bad", color: "#E01B24" }
+    },
+    async discoverNetworks() {
+      if (this.discoverLoading) return
+
+      this.discoverLoading = true
+      this.discoveredNetworks = []
+
+      try {
+        const rawResponse = await fetch("http://192.168.4.1/api/modem_nearby_networks", {
+          method: "GET",
+          headers: {
+            Accept: "application/json, text/plain, */*"
+          }
+        })
+
+        const data = await rawResponse.json()
+        if (data.networks && Array.isArray(data.networks)) {
+          this.discoveredNetworks = data.networks
+        } else {
+          alert("No networks found")
+        }
+        this.discoverLoading = false
+      } catch (error) {
+        console.log("error discovering networks: ", error)
+        this.discoverLoading = false
+        alert("Error discovering networks. Please check your connection and try again.")
+      }
+    },
+    getNetworkStatusLabel(status) {
+      // status values: 0: unknown, 1: available, 2: current, 3: forbidden
+      const statusLabels = {
+        0: "Unknown",
+        1: "Available",
+        2: "Current",
+        3: "Forbidden"
+      }
+      return statusLabels[status] || "Unknown"
+    },
+    selectNetwork(mccMnc) {
+      this.cell_mcc_mnc = mccMnc
     },
     storeData() {
       this.$cookies.set("network", "cellular")

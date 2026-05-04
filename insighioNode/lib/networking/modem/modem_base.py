@@ -39,7 +39,7 @@ class Modem:
         return self.data_over_ppp
 
     def is_alive(self):
-        (status, response) = self.send_at_cmd("AT", 1000)
+        status, response = self.send_at_cmd("AT", 1000)
         return status
 
     def print_status(self):
@@ -51,7 +51,7 @@ class Modem:
         self.send_at_cmd("AT+QSIMDET?")
 
     def get_model(self):
-        (status, lines) = self.send_at_cmd("ATI")
+        status, lines = self.send_at_cmd("ATI")
         if not status or len(lines) < 2:
             return None
 
@@ -78,7 +78,7 @@ class Modem:
     def wait_for_modem_power_on(self, command="AT"):
         retries = 0
         while retries < 10:
-            (status, response) = self.send_at_cmd(command, 500)
+            status, response = self.send_at_cmd(command, 500)
             if status:
                 return True
             retries += 1
@@ -98,7 +98,7 @@ class Modem:
         pass
 
     def set_operator_selection(self, technology, mcc_mnc=None):
-        (status, lines) = self.send_at_cmd("AT+COPS?")
+        status, lines = self.send_at_cmd("AT+COPS?")
         lines = "\n".join(lines)
 
         expected_configuration = "0"  # operator automatic selection
@@ -133,6 +133,30 @@ class Modem:
         self.send_at_cmd(command, 180000)
         self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
         self.send_at_cmd("ATE0")
+
+    def get_operator_list(self):
+        status, lines = self.send_at_cmd("AT+COPS=?", 180000)
+        if not status:
+            return []
+
+        operator_list = []
+        # example response: +COPS: (2,"Vodafone IT","Vodafone IT","22210",0),(1,"TIM","TIM","22201",0),(1,"Iliad","Iliad","22250",0),(1,"WindTre","WindTre","22299",0),(1,"Fastweb","Fastweb","22202",0),,(0,1,2,3,4)
+        operator_regex = r'\s*\((\d),"(.*?)","(.*?)","(\d+)",\d\)'
+        lines = "\n".join(lines).replace("),(", ")\n(").split("\n")
+        for line in lines:
+            match = ure.search(operator_regex, line)
+            if match:
+                operator_info = {
+                    "status": int(match.group(1)),
+                    "long_name": match.group(2),
+                    "short_name": match.group(3),
+                    "mcc_mnc": match.group(4),
+                }
+                operator_list.append(operator_info)
+
+        # status values: 0: unknown, 1: available, 2: current, 3: forbidden
+
+        return operator_list
 
     def init(self, ip_version, apn, technology, mcc_mnc=None):
         if not self.is_alive():
@@ -179,7 +203,7 @@ class Modem:
         timeout_timestamp = ticks_add(start_timestamp, 10000)
         regex = "(\\d+)\\/(\\d+)\\/(\\d+),(\\d+):\\s*(\\d+):(\\d+)([+-]\\d+)"
         while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
-            (status, lines) = self.send_at_cmd("AT+CCLK?")
+            status, lines = self.send_at_cmd("AT+CCLK?")
             if status and len(lines) > 0:
                 reg_res = ure.search(regex, lines[0])
                 if reg_res:
@@ -224,7 +248,7 @@ class Modem:
         current_state = _STATE_CHECK_CREG_INITIALIZATION
         while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
             if current_state == _STATE_CHECK_CREG or current_state == _STATE_CHECK_CREG_INITIALIZATION:
-                (status, lines) = self.send_at_cmd("AT+CREG?")
+                status, lines = self.send_at_cmd("AT+CREG?")
                 if status:
                     regex_match = self._match_regex(regex_creg, lines)
                     if regex_match:
@@ -244,34 +268,34 @@ class Modem:
                         elif group_val == "0" and current_state == _STATE_CHECK_CREG:
                             current_state = _STATE_CHECK_COPS
             elif current_state == _STATE_CHECK_COPS:
-                (mcc, mnc) = self.get_registered_mcc_mnc()
+                mcc, mnc = self.get_registered_mcc_mnc()
                 if mcc is not None and mnc is not None:
                     return True
             sleep_ms(100)
 
         if current_state != _STATE_CHECK_COPS:
-            (mcc, mnc) = self.get_registered_mcc_mnc()
+            mcc, mnc = self.get_registered_mcc_mnc()
             return mcc is not None and mnc is not None
 
         return False
 
     def attach(self, do_attach=True):
-        (status, _) = self.send_at_cmd("at+cgatt={}".format("1" if do_attach else "0"), 144000)
+        status, _ = self.send_at_cmd("at+cgatt={}".format("1" if do_attach else "0"), 144000)
         return status
 
     def detach(self):
         return self.attach(False)
 
     def is_attached(self):
-        (status, lines) = self.send_at_cmd("at+cgatt?")
+        status, lines = self.send_at_cmd("at+cgatt?")
         return status and len(lines) > 0 and "+CGATT: 1" in lines[0]
 
     def has_sim(self):
-        (status, lines) = self.send_at_cmd("at+cimi")
+        status, lines = self.send_at_cmd("at+cimi")
         return status
 
     def connect(self, timeoutms=30000):
-        (status, lines) = self.send_at_cmd('AT+CGDATA="PPP",1', 30000, "CONNECT")
+        status, lines = self.send_at_cmd('AT+CGDATA="PPP",1', 30000, "CONNECT")
         if not status:
             return False
 
@@ -302,7 +326,7 @@ class Modem:
             self.ppp.active(False)
 
         self.connected = False
-        (status_act, _) = self.send_at_cmd("AT+CGACT=0,1", 150000)
+        status_act, _ = self.send_at_cmd("AT+CGACT=0,1", 150000)
         status_att = self.detach()
         return status_att and status_act
 
@@ -313,7 +337,7 @@ class Modem:
         if self.ppp is None:
             regex_rssi = r"\+CSQ:\s*(\d+),\d+"
             self.rssi = -141
-            (status, lines) = self.send_at_cmd("AT+CSQ")
+            status, lines = self.send_at_cmd("AT+CSQ")
             if status and len(lines) > 0:
                 for line in lines:
                     match_res = ure.search(regex_rssi, line)
@@ -331,7 +355,7 @@ class Modem:
         if self.ppp is None:
             self.rsrp = -141
             self.rsrq = -40
-            (status, lines) = self.send_at_cmd("AT+CESQ")
+            status, lines = self.send_at_cmd("AT+CESQ")
             if status and len(lines) > 0:
                 cesq_data = lines[0].split(",")
                 rsrq_tmp = int(cesq_data[-2])
@@ -347,7 +371,7 @@ class Modem:
             regex_creg = r"\+CREG:\s+\d,\d,\"(\w+)\",\"(\w+)\""
             self.lac = None
             self.ci = None
-            (status, lines) = self.send_at_cmd("AT+CREG?")
+            status, lines = self.send_at_cmd("AT+CREG?")
             if status:
                 for line in lines:
                     match_res = ure.search(regex_creg, line)
@@ -374,7 +398,7 @@ class Modem:
             self.mnc = None
             self.technology_id = None
             self.send_at_cmd("AT+COPS=3,2")
-            (status, lines) = self.send_at_cmd("AT+COPS?")
+            status, lines = self.send_at_cmd("AT+COPS?")
             if status:
                 match_res = self._match_regex(r"\+COPS:\s+\d,2,\"(\d+)\",(\d+)", lines)
                 if match_res is not None:
@@ -390,7 +414,7 @@ class Modem:
         self.sim_imsi = None
         self.sim_iccid = None
 
-        (status, lines) = self.send_at_cmd("at+cimi")
+        status, lines = self.send_at_cmd("at+cimi")
         if status:
             match_res = self._match_regex(r"(\d+)", lines)
             if match_res is not None:
@@ -401,7 +425,7 @@ class Modem:
     def get_modem_imei(self):
         self.modem_imei = None
 
-        (status, lines) = self.send_at_cmd("at+gsn")
+        status, lines = self.send_at_cmd("at+gsn")
         if status:
             match_res = self._match_regex(r"(\d+)", lines)
             if match_res is not None:
