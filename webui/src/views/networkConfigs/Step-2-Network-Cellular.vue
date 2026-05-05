@@ -42,8 +42,8 @@
             v-show="discoverLoading"
             style="margin-left: 5px; display: inline-block; width: 200px; vertical-align: middle"
           >
-            <progress class="progress" :value="discoverProgress" max="180"></progress>
-            <!--span style="margin-left: 5px; font-size: 0.9rem">{{ discoverProgress }} / 180s</span-->
+            <progress class="progress" :value="discoverProgress" max="200"></progress>
+            <!--span style="margin-left: 5px; font-size: 0.9rem">{{ discoverProgress }} / 200s</span-->
           </div>
         </div>
         <div class="column col-12"><br /></div>
@@ -82,7 +82,7 @@
                     </td>
                     <td>{{ network.long_name }}</td>
                     <td>{{ network.mcc_mnc }}</td>
-                    <td>{{ getNetworkTechnologyLabel(network.technology_id) }}</td>
+                    <td>{{ getNetworkTechnologyArrayLabel(network.technology_ids) }}</td>
                     <td>
                       <button
                         class="btn btn-sm btn-primary"
@@ -437,7 +437,7 @@ export default {
 
       // Start progress bar increment
       this.discoverProgressInterval = setInterval(() => {
-        if (this.discoverProgress < 180 && this.discoverLoading) {
+        if (this.discoverProgress < 200 && this.discoverLoading) {
           this.discoverProgress++
         }
       }, 1000)
@@ -452,7 +452,36 @@ export default {
 
         const data = await rawResponse.json()
         if (data.networks && Array.isArray(data.networks)) {
-          this.discoveredNetworks = data.networks
+          let tmpList = data.networks.sort((a, b) => a.mcc_mnc.localeCompare(b.mcc_mnc))
+          let networkMap = {}
+
+          tmpList.forEach((network) => {
+            const isForbidden = network.status === 3
+            // Create separate keys for forbidden and non-forbidden networks
+            const key = network.mcc_mnc + (isForbidden ? "_forbidden" : "")
+
+            if (!networkMap[key]) {
+              networkMap[key] = {
+                mcc_mnc: network.mcc_mnc,
+                long_name: network.long_name,
+                technology_ids: [network.technology_id],
+                status: network.status
+              }
+            } else {
+              // Add technology if not already present
+              if (!networkMap[key].technology_ids.includes(network.technology_id)) {
+                networkMap[key].technology_ids.push(network.technology_id)
+              }
+              // Update status to the highest priority (2=current > 1=available > 0=unknown)
+              // Don't update status for forbidden networks
+              if (!isForbidden && network.status > networkMap[key].status) {
+                networkMap[key].status = network.status
+              }
+            }
+          })
+
+          // Convert to array and sort by status (current first, then available, then forbidden)
+          this.discoveredNetworks = Object.values(networkMap).sort((a, b) => b.status - a.status)
         } else {
           alert("No networks found")
         }
@@ -484,6 +513,13 @@ export default {
         8: "LTE-M"
       }
       return techLabels[technology_id] || technology_id
+    },
+    getNetworkTechnologyArrayLabel(technologyArray) {
+      if (!Array.isArray(technologyArray)) return ""
+      return technologyArray
+        .sort((a, b) => a - b) // Sort technology IDs for consistent display
+        .map((tech) => this.getNetworkTechnologyLabel(tech))
+        .join(", ")
     },
     selectNetwork(mccMnc) {
       this.cell_mcc_mnc = mccMnc

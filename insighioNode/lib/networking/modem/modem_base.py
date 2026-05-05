@@ -135,7 +135,7 @@ class Modem:
         self.send_at_cmd("ATE0")
 
     def get_operator_list(self):
-        status, lines = self.send_at_cmd("AT+COPS=?", 180000)
+        status, lines = self.send_at_cmd("AT+COPS=?", 210000)
         if not status:
             return []
 
@@ -532,5 +532,7 @@ class Modem:
 
         if status is None:
             status = False
+
+        logging.debug("! status: " + str(status))
 
         return (status, responseLines)
