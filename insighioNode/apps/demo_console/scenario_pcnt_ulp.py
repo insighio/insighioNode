@@ -35,13 +35,13 @@ def generate_assembly(
 #define SENS_IOMUX_CLK_EN            (BIT(31))
 
 /* Define variables, which go into .bss section (zero-initialized data) */
-sequential_stable_count_max: .long 5
 heartbeat_counter: .long 0
 """
 
     pcnt_template = """\
 
-/* pcnt {pcnt_num} */
+/* pcnt {gpio} */
+sequential_stable_count_max_{gpio}: .long {stable_count_max}
 #define RTC_IO_TOUCH_PADX_{gpio}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio}*0x4))
 next_edge_{gpio}: .long 1
 edge_count_{gpio}: .long 0
@@ -115,7 +115,7 @@ stable_value_detected_{gpio}:
     add r2, r2, 1
     st r2, r3, 0
 
-    move r3, sequential_stable_count_max
+    move r3, sequential_stable_count_max_{gpio}
     ld r3, r3, 0
 
     # ALU Operation: Compare with limit
@@ -193,7 +193,10 @@ loop_detected_{gpio}:
                 else ""
             ),
         )
-        base_template += pcnt_template.format(pcnt_num=1, gpio=pcnt_1_gpio)
+        stable_count_max_1 = (
+            5 if pcnt_1_high_freq else 40 * (10 if pcnt_2_enabled and pcnt_2_high_freq else 1)
+        )  # If both are enabled, we want to detect edges faster to avoid missing counts
+        base_template += pcnt_template.format(gpio=pcnt_1_gpio, stable_count_max=stable_count_max_1)
 
     if pcnt_2_enabled:
         pcnt_io_init += pcnt_io_init_template.format(gpio=pcnt_2_gpio)
@@ -209,7 +212,10 @@ loop_detected_{gpio}:
                 else ""
             ),
         )
-        base_template += pcnt_template.format(pcnt_num=2, gpio=pcnt_2_gpio)
+        stable_count_max_2 = (
+            5 if pcnt_2_high_freq else 40 * (10 if pcnt_1_enabled and pcnt_1_high_freq else 1)
+        )  # If both are enabled, we want to detect edges faster to avoid missing counts
+        base_template += pcnt_template.format(gpio=pcnt_2_gpio, stable_count_max=stable_count_max_2)
 
     return base_template + code_template.format(pcnt_io_init=pcnt_io_init, pcnt_functions=pcnt_functions)
 
@@ -579,12 +585,12 @@ def init_ulp(pcnt_cfg):
         return
 
     # Calculate entry address based on .bss variables:
-    # - 2 shared variables (sequential_stable_count_max, heartbeat_counter)
-    # - 6 variables per PCNT (next_edge, edge_count, edge_count_loops, previous_input_value, sequential_stable_values_count, io_number)
+    # - 1 shared variable (heartbeat_counter)
+    # - 7 variables per PCNT (sequential_stable_count_max_{gpio}, next_edge, edge_count, edge_count_loops, previous_input_value, sequential_stable_values_count, io_number)
     # CRITICAL: ulp.run() expects address in WORDS, not bytes!
-    entry_addr = 8 * 4  # if one pulse counter is enabled (2 + 6 = 8 words)
+    entry_addr = 8 * 4  # if one pulse counter is enabled (1 + 7 = 8 words)
     if number_of_pulse_counters > 1:
-        entry_addr = 14 * 4  # if two pulse counters enabled (2 + 6 + 6 = 14 words)
+        entry_addr = 15 * 4  # if two pulse counters enabled (1 + 7 + 7 = 15 words)
 
     logging.info(
         "ULP configuration: {} pulse counters, entry address: {} words (0x{:04x})".format(number_of_pulse_counters, entry_addr, entry_addr)
@@ -656,7 +662,7 @@ def init_ulp(pcnt_cfg):
     # Extended wait for ULP to start executing
     utime.sleep_ms(200)  # Increased from 100ms
     try:
-        heartbeat_check = value(1)  # Read heartbeat at offset 1
+        heartbeat_check = value(0)  # Read heartbeat at offset 0
         logging.info("ULP heartbeat immediately after start: {}".format(heartbeat_check))
         if heartbeat_check == 0:
             logging.error("WARNING: ULP heartbeat is still 0 after startup - ULP may not be running!")
@@ -704,7 +710,7 @@ def check_ulp_malfunction():
     Check if ULP has stopped running by comparing heartbeat counter.
     Returns: (is_malfunctioning, message)
     """
-    current_heartbeat = value(1)  # heartbeat_counter at offset 1
+    current_heartbeat = value(0)  # heartbeat_counter at offset 0
 
     # Read last heartbeat
     last_heartbeat_str = utils.readFromFlagFile(HEARTBEAT_FLAG_FILE)
@@ -752,7 +758,7 @@ def read_ulp_values(measurements, pcnt_cfg):
     logging.info("Reading pulse counters from ULP...")
 
     # Read heartbeat counter for malfunction detection
-    heartbeat = value(1)  # heartbeat_counter is at offset 0
+    heartbeat = value(0)  # heartbeat_counter at offset 0
 
     # read last pcnt saved timestamp
     last_timestamp_str = utils.readFromFlagFile(TIMESTAMP_FLAG_FILE)
@@ -822,9 +828,9 @@ def read_ulp_values(measurements, pcnt_cfg):
             id = pcnt.get("id")
             formula = pcnt.get("formula")
             # Calculate correct register offsets matching assembly layout
-            base_offset = 2 + (cnt * 6)
-            reg_edge_cnt_16bit = base_offset + 1  # edge_count is second variable
-            reg_loops = base_offset + 2  # edge_count_loops is third
+            base_offset = 1 + (cnt * 7)
+            reg_edge_cnt_16bit = base_offset + 2  # edge_count is third variable
+            reg_loops = base_offset + 3  # edge_count_loops is fourth
             cnt += 1
 
             read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formula, time_diff_from_prev, id)
@@ -834,11 +840,11 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
     """
     Reset all ULP state variables to prevent desynchronization.
 
-    Memory layout per PCNT (6 words each):
-    Offset 0: sequential_stable_count_max (shared)
-    Offset 1: heartbeat_counter (shared)
+    Memory layout per PCNT (7 words each):
+    Offset 0: heartbeat_counter (shared)
 
-    For PCNT 1 (starting at offset 2):
+    For PCNT 1 (starting at offset 1):
+      Offset 1: sequential_stable_count_max_{gpio}
       Offset 2: next_edge
       Offset 3: edge_count (16-bit)
       Offset 4: edge_count_loops (overflow counter)
@@ -846,20 +852,20 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
       Offset 6: sequential_stable_values_count
       Offset 7: io_number
 
-    For PCNT 2: same pattern starting at offset 8 (2 + 6)
+    For PCNT 2: same pattern starting at offset 8 (1 + 7)
     """
     cnt = 0
     for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
             gpio_num = pcnt.get("gpio")
-            # Calculate register offsets (each PCNT uses 6 consecutive words)
-            base_offset = 2 + (cnt * 6)  # Start at offset 2 (after shared variables)
-            reg_next_edge = base_offset + 0
-            reg_edge_cnt_16bit = base_offset + 1
-            reg_loops = base_offset + 2
-            reg_prev_input = base_offset + 3
-            reg_stable_count = base_offset + 4
-            # reg_io_number = base_offset + 5 (read-only, no need to reset)
+            # Calculate register offsets (each PCNT uses 7 consecutive words)
+            base_offset = 1 + (cnt * 7)  # Start at offset 1 (after heartbeat_counter)
+            reg_next_edge = base_offset + 1
+            reg_edge_cnt_16bit = base_offset + 2
+            reg_loops = base_offset + 3
+            reg_prev_input = base_offset + 4
+            reg_stable_count = base_offset + 5
+            # reg_io_number = base_offset + 6 (read-only, no need to reset)
 
             logging.debug("Resetting PCNT {} registers at base offset {}".format(pcnt.get("id"), base_offset))
 
@@ -960,9 +966,9 @@ def execute(measurements, pcnt_cfg):
         utils.writeToFlagFile(RESET_IN_PROGRESS_FILE, "0")
         _reset_in_progress = False
 
-    for pcnt in pcnt_cfg:
-        if pcnt.get("enabled"):
-            pcnt["highFreq"] = False
+    # for pcnt in pcnt_cfg:
+    #     if pcnt.get("enabled"):
+    #         pcnt["highFreq"] = False
     try:
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
             utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
