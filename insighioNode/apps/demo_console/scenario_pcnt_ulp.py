@@ -41,14 +41,15 @@ heartbeat_counter: .long 0
     pcnt_template = """\
 
 /* pcnt {gpio} */
-sequential_stable_count_max_{gpio}: .long {stable_count_max}
 #define RTC_IO_TOUCH_PADX_{gpio}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio}*0x4))
+sequential_stable_count_max_{gpio}: .long {stable_count_max}
 next_edge_{gpio}: .long 1
 edge_count_{gpio}: .long 0
 edge_count_loops_{gpio}: .long 0
 previous_input_value_{gpio}: .long 0
 sequential_stable_values_count_{gpio}: .long 0
 io_number_{gpio}: .long {gpio}
+is_counted_{gpio}: .long 0
 
 """
 
@@ -87,16 +88,16 @@ check_pcnt_{gpio}:
     READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
 
     /* get only the bit that refers to our GPIO */
-    rsh r0, r0, r3
-    and r0, r0, 1
+    rsh r1, r1, r3
+    and r1, r1, 1
 
     /* check input value with the previous value */
 
     /* load previous input to r3 */
     move r2, previous_input_value_{gpio}
-    ld r3, r2, 0 /* get the value */
-    st r0, r2, 0 /* store current value as previous */
-    add r3, r0, r3
+    ld r3, r2, 0 /* get the value  r3 = r2[0]*/
+    st r2, r1, 0 /* store current value as previous */
+    add r3, r1, r3
     and r3, r3, 1
     jump stable_value_detected_{gpio}, eq
     jump unstable_value_detected_{gpio}
@@ -106,32 +107,46 @@ unstable_value_detected_{gpio}:
     move r3, sequential_stable_values_count_{gpio}
     move r2, 0
     st r2, r3, 0
+
+    move r3, is_counted_{gpio}
+    move r2, 0
+    st r2, r3, 0    
     {sleep_or_halt}
 
     .global stable_value_detected_{gpio}
 stable_value_detected_{gpio}:
+    move r3, is_counted_{gpio}
+    ld r2, r3, 0 /* get the value */
+    sub r2, r2, 1
+    /* if r2 is 1, then sleep_or_halt, EQ -> result is Zero */
+    jump no_detect_{gpio}, eq
+
     move r3, sequential_stable_values_count_{gpio}
     ld r2, r3, 0 /* get the value */
     add r2, r2, 1
     st r2, r3, 0
 
-    move r3, sequential_stable_count_max_{gpio}
-    ld r3, r3, 0
+    move r1, sequential_stable_count_max_{gpio}
+    ld r3, r1, 0
 
     # ALU Operation: Compare with limit
-    sub r2, r2, r3          # r2 = counter - limit
+    sub r2, r3, r2          # r2 = limit - counter
 
     # JUMP Operation: Branch based on comparison
-    jump check_stable_with_previous_stable_{gpio}, ov           # Jump if counter >= limit
+    jump check_stable_with_previous_stable_{gpio}, EQ           
     {sleep_or_halt}
 
     .global check_stable_with_previous_stable_{gpio}
 check_stable_with_previous_stable_{gpio}:
-    /* State of input changed? */
+    /* current state */
+    move r3, previous_input_value_{gpio}
+    ld r2, r3, 0  
+    
+    /* Expected next state, State of input changed? */
     move r3, next_edge_{gpio}
-    ld r3, r3, 0
-    add r3, r0, r3
-    and r3, r3, 1
+    ld r1, r3, 0
+    add r1, r2, r1
+    and r1, r1, 1
     jump edge_detected_{gpio}, eq
     jump no_detect_{gpio}
 
@@ -140,8 +155,6 @@ check_stable_with_previous_stable_{gpio}:
 edge_detected_{gpio}:
     /* Flip next_edge_{gpio} */
     move r3, next_edge_{gpio}
-    /*ld r2, r3, 0*/
-    move r2, r0
     add r2, r2, 1
     and r2, r2, 1
     st r2, r3, 0
@@ -150,6 +163,10 @@ edge_detected_{gpio}:
     ld r2, r3, 0
     add r2, r2, 1
     st r2, r3, 0
+
+    move r3, is_counted_{gpio}
+    move r2, 1
+    st r2, r3, 0    
 {loop_detection}
     {sleep_or_halt}
 
@@ -160,7 +177,8 @@ no_detect_{gpio}:
 
     loop_detection_template = """\
     /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
-    ld r1, r3, 0
+    move r3, edge_count_{gpio}
+    ld r2, r3, 0
     jumpr loop_detected_{gpio}, 0, EQ
     {sleep_or_halt}
 
@@ -187,11 +205,7 @@ loop_detected_{gpio}:
         pcnt_functions += pcnt_function_template.format(
             gpio=pcnt_1_gpio,
             sleep_or_halt=sleep_or_halt,
-            loop_detection=(
-                loop_detection_template.format(gpio=pcnt_1_gpio, sleep_or_halt=sleep_or_halt)
-                if pcnt_1_high_freq or pcnt_2_high_freq
-                else ""
-            ),
+            loop_detection=(loop_detection_template.format(gpio=pcnt_1_gpio, sleep_or_halt=sleep_or_halt) if pcnt_1_high_freq else ""),
         )
         stable_count_max_1 = (
             5 if pcnt_1_high_freq else 40 * (10 if pcnt_2_enabled and pcnt_2_high_freq else 1)
@@ -206,11 +220,7 @@ loop_detected_{gpio}:
         pcnt_functions += pcnt_function_template.format(
             gpio=pcnt_2_gpio,
             sleep_or_halt=sleep_or_halt,
-            loop_detection=(
-                loop_detection_template.format(gpio=pcnt_2_gpio, sleep_or_halt=sleep_or_halt)
-                if pcnt_1_high_freq or pcnt_2_high_freq
-                else ""
-            ),
+            loop_detection=(loop_detection_template.format(gpio=pcnt_2_gpio, sleep_or_halt=sleep_or_halt) if pcnt_2_high_freq else ""),
         )
         stable_count_max_2 = (
             5 if pcnt_2_high_freq else 40 * (10 if pcnt_1_enabled and pcnt_1_high_freq else 1)
@@ -588,9 +598,9 @@ def init_ulp(pcnt_cfg):
     # - 1 shared variable (heartbeat_counter)
     # - 7 variables per PCNT (sequential_stable_count_max_{gpio}, next_edge, edge_count, edge_count_loops, previous_input_value, sequential_stable_values_count, io_number)
     # CRITICAL: ulp.run() expects address in WORDS, not bytes!
-    entry_addr = 8 * 4  # if one pulse counter is enabled (1 + 7 = 8 words)
+    entry_addr = 9 * 4  # if one pulse counter is enabled (1 + 8 = 9 words)
     if number_of_pulse_counters > 1:
-        entry_addr = 15 * 4  # if two pulse counters enabled (1 + 7 + 7 = 15 words)
+        entry_addr = 17 * 4  # if two pulse counters enabled (1 + 8 + 8 = 17 words)
 
     logging.info(
         "ULP configuration: {} pulse counters, entry address: {} words (0x{:04x})".format(number_of_pulse_counters, entry_addr, entry_addr)
@@ -828,7 +838,7 @@ def read_ulp_values(measurements, pcnt_cfg):
             id = pcnt.get("id")
             formula = pcnt.get("formula")
             # Calculate correct register offsets matching assembly layout
-            base_offset = 1 + (cnt * 7)
+            base_offset = 1 + (cnt * 8)
             reg_edge_cnt_16bit = base_offset + 2  # edge_count is third variable
             reg_loops = base_offset + 3  # edge_count_loops is fourth
             cnt += 1
@@ -858,13 +868,14 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
     for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
             gpio_num = pcnt.get("gpio")
-            # Calculate register offsets (each PCNT uses 7 consecutive words)
-            base_offset = 1 + (cnt * 7)  # Start at offset 1 (after heartbeat_counter)
+            # Calculate register offsets (each PCNT uses 8 consecutive words)
+            base_offset = 1 + (cnt * 8)  # Start at offset 1 (after heartbeat_counter)
             reg_next_edge = base_offset + 1
             reg_edge_cnt_16bit = base_offset + 2
             reg_loops = base_offset + 3
             reg_prev_input = base_offset + 4
             reg_stable_count = base_offset + 5
+            is_counted = base_offset + 7
             # reg_io_number = base_offset + 6 (read-only, no need to reset)
 
             logging.debug("Resetting PCNT {} registers at base offset {}".format(pcnt.get("id"), base_offset))
@@ -876,6 +887,8 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
             # Reset state variables
             setval(reg_prev_input, 0x0)
             setval(reg_stable_count, 0x0)
+
+            setval(is_counted, 0x0)
 
             # Read current GPIO state and set next_edge accordingly
             # to avoid waiting for the wrong edge
@@ -899,6 +912,8 @@ def read_ulp_values_for_pcnt(measurements, reg_edge_cnt_16bit, reg_loops, formul
     else:
         edge_cnt_16bit = value(reg_edge_cnt_16bit)
         loops = value(reg_loops)
+
+    print("edge_cnt_16bit: {}, loops: {}".format(edge_cnt_16bit, loops))
 
     # reset registers
     setval(reg_edge_cnt_16bit, 0x0)
@@ -966,9 +981,6 @@ def execute(measurements, pcnt_cfg):
         utils.writeToFlagFile(RESET_IN_PROGRESS_FILE, "0")
         _reset_in_progress = False
 
-    # for pcnt in pcnt_cfg:
-    #     if pcnt.get("enabled"):
-    #         pcnt["highFreq"] = False
     try:
         if machine.reset_cause() != machine.DEEPSLEEP_RESET and _is_first_run:
             utils.deleteFlagFile(TIMESTAMP_FLAG_FILE)
