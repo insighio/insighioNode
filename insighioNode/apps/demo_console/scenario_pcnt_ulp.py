@@ -109,7 +109,7 @@ check_pcnt_{gpio}:
     
     move r3, is_counted_{gpio}
     st r2, r3, 0    
-    {sleep_or_halt}
+    jump no_detect_{gpio}
 
     .global stable_value_detected_{gpio}
 stable_value_detected_{gpio}:
@@ -169,13 +169,12 @@ edge_detected_{gpio}:
 
     .global no_detect_{gpio}
 no_detect_{gpio}:
-    {sleep_or_halt}
 """
 
     loop_detection_template = """\
     /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
     move r3, edge_count_{gpio}
-    ld r2, r3, 0
+    ld r0, r3, 0
     jumpr loop_detected_{gpio}, 0, EQ
     jump no_detect_{gpio}
 
@@ -187,44 +186,65 @@ loop_detected_{gpio}:
     st r2, r3, 0
 """
 
+    end_template = """\
+    .global the_end
+the_end:    
+    {sleep_or_halt}
+"""
+
     pcnt_io_init = ""
     pcnt_functions = ""
+
+    sleep_or_halt = "SLEEP 100\n    jump entry" if pcnt_1_high_freq or pcnt_2_high_freq else "halt"
+
+    _LIMIT_HIGH_FREQ = 5
+    _LIMIT_LOW_FREQ_WHEN_BOTH_ENABLED = 5
+    _LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ = 200
+    _LIMIT_LOW_FREQ = 40
 
     if pcnt_1_enabled:
         pcnt_io_init += pcnt_io_init_template.format(gpio=pcnt_1_gpio)
 
-        sleep_or_halt = (
-            "jump check_pcnt_{}".format(pcnt_2_gpio)
-            if pcnt_2_enabled
-            else "SLEEP 100\n    jump entry" if pcnt_1_high_freq or pcnt_2_high_freq else "halt"
-        )
-
         pcnt_functions += pcnt_function_template.format(
             gpio=pcnt_1_gpio,
             sleep_or_halt=sleep_or_halt,
-            loop_detection=(loop_detection_template.format(gpio=pcnt_1_gpio, sleep_or_halt=sleep_or_halt) if pcnt_1_high_freq else ""),
+            loop_detection=(loop_detection_template.format(gpio=pcnt_1_gpio) if pcnt_1_high_freq else ""),
         )
         stable_count_max_1 = (
-            5 if pcnt_1_high_freq else 40 * (10 if pcnt_2_enabled and pcnt_2_high_freq else 1)
+            _LIMIT_HIGH_FREQ
+            if pcnt_1_high_freq
+            else (
+                _LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ
+                if pcnt_2_enabled and pcnt_2_high_freq
+                else (_LIMIT_LOW_FREQ_WHEN_BOTH_ENABLED if pcnt_2_enabled else _LIMIT_LOW_FREQ)
+            )
         )  # If both are enabled, we want to detect edges faster to avoid missing counts
         base_template += pcnt_template.format(gpio=pcnt_1_gpio, stable_count_max=stable_count_max_1)
 
     if pcnt_2_enabled:
         pcnt_io_init += pcnt_io_init_template.format(gpio=pcnt_2_gpio)
 
-        sleep_or_halt = "SLEEP 100\n    jump entry" if pcnt_1_high_freq or pcnt_2_high_freq else "halt"
-
         pcnt_functions += pcnt_function_template.format(
             gpio=pcnt_2_gpio,
             sleep_or_halt=sleep_or_halt,
-            loop_detection=(loop_detection_template.format(gpio=pcnt_2_gpio, sleep_or_halt=sleep_or_halt) if pcnt_2_high_freq else ""),
+            loop_detection=(loop_detection_template.format(gpio=pcnt_2_gpio) if pcnt_2_high_freq else ""),
         )
         stable_count_max_2 = (
-            5 if pcnt_2_high_freq else 40 * (10 if pcnt_1_enabled and pcnt_1_high_freq else 1)
+            _LIMIT_HIGH_FREQ
+            if pcnt_2_high_freq
+            else (
+                _LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ
+                if pcnt_1_enabled and pcnt_1_high_freq
+                else (_LIMIT_LOW_FREQ_WHEN_BOTH_ENABLED if pcnt_1_enabled else _LIMIT_LOW_FREQ)
+            )
         )  # If both are enabled, we want to detect edges faster to avoid missing counts
         base_template += pcnt_template.format(gpio=pcnt_2_gpio, stable_count_max=stable_count_max_2)
 
-    return base_template + code_template.format(pcnt_io_init=pcnt_io_init, pcnt_functions=pcnt_functions)
+    return (
+        base_template
+        + code_template.format(pcnt_io_init=pcnt_io_init, pcnt_functions=pcnt_functions)
+        + end_template.format(sleep_or_halt=sleep_or_halt)
+    )
 
 
 ULP_MEM_BASE = 0x50000000
@@ -283,7 +303,7 @@ def get_number_of_pulse_counters(pcnt_cfg):
 
 def get_pulse_counters_are_high_frequency(pcnt_cfg):
     for pcnt in pcnt_cfg:
-        if pcnt.get("highFreq"):
+        if pcnt.get("enabled") and pcnt.get("highFreq"):
             return True
     return False
 
@@ -651,7 +671,7 @@ def init_ulp(pcnt_cfg):
             init_gpio(gpio_num, ulp)
 
     # Set ULP wakeup period
-    wakeup_period = 1 if get_pulse_counters_are_high_frequency(pcnt_cfg) else 100
+    wakeup_period = 1 if get_pulse_counters_are_high_frequency(pcnt_cfg) else (1 if number_of_pulse_counters == 2 else 100)
     logging.info("Setting ULP wakeup period: {} cycles".format(wakeup_period))
     ulp.set_wakeup_period(0, wakeup_period)
 
