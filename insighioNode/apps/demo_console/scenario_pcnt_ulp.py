@@ -88,7 +88,7 @@ check_pcnt_{gpio}:
     READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
 
     /* get only the bit that refers to our GPIO */
-    rsh r1, r1, r3
+    rsh r1, r0, r3
     and r1, r1, 1
 
     /* check input value with the previous value */
@@ -593,14 +593,16 @@ def init_ulp(pcnt_cfg):
 
     # Calculate entry address based on .bss variables:
     # - 1 shared variable (heartbeat_counter)
-    # - 7 variables per PCNT (sequential_stable_count_max_{gpio}, next_edge, edge_count, edge_count_loops, previous_input_value, sequential_stable_values_count, io_number)
+    # - 8 variables per PCNT (sequential_stable_count_max_{gpio}, next_edge, edge_count, edge_count_loops, previous_input_value, sequential_stable_values_count, io_number, is_counted)
     # CRITICAL: ulp.run() expects address in WORDS, not bytes!
     entry_addr = 9 * 4  # if one pulse counter is enabled (1 + 8 = 9 words)
     if number_of_pulse_counters > 1:
         entry_addr = 17 * 4  # if two pulse counters enabled (1 + 8 + 8 = 17 words)
 
     logging.info(
-        "ULP configuration: {} pulse counters, entry address: {} words (0x{:04x})".format(number_of_pulse_counters, entry_addr, entry_addr)
+        "ULP configuration: {} pulse counters, entry address: {} words (0x{:04x} bytes)".format(
+            number_of_pulse_counters, entry_addr, entry_addr * 4
+        )
     )
 
     if number_of_pulse_counters == 1 and len(pcnt_cfg) == 1:
@@ -656,7 +658,7 @@ def init_ulp(pcnt_cfg):
     utime.sleep_ms(50)  # Increased from 10ms
 
     # Start ULP execution
-    logging.info("Starting ULP execution at entry address {} words (0x{:04x})...".format(entry_addr, entry_addr))
+    logging.info("Starting ULP execution at entry address {} words (0x{:04x} bytes)...".format(entry_addr, entry_addr * 4))
     try:
         ulp.run(entry_addr)
         logging.info("ULP run() completed - coprocessor should now be executing")
@@ -847,7 +849,7 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
     """
     Reset all ULP state variables to prevent desynchronization.
 
-    Memory layout per PCNT (7 words each):
+    Memory layout per PCNT (8 words each):
     Offset 0: heartbeat_counter (shared)
 
     For PCNT 1 (starting at offset 1):
@@ -858,8 +860,9 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
       Offset 5: previous_input_value
       Offset 6: sequential_stable_values_count
       Offset 7: io_number
+      Offset 8: is_counted
 
-    For PCNT 2: same pattern starting at offset 8 (1 + 7)
+    For PCNT 2: same pattern starting at offset 9 (1 + 8)
     """
     cnt = 0
     for pcnt in pcnt_cfg:
