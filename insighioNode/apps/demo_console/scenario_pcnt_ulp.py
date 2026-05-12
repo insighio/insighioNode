@@ -42,15 +42,14 @@ heartbeat_counter: .long 0
 
 /* pcnt {gpio} */
 #define RTC_IO_TOUCH_PADX_{gpio}_REG        (DR_REG_RTCIO_BASE + 0x84 + ({gpio}*0x4))
+
 sequential_stable_count_max_{gpio}: .long {stable_count_max}
 next_edge_{gpio}: .long 1
 edge_count_{gpio}: .long 0
 edge_count_loops_{gpio}: .long 0
 previous_input_value_{gpio}: .long 0
 sequential_stable_values_count_{gpio}: .long 0
-io_number_{gpio}: .long {gpio}
 is_counted_{gpio}: .long 0
-
 """
 
     code_template = """
@@ -81,8 +80,7 @@ entry:
     .global check_pcnt_{gpio}
 check_pcnt_{gpio}:
     /* Load io_number_{gpio} */
-    move r3, io_number_{gpio}
-    ld r3, r3, 0
+    move r3, {gpio}
 
     /* Read the value of lower 16 RTC IOs into R0 */
     READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
@@ -131,8 +129,7 @@ stable_value_detected_{gpio}:
     sub r2, r1, r2          # r2 = limit - counter
 
     # JUMP Operation: Branch based on comparison
-    jump check_stable_with_previous_stable_{gpio}, EQ
-    jump no_detect_{gpio}
+    jump no_detect_{gpio}, ov
 
     .global check_stable_with_previous_stable_{gpio}
 check_stable_with_previous_stable_{gpio}:
@@ -615,9 +612,9 @@ def init_ulp(pcnt_cfg):
     # - 1 shared variable (heartbeat_counter)
     # - 8 variables per PCNT (sequential_stable_count_max_{gpio}, next_edge, edge_count, edge_count_loops, previous_input_value, sequential_stable_values_count, io_number, is_counted)
     # CRITICAL: ulp.run() expects address in WORDS, not bytes!
-    entry_addr = 9 * 4  # if one pulse counter is enabled (1 + 8 = 9 words)
+    entry_addr = 8 * 4  # if one pulse counter is enabled (1 + 7 = 8 words)
     if number_of_pulse_counters > 1:
-        entry_addr = 17 * 4  # if two pulse counters enabled (1 + 8 + 8 = 17 words)
+        entry_addr = 15 * 4  # if two pulse counters enabled (1 + 7 + 7 = 15 words)
 
     logging.info(
         "ULP configuration: {} pulse counters, entry address: {} words (0x{:04x} bytes)".format(
@@ -879,10 +876,9 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
       Offset 4: edge_count_loops (overflow counter)
       Offset 5: previous_input_value
       Offset 6: sequential_stable_values_count
-      Offset 7: io_number
-      Offset 8: is_counted
+      Offset 7: is_counted
 
-    For PCNT 2: same pattern starting at offset 9 (1 + 8)
+    For PCNT 2: same pattern starting at offset 8 (1 + 7)
     """
     cnt = 0
     for pcnt in pcnt_cfg:
@@ -895,7 +891,7 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
             reg_loops = base_offset + 3
             reg_prev_input = base_offset + 4
             reg_stable_count = base_offset + 5
-            is_counted = base_offset + 7
+            is_counted = base_offset + 6
             # reg_io_number = base_offset + 6 (read-only, no need to reset)
 
             logging.debug("Resetting PCNT {} registers at base offset {}".format(pcnt.get("id"), base_offset))
