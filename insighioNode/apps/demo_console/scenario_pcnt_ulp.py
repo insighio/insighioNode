@@ -96,20 +96,18 @@ check_pcnt_{gpio}:
     /* load previous input to r3 */
     move r2, previous_input_value_{gpio}
     ld r3, r2, 0 /* get the value  r3 = r2[0]*/
-    st r2, r1, 0 /* store current value as previous */
+    st r1, r2, 0 /* store current value as previous r2[0] = r1 */
     add r3, r1, r3
     and r3, r3, 1
     jump stable_value_detected_{gpio}, eq
-    jump unstable_value_detected_{gpio}
-
-    .global unstable_value_detected_{gpio}
-unstable_value_detected_{gpio}:
+    
+    /* unstable_value_detected */
+    move r2, 0
+    
     move r3, sequential_stable_values_count_{gpio}
-    move r2, 0
     st r2, r3, 0
-
+    
     move r3, is_counted_{gpio}
-    move r2, 0
     st r2, r3, 0    
     {sleep_or_halt}
 
@@ -126,15 +124,15 @@ stable_value_detected_{gpio}:
     add r2, r2, 1
     st r2, r3, 0
 
-    move r1, sequential_stable_count_max_{gpio}
-    ld r3, r1, 0
+    move r3, sequential_stable_count_max_{gpio}
+    ld r1, r3, 0
 
     # ALU Operation: Compare with limit
-    sub r2, r3, r2          # r2 = limit - counter
+    sub r2, r1, r2          # r2 = limit - counter
 
     # JUMP Operation: Branch based on comparison
-    jump check_stable_with_previous_stable_{gpio}, EQ           
-    {sleep_or_halt}
+    jump check_stable_with_previous_stable_{gpio}, EQ
+    jump no_detect_{gpio}
 
     .global check_stable_with_previous_stable_{gpio}
 check_stable_with_previous_stable_{gpio}:
@@ -168,7 +166,6 @@ edge_detected_{gpio}:
     move r2, 1
     st r2, r3, 0    
 {loop_detection}
-    {sleep_or_halt}
 
     .global no_detect_{gpio}
 no_detect_{gpio}:
@@ -180,7 +177,7 @@ no_detect_{gpio}:
     move r3, edge_count_{gpio}
     ld r2, r3, 0
     jumpr loop_detected_{gpio}, 0, EQ
-    {sleep_or_halt}
+    jump no_detect_{gpio}
 
     .global loop_detected_{gpio}
 loop_detected_{gpio}:
