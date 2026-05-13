@@ -19,6 +19,16 @@ ULP_REQUIRED_WDT_RESET_FLAG_FILE = "/ulp_required_wdt_reset"
 
 _PCNT_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
 
+_ULP_SLEEP_LOW = 10
+_ULP_SLEEP_HIGH = 50
+
+_LIMIT_LOW_FREQ = 5
+_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ = 400
+_LIMIT_HIGH_FREQ = 10
+
+
+_NUM_OF_REGISTERS_PER_PCNT = 7  # number of .bss variables per pulse counter (excluding heartbeat)
+
 
 def generate_assembly(
     pcnt_1_enabled=False, pcnt_1_gpio=4, pcnt_1_high_freq=False, pcnt_2_enabled=False, pcnt_2_gpio=5, pcnt_2_high_freq=False
@@ -113,7 +123,7 @@ check_pcnt_{gpio}:
 stable_value_detected_{gpio}:
     move r3, is_counted_{gpio}
     ld r2, r3, 0 /* get the value */
-    sub r2, r2, 1
+    sub r0, r2, 1
     /* if r2 is 1, then sleep_or_halt, EQ -> result is Zero */
     jump no_detect_{gpio}, eq
 
@@ -125,11 +135,11 @@ stable_value_detected_{gpio}:
     move r3, sequential_stable_count_max_{gpio}
     ld r1, r3, 0
 
-    # ALU Operation: Compare with limit
-    sub r2, r1, r2          # r2 = limit - counter
-
-    # JUMP Operation: Branch based on comparison
-    jump no_detect_{gpio}, ov
+    # r2 already has counter value from earlier
+    # r1 has limit value
+    sub r0, r2, r1          # r0 = counter - limit
+    jump no_detect_{gpio}, ov    # if counter < limit (underflow), skip edge detection
+    # if counter >= limit, fall through to check_stable_with_previous_stable_{gpio}
 
     .global check_stable_with_previous_stable_{gpio}
 check_stable_with_previous_stable_{gpio}:
@@ -172,8 +182,7 @@ no_detect_{gpio}:
     /* Check if edge_count has overfloated and switched from 0xFFFF to 0x0000 */
     move r3, edge_count_{gpio}
     ld r0, r3, 0
-    jumpr loop_detected_{gpio}, 0, EQ
-    jump no_detect_{gpio}
+    jumpr no_detect_{gpio}, 0, GT
 
     .global loop_detected_{gpio}
 loop_detected_{gpio}:
@@ -192,29 +201,30 @@ the_end:
     pcnt_io_init = ""
     pcnt_functions = ""
 
-    sleep_or_halt = "SLEEP 100\n    jump entry" if pcnt_1_high_freq or pcnt_2_high_freq else "halt"
+    sleep_or_halt = ""
 
-    _LIMIT_HIGH_FREQ = 5
-    _LIMIT_LOW_FREQ_WHEN_BOTH_ENABLED = 5
-    _LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ = 200
-    _LIMIT_LOW_FREQ = 40
+    ulp_light_sleep_on = False
+    if pcnt_1_enabled and pcnt_1_high_freq and pcnt_2_enabled and pcnt_2_high_freq:
+        sleep_or_halt = "SLEEP {}\n    jump entry".format(_ULP_SLEEP_LOW)
+        ulp_light_sleep_on = True
+    elif (pcnt_1_enabled and pcnt_1_high_freq) or (pcnt_2_enabled and pcnt_2_high_freq):
+        sleep_or_halt = "SLEEP {}\n    jump entry".format(_ULP_SLEEP_HIGH)
+        ulp_light_sleep_on = True
+    else:
+        sleep_or_halt = "halt"
+        ulp_light_sleep_on = False
 
     if pcnt_1_enabled:
         pcnt_io_init += pcnt_io_init_template.format(gpio=pcnt_1_gpio)
 
         pcnt_functions += pcnt_function_template.format(
             gpio=pcnt_1_gpio,
-            sleep_or_halt=sleep_or_halt,
-            loop_detection=(loop_detection_template.format(gpio=pcnt_1_gpio) if pcnt_1_high_freq else ""),
+            loop_detection=(loop_detection_template.format(gpio=pcnt_1_gpio) if ulp_light_sleep_on else ""),
         )
         stable_count_max_1 = (
             _LIMIT_HIGH_FREQ
             if pcnt_1_high_freq
-            else (
-                _LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ
-                if pcnt_2_enabled and pcnt_2_high_freq
-                else (_LIMIT_LOW_FREQ_WHEN_BOTH_ENABLED if pcnt_2_enabled else _LIMIT_LOW_FREQ)
-            )
+            else (_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ if pcnt_2_enabled and pcnt_2_high_freq else _LIMIT_LOW_FREQ)
         )  # If both are enabled, we want to detect edges faster to avoid missing counts
         base_template += pcnt_template.format(gpio=pcnt_1_gpio, stable_count_max=stable_count_max_1)
 
@@ -223,17 +233,12 @@ the_end:
 
         pcnt_functions += pcnt_function_template.format(
             gpio=pcnt_2_gpio,
-            sleep_or_halt=sleep_or_halt,
-            loop_detection=(loop_detection_template.format(gpio=pcnt_2_gpio) if pcnt_2_high_freq else ""),
+            loop_detection=(loop_detection_template.format(gpio=pcnt_2_gpio) if ulp_light_sleep_on else ""),
         )
         stable_count_max_2 = (
             _LIMIT_HIGH_FREQ
             if pcnt_2_high_freq
-            else (
-                _LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ
-                if pcnt_1_enabled and pcnt_1_high_freq
-                else (_LIMIT_LOW_FREQ_WHEN_BOTH_ENABLED if pcnt_1_enabled else _LIMIT_LOW_FREQ)
-            )
+            else (_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ if pcnt_1_enabled and pcnt_1_high_freq else _LIMIT_LOW_FREQ)
         )  # If both are enabled, we want to detect edges faster to avoid missing counts
         base_template += pcnt_template.format(gpio=pcnt_2_gpio, stable_count_max=stable_count_max_2)
 
@@ -612,9 +617,9 @@ def init_ulp(pcnt_cfg):
     # - 1 shared variable (heartbeat_counter)
     # - 8 variables per PCNT (sequential_stable_count_max_{gpio}, next_edge, edge_count, edge_count_loops, previous_input_value, sequential_stable_values_count, io_number, is_counted)
     # CRITICAL: ulp.run() expects address in WORDS, not bytes!
-    entry_addr = 8 * 4  # if one pulse counter is enabled (1 + 7 = 8 words)
+    entry_addr = (1 + _NUM_OF_REGISTERS_PER_PCNT) * 4  # if one pulse counter is enabled (1 + 7 = 8 words)
     if number_of_pulse_counters > 1:
-        entry_addr = 15 * 4  # if two pulse counters enabled (1 + 7 + 7 = 15 words)
+        entry_addr = (1 + 2 * _NUM_OF_REGISTERS_PER_PCNT) * 4  # if two pulse counters enabled (1 + 7 + 7 = 15 words)
 
     logging.info(
         "ULP configuration: {} pulse counters, entry address: {} words (0x{:04x} bytes)".format(
@@ -667,8 +672,11 @@ def init_ulp(pcnt_cfg):
             logging.info("Initializing GPIO {} for ULP".format(gpio_num))
             init_gpio(gpio_num, ulp)
 
+    _ULP_WAKEUP_PERIOD_HIGH_FREQ = 1
+    _ULP_WAKEUP_PERIOD_LOW_FREQ = 100
+
     # Set ULP wakeup period
-    wakeup_period = 1 if get_pulse_counters_are_high_frequency(pcnt_cfg) else (1 if number_of_pulse_counters == 2 else 100)
+    wakeup_period = _ULP_WAKEUP_PERIOD_HIGH_FREQ if get_pulse_counters_are_high_frequency(pcnt_cfg) else _ULP_WAKEUP_PERIOD_LOW_FREQ
     logging.info("Setting ULP wakeup period: {} cycles".format(wakeup_period))
     ulp.set_wakeup_period(0, wakeup_period)
 
@@ -854,7 +862,7 @@ def read_ulp_values(measurements, pcnt_cfg):
             id = pcnt.get("id")
             formula = pcnt.get("formula")
             # Calculate correct register offsets matching assembly layout
-            base_offset = 1 + (cnt * 8)
+            base_offset = 1 + (cnt * _NUM_OF_REGISTERS_PER_PCNT)
             reg_edge_cnt_16bit = base_offset + 2  # edge_count is third variable
             reg_loops = base_offset + 3  # edge_count_loops is fourth
             cnt += 1
@@ -878,14 +886,14 @@ def reset_ulp_register_values(pcnt_cfg, number_of_pulse_counters):
       Offset 6: sequential_stable_values_count
       Offset 7: is_counted
 
-    For PCNT 2: same pattern starting at offset 8 (1 + 7)
+    For PCNT 2: same pattern starting at offset 1 + _NUM_OF_REGISTERS_PER_PCNT
     """
     cnt = 0
     for pcnt in pcnt_cfg:
         if pcnt.get("enabled"):
             gpio_num = pcnt.get("gpio")
-            # Calculate register offsets (each PCNT uses 8 consecutive words)
-            base_offset = 1 + (cnt * 8)  # Start at offset 1 (after heartbeat_counter)
+            # Calculate register offsets (each PCNT uses _NUM_OF_REGISTERS_PER_PCNT consecutive words)
+            base_offset = 1 + (cnt * _NUM_OF_REGISTERS_PER_PCNT)  # Start at offset 1 (after heartbeat_counter)
             reg_next_edge = base_offset + 1
             reg_edge_cnt_16bit = base_offset + 2
             reg_loops = base_offset + 3
