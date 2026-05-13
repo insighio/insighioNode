@@ -19,13 +19,12 @@ ULP_REQUIRED_WDT_RESET_FLAG_FILE = "/ulp_required_wdt_reset"
 
 _PCNT_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
 
-_ULP_SLEEP_LOW = 10
-_ULP_SLEEP_HIGH = 50
+_ULP_SLEEP_LOW = cfg.get_int("_ULP_SLEEP_LOW", 10)
+_ULP_SLEEP_HIGH = cfg.get_int("_ULP_SLEEP_HIGH", 50)
 
-_LIMIT_LOW_FREQ = 5
-_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ = 400
-_LIMIT_HIGH_FREQ = 10
-
+_ULP_LIMIT_LOW_FREQ = cfg.get_int("_ULP_LIMIT_LOW_FREQ", 5)
+_ULP_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ = cfg.get_int("_ULP_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ", 400)
+_ULP_LIMIT_HIGH_FREQ = cfg.get_int("_ULP_LIMIT_HIGH_FREQ", 10)
 
 _NUM_OF_REGISTERS_PER_PCNT = 7  # number of .bss variables per pulse counter (excluding heartbeat)
 
@@ -222,9 +221,9 @@ the_end:
             loop_detection=(loop_detection_template.format(gpio=pcnt_1_gpio) if ulp_light_sleep_on else ""),
         )
         stable_count_max_1 = (
-            _LIMIT_HIGH_FREQ
+            _ULP_LIMIT_HIGH_FREQ
             if pcnt_1_high_freq
-            else (_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ if pcnt_2_enabled and pcnt_2_high_freq else _LIMIT_LOW_FREQ)
+            else (_ULP_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ if pcnt_2_enabled and pcnt_2_high_freq else _ULP_LIMIT_LOW_FREQ)
         )  # If both are enabled, we want to detect edges faster to avoid missing counts
         base_template += pcnt_template.format(gpio=pcnt_1_gpio, stable_count_max=stable_count_max_1)
 
@@ -236,9 +235,9 @@ the_end:
             loop_detection=(loop_detection_template.format(gpio=pcnt_2_gpio) if ulp_light_sleep_on else ""),
         )
         stable_count_max_2 = (
-            _LIMIT_HIGH_FREQ
+            _ULP_LIMIT_HIGH_FREQ
             if pcnt_2_high_freq
-            else (_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ if pcnt_1_enabled and pcnt_1_high_freq else _LIMIT_LOW_FREQ)
+            else (_ULP_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ if pcnt_1_enabled and pcnt_1_high_freq else _ULP_LIMIT_LOW_FREQ)
         )  # If both are enabled, we want to detect edges faster to avoid missing counts
         base_template += pcnt_template.format(gpio=pcnt_2_gpio, stable_count_max=stable_count_max_2)
 
