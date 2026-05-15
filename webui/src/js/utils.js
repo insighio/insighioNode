@@ -1,4 +1,4 @@
-export function fetchInternal(url, timeout = 30000, method = "GET") {
+export function fetchInternal(url, timeout = 30000, method = "GET", body = null) {
   return new Promise((resolve, reject) => {
     const controller = new AbortController()
     const signal = controller.signal
@@ -12,7 +12,7 @@ export function fetchInternal(url, timeout = 30000, method = "GET") {
     const separator = url.includes("?") ? "&" : "?"
     const cacheBustUrl = url + separator + "_t=" + Date.now()
 
-    fetch("http://192.168.4.1" + cacheBustUrl, {
+    const fetchOptions = {
       signal,
       method,
       cache: "no-cache",
@@ -20,9 +20,22 @@ export function fetchInternal(url, timeout = 30000, method = "GET") {
         "Cache-Control": "no-cache, no-store, must-revalidate",
         Pragma: "no-cache"
       }
-    })
+    }
+
+    // Add body for POST requests
+    if (method === "POST" && body) {
+      fetchOptions.headers["Content-Type"] = "application/json"
+      fetchOptions.body = JSON.stringify(body)
+    }
+
+    fetch("http://192.168.4.1" + cacheBustUrl, fetchOptions)
       .then((response) => {
         clearTimeout(timeoutId)
+        if (!response.ok) {
+          return response.json().then((err) => {
+            throw new Error(err.message || "Request failed")
+          })
+        }
         return response.json()
       })
       .then((data) => {

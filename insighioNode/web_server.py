@@ -64,6 +64,23 @@ class Version:
         }, 200
 
 
+class Login:
+    def post(self, data):
+        logging.debug("[web-server][POST]: /login")
+        try:
+            username = data.get("username", "")
+            password = data.get("password", "")
+
+            # Validate credentials
+            if username == "admin" and password == "insighiodev":
+                return {"success": True}, 200
+            else:
+                return {"success": False, "message": "Invalid credentials"}, 401
+        except Exception as e:
+            logging.exception(e, "Error during login")
+            return {"success": False, "message": "Login error"}, 500
+
+
 class Settings:
     def get(self, data):
         global insighioSettings
@@ -700,6 +717,7 @@ def start(timeoutMs=120000):
     app.add_resource(ConfigTemp, "/save-config-temp")
     app.add_resource(DevID, "/devid")
     app.add_resource(Version, "/version")
+    app.add_resource(Login, "/login")
     app.add_resource(WiFiList, "/update_wifi_list")
     app.add_resource(DeviceMeasurements, "/device_measurements")
     # app.add_resource(StoredMeasurements, "/saved_meas")
