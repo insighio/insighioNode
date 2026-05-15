@@ -56,7 +56,7 @@ class TransferProtocolModemAT(TransferProtocol):
             self.protocol_config.thing_id,
             self.protocol_config.thing_token,
             self.protocol_config.keepalive,
-            self.protocol_config.client_name
+            self.protocol_config.client_name,
         )
         return self.connected
 
@@ -95,9 +95,11 @@ class TransferProtocolModemAT(TransferProtocol):
 
         logging.info("About to send config message")
         URL_base = self.protocol_config.server_ip
-        URL_PATH = "/http/channels/{}/messages/{}{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, "/configResponse")
+        URL_PATH = "/http/channels/{}/messages/{}{}".format(
+            self.protocol_config.control_channel_id, self.protocol_config.thing_id, "/configResponse"
+        )
 
-        post_body = [{"n": "config", "vs": message}]
+        post_body = [{"n": "config", "vs": message}, {"n": "e", "v": 9}]
         return self.modem_instance.http_post_with_auth_header(
             URL_base, URL_PATH, self.protocol_config.thing_token, post_body, timeout_ms=125000
         )

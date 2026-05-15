@@ -30,7 +30,7 @@ def update_hw_ids(measurements, is_senml=True, is_json=False):
 
 def connect(cfg, explicit_protocol=None):
     with mutex:
-        (connOk, connDur, scanDur, wifiChannel, wifiRssi) = wifi.connect(
+        connOk, connDur, scanDur, wifiChannel, wifiRssi = wifi.connect(
             cfg.get("_CONF_NETS"), cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC"), force_no_scan=True
         )
         results = {}
@@ -115,7 +115,7 @@ def send_config_message(cfg, message):
     if transfer_client is not None:
         return send_control_message(
             cfg,
-            '[{"n":"config","vs":"' + message + '"}]',
+            '[{"n":"config","vs":"' + message + '"}, { "n": "e", "v": 9 }]',
             "/configResponse",
         )
     return None
