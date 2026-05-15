@@ -161,6 +161,11 @@ configDict = {
     "_MEAS_PULSECOUNTER": "meas_pulseCounter",
     "_SYSTEM_SETTINGS": "system_settings",
     "_CELLULAR_MCC_MNC": "cell_mcc_mnc",
+    "_ULP_SLEEP_LOW": "ulp_sleep_low",
+    "_ULP_SLEEP_HIGH": "ulp_sleep_high",
+    "_ULP_LIMIT_LOW_FREQ": "ulp_limit_low_freq",
+    "_ULP_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ": "ulp_limit_low_freq_when_other_high_freq",
+    "_ULP_LIMIT_HIGH_FREQ": "ulp_limit_high_freq",
 }
 
 NoneType = type(None)

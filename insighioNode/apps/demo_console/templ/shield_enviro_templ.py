@@ -34,3 +34,10 @@ _MEAS_SDI12 = '<meas-sdi12>'
 _MEAS_MODBUS = '<meas-modbus>'
 _MEAS_ADC = '<meas-adc>'
 _MEAS_PULSECOUNTER = '<meas-pulseCounter>'
+
+
+_ULP_SLEEP_LOW = <ulp-sleep-low>
+_ULP_SLEEP_HIGH = <ulp-sleep-high>
+_ULP_LIMIT_LOW_FREQ = <ulp-limit-low-freq>
+_ULP_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ = <ulp-limit-low-freq-when-other-high-freq>
+_ULP_LIMIT_HIGH_FREQ = <ulp-limit-high-freq>
