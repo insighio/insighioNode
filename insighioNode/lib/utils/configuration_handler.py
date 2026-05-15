@@ -326,7 +326,7 @@ def get_file_config(fileName, keyValuePairs):
     contents = utils.readFromFile(fileName)
     for param in keyValuePairs:
         # logging.debug("Replacing <{}> with {}, type: {}".format(param, keyValuePairs[param], type(keyValuePairs[param])))
-        contents = contents.replace("<" + param + ">", keyValuePairs[param] if keyValuePairs[param] else "None")
+        contents = contents.replace("<" + param + ">", "{}".format(keyValuePairs[param] if keyValuePairs[param] else "None"))
     return ure.sub(r"\"?<[a-z\-0-9]+>\"?", "None", contents)
 
 

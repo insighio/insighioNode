@@ -183,7 +183,7 @@ export default {
         "wifi-ssid"
       ]
 
-      this.$storage.clear()
+      cookieKeys.forEach((key) => this.$storage.remove(key))
     },
     handleSave() {
       // Disable buttons to prevent multiple submissions
