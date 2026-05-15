@@ -164,16 +164,16 @@ export default {
     }
   },
   mounted() {
-    let storedActiveTab = this.$cookies.get("activeTab")
+    let storedActiveTab = this.$storage.get("activeTab")
 
     console.log("storedActiveTab: ", storedActiveTab)
     if (storedActiveTab !== undefined && storedActiveTab !== null) this.tabActive = parseInt(storedActiveTab)
     else {
       this.tabActive = 0
-      this.$cookies.set("activeTab", this.tabActive)
+      this.$storage.set("activeTab", this.tabActive)
     }
 
-    this.networkTech = this.$cookies.get("network")
+    this.networkTech = this.$storage.get("network")
 
     // Close settings menu when clicking outside
     document.addEventListener("click", this.handleOutsideClick)
@@ -183,11 +183,11 @@ export default {
   },
   methods: {
     goToNextStep() {
-      this.networkTech = this.$cookies.get("network")
+      this.networkTech = this.$storage.get("network")
 
       this.tabActive += 1
 
-      this.$cookies.set("activeTab", this.tabActive)
+      this.$storage.set("activeTab", this.tabActive)
 
       console.log("goToNextStep: ", this.tabActive)
       if (this.tabActive === 1) {
@@ -197,7 +197,7 @@ export default {
     goToPreviousStep() {
       this.tabActive -= 1
 
-      this.$cookies.set("activeTab", this.tabActive)
+      this.$storage.set("activeTab", this.tabActive)
 
       console.log("goToPrevStep: ", this.tabActive)
       if (this.tabActive === 1) {
@@ -206,10 +206,10 @@ export default {
     },
     goToStart() {
       this.tabActive = 1
-      this.$cookies.set("activeTab", this.tabActive)
-      const savedSession = this.$cookies.get("session")
-      this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
-      this.$cookies.set("session", savedSession)
+      this.$storage.set("activeTab", this.tabActive)
+      const savedSession = this.$storage.get("session")
+      this.$storage.clear()
+      this.$storage.set("session", savedSession)
     },
     toggleSettingsMenu() {
       this.showSettingsMenu = !this.showSettingsMenu
@@ -288,9 +288,9 @@ export default {
           }
 
           // Get API keys from cookies
-          const insighio_id = this.$cookies.get("insighio-id")
-          const insighio_key = this.$cookies.get("insighio-key")
-          const insighio_channel = this.$cookies.get("insighio-channel")
+          const insighio_id = this.$storage.get("insighio-id")
+          const insighio_key = this.$storage.get("insighio-key")
+          const insighio_channel = this.$storage.get("insighio-channel")
 
           // Create final file content with metadata
           const fileContent = {
@@ -373,11 +373,12 @@ export default {
         if (response.ok) {
           alert("Factory reset completed successfully. The device will restart.")
           // Clear all cookies and redirect to start
-          this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
+          this.$storage.clear()
+
           this.showFactoryResetConfirm = false
-          this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
+          this.$storage.clear()
           this.tabActive = 0
-          this.$cookies.set("activeTab", this.tabActive)
+          this.$storage.set("activeTab", this.tabActive)
         } else {
           console.error("Factory reset failed:", response.statusText)
           alert("Factory reset failed. Please try again.")
@@ -405,9 +406,9 @@ export default {
           console.log(res)
           this.isRebooting = false
           this.showRebootConfirm = false
-          this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
+          this.$storage.clear()
           this.tabActive = 0
-          this.$cookies.set("activeTab", this.tabActive)
+          this.$storage.set("activeTab", this.tabActive)
         })
         .catch((err) => {
           console.log("error rebooting: ", err)
@@ -457,11 +458,9 @@ export default {
       this.showSettingsMenu = false
       this.$nextTick(() => {
         if (confirm("Are you sure you want to reset the session? All unsaved configuration will be lost.")) {
-          this.$cookies.keys().forEach((cookie) => {
-            console.log("removing cookie: ", cookie, ", res:", this.$cookies.remove(cookie))
-          })
+          this.$storage.clear()
           this.tabActive = 0
-          this.$cookies.set("activeTab", this.tabActive)
+          this.$storage.set("activeTab", this.tabActive)
         }
       })
     }

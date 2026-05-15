@@ -399,19 +399,19 @@ export default {
       this.storeData()
     },
     clearCookies() {
-      this.$cookies.remove("meas-sdi12")
-      this.$cookies.remove("meas-modbus")
-      this.$cookies.remove("meas-adc")
-      this.$cookies.remove("meas-pulseCounter")
+      this.$storage.remove("meas-sdi12")
+      this.$storage.remove("meas-modbus")
+      this.$storage.remove("meas-adc")
+      this.$storage.remove("meas-pulseCounter")
     },
 
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas-sdi12", { sensors: this.sdi12Sensors, config: this.sdi12Config })
-      this.$cookies.set("meas-modbus", { sensors: this.modbusSensors, config: this.modbusConfig })
-      this.$cookies.set("meas-adc", this.adcConfig)
-      this.$cookies.set("meas-pulseCounter", this.pulseCounterConfig)
+      this.$storage.set("meas-sdi12", { sensors: this.sdi12Sensors, config: this.sdi12Config })
+      this.$storage.set("meas-modbus", { sensors: this.modbusSensors, config: this.modbusConfig })
+      this.$storage.set("meas-adc", this.adcConfig)
+      this.$storage.set("meas-pulseCounter", this.pulseCounterConfig)
 
       this.requestGoNext()
     }

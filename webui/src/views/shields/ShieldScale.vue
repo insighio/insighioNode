@@ -246,13 +246,13 @@ export default {
   methods: {
     initializeValues() {
       // Add initialization logic here
-      this.i2c1 = this.strToJSValue(this.$cookies.get("meas-i2c-1"), "disabled")
-      this.i2c2 = this.strToJSValue(this.$cookies.get("meas-i2c-2"), "disabled")
-      this.adcP1 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p1"), "disabled")
-      this.scaleEnabled = this.strToJSValue(this.$cookies.get("meas-scale-enabled"), false)
-      this.scaleMonitoring = this.strToJSValue(this.$cookies.get("meas-scale-monitoring-enabled"), false)
-      this.scaleOffset = this.$cookies.get("meas-scale-offset")
-      this.scaleScale = this.$cookies.get("meas-scale-scale")
+      this.i2c1 = this.strToJSValue(this.$storage.get("meas-i2c-1"), "disabled")
+      this.i2c2 = this.strToJSValue(this.$storage.get("meas-i2c-2"), "disabled")
+      this.adcP1 = this.strToJSValue(this.$storage.get("meas-sensor-a-d-p1"), "disabled")
+      this.scaleEnabled = this.strToJSValue(this.$storage.get("meas-scale-enabled"), false)
+      this.scaleMonitoring = this.strToJSValue(this.$storage.get("meas-scale-monitoring-enabled"), false)
+      this.scaleOffset = this.$storage.get("meas-scale-offset")
+      this.scaleScale = this.$storage.get("meas-scale-scale")
     },
     // Add your component methods here
     validateMyForm() {
@@ -260,31 +260,31 @@ export default {
     },
 
     clearCookies() {
-      this.$cookies.remove("meas-i2c-1")
-      this.$cookies.remove("meas-i2c-2")
-      this.$cookies.remove("meas-sensor-a-d-p1")
-      this.$cookies.remove("meas-sensor-a-d-p1-t")
-      this.$cookies.remove("meas-sensor-scale-enabled")
-      this.$cookies.remove("meas-scale-monitoring-enabled")
-      this.$cookies.remove("meas-scale-offset")
-      this.$cookies.remove("meas-scale-scale")
+      this.$storage.remove("meas-i2c-1")
+      this.$storage.remove("meas-i2c-2")
+      this.$storage.remove("meas-sensor-a-d-p1")
+      this.$storage.remove("meas-sensor-a-d-p1-t")
+      this.$storage.remove("meas-sensor-scale-enabled")
+      this.$storage.remove("meas-scale-monitoring-enabled")
+      this.$storage.remove("meas-scale-offset")
+      this.$storage.remove("meas-scale-scale")
     },
 
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas-i2c-1", this.i2c1)
-      this.$cookies.set("meas-i2c-2", this.i2c2)
-      this.$cookies.set("meas-sensor-a-d-p1", this.adcP1)
-      this.$cookies.set("meas-scale-enabled", this.strToJSValue(this.scaleEnabled))
-      this.$cookies.set("meas-scale-monitoring-enabled", this.strToJSValue(this.scaleMonitoring))
+      this.$storage.set("meas-i2c-1", this.i2c1)
+      this.$storage.set("meas-i2c-2", this.i2c2)
+      this.$storage.set("meas-sensor-a-d-p1", this.adcP1)
+      this.$storage.set("meas-scale-enabled", this.strToJSValue(this.scaleEnabled))
+      this.$storage.set("meas-scale-monitoring-enabled", this.strToJSValue(this.scaleMonitoring))
 
       if (this.scaleEnabled) {
-        this.$cookies.set("meas-scale-scale", this.scaleScale)
-        this.$cookies.set("meas-scale-offset", this.scaleOffset)
+        this.$storage.set("meas-scale-scale", this.scaleScale)
+        this.$storage.set("meas-scale-offset", this.scaleOffset)
       } else {
-        this.$cookies.set("meas-scale-scale", 1)
-        this.$cookies.set("meas-scale-offset", 0)
+        this.$storage.set("meas-scale-scale", 1)
+        this.$storage.set("meas-scale-offset", 0)
       }
 
       this.requestGoNext()
@@ -329,7 +329,7 @@ export default {
     getScaleOffset() {
       // Simulate saving idle weight
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
+      fetch("/raw-weight-idle?board=" + this.$storage.get("hw-module"))
         .then((response) => {
           return response.json()
         })
@@ -345,7 +345,7 @@ export default {
 
     calculateScaleMultiplier() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("selected-board"))
+      fetch("/raw-weight-idle?board=" + this.$storage.get("selected-board"))
         .then((response) => {
           return response.json()
         })
@@ -368,7 +368,7 @@ export default {
     },
     requestTare() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
+      fetch("/raw-weight-idle?board=" + this.$storage.get("hw-module"))
         .then((response) => {
           return response.json()
         })
@@ -385,7 +385,7 @@ export default {
     },
     requestMeasure() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$cookies.get("hw-module"))
+      fetch("/raw-weight-idle?board=" + this.$storage.get("hw-module"))
         .then((response) => {
           return response.json()
         })

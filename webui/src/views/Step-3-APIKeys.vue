@@ -79,10 +79,10 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.insighio_id = this.$cookies.get("insighio-id")
-      this.insighio_key = this.$cookies.get("insighio-key")
-      this.insighio_channel = this.$cookies.get("insighio-channel")
-      this.insighio_control_channel = this.$cookies.get("insighio-control-channel")
+      this.insighio_id = this.$storage.get("insighio-id")
+      this.insighio_key = this.$storage.get("insighio-key")
+      this.insighio_channel = this.$storage.get("insighio-channel")
+      this.insighio_control_channel = this.$storage.get("insighio-control-channel")
 
       //detectBoardChange(enableNavigationButtons)
     },
@@ -108,10 +108,10 @@ export default {
       // })
     },
     clearCookies() {
-      this.$cookies.remove("insighio-id")
-      this.$cookies.remove("insighio-key")
-      this.$cookies.remove("insighio-channel")
-      this.$cookies.remove("insighio-channel-control")
+      this.$storage.remove("insighio-id")
+      this.$storage.remove("insighio-key")
+      this.$storage.remove("insighio-channel")
+      this.$storage.remove("insighio-channel-control")
     },
 
     validateMyForm() {
@@ -130,10 +130,10 @@ export default {
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("insighio-id", this.insighio_id)
-      this.$cookies.set("insighio-key", this.insighio_key)
-      this.$cookies.set("insighio-channel", this.insighio_channel)
-      this.$cookies.set("insighio-control-channel", this.insighio_control_channel)
+      this.$storage.set("insighio-id", this.insighio_id)
+      this.$storage.set("insighio-key", this.insighio_key)
+      this.$storage.set("insighio-channel", this.insighio_channel)
+      this.$storage.set("insighio-control-channel", this.insighio_control_channel)
 
       this.requestGoNext()
     }

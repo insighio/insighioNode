@@ -104,7 +104,7 @@ export default {
   },
   methods: {
     loadCookie(name) {
-      let obj = this.$cookies.get(name)
+      let obj = this.$storage.get(name)
 
       if (typeof obj === "string") {
         try {
@@ -187,12 +187,12 @@ export default {
       this.progressValue = 0
       this.isLoading = true
 
-      var cookieKeys = this.$cookies.keys()
+      var cookieKeys = this.$storage.keys()
       var configString = ""
       var config = {} // or []
 
       cookieKeys.forEach((key) => {
-        let value = this.$cookies.get(key)
+        let value = this.$storage.get(key)
 
         if (typeof value === "object") {
           value = JSON.stringify(value)
@@ -279,8 +279,8 @@ export default {
         })
     },
     addStaticValuesForNetwork(obj) {
-      var net = this.$cookies.get("network")
-      var netStats = this.$cookies.get("meas-network-stat")
+      var net = this.$storage.get("network")
+      var netStats = this.$storage.get("meas-network-stat")
 
       if (netStats === "True") {
         if (net === "wifi") {
@@ -302,7 +302,7 @@ export default {
         }
       }
 
-      if (this.$cookies.get("meas-gps-enabled") === "True") {
+      if (this.$storage.get("meas-gps-enabled") === "True") {
         obj["gps_lat"] = {}
         obj["gps_lon"] = {}
         obj["gps_num_of_sat"] = {}
@@ -313,13 +313,13 @@ export default {
       obj["uptime"] = { unit: "ms" }
     },
     clearCookies() {
-      this.$cookies.remove("meas-name-mapping")
-      this.$cookies.remove("meas-name-ext-mapping")
+      this.$storage.remove("meas-name-mapping")
+      this.$storage.remove("meas-name-ext-mapping")
     },
 
     storeData() {
       this.clearCookies()
-      this.$cookies.set("meas-name-ext-mapping", this.getAliasUnitPairs())
+      this.$storage.set("meas-name-ext-mapping", this.getAliasUnitPairs())
       this.$emit("save")
     },
     validateMyForm() {

@@ -151,9 +151,9 @@ export default {
     initializeValues() {
       this.sdi12Rows = []
       for (let i = 1; i <= 10; ++i) {
-        const rowEnabled = this.strToJSValue(this.$cookies.get("meas-sdi-" + i + "-enabled"))
-        const rowLoc = this.$cookies.get("meas-sdi-" + i + "-loc")
-        const rowAddress = this.$cookies.get("meas-sdi-" + i + "-address")
+        const rowEnabled = this.strToJSValue(this.$storage.get("meas-sdi-" + i + "-enabled"))
+        const rowLoc = this.$storage.get("meas-sdi-" + i + "-loc")
+        const rowAddress = this.$storage.get("meas-sdi-" + i + "-address")
 
         if (
           rowEnabled === undefined ||
@@ -171,22 +171,22 @@ export default {
       //   this.sdi12Rows.push({ sensorId: 1, boardLocation: "1", active: false })
       // }
 
-      this.sdi12WarmupTimeMs = this.$cookies.get("meas-sdi-warmup-time")
-        ? this.$cookies.get("meas-sdi-warmup-time")
+      this.sdi12WarmupTimeMs = this.$storage.get("meas-sdi-warmup-time")
+        ? this.$storage.get("meas-sdi-warmup-time")
         : 1000
-      this.sens_4_20_num1_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-1-enable"), false)
-      this.sens_4_20_num2_enable = this.strToJSValue(this.$cookies.get("meas-4-20-snsr-2-enable"), false)
-      this.sens_4_20_num1_formula = this.$cookies.get("meas-4-20-snsr-1-formula")
-        ? this.$cookies.get("meas-4-20-snsr-1-formula")
+      this.sens_4_20_num1_enable = this.strToJSValue(this.$storage.get("meas-4-20-snsr-1-enable"), false)
+      this.sens_4_20_num2_enable = this.strToJSValue(this.$storage.get("meas-4-20-snsr-2-enable"), false)
+      this.sens_4_20_num1_formula = this.$storage.get("meas-4-20-snsr-1-formula")
+        ? this.$storage.get("meas-4-20-snsr-1-formula")
         : "v"
-      this.sens_4_20_num2_formula = this.$cookies.get("meas-4-20-snsr-2-formula")
-        ? this.$cookies.get("meas-4-20-snsr-2-formula")
+      this.sens_4_20_num2_formula = this.$storage.get("meas-4-20-snsr-2-formula")
+        ? this.$storage.get("meas-4-20-snsr-2-formula")
         : "v"
 
-      this.pulseCounterEnable = this.strToJSValue(this.$cookies.get("meas-pcnt-1-enable"), false)
-      this.pulseCounterHighFreq = this.strToJSValue(this.$cookies.get("meas-pcnt-1-high-freq"), false)
-      this.pulseCounterFormula = this.$cookies.get("meas-pcnt-1-formula")
-        ? this.$cookies.get("meas-pcnt-1-formula")
+      this.pulseCounterEnable = this.strToJSValue(this.$storage.get("meas-pcnt-1-enable"), false)
+      this.pulseCounterHighFreq = this.strToJSValue(this.$storage.get("meas-pcnt-1-high-freq"), false)
+      this.pulseCounterFormula = this.$storage.get("meas-pcnt-1-formula")
+        ? this.$storage.get("meas-pcnt-1-formula")
         : "1"
     },
     addSdi12Row() {
@@ -196,21 +196,21 @@ export default {
       this.storeData()
     },
     clearCookies() {
-      this.$cookies.remove("meas-4-20-snsr-1-enable")
-      this.$cookies.remove("meas-4-20-snsr-2-enable")
-      this.$cookies.remove("meas-4-20-snsr-1-formula")
-      this.$cookies.remove("meas-4-20-snsr-2-formula")
-      this.$cookies.remove("meas-pcnt-1-enable")
-      this.$cookies.remove("meas-pcnt-1-cnt-on-rising")
-      this.$cookies.remove("meas-pcnt-1-formula")
-      this.$cookies.remove("meas-pcnt-1-high-freq")
+      this.$storage.remove("meas-4-20-snsr-1-enable")
+      this.$storage.remove("meas-4-20-snsr-2-enable")
+      this.$storage.remove("meas-4-20-snsr-1-formula")
+      this.$storage.remove("meas-4-20-snsr-2-formula")
+      this.$storage.remove("meas-pcnt-1-enable")
+      this.$storage.remove("meas-pcnt-1-cnt-on-rising")
+      this.$storage.remove("meas-pcnt-1-formula")
+      this.$storage.remove("meas-pcnt-1-high-freq")
 
-      this.$cookies.remove("meas-sdi-warmup-time")
+      this.$storage.remove("meas-sdi-warmup-time")
 
       for (let i = 1; i < 11; ++i) {
-        this.$cookies.remove("meas-sdi-" + i + "-enabled")
-        this.$cookies.remove("meas-sdi-" + i + "-address")
-        this.$cookies.remove("meas-sdi-" + i + "-loc")
+        this.$storage.remove("meas-sdi-" + i + "-enabled")
+        this.$storage.remove("meas-sdi-" + i + "-address")
+        this.$storage.remove("meas-sdi-" + i + "-loc")
       }
     },
 
@@ -219,21 +219,21 @@ export default {
 
       for (let i = 0; i < this.sdi12Rows.length; ++i) {
         const config_index = i + 1
-        this.$cookies.set("meas-sdi-" + config_index + "-enabled", this.boolToPyStr(this.sdi12Rows[i].active))
-        this.$cookies.set("meas-sdi-" + config_index + "-address", this.sdi12Rows[i].sensorId)
-        this.$cookies.set("meas-sdi-" + config_index + "-loc", this.sdi12Rows[i].boardLocation)
+        this.$storage.set("meas-sdi-" + config_index + "-enabled", this.boolToPyStr(this.sdi12Rows[i].active))
+        this.$storage.set("meas-sdi-" + config_index + "-address", this.sdi12Rows[i].sensorId)
+        this.$storage.set("meas-sdi-" + config_index + "-loc", this.sdi12Rows[i].boardLocation)
       }
 
-      this.$cookies.set("meas-4-20-snsr-1-enable", this.boolToPyStr(this.sens_4_20_num1_enable))
-      this.$cookies.set("meas-4-20-snsr-2-enable", this.boolToPyStr(this.sens_4_20_num2_enable))
-      this.$cookies.set("meas-4-20-snsr-1-formula", this.sens_4_20_num1_formula)
-      this.$cookies.set("meas-4-20-snsr-2-formula", this.sens_4_20_num2_formula)
+      this.$storage.set("meas-4-20-snsr-1-enable", this.boolToPyStr(this.sens_4_20_num1_enable))
+      this.$storage.set("meas-4-20-snsr-2-enable", this.boolToPyStr(this.sens_4_20_num2_enable))
+      this.$storage.set("meas-4-20-snsr-1-formula", this.sens_4_20_num1_formula)
+      this.$storage.set("meas-4-20-snsr-2-formula", this.sens_4_20_num2_formula)
 
-      this.$cookies.set("meas-sdi-warmup-time", this.sdi12WarmupTimeMs)
+      this.$storage.set("meas-sdi-warmup-time", this.sdi12WarmupTimeMs)
 
-      this.$cookies.set("meas-pcnt-1-enable", this.boolToPyStr(this.pulseCounterEnable))
-      this.$cookies.set("meas-pcnt-1-formula", this.pulseCounterFormula)
-      this.$cookies.set("meas-pcnt-1-high-freq", this.boolToPyStr(this.pulseCounterHighFreq))
+      this.$storage.set("meas-pcnt-1-enable", this.boolToPyStr(this.pulseCounterEnable))
+      this.$storage.set("meas-pcnt-1-formula", this.pulseCounterFormula)
+      this.$storage.set("meas-pcnt-1-high-freq", this.boolToPyStr(this.pulseCounterHighFreq))
 
       this.requestGoNext()
     }

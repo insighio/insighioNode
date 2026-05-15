@@ -37,10 +37,10 @@ export default {
       const encodedParams = {}
       const config = {}
       let isConfigValid = false
-      let requestFileSystemOptimization = this.$cookies.get("request_fs_optimization")
+      let requestFileSystemOptimization = this.$storage.get("request_fs_optimization")
 
-      this.$cookies.keys().forEach((key) => {
-        let value = this.$cookies.get(key)
+      this.$storage.keys().forEach((key) => {
+        let value = this.$storage.get(key)
 
         if (typeof value === "object") {
           value = JSON.stringify(value)
@@ -78,7 +78,7 @@ export default {
         body: JSON.stringify({ queryParams: config, encodedParams, requestFileSystemOptimization })
       })
         .then(() => {
-          this.$cookies.keys().forEach((cookie) => this.$cookies.remove(cookie))
+          this.$storage.clear()
           this.requestReboot()
         })
         .catch((err) => console.error("Error saving config:", err))

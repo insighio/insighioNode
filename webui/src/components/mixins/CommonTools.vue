@@ -27,12 +27,10 @@ export default {
     },
     initializeValues() {},
     clearAllCookies() {
-      console.log("this.$cookies.keys(): ", this.$cookies.keys())
-      this.$cookies.keys().forEach((key) => {
-        this.$cookies.remove(key)
-      })
+      console.log("this.$storage.keys(): ", this.$storage.keys())
+      this.$storage.clear()
 
-      console.log("this.$cookies.keys() after: ", this.$cookies.keys())
+      console.log("this.$storage.keys() after: ", this.$storage.keys())
     },
     requestGoNext() {
       this.$emit("goNext")
@@ -71,7 +69,7 @@ export default {
       return val ? "True" : "False"
     },
     getJsonObjectFromCookies(cookieName) {
-      const cookieValue = this.$cookies.get(cookieName)
+      const cookieValue = this.$storage.get(cookieName)
 
       // console.log("Cookie: " + cookieName + ", value: " + cookieValue + ", type: " + typeof cookieValue)
       if (cookieValue) {

@@ -49,7 +49,7 @@ export default {
     checkPassword() {
       if (this.username === "admin" && this.password === "insighiodev") {
         this.clearAllCookies()
-        this.$cookies.set("session", "true")
+        this.$storage.set("session", "true")
         this.requestGoNext()
         return true
       } else {
@@ -58,7 +58,7 @@ export default {
       }
     },
     checkAlreadyLoggedIn() {
-      if (this.$cookies.isKey("session")) {
+      if (this.$storage.isKey("session")) {
         this.requestGoNext()
       }
     }

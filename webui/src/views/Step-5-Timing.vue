@@ -153,9 +153,9 @@ export default {
       return `${hours < 10 ? "0" : ""}${hours}:${minutes < 10 ? "0" : ""}${minutes}`
     },
     initializeValues() {
-      this.timing_batch_upload_buffer_size = this.getValueWithDefaults(this.$cookies.get("batch-upload-buffer-size"), 1)
-      let timeA = this.strToJSValue(this.$cookies.get("scheduled-time-a"))
-      let timeB = this.strToJSValue(this.$cookies.get("scheduled-time-b"))
+      this.timing_batch_upload_buffer_size = this.getValueWithDefaults(this.$storage.get("batch-upload-buffer-size"), 1)
+      let timeA = this.strToJSValue(this.$storage.get("scheduled-time-a"))
+      let timeB = this.strToJSValue(this.$storage.get("scheduled-time-b"))
 
       if (timeA && timeB) {
         this.timingChanged("scheduled")
@@ -164,26 +164,26 @@ export default {
         this.timing_scheduled_time_b = this.secondsToStringTime(timeB)
       } else this.timingChanged("periodic")
 
-      this.timing_period = this.getValueWithDefaults(this.$cookies.get("period"), 300)
+      this.timing_period = this.getValueWithDefaults(this.$storage.get("period"), 300)
       this.timing_batch_enabled = this.timing_batch_upload_buffer_size && this.timing_batch_upload_buffer_size > 1
 
-      this.timing_light_sleep_on = this.strToJSValue(this.$cookies.get("light-sleep-on"), false)
-      this.timing_light_sleep_network_active = this.strToJSValue(this.$cookies.get("light-sleep-network-active"), false)
+      this.timing_light_sleep_on = this.strToJSValue(this.$storage.get("light-sleep-on"), false)
+      this.timing_light_sleep_network_active = this.strToJSValue(this.$storage.get("light-sleep-network-active"), false)
       this.timing_light_sleep_deactivate_on_battery = this.strToJSValue(
-        this.$cookies.get("light-sleep-deactivate-on-battery"),
+        this.$storage.get("light-sleep-deactivate-on-battery"),
         false
       )
 
       //backward compatibility
-      if (this.$cookies.get("always-on-period") !== undefined)
-        this.timing_period = this.getValueWithDefaults(this.$cookies.get("period"), 300)
+      if (this.$storage.get("always-on-period") !== undefined)
+        this.timing_period = this.getValueWithDefaults(this.$storage.get("period"), 300)
 
-      if (this.$cookies.get("always-on-connection") !== undefined)
-        this.timing_light_sleep_on = this.strToJSValue(this.$cookies.get("light-sleep-on"), false)
+      if (this.$storage.get("always-on-connection") !== undefined)
+        this.timing_light_sleep_on = this.strToJSValue(this.$storage.get("light-sleep-on"), false)
 
-      if (this.$cookies.get("force-always-on-connection") !== undefined)
+      if (this.$storage.get("force-always-on-connection") !== undefined)
         this.timing_light_sleep_deactivate_on_battery = this.strToJSValue(
-          this.$cookies.get("force-always-on-connection"),
+          this.$storage.get("force-always-on-connection"),
           false
         )
 
@@ -194,17 +194,17 @@ export default {
       this.updateEstimatedTime()
     },
     clearCookies() {
-      this.$cookies.remove("period")
-      this.$cookies.remove("batch-upload-buffer-size")
-      this.$cookies.remove("scheduled-time-a")
-      this.$cookies.remove("scheduled-time-b")
-      this.$cookies.remove("always-on-connection")
-      this.$cookies.remove("force-always-on-connection")
-      this.$cookies.remove("always-on-period")
+      this.$storage.remove("period")
+      this.$storage.remove("batch-upload-buffer-size")
+      this.$storage.remove("scheduled-time-a")
+      this.$storage.remove("scheduled-time-b")
+      this.$storage.remove("always-on-connection")
+      this.$storage.remove("force-always-on-connection")
+      this.$storage.remove("always-on-period")
 
-      this.$cookies.remove("light-sleep-on")
-      this.$cookies.remove("light-sleep-network-active")
-      this.$cookies.remove("light-sleep-deactivate-on-battery")
+      this.$storage.remove("light-sleep-on")
+      this.$storage.remove("light-sleep-network-active")
+      this.$storage.remove("light-sleep-deactivate-on-battery")
     },
     stringTimeToSeconds(timeStr) {
       var timeElements = timeStr.split(":")
@@ -218,28 +218,28 @@ export default {
       this.clearCookies()
 
       if (this.timing_type === "periodic") {
-        this.$cookies.set("period", this.timing_period)
-        this.$cookies.set("scheduled-time-a", "None")
-        this.$cookies.set("scheduled-time-b", "None")
+        this.$storage.set("period", this.timing_period)
+        this.$storage.set("scheduled-time-a", "None")
+        this.$storage.set("scheduled-time-b", "None")
 
-        this.$cookies.set("light-sleep-on", this.boolToPyStr(this.timing_light_sleep_on))
-        this.$cookies.set("light-sleep-network-active", this.boolToPyStr(this.timing_light_sleep_network_active))
-        this.$cookies.set(
+        this.$storage.set("light-sleep-on", this.boolToPyStr(this.timing_light_sleep_on))
+        this.$storage.set("light-sleep-network-active", this.boolToPyStr(this.timing_light_sleep_network_active))
+        this.$storage.set(
           "light-sleep-deactivate-on-battery",
           this.boolToPyStr(this.timing_light_sleep_deactivate_on_battery)
         )
       } else if (this.timing_type === "scheduled") {
-        this.$cookies.set("period", "None")
-        this.$cookies.set("scheduled-time-a", this.stringTimeToSeconds(this.timing_scheduled_time_a))
-        this.$cookies.set("scheduled-time-b", this.stringTimeToSeconds(this.timing_scheduled_time_b))
+        this.$storage.set("period", "None")
+        this.$storage.set("scheduled-time-a", this.stringTimeToSeconds(this.timing_scheduled_time_a))
+        this.$storage.set("scheduled-time-b", this.stringTimeToSeconds(this.timing_scheduled_time_b))
       }
 
       console.log("this.timing_batch_enabled: ", this.timing_batch_enabled)
       console.log("this.timing_batch_upload_buffer_size: ", this.timing_batch_upload_buffer_size)
 
       if (this.timing_batch_enabled && this.timing_batch_upload_buffer_size >= 1)
-        this.$cookies.set("batch-upload-buffer-size", this.timing_batch_upload_buffer_size)
-      else this.$cookies.set("batch-upload-buffer-size", "1")
+        this.$storage.set("batch-upload-buffer-size", this.timing_batch_upload_buffer_size)
+      else this.$storage.set("batch-upload-buffer-size", "1")
 
       this.requestGoNext()
     },

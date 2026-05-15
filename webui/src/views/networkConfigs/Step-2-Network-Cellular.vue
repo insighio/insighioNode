@@ -344,14 +344,14 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.protocol = this.getValueWithDefaults(this.$cookies.get("protocol"), "mqtt")
-      this.ipversion = this.getValueWithDefaults(this.$cookies.get("ipversion"), "IP")
+      this.protocol = this.getValueWithDefaults(this.$storage.get("protocol"), "mqtt")
+      this.ipversion = this.getValueWithDefaults(this.$storage.get("ipversion"), "IP")
 
-      this.cell_tech = this.getValueWithDefaults(this.$cookies.get("cell-tech"), "NBIoT")
-      this.cell_apn = this.getValueWithDefaults(this.$cookies.get("cell-apn"), "iot.1nce.net")
-      this.cell_band = this.getValueWithDefaults(this.$cookies.get("cell-band"), 20)
-      this.cell_mcc_mnc = this.getValueWithDefaults(this.$cookies.get("cell-mcc-mnc"), "20201")
-      this.cell_mcc_mnc_enabled = this.getValueWithDefaults(this.$cookies.get("cell-mcc-mnc"), null) !== null
+      this.cell_tech = this.getValueWithDefaults(this.$storage.get("cell-tech"), "NBIoT")
+      this.cell_apn = this.getValueWithDefaults(this.$storage.get("cell-apn"), "iot.1nce.net")
+      this.cell_band = this.getValueWithDefaults(this.$storage.get("cell-band"), 20)
+      this.cell_mcc_mnc = this.getValueWithDefaults(this.$storage.get("cell-mcc-mnc"), "20201")
+      this.cell_mcc_mnc_enabled = this.getValueWithDefaults(this.$storage.get("cell-mcc-mnc"), null) !== null
     },
     async updateModemInfo() {
       // Implement modem info update if needed
@@ -525,16 +525,16 @@ export default {
       this.cell_mcc_mnc = mccMnc
     },
     storeData() {
-      this.$cookies.set("network", "cellular")
-      this.$cookies.set("cell-tech", this.cell_tech)
-      this.$cookies.set("cell-apn", this.cell_apn.trim())
-      this.$cookies.set("cell-band", this.cell_band)
-      this.$cookies.set("protocol", this.protocol)
-      this.$cookies.set("ipversion", this.ipversion)
+      this.$storage.set("network", "cellular")
+      this.$storage.set("cell-tech", this.cell_tech)
+      this.$storage.set("cell-apn", this.cell_apn.trim())
+      this.$storage.set("cell-band", this.cell_band)
+      this.$storage.set("protocol", this.protocol)
+      this.$storage.set("ipversion", this.ipversion)
       if (this.cell_mcc_mnc_enabled) {
-        this.$cookies.set("cell-mcc-mnc", this.cell_mcc_mnc)
+        this.$storage.set("cell-mcc-mnc", this.cell_mcc_mnc)
       } else {
-        this.$cookies.remove("cell-mcc-mnc")
+        this.$storage.remove("cell-mcc-mnc")
       }
     },
 

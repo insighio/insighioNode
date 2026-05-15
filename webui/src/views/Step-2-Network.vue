@@ -105,16 +105,18 @@ export default {
 
       console.log("in here.....")
 
+      this.$storage.clear()
+
       fetchInternal("/settings")
         .then((data) => {
           Object.keys(data).forEach((key) => {
-            this.$cookies.set(key.replaceAll("_", "-"), data[key])
+            this.$storage.set(key.replaceAll("_", "-"), data[key])
           })
           this.enableButtonsLocal()
           this.localLoading = false
           this.settingsAcquired = true
 
-          this.activeNetwork = this.$cookies.get("network")
+          this.activeNetwork = this.$storage.get("network")
           this.noNetworkSelected = this.activeNetwork === undefined || this.activeNetwork === null
 
           // Highlight the corresponding button based on activeNetwork value
@@ -181,10 +183,7 @@ export default {
         "wifi-ssid"
       ]
 
-      cookieKeys.forEach((key) => {
-        console.log("Removing cookie:", key)
-        this.$cookies.remove(key)
-      })
+      this.$storage.clear()
     },
     handleSave() {
       // Disable buttons to prevent multiple submissions

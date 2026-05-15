@@ -3,10 +3,10 @@ import "@/assets/css/style.css"
 
 import { createApp } from "vue"
 import App from "./App.vue"
-import VueCookies from "vue-cookies"
+import StoragePlugin from "@/js/storage.js"
 
 let app = createApp(App)
-app.use(VueCookies, { expires: "35min" })
+app.use(StoragePlugin, { expires: "35min" })
 app.mount("#app")
 
 // Add cache busting to all requests

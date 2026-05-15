@@ -35,19 +35,19 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.dev_ssid = this.$cookies.get("sat-astro-devkit-ssid")
-      this.dev_pass = this.$cookies.get("sat-astro-devkit-pass")
-      this.dev_token = this.$cookies.get("sat-astro-devkit-token")
+      this.dev_ssid = this.$storage.get("sat-astro-devkit-ssid")
+      this.dev_pass = this.$storage.get("sat-astro-devkit-pass")
+      this.dev_token = this.$storage.get("sat-astro-devkit-token")
 
-      this.dev_enable = this.strToJSValue(this.$cookies.get("sat-astro-devkit-en"), false)
+      this.dev_enable = this.strToJSValue(this.$storage.get("sat-astro-devkit-en"), false)
     },
     storeData() {
-      this.$cookies.set("network", "satellite")
+      this.$storage.set("network", "satellite")
 
-      this.$cookies.set("sat-astro-devkit-en", this.boolToPyStr(this.dev_enable))
-      this.$cookies.set("sat-astro-devkit-ssid", this.dev_ssid)
-      this.$cookies.set("sat-astro-devkit-pass", this.dev_pass)
-      this.$cookies.set("sat-astro-devkit-token", this.dev_token)
+      this.$storage.set("sat-astro-devkit-en", this.boolToPyStr(this.dev_enable))
+      this.$storage.set("sat-astro-devkit-ssid", this.dev_ssid)
+      this.$storage.set("sat-astro-devkit-pass", this.dev_pass)
+      this.$storage.set("sat-astro-devkit-token", this.dev_token)
     },
     validateMyForm() {
       this.storeData()

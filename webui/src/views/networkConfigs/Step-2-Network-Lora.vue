@@ -85,23 +85,23 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.lora_adr = this.strToJSValue(this.$cookies.get("lora-adr"), true)
-      this.lora_confirmed = this.strToJSValue(this.$cookies.get("lora-confirmed"), true)
+      this.lora_adr = this.strToJSValue(this.$storage.get("lora-adr"), true)
+      this.lora_confirmed = this.strToJSValue(this.$storage.get("lora-confirmed"), true)
 
-      this.lora_region = this.getValueWithDefaults(this.$cookies.get("lora-region"), "EU868")
-      this.lora_dr = this.getValueWithDefaults(this.$cookies.get("lora-dr"), 5)
-      this.lora_retries = this.getValueWithDefaults(this.$cookies.get("lora-retries"), 1)
+      this.lora_region = this.getValueWithDefaults(this.$storage.get("lora-region"), "EU868")
+      this.lora_dr = this.getValueWithDefaults(this.$storage.get("lora-dr"), 5)
+      this.lora_retries = this.getValueWithDefaults(this.$storage.get("lora-retries"), 1)
 
       //detectBoardChange(enableNavigationButtons)
     },
     storeData() {
-      this.$cookies.set("network", "lora")
+      this.$storage.set("network", "lora")
 
-      this.$cookies.set("lora-adr", this.boolToPyStr(this.lora_adr))
-      this.$cookies.set("lora-confirmed", this.boolToPyStr(this.lora_confirmed))
-      this.$cookies.set("lora-dr", this.lora_dr)
-      this.$cookies.set("lora-region", this.lora_region)
-      this.$cookies.set("lora-retries", this.lora_retries)
+      this.$storage.set("lora-adr", this.boolToPyStr(this.lora_adr))
+      this.$storage.set("lora-confirmed", this.boolToPyStr(this.lora_confirmed))
+      this.$storage.set("lora-dr", this.lora_dr)
+      this.$storage.set("lora-region", this.lora_region)
+      this.$storage.set("lora-retries", this.lora_retries)
     },
     validateMyForm() {
       this.storeData()

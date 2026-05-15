@@ -65,23 +65,23 @@ export default {
 
   methods: {
     initializeValues() {
-      this.lora_dev_eui = this.$cookies.get("lora-dev-eui")
-      this.lora_app_eui = this.$cookies.get("lora-app-eui")
-      this.lora_app_key = this.$cookies.get("lora-app-key")
+      this.lora_dev_eui = this.$storage.get("lora-dev-eui")
+      this.lora_app_eui = this.$storage.get("lora-app-eui")
+      this.lora_app_key = this.$storage.get("lora-app-key")
 
       //      detectBoardChange(enableNavigationButtons)
     },
     clearCookies() {
-      this.$cookies.remove("lora-dev-eui")
-      this.$cookies.remove("lora-app-eui")
-      this.$cookies.remove("lora-app-key")
+      this.$storage.remove("lora-dev-eui")
+      this.$storage.remove("lora-app-eui")
+      this.$storage.remove("lora-app-key")
     },
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("lora-dev-eui", this.lora_dev_eui.trim())
-      this.$cookies.set("lora-app-eui", this.lora_app_eui.trim())
-      this.$cookies.set("lora-app-key", this.lora_app_key.trim())
+      this.$storage.set("lora-dev-eui", this.lora_dev_eui.trim())
+      this.$storage.set("lora-app-eui", this.lora_app_eui.trim())
+      this.$storage.set("lora-app-key", this.lora_app_key.trim())
 
       this.requestGoNext()
     },

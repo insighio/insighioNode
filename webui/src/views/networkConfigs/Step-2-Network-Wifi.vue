@@ -100,9 +100,9 @@ export default {
   methods: {
     // Add your component methods here
     initializeValues() {
-      this.protocol = this.getValueWithDefaults(this.$cookies.get("protocol"), "mqtt")
-      this.wifi_ssid = this.$cookies.get("wifi-ssid")
-      this.wifi_pass = this.$cookies.get("wifi-pass")
+      this.protocol = this.getValueWithDefaults(this.$storage.get("protocol"), "mqtt")
+      this.wifi_ssid = this.$storage.get("wifi-ssid")
+      this.wifi_pass = this.$storage.get("wifi-pass")
     },
     updateWifiList() {
       if (this.localLoading) return
@@ -119,10 +119,10 @@ export default {
     },
     storeData() {
       //wifi
-      this.$cookies.set("network", "wifi")
-      this.$cookies.set("wifi-ssid", this.wifi_ssid.trim())
-      this.$cookies.set("wifi-pass", this.wifi_pass ? this.wifi_pass.trim() : "")
-      this.$cookies.set("protocol", this.protocol)
+      this.$storage.set("network", "wifi")
+      this.$storage.set("wifi-ssid", this.wifi_ssid.trim())
+      this.$storage.set("wifi-pass", this.wifi_pass ? this.wifi_pass.trim() : "")
+      this.$storage.set("protocol", this.protocol)
     },
     ssidSelected(network) {
       this.wifi_ssid = network.ssid

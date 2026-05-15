@@ -70,8 +70,8 @@ export default {
       this.configToStore = []
       this.configToStoreOdd = []
       this.configToStoreEven = []
-      this.$cookies.keys().forEach((key, index) => {
-        const item = { key: key, value: this.$cookies.get(key) }
+      this.$storage.keys().forEach((key, index) => {
+        const item = { key: key, value: this.$storage.get(key) }
 
         if (item.value === undefined || item.value === null || item.value === "null") return
 

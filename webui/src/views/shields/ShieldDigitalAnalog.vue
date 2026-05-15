@@ -135,18 +135,18 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.i2c1 = this.strToJSValue(this.$cookies.get("meas-i2c-1"), "disabled")
-      this.analogDigitalP1 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p1"), "disabled")
-      this.analogDigitalP2 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p2"), "disabled")
-      this.analogDigitalP3 = this.strToJSValue(this.$cookies.get("meas-sensor-a-d-p3"), "disabled")
-      this.analogDigitalP1Transformation = this.$cookies.get("meas-sensor-a-d-p1-t")
-        ? this.$cookies.get("meas-sensor-a-d-p1-t")
+      this.i2c1 = this.strToJSValue(this.$storage.get("meas-i2c-1"), "disabled")
+      this.analogDigitalP1 = this.strToJSValue(this.$storage.get("meas-sensor-a-d-p1"), "disabled")
+      this.analogDigitalP2 = this.strToJSValue(this.$storage.get("meas-sensor-a-d-p2"), "disabled")
+      this.analogDigitalP3 = this.strToJSValue(this.$storage.get("meas-sensor-a-d-p3"), "disabled")
+      this.analogDigitalP1Transformation = this.$storage.get("meas-sensor-a-d-p1-t")
+        ? this.$storage.get("meas-sensor-a-d-p1-t")
         : "v"
-      this.analogDigitalP2Transformation = this.$cookies.get("meas-sensor-a-d-p2-t")
-        ? this.$cookies.get("meas-sensor-a-d-p2-t")
+      this.analogDigitalP2Transformation = this.$storage.get("meas-sensor-a-d-p2-t")
+        ? this.$storage.get("meas-sensor-a-d-p2-t")
         : "v"
-      this.analogDigitalP3Transformation = this.$cookies.get("meas-sensor-a-d-p3-t")
-        ? this.$cookies.get("meas-sensor-a-d-p3-t")
+      this.analogDigitalP3Transformation = this.$storage.get("meas-sensor-a-d-p3-t")
+        ? this.$storage.get("meas-sensor-a-d-p3-t")
         : "v"
     },
     // Add your component methods here
@@ -154,31 +154,31 @@ export default {
       this.storeData()
     },
     clearCookies() {
-      this.$cookies.remove("meas-i2c-1")
-      this.$cookies.remove("meas-sensor-a-d-p1")
-      this.$cookies.remove("meas-sensor-a-d-p1-t")
-      this.$cookies.remove("meas-sensor-a-d-p2")
-      this.$cookies.remove("meas-sensor-a-d-p2-t")
-      this.$cookies.remove("meas-sensor-a-d-p3")
-      this.$cookies.remove("meas-sensor-a-d-p3-t")
+      this.$storage.remove("meas-i2c-1")
+      this.$storage.remove("meas-sensor-a-d-p1")
+      this.$storage.remove("meas-sensor-a-d-p1-t")
+      this.$storage.remove("meas-sensor-a-d-p2")
+      this.$storage.remove("meas-sensor-a-d-p2-t")
+      this.$storage.remove("meas-sensor-a-d-p3")
+      this.$storage.remove("meas-sensor-a-d-p3-t")
     },
 
     storeData() {
       this.clearCookies()
 
-      this.$cookies.set("meas-i2c-1", this.i2c1)
-      this.$cookies.set("meas-sensor-a-d-p1", this.analogDigitalP1)
-      this.$cookies.set("meas-sensor-a-d-p2", this.analogDigitalP2)
-      this.$cookies.set("meas-sensor-a-d-p3", this.analogDigitalP3)
+      this.$storage.set("meas-i2c-1", this.i2c1)
+      this.$storage.set("meas-sensor-a-d-p1", this.analogDigitalP1)
+      this.$storage.set("meas-sensor-a-d-p2", this.analogDigitalP2)
+      this.$storage.set("meas-sensor-a-d-p3", this.analogDigitalP3)
 
       if (this.adc1TransformationIsVisible)
-        this.$cookies.set("meas-sensor-a-d-p1-t", this.analogDigitalP1Transformation)
+        this.$storage.set("meas-sensor-a-d-p1-t", this.analogDigitalP1Transformation)
 
       if (this.adc2TransformationIsVisible)
-        this.$cookies.set("meas-sensor-a-d-p2-t", this.analogDigitalP2Transformation)
+        this.$storage.set("meas-sensor-a-d-p2-t", this.analogDigitalP2Transformation)
 
       if (this.adc3TransformationIsVisible)
-        this.$cookies.set("meas-sensor-a-d-p3-t", this.analogDigitalP2Transformation)
+        this.$storage.set("meas-sensor-a-d-p3-t", this.analogDigitalP2Transformation)
 
       this.requestGoNext()
     }
