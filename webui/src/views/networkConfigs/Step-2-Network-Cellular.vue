@@ -350,8 +350,15 @@ export default {
       this.cell_tech = this.getValueWithDefaults(this.$storage.get("cell-tech"), "NBIoT")
       this.cell_apn = this.getValueWithDefaults(this.$storage.get("cell-apn"), "iot.1nce.net")
       this.cell_band = this.getValueWithDefaults(this.$storage.get("cell-band"), 20)
-      this.cell_mcc_mnc = this.getValueWithDefaults(this.$storage.get("cell-mcc-mnc"), "20201")
-      this.cell_mcc_mnc_enabled = this.getValueWithDefaults(this.$storage.get("cell-mcc-mnc"), null) !== null
+
+      let mccMncValue = this.$storage.get("cell-mcc-mnc")
+      if (mccMncValue !== undefined && mccMncValue !== null && mccMncValue.trim() !== "") {
+        this.cell_mcc_mnc = mccMncValue
+        this.cell_mcc_mnc_enabled = true
+      } else {
+        this.cell_mcc_mnc = null
+        this.cell_mcc_mnc_enabled = false
+      }
     },
     async updateModemInfo() {
       // Implement modem info update if needed
@@ -542,6 +549,14 @@ export default {
       if (this.cell_apn.trim() === "") {
         window.alert("Please enter an APN")
         return false
+      }
+
+      if (this.cell_mcc_mnc_enabled) {
+        const mccMncRegex = /^\d{5,6}$/
+        if (!this.cell_mcc_mnc || !mccMncRegex.test(this.cell_mcc_mnc.toString().trim())) {
+          window.alert("Please enter a valid MCC/MNC (5 or 6 digits)")
+          return false
+        }
       }
 
       this.storeData()
