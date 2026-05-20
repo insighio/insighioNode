@@ -29,5 +29,11 @@ do
     fi
 done
 
+WWW_FILES=`find $TARGET_PATH` # -type f | grep "gz$\|ico$\|png$"`
+echo $WWW_FILES > $TARGET_PATH/../www_files.txt
+sed -i 's/ /\n/g' $TARGET_PATH/../www_files.txt
+sed -i 's|.*www|/www|g' $TARGET_PATH/../www_files.txt
+echo "File www_files.txt generated."
+
 cd ..
 echo "Done"
