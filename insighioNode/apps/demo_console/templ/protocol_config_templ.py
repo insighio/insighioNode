@@ -35,3 +35,7 @@ def get_protocol_config():
     protocol_config.thing_token = "<insighio-key>"
     protocol_config_instance = protocol_config
     return protocol_config
+
+
+ENABLE_SECONDARY_MEASUREMENT_TRANSMISSION = <enable-secondary-measurement-transmission>
+SECONDARY_MEASUREMENT_TRANSMISSION_INFO = '<secondary-measurement-transmission-info>'

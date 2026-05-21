@@ -166,6 +166,8 @@ configDict = {
     "_ULP_LIMIT_LOW_FREQ": "ulp_limit_low_freq",
     "_ULP_LIMIT_LOW_FREQ_WHEN_OTHER_HIGH_FREQ": "ulp_limit_low_freq_when_other_high_freq",
     "_ULP_LIMIT_HIGH_FREQ": "ulp_limit_high_freq",
+    "ENABLE_SECONDARY_MEASUREMENT_TRANSMISSION": "enable_secondary_measurement_transmission",
+    "SECONDARY_MEASUREMENT_TRANSMISSION_INFO": "secondary_measurement_transmission_info",
 }
 
 NoneType = type(None)

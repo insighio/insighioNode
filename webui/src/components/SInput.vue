@@ -16,6 +16,7 @@
           :type="inputType"
           class="form-input constr-field"
           v-model="internalValue"
+          :placeholder="placeholder"
           ref="inputField"
         />
       </div>
@@ -40,6 +41,10 @@ export default {
     inputType: {
       type: String,
       default: "text"
+    },
+    placeholder: {
+      type: String,
+      default: ""
     }
   },
   methods: {
