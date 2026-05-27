@@ -355,8 +355,8 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
             return
 
         manufacturer, model = sdi12.get_sensor_info(address)
-        manufacturer = manufacturer.lower()
-        model = model.lower()
+        manufacturer = manufacturer.lower().strip() if manufacturer else ""
+        model = model.lower().strip() if model else ""
         logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
 
         command_to_execute = command + sub_cmd

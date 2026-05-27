@@ -353,8 +353,8 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
             return
 
         manufacturer, model = sdi12.get_sensor_info(address)
-        manufacturer = manufacturer.lower()
-        model = model.lower()
+        manufacturer = manufacturer.lower().strip() if manufacturer else ""
+        model = model.lower().strip() if model else ""
         logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
 
         command_to_execute = command + sub_cmd
@@ -822,7 +822,7 @@ def execute_pulse_counter_measurements(measurements):
                 if not edge_level:
                     edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
-                        (edge_level, v) = detect_stable_edge(pcnt_1_adc)
+                        edge_level, v = detect_stable_edge(pcnt_1_adc)
                 # Explicitly delete ADC
                 # del temp_adc
 
@@ -863,7 +863,7 @@ def execute_pulse_counter_measurements(measurements):
                 if not edge_level:
                     edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
-                        (edge_level, v) = detect_stable_edge(pcnt_2_adc)
+                        edge_level, v = detect_stable_edge(pcnt_2_adc)
 
                 # Explicitly delete ADC
                 # del temp_adc
@@ -907,7 +907,7 @@ def execute_pulse_counter_measurements(measurements):
                 if not edge_level:
                     edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
-                        (edge_level, v) = detect_stable_edge(pcnt_1_adc)
+                        edge_level, v = detect_stable_edge(pcnt_1_adc)
 
                 # Re-enable interrupt on existing pin object
                 # pcnt_1_pin = Pin(pcnt_1_gpio, Pin.IN)
@@ -979,7 +979,7 @@ def execute_pulse_counter_measurements(measurements):
                 if not edge_level:
                     edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
-                        (edge_level, v) = detect_stable_edge(pcnt_2_adc)
+                        edge_level, v = detect_stable_edge(pcnt_2_adc)
 
                 # Re-enable interrupt on existing pin object
                 # pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
@@ -1283,12 +1283,12 @@ def pulse_counter_thread(config, execution_period_ms=None):
     pcnt_1_readings = 0
     pcnt_2_readings = 0
 
-    (pcnt_1_previous_input_value, _) = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else (0, 0)
+    pcnt_1_previous_input_value, _ = detect_stable_edge(pcnt_1_adc) if pcnt_1_adc is not None else (0, 0)
     pcnt_1_next_edge = 1 - pcnt_1_previous_input_value
     pcnt_1_voltage_min = 3300000
     pcnt_1_voltage_max = 0
 
-    (pcnt_2_previous_input_value, _) = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else (0, 0)
+    pcnt_2_previous_input_value, _ = detect_stable_edge(pcnt_2_adc) if pcnt_2_adc is not None else (0, 0)
     pcnt_2_next_edge = 1 - pcnt_2_previous_input_value
     pcnt_2_voltage_min = 3300000
     pcnt_2_voltage_max = 0
@@ -1314,7 +1314,7 @@ def pulse_counter_thread(config, execution_period_ms=None):
                 if not edge_level:
                     edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
-                        (edge_level, v) = detect_stable_edge(pcnt_1_adc)
+                        edge_level, v = detect_stable_edge(pcnt_1_adc)
                     else:
                         edge_level = 0
                 else:
@@ -1354,7 +1354,7 @@ def pulse_counter_thread(config, execution_period_ms=None):
                 if not edge_level:
                     edge_level = v & 0x100000  # 1.048.576 > < 2.097.152 microvolts
                     if edge_level:
-                        (edge_level, v) = detect_stable_edge(pcnt_2_adc)
+                        edge_level, v = detect_stable_edge(pcnt_2_adc)
                     else:
                         edge_level = 0
                 else:
