@@ -117,8 +117,8 @@ def read_sdi12_sensor(sdi12, address, measurements, location=None):
     responseArray = None
     if sdi12.is_active(address):
         manufacturer, model = sdi12.get_sensor_info(address)
-        manufacturer = manufacturer.lower()
-        model = model.lower()
+        manufacturer = manufacturer.lower().strip() if manufacturer else ""
+        model = model.lower().strip() if model else ""
         logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
         set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
         set_value(measurements, "sdi12_{}_m".format(address), model, None)
