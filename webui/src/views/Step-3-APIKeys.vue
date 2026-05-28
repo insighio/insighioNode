@@ -164,7 +164,11 @@ export default {
         this.$storage.get("enable-secondary-measurement-transmission") || false
       const savedMqttInfo = this.$storage.get("secondary-measurement-transmission-info")
       if (savedMqttInfo) {
-        this.secondary_measurement_transmission_info = JSON.parse(savedMqttInfo)
+        try {
+          this.secondary_measurement_transmission_info = JSON.parse(savedMqttInfo)
+        } catch (e) {
+          console.log("Error parsing saved MQTT info: ", e, ", from input: ", savedMqttInfo)
+        }
       }
 
       //detectBoardChange(enableNavigationButtons)
@@ -194,7 +198,7 @@ export default {
       this.$storage.remove("insighio-id")
       this.$storage.remove("insighio-key")
       this.$storage.remove("insighio-channel")
-      this.$storage.remove("insighio-channel-control")
+      this.$storage.remove("insighio-control-channel")
       this.$storage.remove("enable-secondary-measurement-transmission")
       this.$storage.remove("secondary-measurement-transmission-info")
     },
