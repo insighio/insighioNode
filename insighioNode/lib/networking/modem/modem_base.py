@@ -113,24 +113,27 @@ class Modem:
         # examples to be handled
         # +COPS: 1,2,"20201",0
         # +COPS: 0
+        retries = 0
+        while retries < 10:
+            status, lines = self.send_at_cmd("AT+COPS?")
+            if status:
+                lines = "\n".join(lines)
+                operator_regex = r'\+COPS:\s*(\d)(,\d+,"(\d+)")?'
+                match = ure.search(operator_regex, lines)
 
-        status, lines = self.send_at_cmd("AT+COPS?")
-        lines = "\n".join(lines)
-        operator_regex = r'\+COPS:\s*(\d)(,\d+,"(\d+)")?'
-        match = ure.search(operator_regex, lines)
-        if (
-            match
-            and match.group(1) == expected_configuration
-            and (
-                expected_configuration == "0"
-                or (expected_configuration == "1" and match.group(3) is not None and match.group(3) == mcc_mnc)
-            )
-        ):
-            logging.debug("Operator selection already configured")
-            return
+                if (
+                    match
+                    and match.group(1) == expected_configuration
+                    and (
+                        expected_configuration == "0"
+                        or (expected_configuration == "1" and match.group(3) is not None and match.group(3) == mcc_mnc)
+                    )
+                ):
+                    logging.debug("Operator selection already configured")
+                    return
+            sleep_ms(500)
+            retries += 1
 
-        # self.send_at_cmd("AT+CFUN=0")  # set phone functionality to minimum
-        # sleep_ms(5000)
         self.send_at_cmd(command, 180000)
         self.send_at_cmd("AT+CFUN=1,1", 15000, "APP RDY")
         self.send_at_cmd("ATE0")
