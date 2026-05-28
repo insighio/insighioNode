@@ -609,6 +609,7 @@ export default {
         alert(
           "OTA package uploaded successfully! The device will now apply the update and restart. You may need to reconnect."
         )
+        this.isUploading = false
         this.closeOTAModal()
 
         // Clear storage and reset to login screen
