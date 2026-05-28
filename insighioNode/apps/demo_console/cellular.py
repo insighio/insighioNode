@@ -8,16 +8,22 @@ from utime import sleep_ms, ticks_ms, ticks_diff
 from .dictionary_utils import set_value, set_value_float, set_value_int
 
 transfer_client = None
+transfer_secondary_client = None
 mqtt_connected = False
+
+is_secondary_transfer_protocol_enabled = False
 
 
 def init(cfg):
+    global is_secondary_transfer_protocol_enabled
     cellular.set_pins(
         cfg.get("_UC_IO_RADIO_ON"),
         cfg.get("_UC_IO_PWRKEY"),
         cfg.get("_UC_UART_MODEM_TX"),
         cfg.get("_UC_UART_MODEM_RX"),
     )
+
+    is_secondary_transfer_protocol_enabled = cfg.get("ENABLE_SECONDARY_MEASUREMENT_TRANSMISSION")
 
 
 def deinit():
@@ -50,9 +56,9 @@ def updateSignalQuality(cfg, measurements):
         return
 
     rssi = modem_instance.get_rssi()
-    (rsrp, rsrq) = modem_instance.get_extended_signal_quality()
-    (mcc, mnc) = modem_instance.get_registered_mcc_mnc()
-    (lac, ci) = modem_instance.get_lac_n_cell_id()
+    rsrp, rsrq = modem_instance.get_extended_signal_quality()
+    mcc, mnc = modem_instance.get_registered_mcc_mnc()
+    lac, ci = modem_instance.get_lac_n_cell_id()
 
     set_value_float(measurements, "cell_rssi", rssi, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
     set_value_float(measurements, "cell_rsrp", rsrp, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
@@ -69,7 +75,7 @@ def update_hw_ids(measurements, is_senml=True, is_json=False):
     if modem_instance is None:
         return
 
-    (imsi, iccid) = modem_instance.get_sim_card_ids()
+    imsi, iccid = modem_instance.get_sim_card_ids()
 
     modem_imei = modem_instance.get_modem_imei()
 
@@ -95,7 +101,7 @@ def connect(cfg):
     if modem_instance is None or not modem_instance.has_sim():
         return results
 
-    (status, activation_duration, attachment_duration, connection_duration) = cellular.connect(cfg.get_cfg_module())
+    status, activation_duration, attachment_duration, connection_duration = cellular.connect(cfg.get_cfg_module())
     set_value(results, "status", status == cellular.MODEM_CONNECTED)
 
     # if network statistics are enabled
@@ -107,6 +113,7 @@ def connect(cfg):
 
     if status == cellular.MODEM_CONNECTED:
         global transfer_client
+        global transfer_secondary_client
         from . import transfer_protocol
 
         # AT command based implementation of communication of Quectel BG600L
@@ -114,6 +121,11 @@ def connect(cfg):
         if modem_model and "bg600" in modem_model:
             transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
             transfer_client.protocol_config.client_name = "{}_ca".format(cfg.get("device_id"))
+
+            if is_secondary_transfer_protocol_enabled:
+                transfer_secondary_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance, True)
+                transfer_secondary_client.protocol_config.client_name = "{}_ca".format(cfg.get("device_id"))
+                logging.info("Secondary protocol enabled for modem AT transfer protocol")
         elif cfg.protocol == "coap":
             transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
             transfer_client.protocol_config.client_name = "{}_cc".format(cfg.get("device_id"))
@@ -124,16 +136,31 @@ def connect(cfg):
             transfer_client = None
 
         tc_success = transfer_client.connect()
+
+        tc_secondary_success = False
+        if is_secondary_transfer_protocol_enabled:
+            tc_secondary_success = transfer_secondary_client.connect()
+
         if modem_model and "bg600" in modem_model:
             logging.debug("tc_success: {}".format(tc_success))
-            set_value(results, "status", status == cellular.MODEM_CONNECTED and tc_success)
+            set_value(
+                results,
+                "status",
+                status == cellular.MODEM_CONNECTED and tc_success and (not is_secondary_transfer_protocol_enabled or tc_secondary_success),
+            )
 
     return results
 
 
 def is_connected():
     modem_instance = cellular.get_modem_instance()
-    return modem_instance and transfer_client and modem_instance.is_connected() and transfer_client.is_connected()
+    return (
+        modem_instance
+        and transfer_client
+        and modem_instance.is_connected()
+        and transfer_client.is_connected()
+        and (not is_secondary_transfer_protocol_enabled or (transfer_secondary_client and transfer_secondary_client.is_connected()))
+    )
 
 
 def coord_to_double(part1, part2, part3):
@@ -170,7 +197,7 @@ def get_gps_position(cfg, measurements, keep_open=False):
         if cfg.has("_MEAS_GPS_SATELLITE_FIX_NUM"):
             min_satellite_fix_num = cfg.get("_MEAS_GPS_SATELLITE_FIX_NUM")
 
-        (_, lat, lon, num_of_sat, hdop) = modem_instance.get_gps_position(timeout_ms, min_satellite_fix_num)
+        _, lat, lon, num_of_sat, hdop = modem_instance.get_gps_position(timeout_ms, min_satellite_fix_num)
         set_value(measurements, "gps_dur", ticks_diff(ticks_ms(), start_time), SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         if lat is not None and lon is not None:
             latD = coord_to_double(lat[0], lat[1], lat[2])
@@ -185,7 +212,7 @@ def get_gps_position(cfg, measurements, keep_open=False):
     return status
 
 
-def create_message(device_id, measurements):
+def create_message_senml(device_id, measurements):
     message = SenmlPackJson((device_id + "-") if device_id is not None else None)
 
     if "dt" in measurements:
@@ -203,9 +230,66 @@ def create_message(device_id, measurements):
     return message.to_json()
 
 
+def create_message_json_with_units(device_id, measurements):
+    import ujson
+
+    return ujson.dumps(measurements)
+
+
+def create_message_json_without_units(device_id, measurements):
+    import ujson
+
+    message = {}
+    for key in measurements:
+        if isinstance(measurements[key], dict) and "value" in measurements[key]:
+            message[key] = measurements[key]["value"]
+        elif measurements[key] is not None:
+            message[key] = measurements[key]
+    return ujson.dumps(message)
+
+
+def create_message(device_id, measurements):
+    return create_message_senml(device_id, measurements)
+
+
+def create_secondary_message(device_id, measurements):
+    if not is_secondary_transfer_protocol_enabled:
+        logging.warning("Secondary message creation requested but secondary transfer protocol is not enabled")
+        return None
+
+    if not transfer_secondary_client:
+        logging.warning("Secondary message creation requested but secondary transfer client is not initialized")
+        return None
+
+    format = "senml"
+    if transfer_secondary_client._secondary_protocol_info and "format" in transfer_secondary_client._secondary_protocol_info:
+        format = transfer_secondary_client._secondary_protocol_info.get("format")
+
+    if format == "json_without_units":
+        return create_message_json_without_units(device_id, measurements)
+    elif format == "json_with_units":
+        return create_message_json_with_units(device_id, measurements)
+    elif format == "senml":
+        return create_message_senml(device_id, measurements)
+
+    return None
+
+
 def send_message(cfg, message, explicit_channel_name=None):
     if transfer_client is not None:
         return transfer_client.send_packet(message, explicit_channel_name)
+    return False
+
+
+def send_secondary_message(cfg, message, explicit_channel_name=None):
+    explicit_channel_name = (
+        "/{}".format(cfg.get("device_id"))
+        if transfer_secondary_client and transfer_secondary_client._secondary_protocol_info.get("append_mac_to_topic")
+        else None
+    )
+
+    if transfer_secondary_client is not None:
+        return transfer_secondary_client.send_packet(message, explicit_channel_name)
     return False
 
 
@@ -226,6 +310,11 @@ def disconnect():
     if transfer_client is not None:
         transfer_client.disconnect()
         transfer_client = None
+
+    global transfer_secondary_client
+    if transfer_secondary_client is not None:
+        transfer_secondary_client.disconnect()
+        transfer_secondary_client = None
 
 
 def check_and_apply_ota(cfg):

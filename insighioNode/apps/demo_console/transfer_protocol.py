@@ -35,13 +35,32 @@ class TransferProtocol:
 
 
 class TransferProtocolModemAT(TransferProtocol):
-    def __init__(self, cfg, modem_instance=None):
+    def __init__(self, cfg, modem_instance=None, is_secondary_transfer_protocol=False):
         super().__init__(cfg, modem_instance)
         self.modem_instance = modem_instance
         self.modem_based = modem_instance is not None
-        self.require_message_delivery_ack = utils.get_var_from_module(self.protocol_config, "REQ_MESG_DEL_ACK")
-        if self.require_message_delivery_ack is None:
-            self.require_message_delivery_ack = True  # enable if configuration is missing
+
+        self.is_secondary_transfer_protocol = is_secondary_transfer_protocol
+
+        if not self.is_secondary_transfer_protocol:
+            self.require_message_delivery_ack = utils.get_var_from_module(self.protocol_config, "REQ_MESG_DEL_ACK")
+            if self.require_message_delivery_ack is None:
+                self.require_message_delivery_ack = True  # enable if configuration is missing
+            self.modem_client_id = 1
+        else:
+            self.require_message_delivery_ack = True
+            self.modem_client_id = 2
+
+            self._secondary_protocol_info = cfg.get("SECONDARY_MEASUREMENT_TRANSMISSION_INFO")
+            self.is_secondary_protocol_enabled = cfg.get("ENABLE_SECONDARY_MEASUREMENT_TRANSMISSION")
+
+        logging.info("Initialized TransferProtocolModemAT with modem client id: {}".format(self.modem_client_id))
+        logging.info("Secondary transfer protocol enabled: {}".format(self.is_secondary_transfer_protocol))
+        logging.info(
+            "Secondary measurement transmission info: {}".format(
+                self._secondary_protocol_info if self.is_secondary_transfer_protocol else "N/A"
+            )
+        )
 
         logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
 
@@ -49,38 +68,80 @@ class TransferProtocolModemAT(TransferProtocol):
         if self.is_connected():
             return True
 
-        # TODO: use the keepalive setting
-        self.connected = self.modem_instance.mqtt_connect(
-            self.protocol_config.server_ip,
-            self.protocol_config.server_port,
-            self.protocol_config.thing_id,
-            self.protocol_config.thing_token,
-            self.protocol_config.keepalive,
-            self.protocol_config.client_name,
-        )
+        if not self.is_secondary_transfer_protocol:
+            self.connected = self.modem_instance.mqtt_connect(
+                self.protocol_config.server_ip,
+                self.protocol_config.server_port,
+                self.protocol_config.thing_id,
+                self.protocol_config.thing_token,
+                self.protocol_config.keepalive,
+                self.protocol_config.client_name,
+                self.modem_client_id,
+            )
+        else:
+            info = self._secondary_protocol_info
+            if info is None:
+                logging.info(
+                    "No secondary measurement transmission info found in configuration, cannot connect to secondary transfer protocol"
+                )
+                return False
+
+            try:
+                import ujson
+
+                self._secondary_protocol_info = ujson.loads(info)
+
+                logging.debug("[Connect]: Secondary measurement transmission info: " + str(self._secondary_protocol_info))
+            except Exception as e:
+                logging.exception(e, "Error parsing secondary measurement transmission info, cannot connect to secondary transfer protocol")
+                return False
+
+            self.connected = self.modem_instance.mqtt_connect(
+                self._secondary_protocol_info["mqtt_url"],
+                self._secondary_protocol_info["mqtt_port"],
+                self._secondary_protocol_info["mqtt_username"],
+                self._secondary_protocol_info["mqtt_password"],
+                self.protocol_config.keepalive,
+                self.protocol_config.client_name,
+                self.modem_client_id,
+            )
+
         return self.connected
 
     def is_connected(self):
-        self.connected = self.modem_instance.mqtt_is_connected()
+        self.connected = self.modem_instance.mqtt_is_connected(self.modem_client_id)
         return self.connected
 
     def disconnect(self):
-        self.modem_instance.mqtt_disconnect()
+        self.modem_instance.mqtt_disconnect(self.modem_client_id)
         self.connected = False
         logging.info("Disconnected")
 
-    def send_packet(self, message, channel=None):
+    def send_packet(self, message, subtopic=None):
         # transport-related functionalities
         if not self.connected:
             logging.info("TransferProtocol not connected")
             return False
 
-        topic = "channels/{}/messages/{}".format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
-        return self.modem_instance.mqtt_publish(topic, message, 3, False, 1 if self.require_message_delivery_ack else 0)
+        if self.is_secondary_transfer_protocol:
+            topic = self._secondary_protocol_info["mqtt_topic"]
+        else:
+            topic = "channels/{}/messages/{}".format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
+
+        if subtopic is not None:
+            topic += subtopic
+
+        return self.modem_instance.mqtt_publish(
+            topic, message, 3, False, 1 if self.require_message_delivery_ack else 0, self.modem_client_id
+        )
 
     def send_control_packet(self, message, subtopic):
         if not self.connected:
             logging.info("TransferProtocol not connected")
+            return False
+
+        if self.is_secondary_transfer_protocol:
+            logging.info("Control packet not supported for secondary transfer protocol")
             return False
 
         logging.info("About to send control message")
@@ -91,6 +152,10 @@ class TransferProtocolModemAT(TransferProtocol):
     def send_config_packet(self, message):
         if not self.connected:
             logging.info("TransferProtocol not connected")
+            return False
+
+        if self.is_secondary_transfer_protocol:
+            logging.info("Config packet not supported for secondary transfer protocol")
             return False
 
         logging.info("About to send config message")
@@ -107,6 +172,10 @@ class TransferProtocolModemAT(TransferProtocol):
     def get_control_message(self):
         if not self.connected:
             logging.info("TransferProtocol not connected")
+            return None
+
+        if self.is_secondary_transfer_protocol:
+            logging.info("Control packet not supported for secondary transfer protocol")
             return None
 
         topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)

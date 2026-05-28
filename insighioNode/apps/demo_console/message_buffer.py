@@ -138,6 +138,12 @@ def parse_stored_measurements_and_upload(network):
 
             logging.debug("Message send status: " + str(message_send_status))
 
+            if utils.get_var_from_module(network, "is_secondary_transfer_protocol_enabled"):
+                message_sec = network.create_secondary_message(cfg.get("device_id"), data)
+                message_sec_send_status = network.send_secondary_message(cfg, message_sec)
+                logging.debug("Secondary message send status: " + str(message_sec_send_status))
+                completed_without_errors &= message_sec_send_status
+
             # this only works for BG600 modem since it supports correct message transmission status
             if message_send_status is not None and not message_send_status:
                 logging.info("Failed message appended for future upload: " + str(line))
