@@ -32,6 +32,13 @@
               <i class="icon icon-refresh" style="margin-right: 5px"></i>Reset Session
             </button>
             <div class="menu-separator"></div>
+            <button class="btn btn-link menu-item" @click="downloadConfiguration">
+              <i class="icon icon-download" style="margin-right: 5px"></i>Download Configuration
+            </button>
+            <button class="btn btn-link menu-item" @click="importConfiguration">
+              <i class="icon icon-upload" style="margin-right: 5px"></i>Import Configuration
+            </button>
+            <div class="menu-separator"></div>
             <button class="btn btn-link menu-item" @click="doUploadOTA">
               <i class="icon icon-upload" style="margin-right: 5px"></i>Upload OTA
             </button>
@@ -623,6 +630,55 @@ export default {
       } finally {
         this.isUploading = false
       }
+    },
+    async downloadConfiguration() {
+      try {
+        this.showSettingsMenu = false
+
+        // Fetch the configuration file
+        const response = await fetch("http://192.168.4.1/api/download_config", {
+          method: "GET"
+        })
+
+        if (response.ok) {
+          // Get the configuration content
+          const configContent = await response.text()
+
+          // Extract filename from Content-Disposition header or use default
+          let filename = "config.py"
+          const contentDisposition = response.headers.get("Content-Disposition")
+          if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+            if (filenameMatch) {
+              filename = filenameMatch[1]
+            }
+          }
+
+          // Create downloadable file
+          const blob = new Blob([configContent], { type: "text/x-python" })
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = filename
+          document.body.appendChild(a)
+          a.click()
+          window.URL.revokeObjectURL(url)
+          document.body.removeChild(a)
+
+          console.log("Configuration downloaded successfully")
+        } else {
+          console.error("Failed to download configuration:", response.statusText)
+          alert("Failed to download configuration. Please try again.")
+        }
+      } catch (error) {
+        console.error("Error downloading configuration:", error)
+        alert("Error downloading configuration. Please check your connection and try again.")
+      }
+    },
+    importConfiguration() {
+      this.showSettingsMenu = false
+      // TODO: Implement import configuration
+      alert("Import configuration feature coming soon!")
     },
     resetSession() {
       this.showSettingsMenu = false

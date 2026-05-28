@@ -689,6 +689,35 @@ def start(timeoutMs=120000):
 
         machine.reset()
 
+    @app.route("/api/download_config", methods=["GET"])
+    async def api_download_config(req, resp):
+        """Download device configuration file"""
+        logging.debug("[web-server][GET]: /api/download_config")
+        import utils
+
+        config_file = "/apps/demo_console/demo_config.py"
+
+        try:
+            if not utils.existsFile(config_file):
+                logging.error("Config file not found: {}".format(config_file))
+                await resp.error(404, "Configuration file not found")
+                return
+
+            # Get device MAC address for filename
+            device_mac = get_device_id()[0]
+            filename = "config_{}.py".format(device_mac)
+
+            # Set response headers for file download
+            resp.add_header("Content-Type", "text/x-python")
+            resp.add_header("Content-Disposition", 'attachment; filename="{}"'.format(filename))
+
+            # Send the file
+            await resp.send_file(config_file, content_type="text/x-python")
+
+        except Exception as e:
+            logging.exception(e, "Error downloading configuration")
+            await resp.error(500)
+
     @app.route("/api/saved_meas", methods=["GET"])
     async def api_saved_meas(req, resp):
         """Stream raw measurement data directly to client without parsing"""
