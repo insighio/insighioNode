@@ -69,7 +69,7 @@ class Modem:
         p0.off()
         logging.debug("Output Pin {} {}".format(self.modem_power_key, p0.value()))
         logging.info("Waiting for the modem to finish power on")
-        status = self.wait_for_modem_power_on()
+        status = self.wait_for_modem_power_on("AT")
         logging.info("Modem ready: " + str(status))
 
         if status:
@@ -98,9 +98,6 @@ class Modem:
         pass
 
     def set_operator_selection(self, technology, mcc_mnc=None):
-        status, lines = self.send_at_cmd("AT+COPS?")
-        lines = "\n".join(lines)
-
         expected_configuration = "0"  # operator automatic selection
         command = "AT+COPS=0"
 
@@ -111,10 +108,14 @@ class Modem:
             expected_configuration = "1"  # operator locking
             command = "AT+COPS=4,2,{}".format(mcc_mnc)
 
+        self.send_at_cmd("AT+COPS=3,2")  # set network name as numeric value
+
         # examples to be handled
         # +COPS: 1,2,"20201",0
         # +COPS: 0
 
+        status, lines = self.send_at_cmd("AT+COPS?")
+        lines = "\n".join(lines)
         operator_regex = r'\+COPS:\s*(\d)(,\d+,"(\d+)")?'
         match = ure.search(operator_regex, lines)
         if (
