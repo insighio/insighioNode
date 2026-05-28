@@ -102,6 +102,7 @@ def get_modem_instance():
                 from networking.modem.modem_bg600 import ModemBG600
 
                 modem_instance = ModemBG600(pin_modem_power_on, pin_modem_power_key, pin_modem_tx, pin_modem_rx)
+                modem_instance.wait_for_modem_power_on()
             else:
                 from networking.modem.modem_base import Modem
 
@@ -179,7 +180,7 @@ def connect(cfg):
 
                 # signal quality
                 rssi = modemInst.get_rssi()
-                (rsrp, rsrq) = modemInst.get_extended_signal_quality()
+                rsrp, rsrq = modemInst.get_extended_signal_quality()
                 modemInst.get_lac_n_cell_id()
 
                 logging.debug("Signal Quality - RSSI/RSRP/RSRQ: {}, {}, {}".format(rssi, rsrp, rsrq))
