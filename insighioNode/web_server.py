@@ -322,6 +322,76 @@ class ModemConnectionInfo:
         return response_dict, 200
 
 
+def rebootThread():
+    import utime
+
+    utime.sleep_ms(1000)
+    import machine
+
+    machine.reset()
+
+
+def requestReboot():
+    import _thread
+
+    _thread.start_new_thread(rebootThread, ())
+
+
+class UploadOTA:
+    def post(self, data):
+        logging.debug("[web-server]: /api/upload_ota")
+
+        # In class-based resources, 'data' contains the raw request body (binary data)
+        if not data or len(data) == 0:
+            logging.error("No data received in upload")
+            return {"error": "no data"}, 400
+
+        size = len(data)
+        logging.debug("Receiving OTA file with size: {} bytes".format(size))
+
+        # Use fixed filename - actual name doesn't matter
+        filename = "ota_upload.tar"
+
+        from apps.demo_console import ota
+
+        if not ota.hasEnoughFreeSpace(int(size)):
+            logging.error("Not enough free space for OTA file")
+            return {"error": "not enough space"}, 500
+
+        downloaded_file = "/" + filename
+        logging.debug("Saving OTA file to: {}".format(downloaded_file))
+
+        # Write the file data
+        try:
+            with open(downloaded_file, "wb") as f:
+                f.write(data)
+            logging.debug("OTA file saved, {} bytes written".format(size))
+        except Exception as e:
+            logging.exception(e, "Error writing OTA file")
+            return {"error": "error writing file"}, 500
+
+        from apps.demo_console import apply_ota
+
+        logging.debug("Applying OTA update...")
+        applied = apply_ota.do_apply(downloaded_file)
+
+        if not applied:
+            logging.error("Failed to apply OTA update")
+            return {"error": "failed to apply ota"}, 500
+
+        import utils
+
+        utils.writeToFlagFile("/ota_applied_flag", "done")
+
+        logging.info("OTA applied successfully, rebooting...")
+
+        # Schedule reboot after response is sent
+        requestReboot()
+
+        # This won't be reached but needed for proper return
+        return {"success": True}, 200
+
+
 class ModemNearbyNetworks:
     def get(self, data):
         logging.debug("[web-server]: /api/modem_nearby_networks")
@@ -619,43 +689,6 @@ def start(timeoutMs=120000):
 
         machine.reset()
 
-    @app.route("/api/upload_ota", methods=["POST"])
-    async def api_upload_ota(req, resp):
-        # obtain the filename and size from request headers
-        filename = req.headers["Content-Disposition"].split("filename=")[1].strip('"')
-        size = int(req.headers["Content-Length"])
-
-        # sanitize the filename
-        filename = filename.replace("/", "_")
-
-        from apps.demo_console import ota
-
-        if not ota.hasEnoughFreeSpace(int(size)):
-            return "not enough space", 500
-
-        downloaded_file = "/" + filename
-        # write the file to the files directory in 1K chunks
-        with open(downloaded_file, "wb") as f:
-            while size > 0:
-                chunk = await req.stream.read(min(size, 1024))
-                f.write(chunk)
-                size -= len(chunk)
-
-        from . import apply_ota
-
-        applied = apply_ota.do_apply(downloaded_file)
-
-        import utils
-
-        utils.writeToFlagFile("/ota_applied_flag", "done")
-
-        await resp._send_headers()
-        await resp.send("")
-
-        import machine
-
-        machine.reset()
-
     @app.route("/api/saved_meas", methods=["GET"])
     async def api_saved_meas(req, resp):
         """Stream raw measurement data directly to client without parsing"""
@@ -710,20 +743,19 @@ def start(timeoutMs=120000):
             logging.exception(e, "Error streaming measurements")
             await resp.error(500)
 
-    app.add_resource(Settings, "/settings")
-    app.add_resource(RawWeightIdle, "/raw-weight-idle")
-    # app.add_resource(RawWeight, '/raw-weight')
     app.add_resource(Config, "/save-config")
     app.add_resource(ConfigTemp, "/save-config-temp")
-    app.add_resource(DevID, "/devid")
-    app.add_resource(Version, "/version")
-    app.add_resource(Login, "/login")
-    app.add_resource(WiFiList, "/update_wifi_list")
     app.add_resource(DeviceMeasurements, "/device_measurements")
-    # app.add_resource(StoredMeasurements, "/saved_meas")
-    app.add_resource(SystemTime, "/api/time")
+    app.add_resource(DevID, "/devid")
+    app.add_resource(Login, "/login")
     app.add_resource(ModemConnectionInfo, "/api/modem_info")
     app.add_resource(ModemNearbyNetworks, "/api/modem_nearby_networks")
+    app.add_resource(RawWeightIdle, "/raw-weight-idle")
+    app.add_resource(Settings, "/settings")
+    app.add_resource(SystemTime, "/api/time")
+    app.add_resource(UploadOTA, "/api/upload_ota")
+    app.add_resource(Version, "/version")
+    app.add_resource(WiFiList, "/update_wifi_list")
 
     try:
         uasyncio.run(server_loop(app, timeoutMs))

@@ -32,6 +32,10 @@
               <i class="icon icon-refresh" style="margin-right: 5px"></i>Reset Session
             </button>
             <div class="menu-separator"></div>
+            <button class="btn btn-link menu-item" @click="doUploadOTA">
+              <i class="icon icon-upload" style="margin-right: 5px"></i>Upload OTA
+            </button>
+            <div class="menu-separator"></div>
             <button class="btn btn-link menu-item" @click="doShowRebootConfirm">
               <i class="icon icon-shutdown" style="margin-right: 5px"></i>Reboot
             </button>
@@ -123,6 +127,52 @@
         </div>
       </div>
     </div>
+
+    <!-- OTA Upload Modal -->
+    <div v-if="showOTAUploadModal" class="modal active">
+      <div class="modal-overlay" @click="closeOTAModal"></div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <div class="modal-title h5">Upload OTA Package</div>
+        </div>
+        <div class="modal-body">
+          <p>Select a .tar OTA package file to upload (max 500KB).</p>
+          <div class="form-group">
+            <input
+              type="file"
+              ref="otaFileInput"
+              @change="handleFileSelect"
+              accept=".tar"
+              class="form-input"
+              :disabled="isUploading"
+            />
+          </div>
+          <div v-if="selectedFile" class="file-info">
+            <p><strong>File:</strong> {{ selectedFile.name }}</p>
+            <p><strong>Size:</strong> {{ formatFileSize(selectedFile.size) }}</p>
+          </div>
+          <div v-if="uploadError" class="toast toast-error">
+            {{ uploadError }}
+          </div>
+          <div v-if="uploadProgress > 0 && uploadProgress < 100" class="upload-progress">
+            <div class="bar">
+              <div class="bar-item" :style="{ width: uploadProgress + '%' }" role="progressbar"></div>
+            </div>
+            <p>Uploading: {{ uploadProgress }}%</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-primary"
+            @click="uploadOTAFile"
+            :disabled="!selectedFile || isUploading || fileSizeError"
+          >
+            {{ isUploading ? "Uploading..." : "Upload" }}
+          </button>
+          <button class="btn btn-link" @click="closeOTAModal" :disabled="isUploading">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -160,7 +210,14 @@ export default {
       isResetting: false,
       isRebooting: false,
       showToast: false,
-      toastMessage: ""
+      toastMessage: "",
+      showOTAUploadModal: false,
+      selectedFile: null,
+      isUploading: false,
+      uploadError: null,
+      uploadProgress: 0,
+      fileSizeError: false,
+      maxFileSize: 500 * 1024 // 500KB in bytes
     }
   },
   mounted() {
@@ -454,6 +511,118 @@ export default {
       this.showRebootConfirm = true
       this.showSettingsMenu = false
     },
+    doUploadOTA() {
+      this.showSettingsMenu = false
+      this.showOTAUploadModal = true
+      this.selectedFile = null
+      this.uploadError = null
+      this.uploadProgress = 0
+      this.fileSizeError = false
+    },
+    closeOTAModal() {
+      if (!this.isUploading) {
+        this.showOTAUploadModal = false
+        this.selectedFile = null
+        this.uploadError = null
+        this.uploadProgress = 0
+        this.fileSizeError = false
+        if (this.$refs.otaFileInput) {
+          this.$refs.otaFileInput.value = ""
+        }
+      }
+    },
+    handleFileSelect(event) {
+      const file = event.target.files[0]
+      if (!file) {
+        this.selectedFile = null
+        this.fileSizeError = false
+        return
+      }
+
+      // Check file extension
+      if (!file.name.endsWith(".tar")) {
+        this.uploadError = "Only .tar files are accepted."
+        this.selectedFile = null
+        this.fileSizeError = true
+        return
+      }
+
+      // Check file size
+      if (file.size > this.maxFileSize) {
+        this.uploadError = `File size exceeds maximum allowed size of 500KB. Selected file is ${this.formatFileSize(
+          file.size
+        )}.`
+        this.selectedFile = null
+        this.fileSizeError = true
+        return
+      }
+
+      this.selectedFile = file
+      this.uploadError = null
+      this.fileSizeError = false
+    },
+    formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + " B"
+      else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB"
+      else return (bytes / (1024 * 1024)).toFixed(2) + " MB"
+    },
+    async uploadOTAFile() {
+      if (!this.selectedFile) return
+
+      this.isUploading = true
+      this.uploadError = null
+      this.uploadProgress = 0
+
+      try {
+        const xhr = new XMLHttpRequest()
+
+        // Track upload progress
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            this.uploadProgress = Math.round((e.loaded / e.total) * 100)
+          }
+        })
+
+        // Handle completion
+        const uploadPromise = new Promise((resolve, reject) => {
+          xhr.addEventListener("load", () => {
+            if (xhr.status === 200) {
+              resolve()
+            } else {
+              reject(new Error(`Upload failed with status: ${xhr.status}`))
+            }
+          })
+          xhr.addEventListener("error", () => reject(new Error("Network error during upload")))
+          xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")))
+        })
+
+        // Open request
+        xhr.open("POST", "http://192.168.4.1/api/upload_ota", true)
+
+        // Send raw file data directly (server will use a fixed filename)
+        xhr.send(this.selectedFile)
+
+        await uploadPromise
+
+        // Success
+        this.uploadProgress = 100
+        alert(
+          "OTA package uploaded successfully! The device will now apply the update and restart. You may need to reconnect."
+        )
+        this.closeOTAModal()
+
+        // Clear storage and reset to login screen
+        this.$storage.clear()
+        this.tabActive = 0
+        this.$storage.set("activeTab", this.tabActive)
+      } catch (error) {
+        console.error("Error uploading OTA file:", error)
+        this.uploadError = error.message || "Failed to upload OTA package. Please try again."
+        this.uploadProgress = 0
+      } finally {
+        this.isUploading = false
+      }
+    },
     resetSession() {
       this.showSettingsMenu = false
       this.$nextTick(() => {
@@ -573,5 +742,53 @@ export default {
   height: 1px;
   background-color: #e0e0e0;
   margin: 0.25rem 0;
+}
+
+/* OTA Upload Modal Styles */
+.file-info {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 0.25rem;
+  border: 1px solid #e0e0e0;
+}
+
+.file-info p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.upload-progress {
+  margin-top: 1rem;
+}
+
+.upload-progress .bar {
+  height: 0.5rem;
+  background-color: #f0f0f0;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.upload-progress .bar-item {
+  height: 100%;
+  background-color: #5755d9;
+  transition: width 0.3s ease;
+}
+
+.upload-progress p {
+  margin: 0;
+  font-size: 0.9rem;
+  text-align: center;
+  color: #666;
+}
+
+.toast-error {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 0.25rem;
+  color: #721c24;
 }
 </style>

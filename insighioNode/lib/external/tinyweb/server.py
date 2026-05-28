@@ -21,7 +21,6 @@ import usocket as socket
 
 import logging as log
 
-
 # log = logging.getLogger("WEB")
 
 type_gen = type((lambda: (yield))())
@@ -135,6 +134,7 @@ class request:
 
         Returns:
             - dict of key / value pairs
+            - raw binary data for unknown content types
             - None in case of no form data present
         """
         # TODO: Probably there is better solution how to handle
@@ -143,14 +143,17 @@ class request:
         gc.collect()
         if b"Content-Length" not in self.headers:
             return {}
-        # Parse payload depending on content type
-        if b"Content-Type" not in self.headers:
-            # Unknown content type, return unparsed, raw data
-            return {}
+
         size = int(self.headers[b"Content-Length"])
         if size > self.params["max_body_size"] or size < 0:
             raise HTTPException(413)
         data = await self.reader.readexactly(size)
+
+        # Parse payload depending on content type
+        if b"Content-Type" not in self.headers:
+            # Unknown content type, return unparsed, raw binary data
+            return data
+
         # Use only string before ';', e.g:
         # application/x-www-form-urlencoded; charset=UTF-8
         ct = self.headers[b"Content-Type"].split(b";", 1)[0]
@@ -159,6 +162,9 @@ class request:
                 return json.loads(data)
             elif ct == b"application/x-www-form-urlencoded":
                 return parse_query_string(data.decode())
+            else:
+                # For any other content type (e.g., application/octet-stream), return raw data
+                return data
         except ValueError:
             # Re-generate exception for malformed form data
             raise HTTPException(400)
@@ -530,7 +536,7 @@ class webserver:
         params = {
             "methods": ["GET"],
             "save_headers": [],
-            "max_body_size": 32768,
+            "max_body_size": 524288,
             "allowed_access_control_headers": "*",
             "allowed_access_control_origins": "*",
         }
