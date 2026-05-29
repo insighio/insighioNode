@@ -222,6 +222,7 @@
               :disabled="isImporting"
             />
           </div>
+          <SSwitch v-model:value="importAPIKeys" label="Import API Keys" :disabled="isImporting" />
           <div v-if="selectedConfigFile" class="file-info">
             <p><strong>File:</strong> {{ selectedConfigFile.name }}</p>
             <p><strong>Size:</strong> {{ formatFileSize(selectedConfigFile.size) }}</p>
@@ -269,6 +270,7 @@ import Step5Timing from "@/views/Step-5-Timing.vue"
 import Step6Verify from "@/views/Step-6-Verify.vue"
 import Step7Apply from "@/views/Step-7-apply.vue"
 import { fetchInternal } from "@/js/utils.js"
+import SSwitch from "@/components/SSwitch.vue"
 
 export default {
   name: "MainPage",
@@ -280,7 +282,8 @@ export default {
     Step4Measurements,
     Step5Timing,
     Step6Verify,
-    Step7Apply
+    Step7Apply,
+    SSwitch
   },
   data() {
     return {
@@ -303,6 +306,7 @@ export default {
       maxFileSize: 500 * 1024, // 500KB in bytes
       showImportConfigModal: false,
       selectedConfigFile: null,
+      importAPIKeys: false,
       isImporting: false,
       importError: null,
       importProgress: 0,
@@ -354,7 +358,6 @@ export default {
       try {
         let data = await fetchInternal("/settings")
         Object.keys(data).forEach((key) => {
-          console.log("Storing setting in cookie:", key, "=", data[key])
           this.$storage.set(key.replaceAll("_", "-"), data[key])
         })
       } catch (err) {
@@ -868,11 +871,29 @@ export default {
         })
         //this.importProgress = 75
 
-        // Load settings into local storage (similar to Step-2-Network.vue initializeValues)
+        let backedUpKeys = {}
+
+        console.log("importAPIKeys: ", this.importAPIKeys)
+        if (!this.importAPIKeys) {
+          //backup API keys from current settings before clearing storage
+          backedUpKeys["insighio-id"] = this.$storage.get("insighio-id")
+          backedUpKeys["insighio-key"] = this.$storage.get("insighio-key")
+          backedUpKeys["insighio-channel"] = this.$storage.get("insighio-channel")
+          backedUpKeys["insighio-control-channel"] = this.$storage.get("insighio-control-channel")
+        }
         this.$storage.clear()
         Object.keys(settings).forEach((key) => {
           this.$storage.set(key.replaceAll("_", "-"), settings[key])
         })
+
+        if (!this.importAPIKeys) {
+          //restore backedUpKeys
+          Object.keys(backedUpKeys).forEach((key) => {
+            if (backedUpKeys[key]) {
+              this.$storage.set(key, backedUpKeys[key])
+            }
+          })
+        }
 
         // Update progress to 100%
 
