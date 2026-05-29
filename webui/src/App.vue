@@ -7,6 +7,7 @@
 
 <script>
 import MainPage from "@/views/MainPage.vue"
+import { fetchInternal } from "@/js/utils.js"
 //const appVersion = import.meta.env.VITE_APP_VERSION || "unknown version"
 
 export default {
@@ -24,8 +25,7 @@ export default {
   },
   methods: {
     getFirmwareVersion() {
-      fetch("/version")
-        .then((response) => response.json())
+      fetchInternal("/version", 30000, "GET", null, "json")
         .then((data) => {
           this.appVersion = `${data.branch}:${data.commit}`
         })

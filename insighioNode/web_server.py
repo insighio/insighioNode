@@ -5,10 +5,11 @@ from external import tinyweb
 
 import device_info
 from device_info import get_hw_module_version, get_device_id, get_hw_module_version, set_led_enabled, set_led_color, wdt_reset
-from utime import ticks_ms, ticks_diff, ticks_add
+from utime import ticks_ms, ticks_diff, ticks_add, sleep_ms
 import logging
 import uasyncio
 import utils
+import machine
 
 insighioSettings = None
 wlan = None
@@ -323,11 +324,7 @@ class ModemConnectionInfo:
 
 
 def rebootThread():
-    import utime
-
-    utime.sleep_ms(1000)
-    import machine
-
+    sleep_ms(2000)
     machine.reset()
 
 
@@ -390,6 +387,126 @@ class UploadOTA:
 
         # This won't be reached but needed for proper return
         return {"success": True}, 200
+
+
+class UploadConfig:
+    def post(self, data):
+        logging.debug("[web-server]: /api/upload_config")
+
+        # In class-based resources, 'data' contains the raw request body (binary data)
+        if not data or len(data) == 0:
+            logging.error("No data received in upload")
+            return {"error": "no data"}, 400
+
+        size = len(data)
+        logging.debug("Receiving config file with size: {} bytes".format(size))
+
+        # Save to a temporary file first
+        temp_config_file = "/uploaded_config.py"
+        logging.debug("Saving config file to: {}".format(temp_config_file))
+
+        # Write the file data
+        try:
+            with open(temp_config_file, "wb") as f:
+                f.write(data)
+            logging.debug("Config file saved, {} bytes written".format(size))
+        except Exception as e:
+            logging.exception(e, "Error writing config file")
+            return {"error": "error writing file"}, 500
+
+        # Now read the configuration from the uploaded file and return as JSON
+        try:
+            from utils import configuration_handler
+
+            # Temporarily set the config file to the uploaded one
+            original_config_file = configuration_handler.config_file
+            configuration_handler.config_file = temp_config_file
+
+            # Reload the configuration module
+            import sys
+
+            module_path = configuration_handler.getModulePathFromFile(temp_config_file)
+
+            # Load the uploaded config module
+            exec("import {} as uploaded_cfg".format(module_path.replace("/uploaded_config", "uploaded_config")))
+
+            # Get config values by reading the file directly
+            settings = {}
+
+            # Read and execute the uploaded config to get values
+            with open(temp_config_file, "r") as f:
+                config_content = f.read()
+
+            # Create a namespace to execute the config
+            config_namespace = {}
+            exec(config_content, config_namespace)
+
+            # Extract configuration values using the configDict mapping
+            for key in configuration_handler.configDict.keys():
+                web_ui_key = configuration_handler.configDict[key]
+                if key in config_namespace:
+                    value = config_namespace[key]
+                    if isinstance(value, (int, float, str)):
+                        settings[web_ui_key] = str(value)
+                        if settings[web_ui_key] == "None":
+                            settings[web_ui_key] = ""
+                    elif isinstance(value, bool):
+                        settings[web_ui_key] = str(value).lower()
+                    elif value is None:
+                        settings[web_ui_key] = ""
+                    elif isinstance(value, dict):
+                        import ujson
+
+                        settings[web_ui_key] = ujson.dumps(value)
+
+            # Extract protocol config if available
+            try:
+                if "get_protocol_config" in config_namespace:
+                    proto_config = config_namespace["get_protocol_config"]()
+                    settings["insighio_channel"] = proto_config.message_channel_id
+                    settings["insighio_control_channel"] = proto_config.control_channel_id
+                    settings["insighio_id"] = proto_config.thing_id
+                    settings["insighio_key"] = proto_config.thing_token
+            except:
+                pass
+
+            # Extract WiFi config if available
+            try:
+                if "_CONF_NETS" in config_namespace:
+                    ssid = list(config_namespace["_CONF_NETS"].keys())[0]
+                    settings["wifi_ssid"] = ssid
+                    settings["wifi_pass"] = config_namespace["_CONF_NETS"][ssid]["pwd"]
+            except:
+                pass
+
+            # Restore original config file
+            configuration_handler.config_file = original_config_file
+
+            # Clean up temp file
+            import utils
+
+            utils.deleteFile(temp_config_file)
+
+            logging.debug("Config uploaded and parsed successfully")
+            return settings, 200
+
+        except Exception as e:
+            logging.exception(e, "Error parsing uploaded config file")
+            # Restore original config file
+            try:
+                from utils import configuration_handler
+
+                configuration_handler.config_file = original_config_file
+            except:
+                pass
+            # Clean up temp file
+            try:
+                import utils
+
+                utils.deleteFile(temp_config_file)
+            except:
+                pass
+            return {"error": "error parsing config"}, 500
 
 
 class ModemNearbyNetworks:
@@ -646,54 +763,46 @@ def start(timeoutMs=120000):
     #     logging.debug("[web-server]: /img/{}".format(fn))
     #     await resp.send_file("www/img/{}".format(fn), content_type="image/png")
 
-    @app.route("/reboot", methods=["POST"])
-    async def reboot(req, resp):
+    @app.resource("/reboot", method="POST")
+    async def reboot(data):
         logging.debug("[web-server]: /reboot")
-        resp.code = 200
-        resp.add_access_control_headers()
-        await resp._send_headers()
-        await resp.send("")
+        requestReboot()
+        return {}, 200
 
-        import machine
-
-        machine.reset()
-
-    @app.route("/clear_measurements", methods=["POST"])
-    async def clear_measurements(req, resp):
+    @app.resource("/clear_measurements", method="POST")
+    async def clear_measurements(data):
         logging.debug("[web-server]: /clear_measurements")
-        resp.code = 200
-        resp.add_access_control_headers()
 
-        import utils
+        try:
+            import utils
 
-        utils.deleteFlagFile("/measurements.log")
+            utils.deleteFlagFile("/measurements.log")
+            return {}, 200
+        except Exception as e:
+            logging.exception(e, "Error clearing measurements")
+            return {}, 500
 
-        await resp._send_headers()
-        await resp.send("")
-
-    @app.route("/factory_reset", methods=["POST"])
-    async def factory_reset(req, resp):
+    @app.resource("/factory_reset", method="POST")
+    async def factory_reset(data):
         logging.debug("[web-server]: /factory_reset")
-        resp.code = 200
-        resp.add_access_control_headers()
 
-        import utils
+        returnCode = 500
+        try:
+            utils.deleteFile("/package.md5")
+            utils.writeToFlagFile("/ota_applied_flag", "")
 
-        utils.deleteFile("/package.md5")
-        utils.writeToFlagFile("/ota_applied_flag", "")
+            returnCode = 200
+        except Exception as e:
+            logging.exception(e, "Error during factory reset")
 
-        await resp._send_headers()
-        await resp.send("")
+        requestReboot()
 
-        import machine
-
-        machine.reset()
+        return {}, returnCode
 
     @app.route("/api/download_config", methods=["GET"])
     async def api_download_config(req, resp):
         """Download device configuration file"""
         logging.debug("[web-server][GET]: /api/download_config")
-        import utils
 
         config_file = "/apps/demo_console/demo_config.py"
 
@@ -782,6 +891,7 @@ def start(timeoutMs=120000):
     app.add_resource(RawWeightIdle, "/raw-weight-idle")
     app.add_resource(Settings, "/settings")
     app.add_resource(SystemTime, "/api/time")
+    app.add_resource(UploadConfig, "/api/upload_config")
     app.add_resource(UploadOTA, "/api/upload_ota")
     app.add_resource(Version, "/version")
     app.add_resource(WiFiList, "/update_wifi_list")
@@ -809,3 +919,6 @@ def start(timeoutMs=120000):
 
     wlan.active(False)
     logging.info("Bye\n")
+
+
+# to delete - 3

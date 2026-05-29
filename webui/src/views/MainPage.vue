@@ -445,9 +445,7 @@ export default {
         this.showSettingsMenu = false
 
         // Fetch the streamed measurements file
-        const response = await fetch("http://192.168.4.1/api/saved_meas", {
-          method: "GET"
-        })
+        const response = await fetchInternal("/api/saved_meas", 30000, "GET", null, "response")
 
         if (response.ok) {
           // Get the raw text content
@@ -517,22 +515,12 @@ export default {
       }
     },
     async clearMeasurements() {
+      this.showSettingsMenu = false
       try {
-        this.showSettingsMenu = false
-        const response = await fetch("http://192.168.4.1" + "/clear_measurements", {
-          method: "POST",
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            "Content-Type": "application/json"
-          }
-        })
-        if (response.ok) {
-          alert("Measurements cleared successfully.")
-          console.log("Measurements cleared successfully")
-        } else {
-          console.error("Failed to clear measurements:", response.statusText)
-          alert("Failed to clear measurements. Please try again.")
-        }
+        await fetchInternal("/clear_measurements", 30000, "POST", {})
+
+        alert("Measurements cleared successfully.")
+        console.log("Measurements cleared successfully")
       } catch (error) {
         console.error("Error clearing measurements:", error)
         alert("Error clearing measurements. Please check your connection and try again.")
@@ -542,27 +530,14 @@ export default {
       this.isResetting = true
 
       try {
-        const response = await fetch("http://192.168.4.1" + "/factory_reset", {
-          method: "POST",
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            "Content-Type": "application/json"
-          }
-        })
+        await fetchInternal("/factory_reset", 30000, "POST", {})
 
-        if (response.ok) {
-          alert("Factory reset completed successfully. The device will restart.")
-          // Clear all cookies and redirect to start
-          this.$storage.clear()
+        alert("Factory reset completed successfully. The device will restart.")
 
-          this.showFactoryResetConfirm = false
-          this.$storage.clear()
-          this.tabActive = 0
-          this.$storage.set("activeTab", this.tabActive)
-        } else {
-          console.error("Factory reset failed:", response.statusText)
-          alert("Factory reset failed. Please try again.")
-        }
+        this.showFactoryResetConfirm = false
+        this.$storage.clear()
+        this.tabActive = 0
+        this.$storage.set("activeTab", this.tabActive)
       } catch (error) {
         console.error("Error during factory reset:", error)
         alert("Error during factory reset. Please check your connection and try again.")
@@ -574,14 +549,7 @@ export default {
       this.isRebooting = true
       this.showSettingsMenu = false
 
-      fetch("http://192.168.4.1" + "/reboot", {
-        method: "POST",
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Content-Type": "application/json"
-        },
-        body: "{}"
-      })
+      fetchInternal("/reboot", 30000, "POST", {})
         .then((res) => {
           console.log(res)
           this.isRebooting = false
@@ -601,24 +569,10 @@ export default {
       this.showSettingsMenu = false
       const now = new Date()
       const timestamp = Math.floor(now.getTime() / 1000)
-      const bodyLocal = JSON.stringify({ epoch: timestamp })
-      fetch("http://192.168.4.1/api/time", {
-        method: "POST",
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Content-Type": "application/json",
-          "Content-Length": bodyLocal.length.toString()
-        },
-        body: bodyLocal
-      })
+      const body = { epoch: timestamp }
+      fetchInternal("/api/time", 30000, "POST", body)
         .then((res) => {
-          if (res.ok) {
-            this.showToastMessage("Device system time updated successfully.")
-            console.log("Device system time updated successfully.")
-          } else {
-            alert("Failed to update device system time. Please try again.")
-            console.error("Failed to update device system time:", res.statusText)
-          }
+          this.showToastMessage("Device system time updated successfully.")
         })
         .catch((err) => {
           console.log("error setting device time: ", err)
@@ -748,9 +702,7 @@ export default {
         this.showSettingsMenu = false
 
         // Fetch the configuration file
-        const response = await fetch("http://192.168.4.1/api/download_config", {
-          method: "GET"
-        })
+        const response = await fetchInternal("/api/download_config", 30000, "GET", null, "response")
 
         if (response.ok) {
           // Get the configuration content
@@ -933,6 +885,7 @@ export default {
           this.$storage.set("activeTab", this.tabActive)
         }
       })
+      console.log("to delete")
     }
   },
   setup() {

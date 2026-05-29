@@ -213,6 +213,7 @@
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import ShieldCommonData from "@/components/mixins/ShieldCommonData.vue"
 import WebuiFooter from "@/components/WebuiFooter.vue"
+import { fetchInternal } from "@/js/utils.js"
 
 import SSwitch from "@/components/SSwitch.vue"
 import SSelect from "@/components/SSelect.vue"
@@ -329,10 +330,7 @@ export default {
     getScaleOffset() {
       // Simulate saving idle weight
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$storage.get("hw-module"))
-        .then((response) => {
-          return response.json()
-        })
+      fetchInternal("/raw-weight-idle?board=" + this.$storage.get("hw-module"), 30000, "GET", null, "json")
         .then((data) => {
           this.scaleOffset = data.raw
 
@@ -345,10 +343,7 @@ export default {
 
     calculateScaleMultiplier() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$storage.get("selected-board"))
-        .then((response) => {
-          return response.json()
-        })
+      fetchInternal("/raw-weight-idle?board=" + this.$storage.get("selected-board"), 30000, "GET", null, "json")
         .then((data) => {
           var referenceExpectedWeight = this.referenceWeight
           this.scaleScale = (data.raw - this.scaleOffset) / referenceExpectedWeight
@@ -368,10 +363,7 @@ export default {
     },
     requestTare() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$storage.get("hw-module"))
-        .then((response) => {
-          return response.json()
-        })
+      fetchInternal("/raw-weight-idle?board=" + this.$storage.get("hw-module"), 30000, "GET", null, "json")
         .then((data) => {
           this.scaleOffset = data.raw
           this.currentWeight = 0
@@ -385,10 +377,7 @@ export default {
     },
     requestMeasure() {
       this.startProgressAnimation()
-      fetch("/raw-weight-idle?board=" + this.$storage.get("hw-module"))
-        .then((response) => {
-          return response.json()
-        })
+      fetchInternal("/raw-weight-idle?board=" + this.$storage.get("hw-module"), 30000, "GET", null, "json")
         .then((data) => {
           const offset = parseFloat(this.scaleOffset)
           const scale = parseFloat(this.scaleScale)

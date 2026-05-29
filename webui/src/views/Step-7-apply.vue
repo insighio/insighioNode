@@ -22,6 +22,8 @@
 </template>
 
 <script>
+import { fetchInternal } from "@/js/utils.js"
+
 export default {
   name: "Step7Apply",
   data() {
@@ -72,11 +74,13 @@ export default {
         return
       }
 
-      fetch("http://192.168.4.1" + "/save-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ queryParams: config, encodedParams, requestFileSystemOptimization })
-      })
+      fetchInternal(
+        "/save-config",
+        30000,
+        "POST",
+        { queryParams: config, encodedParams, requestFileSystemOptimization },
+        "json"
+      )
         .then(() => {
           this.$storage.clear()
           this.requestReboot()
@@ -86,14 +90,7 @@ export default {
     requestReboot() {
       this.isLoading = false
 
-      fetch("http://192.168.4.1" + "/reboot", {
-        method: "POST",
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Content-Type": "application/json"
-        },
-        body: "{}"
-      })
+      fetchInternal("/reboot", 30000, "POST", {}, "json")
         .then((res) => console.log(res))
         .catch((err) => {
           console.log("error rebooting: ", err)

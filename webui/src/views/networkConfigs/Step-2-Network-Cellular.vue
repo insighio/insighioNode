@@ -273,6 +273,7 @@ import SInput from "@/components/SInput.vue"
 import SSelect from "@/components/SSelect.vue"
 import SRadioGroup from "@/components/SRadioGroup.vue"
 import SDivider from "@/components/SDivider.vue"
+import { fetchInternal } from "@/js/utils.js"
 
 export default {
   name: "NetworkCellular",
@@ -365,24 +366,15 @@ export default {
       if (this.localLoading) return
 
       this.localLoading = true
-      const bodyLocal = JSON.stringify({
+      const body = {
         IP: this.ipversion,
         technology: this.cell_tech,
         apn: this.cell_apn,
         mcc_mnc: this.cell_mcc_mnc_enabled ? this.cell_mcc_mnc : null
-      })
+      }
       try {
-        const rawResponse = await fetch("http://192.168.4.1/api/modem_info", {
-          method: "POST",
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            "Content-Type": "application/json",
-            "Content-Length": bodyLocal.length.toString()
-          },
-          body: bodyLocal
-        })
+        const data = await fetchInternal("/api/modem_info", 60000, "POST", body, "json")
 
-        const data = await rawResponse.json()
         this.modemInfo.status = data.status
         this.modemInfo.activation_duration = data.activation_duration
         this.modemInfo.attachment_duration = data.attachment_duration
@@ -450,14 +442,8 @@ export default {
       }, 1000)
 
       try {
-        const rawResponse = await fetch("http://192.168.4.1/api/modem_nearby_networks", {
-          method: "GET",
-          headers: {
-            Accept: "application/json, text/plain, */*"
-          }
-        })
+        const data = await fetchInternal("/api/modem_nearby_networks", 240000, "GET", null, "json")
 
-        const data = await rawResponse.json()
         if (data.networks && Array.isArray(data.networks)) {
           let tmpList = data.networks.sort((a, b) => a.mcc_mnc.localeCompare(b.mcc_mnc))
           let networkMap = {}

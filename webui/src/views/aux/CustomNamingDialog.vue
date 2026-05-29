@@ -227,14 +227,7 @@ export default {
 
       if (!configString) return
 
-      fetch("http://192.168.4.1" + "/save-config-temp", {
-        method: "POST",
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(objToSend)
-      })
+      fetchInternal("/save-config-temp", 30000, "POST", objToSend, "json")
         .then((res) => {
           this.startProgress()
           fetchInternal("/device_measurements", 60000)
