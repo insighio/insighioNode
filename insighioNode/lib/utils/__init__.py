@@ -115,6 +115,7 @@ def deleteFile(destination):
     try:
         logging.debug("deleteFile: " + destination)
         uos.remove(destination)
+        return True
     except Exception as e:
         logging.exception(e, "Error deleting file [{}]".format(destination))
         return False
