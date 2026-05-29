@@ -72,23 +72,45 @@
       </div>
 
       <div>
-        <Step1Login v-if="tabActive === 0" @goNext="goToNextStep" />
-        <Step2Network v-else-if="tabActive === 1" @goNext="goToNextStep" @goBack="goToPreviousStep" />
+        <Step1Login v-if="tabActive === 0" :key="'step1-' + configVersion" @goNext="goToNextStep" />
+        <Step2Network
+          v-else-if="tabActive === 1"
+          :key="'step2-' + configVersion"
+          @goNext="goToNextStep"
+          @goBack="goToPreviousStep"
+        />
         <Step3APIKeys
           v-else-if="tabActive === 2 && networkTech !== 'lora'"
+          :key="'step3api-' + configVersion"
           @goNext="goToNextStep"
           @goBack="goToPreviousStep"
         />
         <Step3LoRaKeys
           v-else-if="tabActive === 2 && networkTech === 'lora'"
+          :key="'step3lora-' + configVersion"
           @goNext="goToNextStep"
           @goBack="goToPreviousStep"
         />
 
-        <Step4Measurements v-else-if="tabActive === 3" @goNext="goToNextStep" @goBack="goToPreviousStep" />
-        <Step5Timing v-else-if="tabActive === 4" @goNext="goToNextStep" @goBack="goToPreviousStep" />
-        <Step6Verify v-else-if="tabActive === 5" @goNext="goToNextStep" @goBack="goToPreviousStep" />
-        <Step7Apply v-else-if="tabActive === 6" @start-over="goToStart" />
+        <Step4Measurements
+          v-else-if="tabActive === 3"
+          :key="'step4-' + configVersion"
+          @goNext="goToNextStep"
+          @goBack="goToPreviousStep"
+        />
+        <Step5Timing
+          v-else-if="tabActive === 4"
+          :key="'step5-' + configVersion"
+          @goNext="goToNextStep"
+          @goBack="goToPreviousStep"
+        />
+        <Step6Verify
+          v-else-if="tabActive === 5"
+          :key="'step6-' + configVersion"
+          @goNext="goToNextStep"
+          @goBack="goToPreviousStep"
+        />
+        <Step7Apply v-else-if="tabActive === 6" :key="'step7-' + configVersion" @start-over="goToStart" />
       </div>
     </div>
 
@@ -180,6 +202,59 @@
         </div>
       </div>
     </div>
+
+    <!-- Import Configuration Modal -->
+    <div v-if="showImportConfigModal" class="modal active">
+      <div class="modal-overlay" @click="closeImportConfigModal"></div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <div class="modal-title h5">Import Configuration</div>
+        </div>
+        <div class="modal-body">
+          <p>Select a configuration file (.py) to import settings.</p>
+          <div class="form-group">
+            <input
+              type="file"
+              ref="configFileInput"
+              @change="handleConfigFileSelect"
+              accept=".py"
+              class="form-input"
+              :disabled="isImporting"
+            />
+          </div>
+          <div v-if="selectedConfigFile" class="file-info">
+            <p><strong>File:</strong> {{ selectedConfigFile.name }}</p>
+            <p><strong>Size:</strong> {{ formatFileSize(selectedConfigFile.size) }}</p>
+          </div>
+          <div v-if="importError" class="toast toast-error">
+            {{ importError }}
+          </div>
+          <div v-if="importProgress > 0 && importProgress < 100" class="upload-progress">
+            <div class="bar">
+              <div class="bar-item" :style="{ width: importProgress + '%' }" role="progressbar"></div>
+            </div>
+            <p>Importing: {{ importProgress }}%</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" @click="uploadConfigFile" :disabled="!selectedConfigFile || isImporting">
+            {{ isImporting ? "Importing..." : "Import" }}
+          </button>
+          <button class="btn btn-link" @click="closeImportConfigModal" :disabled="isImporting">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Synchronization Loading Overlay -->
+    <div v-if="isSynchingSettings" class="modal active">
+      <div class="modal-overlay"></div>
+      <div class="modal-container" style="background: transparent; box-shadow: none">
+        <div class="modal-body" style="text-align: center; background: white; border-radius: 0.5rem; padding: 2rem">
+          <div class="loading loading-lg"></div>
+          <p style="margin-top: 1rem; font-size: 1rem; color: #333">Loading device settings...</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -193,6 +268,7 @@ import Step4Measurements from "@/views/Step-4-Measurements.vue"
 import Step5Timing from "@/views/Step-5-Timing.vue"
 import Step6Verify from "@/views/Step-6-Verify.vue"
 import Step7Apply from "@/views/Step-7-apply.vue"
+import { fetchInternal } from "@/js/utils.js"
 
 export default {
   name: "MainPage",
@@ -224,7 +300,14 @@ export default {
       uploadError: null,
       uploadProgress: 0,
       fileSizeError: false,
-      maxFileSize: 500 * 1024 // 500KB in bytes
+      maxFileSize: 500 * 1024, // 500KB in bytes
+      showImportConfigModal: false,
+      selectedConfigFile: null,
+      isImporting: false,
+      importError: null,
+      importProgress: 0,
+      configVersion: 0, // Incremented to force component remount when config is imported
+      isSynchingSettings: false // Loading state for settings synchronization
     }
   },
   mounted() {
@@ -246,16 +329,38 @@ export default {
     document.removeEventListener("click", this.handleOutsideClick)
   },
   methods: {
-    goToNextStep() {
-      this.networkTech = this.$storage.get("network")
+    async goToNextStep() {
+      // if tabActive is 0 (login page) and goToNextStep is called,
+      // get the settings of the device.
+      if (this.tabActive === 0) {
+        await this.synchSettings()
+      }
 
-      this.tabActive += 1
+      this.$nextTick(() => {
+        this.tabActive += 1
 
-      this.$storage.set("activeTab", this.tabActive)
+        this.$storage.set("activeTab", this.tabActive)
 
-      console.log("goToNextStep: ", this.tabActive)
-      if (this.tabActive === 1) {
-        this.updateDeviceSystemTime()
+        console.log("goToNextStep: ", this.tabActive)
+        if (this.tabActive === 1) {
+          this.updateDeviceSystemTime()
+        }
+      })
+    },
+    async synchSettings() {
+      this.isSynchingSettings = true
+      this.$storage.clear()
+
+      try {
+        let data = await fetchInternal("/settings")
+        Object.keys(data).forEach((key) => {
+          console.log("Storing setting in cookie:", key, "=", data[key])
+          this.$storage.set(key.replaceAll("_", "-"), data[key])
+        })
+      } catch (err) {
+        console.log("error completing request", err)
+      } finally {
+        this.isSynchingSettings = false
       }
     },
     goToPreviousStep() {
@@ -274,6 +379,14 @@ export default {
       const savedSession = this.$storage.get("session")
       this.$storage.clear()
       this.$storage.set("session", savedSession)
+    },
+    showToastMessage(message, timeout = 2000) {
+      this.toastMessage = message
+      this.showToast = true
+      setTimeout(() => {
+        this.showToast = false
+        this.toastMessage = ""
+      }, timeout)
     },
     toggleSettingsMenu() {
       this.showSettingsMenu = !this.showSettingsMenu
@@ -497,12 +610,7 @@ export default {
       })
         .then((res) => {
           if (res.ok) {
-            this.toastMessage = "Device system time updated successfully."
-            this.showToast = true
-            setTimeout(() => {
-              this.showToast = false
-              this.toastMessage = ""
-            }, 2000)
+            this.showToastMessage("Device system time updated successfully.")
             console.log("Device system time updated successfully.")
           } else {
             alert("Failed to update device system time. Please try again.")
@@ -613,7 +721,8 @@ export default {
 
         // Success
         this.uploadProgress = 100
-        alert(
+
+        this.showToastMessage(
           "OTA package uploaded successfully! The device will now apply the update and restart. You may need to reconnect."
         )
         this.isUploading = false
@@ -677,8 +786,122 @@ export default {
     },
     importConfiguration() {
       this.showSettingsMenu = false
-      // TODO: Implement import configuration
-      alert("Import configuration feature coming soon!")
+      this.showImportConfigModal = true
+      this.selectedConfigFile = null
+      this.importError = null
+      this.importProgress = 0
+    },
+    closeImportConfigModal() {
+      if (!this.isImporting) {
+        this.showImportConfigModal = false
+        this.selectedConfigFile = null
+        this.importError = null
+        this.importProgress = 0
+        if (this.$refs.configFileInput) {
+          this.$refs.configFileInput.value = ""
+        }
+      }
+    },
+    handleConfigFileSelect(event) {
+      const file = event.target.files[0]
+      if (!file) {
+        this.selectedConfigFile = null
+        return
+      }
+
+      // Check file extension
+      if (!file.name.endsWith(".py")) {
+        this.importError = "Only .py configuration files are accepted."
+        this.selectedConfigFile = null
+        return
+      }
+
+      this.selectedConfigFile = file
+      this.importError = null
+    },
+    async uploadConfigFile() {
+      if (!this.selectedConfigFile) return
+
+      this.isImporting = true
+      this.importError = null
+      this.importProgress = 0
+
+      try {
+        const xhr = new XMLHttpRequest()
+
+        // Track upload progress
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            this.importProgress = Math.round((e.loaded / e.total) * 50) // First 50% for upload
+          }
+        })
+
+        // Handle completion
+        const uploadPromise = new Promise((resolve, reject) => {
+          xhr.addEventListener("load", () => {
+            if (xhr.status === 200) {
+              try {
+                const settings = JSON.parse(xhr.responseText)
+                resolve(settings)
+              } catch (e) {
+                reject(new Error("Failed to parse response"))
+              }
+            } else {
+              reject(new Error(`Upload failed with status: ${xhr.status}`))
+            }
+          })
+          xhr.addEventListener("error", () => reject(new Error("Network error during upload")))
+          xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")))
+        })
+
+        // Open request
+        xhr.open("POST", "http://192.168.4.1/api/upload_config", true)
+
+        // Send raw file data
+        xhr.send(this.selectedConfigFile)
+
+        const settings = await uploadPromise
+
+        // Update progress to 75% after upload completes
+        this.$nextTick(() => {
+          this.importProgress = 75
+        })
+        //this.importProgress = 75
+
+        // Load settings into local storage (similar to Step-2-Network.vue initializeValues)
+        this.$storage.clear()
+        Object.keys(settings).forEach((key) => {
+          this.$storage.set(key.replaceAll("_", "-"), settings[key])
+        })
+
+        // Update progress to 100%
+
+        this.importProgress = 100
+
+        // Increment configVersion to force component remount
+        this.configVersion++
+
+        this.$nextTick(() => {
+          this.showToastMessage(
+            "Configuration imported successfully! The settings have been loaded. Please review and save them."
+          )
+          this.isImporting = false
+          this.closeImportConfigModal()
+
+          // Navigate to Network step to review the imported settings
+          this.tabActive = 1
+          this.$storage.set("activeTab", this.tabActive)
+
+          // Update network tech from imported settings
+          this.networkTech = this.$storage.get("network")
+        })
+      } catch (error) {
+        console.error("Error importing configuration:", error)
+        this.importError = error.message || "Failed to import configuration. Please try again."
+        this.importProgress = 0
+      } finally {
+        this.isImporting = false
+      }
     },
     resetSession() {
       this.showSettingsMenu = false

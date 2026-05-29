@@ -163,15 +163,14 @@ export default {
       this.enable_secondary_measurement_transmission =
         this.$storage.get("enable-secondary-measurement-transmission") || false
       const savedMqttInfo = this.$storage.get("secondary-measurement-transmission-info")
-      if (savedMqttInfo) {
+
+      if (savedMqttInfo && typeof savedMqttInfo === "string") {
         try {
           this.secondary_measurement_transmission_info = JSON.parse(savedMqttInfo)
         } catch (e) {
           console.log("Error parsing saved MQTT info: ", e, ", from input: ", savedMqttInfo)
         }
-      }
-
-      //detectBoardChange(enableNavigationButtons)
+      } else this.secondary_measurement_transmission_info = savedMqttInfo
     },
     fillClipboardData(evt) {
       const clipboardData = evt.clipboardData.getData("text")

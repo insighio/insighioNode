@@ -59,7 +59,6 @@
 <script>
 import "@/assets/css/spectre.min.css"
 import "@/assets/css/style.css"
-import { fetchInternal } from "@/js/utils.js"
 
 import NetworkWifi from "@/views/networkConfigs/Step-2-Network-Wifi.vue"
 import NetworkCellular from "@/views/networkConfigs/Step-2-Network-Cellular.vue"
@@ -89,7 +88,6 @@ export default {
     return {
       activeNetwork: undefined,
       localLoading: false,
-      settingsAcquired: false,
       noNetworkSelected: false
     }
   },
@@ -98,55 +96,33 @@ export default {
   },
   methods: {
     initializeValues() {
-      if (this.settingsAcquired || this.localLoading) return
+      if (this.localLoading) return
 
-      this.localLoading = true
-      this.disableButtonsLocal()
+      this.activeNetwork = this.$storage.get("network")
+      this.noNetworkSelected = this.activeNetwork === undefined || this.activeNetwork === null
 
-      console.log("in here.....")
+      // Highlight the corresponding button based on activeNetwork value
+      this.$nextTick(() => {
+        if (this.activeNetwork) {
+          const buttons = this.$el.querySelectorAll(".btn-group .btn")
+          buttons.forEach((btn) => btn.classList.remove("btn-primary"))
 
-      this.$storage.clear()
+          const networkMap = {
+            wifi: "WiFi",
+            cellular: "Cellular",
+            lora: "LoRa",
+            satellite: "Satellite"
+          }
 
-      fetchInternal("/settings")
-        .then((data) => {
-          Object.keys(data).forEach((key) => {
-            this.$storage.set(key.replaceAll("_", "-"), data[key])
-          })
-          this.enableButtonsLocal()
-          this.localLoading = false
-          this.settingsAcquired = true
-
-          this.activeNetwork = this.$storage.get("network")
-          this.noNetworkSelected = this.activeNetwork === undefined || this.activeNetwork === null
-
-          // Highlight the corresponding button based on activeNetwork value
-          this.$nextTick(() => {
-            if (this.activeNetwork) {
-              const buttons = this.$el.querySelectorAll(".btn-group .btn")
-              buttons.forEach((btn) => btn.classList.remove("btn-primary"))
-
-              const networkMap = {
-                wifi: "WiFi",
-                cellular: "Cellular",
-                lora: "LoRa",
-                satellite: "Satellite"
-              }
-
-              const targetText = networkMap[this.activeNetwork.toLowerCase()]
-              if (targetText) {
-                const targetButton = Array.from(buttons).find((btn) => btn.textContent.trim() === targetText)
-                if (targetButton) {
-                  targetButton.classList.add("btn-primary")
-                }
-              }
+          const targetText = networkMap[this.activeNetwork.toLowerCase()]
+          if (targetText) {
+            const targetButton = Array.from(buttons).find((btn) => btn.textContent.trim() === targetText)
+            if (targetButton) {
+              targetButton.classList.add("btn-primary")
             }
-          })
-        })
-        .catch((err) => {
-          console.log("error completing request", err)
-          this.enableButtonsLocal()
-          this.localLoading = false
-        })
+          }
+        }
+      })
     },
 
     operationSelected(operationName) {
