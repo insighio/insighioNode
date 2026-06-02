@@ -30,7 +30,7 @@ def get_int(key, default=None):
     try:
         return int(getattr(_cfg, key)) if hasattr(_cfg, key) else default
     except Exception as e:
-        logging.error("Error converting config value to int: {}".format(e))
+        logging.error("Error converting config value {} to int: {}".format(key, e))
         return default
 
 
