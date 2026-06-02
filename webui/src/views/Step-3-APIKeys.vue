@@ -161,7 +161,7 @@ export default {
 
       // Load secondary measurement transmission settings
       this.enable_secondary_measurement_transmission =
-        this.$storage.get("enable-secondary-measurement-transmission") || false
+        this.strToJSValue(this.$storage.get("enable-secondary-measurement-transmission")) || false
       const savedMqttInfo = this.$storage.get("secondary-measurement-transmission-info")
 
       if (savedMqttInfo && typeof savedMqttInfo === "string") {
