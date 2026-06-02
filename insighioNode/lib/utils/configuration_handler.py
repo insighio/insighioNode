@@ -168,6 +168,7 @@ configDict = {
     "_ULP_LIMIT_HIGH_FREQ": "ulp_limit_high_freq",
     "ENABLE_SECONDARY_MEASUREMENT_TRANSMISSION": "enable_secondary_measurement_transmission",
     "SECONDARY_MEASUREMENT_TRANSMISSION_INFO": "secondary_measurement_transmission_info",
+    "_SHIELD_VERSION": "shield_version",
 }
 
 NoneType = type(None)
@@ -403,7 +404,8 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         contents += get_file_config(app_path + "/templ/shield_i2c_dig_analog_templ.py", keyValuePairDictionary)
     elif shield == "enviro":
         contents += get_file_config(app_path + "/templ/shield_enviro_templ.py", keyValuePairDictionary)
-    #   contents += get_file_config(app_path + "/templ/device_enviro_config.py", keyValuePairDictionary)
+    elif shield == "enviro_v2":
+        contents += get_file_config(app_path + "/templ/shield_enviro_v2_templ.py", keyValuePairDictionary)
     elif shield == "scale":
         if board == device_info._CONST_ESP32 or board == device_info._CONST_ESP32_WROOM:
             contents += get_file_config(app_path + "/templ/shield_esp32_scale.py", keyValuePairDictionary)

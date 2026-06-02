@@ -1,5 +1,13 @@
 <template>
   <div class="form-group columns">
+    <SDivider label="Shield Version" />
+    <SSelect
+      label="Select your shield version"
+      v-model:value="shieldVersion"
+      @update:value="shieldVersion = $event"
+      :valueOptions="shieldVersionOptions"
+    />
+    <br />
     <SDivider label="SDI12" />
     <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
       <SDivider label="General Settings" />
@@ -357,7 +365,12 @@ export default {
         "defines the voltage range\nof the ADC input\nthe lower the voltage range\n the higher the precision",
       formula_tooltip: "python script to\ntransform raw value (v)\nfrom millivolt\nto meaningful value\nex: 2*v + v**2",
       formula_pcnt_tooltip:
-        "python script to\ntransform raw value \nfrom pulse count\nto meaningful value\nVariables:\n(v): pulse counts\n(d):time period in seconds\nex: (v/d)*(40/100)"
+        "python script to\ntransform raw value \nfrom pulse count\nto meaningful value\nVariables:\n(v): pulse counts\n(d):time period in seconds\nex: (v/d)*(40/100)",
+      shieldVersion: "",
+      shieldVersionOptions: [
+        { value: "", label: "Version 1" },
+        { value: "v2", label: "Version 2" }
+      ]
     }
   },
   methods: {
@@ -388,6 +401,9 @@ export default {
       this.pulseCounterConfig = this.getJsonObjectFromCookies("meas-pulseCounter")
         ? this.getJsonObjectFromCookies("meas-pulseCounter")
         : this.pulseCounterDefaultConfig
+      this.shieldVersion = this.getJsonObjectFromCookies("shield-version")
+        ? this.getJsonObjectFromCookies("shield-version")
+        : ""
     },
     addSdi12Row() {
       this.sdi12Sensors.push({ ...this.sdi12DefaultRow })
@@ -403,6 +419,7 @@ export default {
       this.$storage.remove("meas-modbus")
       this.$storage.remove("meas-adc")
       this.$storage.remove("meas-pulseCounter")
+      this.$storage.remove("shield-version")
     },
 
     storeData() {
@@ -412,6 +429,7 @@ export default {
       this.$storage.set("meas-modbus", { sensors: this.modbusSensors, config: this.modbusConfig })
       this.$storage.set("meas-adc", this.adcConfig)
       this.$storage.set("meas-pulseCounter", this.pulseCounterConfig)
+      this.$storage.set("shield-version", this.shieldVersion)
 
       this.requestGoNext()
     }

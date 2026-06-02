@@ -253,6 +253,13 @@ export default {
         ? this.$storage.get("selected-shield")
         : this.$storage.get("selected-board")
 
+      const shieldVersion = this.$storage.get("shield-version") ? this.$storage.get("shield-version") : ""
+
+      //remove shieldVersion from the end of selectedShield.
+      if (shieldVersion && selectedShield && selectedShield.endsWith(`_${shieldVersion}`)) {
+        selectedShield = selectedShield.slice(0, -`_${shieldVersion}`.length)
+      }
+
       this.activeTab = this.backwardCompatibilitySelectedShield[selectedShield]
         ? this.backwardCompatibilitySelectedShield[selectedShield]
         : "scale"
@@ -331,7 +338,12 @@ export default {
 
       this.$storage.set("meas-keyvalue", this.getKeyValuePairs())
 
-      this.$storage.set("selected-shield", this.activeTab)
+      let selectedShield = this.activeTab
+      const shieldVersion = this.$storage.get("shield-version") ? this.$storage.get("shield-version") : ""
+      if (shieldVersion && selectedShield) {
+        selectedShield += `_${shieldVersion}`
+      }
+      this.$storage.set("selected-shield", selectedShield)
 
       this.$storage.set("system-settings", this.systemSettings)
       this.$storage.set("request_fs_optimization", this.systemSettings.enableFileSystemOptimization)

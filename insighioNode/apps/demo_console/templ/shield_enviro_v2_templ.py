@@ -32,10 +32,10 @@ UC_IO_DGTL_SNSR_2_READ = 5
 """ Chip ID """
 _I2C_CHIP_ID_ADDRESS = 0x54
 
-_MEAS_SDI12 = "<meas-sdi12>"
-_MEAS_MODBUS = "<meas-modbus>"
-_MEAS_ADC = "<meas-adc>"
-_MEAS_PULSECOUNTER = "<meas-pulseCounter>"
+_MEAS_SDI12 = '<meas-sdi12>'
+_MEAS_MODBUS = '<meas-modbus>'
+_MEAS_ADC = '<meas-adc>'
+_MEAS_PULSECOUNTER = '<meas-pulseCounter>'
 
 _ULP_SLEEP_LOW = <ulp-sleep-low>
 _ULP_SLEEP_HIGH = <ulp-sleep-high>

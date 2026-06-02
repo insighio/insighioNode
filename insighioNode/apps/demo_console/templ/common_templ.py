@@ -58,3 +58,5 @@ _STORE_MEASUREMENT_IF_FAILED_CONNECTION=<store-meas-if-failed-conn>
 _SYSTEM_SETTINGS = '<system-settings>'
 
 _LOW_LATENCY_MODE_ON = <low-latency-mode-on>
+
+_SHIELD_VERSION = "<shield-version>"
