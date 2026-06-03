@@ -145,6 +145,15 @@ export default {
         append_mac_to_topic: false,
         format: "json_without_units"
       },
+      secondary_measurement_transmission_info_default: {
+        mqtt_url: "",
+        mqtt_port: "",
+        mqtt_username: "",
+        mqtt_password: "",
+        mqtt_topic: "",
+        append_mac_to_topic: false,
+        format: "json_without_units"
+      },
       package_format_options: [
         { value: "json_without_units", label: "JSON without units" },
         { value: "json_with_units", label: "JSON with units" },
@@ -164,13 +173,21 @@ export default {
         this.strToJSValue(this.$storage.get("enable-secondary-measurement-transmission")) || false
       const savedMqttInfo = this.$storage.get("secondary-measurement-transmission-info")
 
-      if (savedMqttInfo && typeof savedMqttInfo === "string") {
-        try {
-          this.secondary_measurement_transmission_info = JSON.parse(savedMqttInfo)
-        } catch (e) {
-          console.log("Error parsing saved MQTT info: ", e, ", from input: ", savedMqttInfo)
+      if (savedMqttInfo) {
+        if (typeof savedMqttInfo === "string") {
+          try {
+            this.secondary_measurement_transmission_info = JSON.parse(savedMqttInfo)
+          } catch (e) {
+            console.log("Error parsing saved MQTT info: ", e, ", from input: ", savedMqttInfo)
+            this.secondary_measurement_transmission_info = { ...this.secondary_measurement_transmission_info_default }
+          }
+        } else if (typeof savedMqttInfo === "object") {
+          this.secondary_measurement_transmission_info = savedMqttInfo
+        } else {
+          console.log("Unexpected type for saved MQTT info: ", typeof savedMqttInfo)
+          this.secondary_measurement_transmission_info = { ...this.secondary_measurement_transmission_info_default }
         }
-      } else this.secondary_measurement_transmission_info = savedMqttInfo
+      } else this.secondary_measurement_transmission_info = { ...this.secondary_measurement_transmission_info_default }
     },
     fillClipboardData(evt) {
       const clipboardData = evt.clipboardData.getData("text")
