@@ -131,18 +131,21 @@ def parse_stored_measurements_and_upload(network):
             data = json.loads(line)
             update_timestamp_based_on_diff_dt(data, True)
 
-            message = network.create_message(cfg.get("device_id"), data)
-            message_send_status = network.send_message(cfg, message)
-
-            completed_without_errors &= message_send_status
-
-            logging.debug("Message send status: " + str(message_send_status))
-
             if utils.get_var_from_module(network, "is_secondary_transfer_protocol_enabled"):
                 message_sec = network.create_secondary_message(cfg.get("device_id"), data)
                 message_sec_send_status = network.send_secondary_message(cfg, message_sec)
                 logging.debug("Secondary message send status: " + str(message_sec_send_status))
-                completed_without_errors &= message_sec_send_status
+                data["secondary_message_send_status"] = {"value": 1 if message_sec_send_status else 0}
+                # completed_without_errors &= message_sec_send_status
+            else:
+                message_sec_send_status = True
+
+            message = network.create_message(cfg.get("device_id"), data)
+            message_send_status = network.send_message(cfg, message)
+
+            completed_without_errors &= message_send_status or message_sec_send_status
+
+            logging.debug("Message send status: {}, message_sec_send_status: {}".format(message_send_status, message_sec_send_status))
 
             # this only works for BG600 modem since it supports correct message transmission status
             if message_send_status is not None and not message_send_status:

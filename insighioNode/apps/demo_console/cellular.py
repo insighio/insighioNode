@@ -146,8 +146,16 @@ def connect(cfg):
             set_value(
                 results,
                 "status",
-                status == cellular.MODEM_CONNECTED and tc_success and (not is_secondary_transfer_protocol_enabled or tc_secondary_success),
+                status == cellular.MODEM_CONNECTED and tc_success,
             )
+
+            if is_secondary_transfer_protocol_enabled:
+                logging.debug("tc_secondary_success: {}".format(tc_secondary_success))
+                set_value(
+                    results,
+                    "secondary_conn_status",
+                    1 if tc_secondary_success else 0,
+                )
 
     return results
 
@@ -158,8 +166,10 @@ def is_connected():
         modem_instance
         and transfer_client
         and modem_instance.is_connected()
-        and transfer_client.is_connected()
-        and (not is_secondary_transfer_protocol_enabled or (transfer_secondary_client and transfer_secondary_client.is_connected()))
+        and (
+            transfer_client.is_connected()
+            or (not is_secondary_transfer_protocol_enabled or (transfer_secondary_client and transfer_secondary_client.is_connected()))
+        )
     )
 
 
