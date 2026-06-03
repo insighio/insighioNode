@@ -12,7 +12,6 @@
               <SSwitch label="Board statistics" v-model:value="boardStat" />
               <SSwitch label="Network statistics" v-model:value="networkStat" />
               <SSwitch label="Board humidity/temperature" v-model:value="boardSense" />
-              <SSwitch label="Store measurements if failed connection" v-model:value="storeMeasIfFailedConn" />
               <SSelect
                 label="Temperature unit"
                 v-model:value="temperatureUnitIsCelsius"
@@ -175,7 +174,6 @@ export default {
       boardStat: false,
       networkStat: true,
       otaEnabled: true,
-      storeMeasIfFailedConn: true,
       temperatureUnitIsCelsius: true,
       gpsEnabled: true,
       gpsTimeout: 120,
@@ -271,8 +269,6 @@ export default {
       this.gpsNoFixNoUpload = this.strToJSValue(this.$storage.get("meas-gps-no-fix-no-upload"), false)
       this.gpsOnlyOnBoot = this.strToJSValue(this.$storage.get("meas-gps-only-on-boot"), true)
 
-      this.storeMeasIfFailedConn = this.strToJSValue(this.$storage.get("store-meas-if-failed-conn"), true)
-
       this.systemSettings = this.getJsonObjectFromCookies("system-settings")
         ? this.getJsonObjectFromCookies("system-settings")
         : this.systemDefaultSettings
@@ -312,7 +308,6 @@ export default {
       this.$storage.remove("selected-shield")
       this.$storage.remove("system-enable-ota")
       this.$storage.remove("meas-keyvalue")
-      this.$storage.remove("store-meas-if-failed-conn")
       this.$storage.remove("system-settings")
       this.$storage.remove("request_fs_optimization")
     },
@@ -333,8 +328,6 @@ export default {
       this.$storage.set("meas-gps-sat-num", this.gpsSatNum)
       this.$storage.set("meas-gps-no-fix-no-upload", this.boolToPyStr(this.gpsNoFixNoUpload))
       this.$storage.set("meas-gps-only-on-boot", this.boolToPyStr(this.gpsOnlyOnBoot))
-
-      this.$storage.set("store-meas-if-failed-conn", this.boolToPyStr(this.storeMeasIfFailedConn))
 
       this.$storage.set("meas-keyvalue", this.getKeyValuePairs())
 
