@@ -101,6 +101,12 @@ class Modem:
         expected_configuration = "0"  # operator automatic selection
         command = "AT+COPS=0"
 
+        try:
+            #check that mcc mnc is a since integer
+            mcc_mnc = "{}".format(int(mcc_mnc))
+        except:
+            mcc_mnc = None
+
         if technology.lower() == "nbiot" and mcc_mnc is None:
             mcc_mnc = "20201"  # backward compatibility
 
@@ -240,6 +246,9 @@ class Modem:
                 logging.debug("Network time not ready yet")
             sleep_ms(250)
         return (2000, 0, 0, 0, 0, 0, 0, 0)
+
+    def update_ntp_date_time(self):
+        return False
 
     def wait_for_registration(self, timeoutms=30000):
         status = False
