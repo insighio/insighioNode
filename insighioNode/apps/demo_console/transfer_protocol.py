@@ -51,8 +51,20 @@ class TransferProtocolModemAT(TransferProtocol):
             self.require_message_delivery_ack = True
             self.modem_client_id = 2
 
-            self._secondary_protocol_info = cfg.get("SECONDARY_MEASUREMENT_TRANSMISSION_INFO")
+            self._secondary_protocol_info = None
             self.is_secondary_protocol_enabled = cfg.get("ENABLE_SECONDARY_MEASUREMENT_TRANSMISSION")
+            if self.is_secondary_protocol_enabled:
+                try:
+                    info = cfg.get("SECONDARY_MEASUREMENT_TRANSMISSION_INFO")
+                    import ujson
+
+                    self._secondary_protocol_info = ujson.loads(info)
+
+                    logging.debug("[Init]: Secondary measurement transmission info: " + str(self._secondary_protocol_info))
+                except Exception as e:
+                    logging.exception(
+                        e, "Error parsing secondary measurement transmission info, cannot connect to secondary transfer protocol"
+                    )
 
         logging.info("Initialized TransferProtocolModemAT with modem client id: {}".format(self.modem_client_id))
         logging.info("Secondary transfer protocol enabled: {}".format(self.is_secondary_transfer_protocol))
@@ -79,23 +91,6 @@ class TransferProtocolModemAT(TransferProtocol):
                 self.modem_client_id,
             )
         else:
-            info = self._secondary_protocol_info
-            if info is None:
-                logging.info(
-                    "No secondary measurement transmission info found in configuration, cannot connect to secondary transfer protocol"
-                )
-                return False
-
-            try:
-                import ujson
-
-                self._secondary_protocol_info = ujson.loads(info)
-
-                logging.debug("[Connect]: Secondary measurement transmission info: " + str(self._secondary_protocol_info))
-            except Exception as e:
-                logging.exception(e, "Error parsing secondary measurement transmission info, cannot connect to secondary transfer protocol")
-                return False
-
             self.connected = self.modem_instance.mqtt_connect(
                 self._secondary_protocol_info["mqtt_url"],
                 self._secondary_protocol_info["mqtt_port"],
