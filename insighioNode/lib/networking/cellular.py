@@ -211,9 +211,17 @@ def connect(cfg):
     return (status, activation_duration, attachment_duration, connection_duration)
 
 
-def update_rtc_from_network_time(modem):
+def update_rtc_from_network_time(modem, use_ntp_update=False):
     try:
         from machine import RTC
+
+        if use_ntp_update:
+            retries = 0
+            while retries < 3:
+                if modem.update_ntp_date_time():
+                    break
+                retries += 1
+                sleep_ms(500)
 
         time_tuple = modem.get_network_date_time()
 

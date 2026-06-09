@@ -241,3 +241,13 @@ def deleteModule(module_name):
 
 def get_var_from_module(module, key):
     return getattr(module, key) if hasattr(module, key) else None
+
+
+def is_system_time_valid():
+    import utime
+
+    _ESP32_SYS_TIME_OFFSET = 946684800
+
+    epoch = utime.time() + _ESP32_SYS_TIME_OFFSET
+    # Friday, April 15, 2022
+    return epoch > 1650000000

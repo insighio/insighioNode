@@ -162,6 +162,16 @@ class ModemBG600(modem_base.Modem):
         res, lines = self.send_at_cmd("AT+QIDEACT=1")
         return res
 
+    def update_ntp_date_time(self):
+        status, lines = self.send_at_cmd('AT+QNTP=1,"pool.ntp.org"', 125000)
+
+        reg = r"\+QNTP:\s*(\d+),.*"
+        if status and len(lines) > 0:
+            res = ure.match(reg, lines[0])
+            if res and res.group(1) == "0":
+                return True
+        return False
+
     def get_extended_signal_quality(self):
         rsrp = None
         rsrq = None

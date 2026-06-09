@@ -7,6 +7,8 @@ import logging
 from utime import sleep_ms, ticks_ms, ticks_diff
 from .dictionary_utils import set_value, set_value_float, set_value_int
 
+# from utils import is_system_time_valid
+
 transfer_client = None
 transfer_secondary_client = None
 mqtt_connected = False
@@ -114,6 +116,7 @@ def connect(cfg):
     if status == cellular.MODEM_CONNECTED:
         global transfer_client
         global transfer_secondary_client
+
         from . import transfer_protocol
 
         # AT command based implementation of communication of Quectel BG600L
@@ -156,6 +159,13 @@ def connect(cfg):
                     "secondary_conn_status",
                     1 if tc_secondary_success else 0,
                 )
+
+        if tc_success:  # and not is_system_time_valid():
+            # if system time is invalid, try to update it from network time
+            # cellular.update_rtc_from_network_time(modem_instance, True)
+
+            # for now, just retry updating time
+            cellular.update_rtc_from_network_time(modem_instance, False)
 
     return results
 
