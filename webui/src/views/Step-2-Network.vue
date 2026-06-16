@@ -1,10 +1,7 @@
 <template>
-  <div class="panel-body">
-    <br />
+  <div class="panel-body" style="padding-top: 1rem">
     <div class="text-center">Select network technology to be used:</div>
-    <br />
-    <div v-show="localLoading" class="loading loading-lg"></div>
-    <br />
+    <div v-show="localLoading" class="loading loading-lg" style="margin-top: 1rem"></div>
     <div class="container grid-lg">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
@@ -22,7 +19,6 @@
               Satellite
             </button>
           </div>
-          <br />
           <!-- check box with the option "No Network"-->
           <label class="form-checkbox">
             <input
@@ -48,8 +44,7 @@
           <NetworkSatAstro ref="satelliteComponent" />
         </div>
       </div>
-      <br />
-      <div class="columns">
+      <div class="columns" style="margin-top: 1rem">
         <WebuiFooter :showBackButton="false" @savePressed="handleSave" @backPressed="handleBack" />
       </div>
     </div>

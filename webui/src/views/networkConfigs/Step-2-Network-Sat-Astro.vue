@@ -1,6 +1,5 @@
 <template>
-  <div class="form-group">
-    <br />
+  <div class="form-group" style="padding-top: 1rem">
     <div class="columns">
       <SDivider label="Connection Configuration" />
       <SSwitch label="Enable AstroNode DevKit" v-model:value="dev_enable" @update:value="dev_enable = $event" />

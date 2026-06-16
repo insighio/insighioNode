@@ -1,6 +1,5 @@
 <template>
-  <div class="panel-body">
-    <br />
+  <div class="panel-body" style="padding-top: 1rem">
     <!--div class="loading loading-lg"></div-->
     <div class="container grid-lg">
       <div class="columns flex-centered">
@@ -27,7 +26,6 @@
                 <SSwitch label="Discard measurements if no GPS fix" v-model:value="gpsNoFixNoUpload" />
                 <SSwitch label="GPS only on boot" v-model:value="gpsOnlyOnBoot" />
               </div>
-              <br />
 
               <SDivider label="Explicit key-values" />
               <div class="accordion col-12">
@@ -69,7 +67,6 @@
                       </table>
                     </div>
                   </div>
-                  <br />
                 </div>
               </div>
 
@@ -100,7 +97,6 @@
                       v-model:value="systemSettings.enableBatteryLifeOptimization"
                     />
                   </div>
-                  <br />
                 </div>
               </div>
 
@@ -118,18 +114,13 @@
                   </li>
                 </ul>
               </div>
-              <br />
               <div class="column col-12" v-for="(tab, index) in tabs" :key="index">
                 <transition :name="transitionDirection" mode="out-in">
                   <div v-if="activeTab === tab.id" :key="tab.id">
-                    <br />
-                    <br />
                     <component :is="tab.component" @goNext="validateMyForm" @goBack="requestGoBack" />
                   </div>
                 </transition>
               </div>
-              <br />
-              <br />
             </div>
           </div>
         </div>

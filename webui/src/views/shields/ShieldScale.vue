@@ -39,8 +39,6 @@
       <div class="column col-8 col-sm-12">
         <button class="btn btn-primary" @click="startCalibration()" style="margin-left: 30px">Calibrate</button>
       </div>
-      <br />
-      <br />
     </div>
     <SSwitch
       label="[Debug] Enable Scale Sensor Monitoring"
@@ -49,8 +47,6 @@
       :colsLabel="4"
       :colsInput="8"
     />
-    <br />
-    <br />
     <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
 
     <!-- Wizard Dialog -->

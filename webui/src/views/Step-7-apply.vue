@@ -1,6 +1,5 @@
 <template>
-  <div class="panel-body">
-    <br />
+  <div class="panel-body" style="padding-top: 1rem">
     <div v-if="isLoading" class="loading loading-lg"></div>
     <div class="empty">
       <div v-show="!isLoading" class="empty-icon">
@@ -15,8 +14,6 @@
       <div class="empty-action">
         <button class="btn btn-primary" @click="startOver">Start over?</button>
       </div>
-      <br />
-      <br />
     </div>
   </div>
 </template>

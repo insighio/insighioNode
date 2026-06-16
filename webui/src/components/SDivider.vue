@@ -1,8 +1,7 @@
 <template>
-  <div :class="'column col-' + colsSum">
+  <div :class="'column col-' + colsSum" style="margin-bottom: 1rem">
     <div v-if="label" class="divider text-center" :data-content="label"></div>
     <div v-else class="divider"></div>
-    <br />
   </div>
 </template>
 

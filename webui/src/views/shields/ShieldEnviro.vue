@@ -7,7 +7,6 @@
       @update:value="shieldVersion = $event"
       :valueOptions="shieldVersionOptions"
     />
-    <br />
     <SDivider label="SDI12" />
     <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
       <SDivider label="General Settings" />
@@ -17,7 +16,6 @@
         v-model:value="sdi12Config.warmupTimeMs"
         @update:value="sdi12Config.warmupTimeMs = $event"
       />
-      <br />
       <SDivider label="Sensors" />
       <table class="table table-striped table-hover">
         <thead>
@@ -88,7 +86,6 @@
           @update:value="modbusConfig.parity = $event"
           :valueOptions="modbusParityOptions"
         />
-        <br />
         <SDivider label="Sensors" />
         <table class="table table-striped table-hover">
           <thead>
@@ -147,9 +144,6 @@
           </tbody>
         </table>
       </div>
-
-      <br />
-      <br />
     </div>
     <SDivider label="ADC" />
     <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
@@ -206,8 +200,6 @@
         </div>
       </div>
     </div>
-    <br />
-    <br />
     <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>

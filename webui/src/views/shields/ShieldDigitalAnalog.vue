@@ -32,10 +32,7 @@
         </div>
         <div class="column col-2 col-mr-auto"></div>
       </div>
-      <br />
     </div>
-    <br />
-    <br />
     <SSelect
       label="Analog / Digital P2"
       v-model:value="analogDigitalP2"
@@ -59,10 +56,7 @@
         </div>
         <div class="column col-2 col-mr-auto"></div>
       </div>
-      <br />
     </div>
-    <br />
-    <br />
     <SSelect
       label="Analog / Digital P3"
       v-model:value="analogDigitalP3"
@@ -85,11 +79,8 @@
           />
         </div>
         <div class="column col-2 col-mr-auto"></div>
-        <br />
       </div>
     </div>
-    <br />
-    <br />
     <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>

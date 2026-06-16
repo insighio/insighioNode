@@ -58,9 +58,7 @@
 
     <div class="panel panel-custom">
       <div class="columns">
-        <div class="panel-nav col-12 hide-sm">
-          <br />
-
+        <div class="panel-nav col-12 hide-sm" style="padding-top: 1rem">
           <div class="toast" v-if="showToast">{{ toastMessage }}</div>
 
           <ul class="step">

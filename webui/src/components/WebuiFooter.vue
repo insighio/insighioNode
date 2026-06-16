@@ -1,15 +1,9 @@
 <template>
-  <div class="column col-12">
+  <div class="column col-12" style="margin-top: 2rem; margin-bottom: 3rem">
     <button v-if="showSaveButton" class="btn btn-primary float-right" @click="savePressed()" style="margin-left: 30px">
       Save
     </button>
     <button v-if="showBackButton" class="btn btn-primary float-right" type="button" @click="backPressed()">Back</button>
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
   </div>
 </template>
 

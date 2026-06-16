@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container" style="margin-bottom: 1rem">
     <div :class="'columns col-' + colsSum" style="padding-right: 0px; padding-left: 0px">
       <div :class="'column col-' + colsLabel + ' col-sm-12'">
         <label class="form-label"
@@ -15,8 +15,6 @@
           <i class="form-icon"></i> {{ opt.label }}
         </label>
       </div>
-      <br />
-      <br />
     </div>
   </div>
 </template>

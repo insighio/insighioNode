@@ -43,8 +43,6 @@
         </tbody>
       </table>
 
-      <br />
-
       <SInput
         label="Warmup time (ms)"
         type="number"
@@ -110,8 +108,6 @@
         </div>
       </div>
     </div>
-    <br />
-    <br />
     <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
   </div>
 </template>

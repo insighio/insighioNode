@@ -1,33 +1,27 @@
 <template>
-  <div class="panel-body">
-    <br />
+  <div class="panel-body" style="padding-top: 1rem">
     <div class="text-center">Set API keys that were generated during device creation in console.insigh.io.</div>
-    <br />
     <div class="container grid-lg">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="form-group">
             <div class="columns">
               <div class="column col-3 col-sm-12">
-                <label class="form-label" for="input-id">ID</label>
+                <label class="form-label" for="input-id" style="margin-top: 1rem">ID</label>
               </div>
-              <div class="column col-9 col-sm-12">
+              <div class="column col-9 col-sm-12" style="margin-top: 1rem">
                 <input class="form-input constr-field" type="text" v-model="insighio_id" @paste="fillClipboardData" />
               </div>
-              <br />
-              <br />
-              <div class="column col-3 col-sm-12">
+              <div class="column col-3 col-sm-12" style="margin-top: 1rem">
                 <label class="form-label" for="input-key">KEY</label>
               </div>
-              <div class="column col-9 col-sm-12">
+              <div class="column col-9 col-sm-12" style="margin-top: 1rem">
                 <input class="form-input constr-field" type="text" v-model="insighio_key" @paste="fillClipboardData" />
               </div>
-              <br />
-              <br />
-              <div class="column col-3 col-sm-12">
+              <div class="column col-3 col-sm-12" style="margin-top: 1rem">
                 <label class="form-label" for="input-channel">Data Channel</label>
               </div>
-              <div class="column col-9 col-sm-12">
+              <div class="column col-9 col-sm-12" style="margin-top: 1rem">
                 <input
                   class="form-input constr-field"
                   type="text"
@@ -35,12 +29,10 @@
                   @paste="fillClipboardData"
                 />
               </div>
-              <br />
-              <br />
-              <div class="column col-3 col-sm-12">
+              <div class="column col-3 col-sm-12" style="margin-top: 1rem">
                 <label class="form-label" for="input-controlChannel">Control Channel</label>
               </div>
-              <div class="column col-9 col-sm-12">
+              <div class="column col-9 col-sm-12" style="margin-top: 1rem">
                 <input
                   class="form-input constr-field"
                   type="text"
@@ -48,11 +40,7 @@
                   @paste="fillClipboardData"
                 />
               </div>
-              <br />
-              <br />
-              <br />
-              <SDivider label="Secondary Transmission method" />
-              <br />
+              <SDivider label="Secondary Transmission method" style="margin-top: 1.5rem; margin-bottom: 0.5rem" />
               <SSwitch
                 label="Enable Secondary Measurement Transmission (MQTT)"
                 v-model:value="enable_secondary_measurement_transmission"
@@ -65,45 +53,30 @@
                     v-model:value="secondary_measurement_transmission_info.mqtt_url"
                     placeholder="mqtt.example.com"
                   />
-                  <br />
-                  <br />
                   <SInput
                     label="MQTT Port"
                     v-model:value="secondary_measurement_transmission_info.mqtt_port"
                     inputType="number"
                     placeholder="1883"
                   />
-                  <br />
-                  <br />
                   <SInput label="MQTT Username" v-model:value="secondary_measurement_transmission_info.mqtt_username" />
-                  <br />
-                  <br />
                   <SInput label="MQTT Password" v-model:value="secondary_measurement_transmission_info.mqtt_password" />
-                  <br />
-                  <br />
 
                   <SInput
                     label="MQTT Topic"
                     v-model:value="secondary_measurement_transmission_info.mqtt_topic"
                     placeholder="device/data"
                   />
-                  <br />
-                  <br />
                   <SSelect
                     label="Package Format"
                     v-model:value="secondary_measurement_transmission_info.format"
                     :valueOptions="package_format_options"
                   />
-                  <br />
-                  <br />
 
                   <SSwitch
                     label="Append MAC address to topic"
                     v-model:value="secondary_measurement_transmission_info.append_mac_to_topic"
                   />
-
-                  <br />
-                  <br />
                 </div>
               </div>
             </div>

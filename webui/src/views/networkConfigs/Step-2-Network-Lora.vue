@@ -1,6 +1,5 @@
 <template>
-  <div class="form-group">
-    <br />
+  <div class="form-group" style="padding-top: 1rem">
     <div class="columns">
       <SDivider label="Connection Configuration" />
 

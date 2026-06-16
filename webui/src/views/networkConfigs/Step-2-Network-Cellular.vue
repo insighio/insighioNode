@@ -1,6 +1,5 @@
 <template>
-  <div class="form-group">
-    <br />
+  <div class="form-group" style="padding-top: 1rem">
     <div class="columns">
       <SDivider label="Connection Configuration" />
 
@@ -32,7 +31,7 @@
           :colsInput="9"
         />
 
-        <div class="column col-12"><br /></div>
+        <div class="column col-12" style="margin-top: 1rem"></div>
         <!-- Network Discovery Section -->
         <div class="column col-12" v-if="cell_mcc_mnc_enabled">
           <button class="btn btn-primary" :disabled="discoverLoading" type="button" @click="discoverNetworks()">
@@ -46,7 +45,7 @@
             <!--span style="margin-left: 5px; font-size: 0.9rem">{{ discoverProgress }} / 200s</span-->
           </div>
         </div>
-        <div class="column col-12"><br /></div>
+        <div class="column col-12" style="margin-top: 1rem"></div>
 
         <!-- Networks Table -->
         <div class="column col-12" v-if="discoveredNetworks.length > 0">
@@ -125,7 +124,7 @@
         <button class="btn btn-primary" :disabled="localLoading" type="button" @click="updateModemInfo()">Test</button>
         <div v-show="localLoading" class="loading loading-lg" style="margin-left: 5px"></div>
       </div>
-      <div class="column col-12"><br /></div>
+      <div class="column col-12" style="margin-top: 1rem"></div>
 
       <div class="column col-12">
         <div v-if="modemInfo.updated" class="card" style="padding: 0.8rem">

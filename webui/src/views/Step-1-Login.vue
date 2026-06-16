@@ -1,8 +1,6 @@
 <template>
-  <div class="panel-body">
-    <br />
+  <div class="panel-body" style="padding-top: 1rem">
     <hr />
-    <br />
     <div class="container">
       <div class="columns flex-centered">
         <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
@@ -23,15 +21,12 @@
               v-model="password"
               @keyup.enter="checkPassword()"
             />
-            <br />
-            <div class="flex-centered">
+            <div class="flex-centered" style="margin-top: 1rem">
               <button class="btn btn-primary constr-field" @click="checkPassword()" :disabled="isLoggingIn">
                 <span v-if="isLoggingIn">Logging in...</span>
                 <span v-else>Login</span>
               </button>
             </div>
-            <br />
-            <br />
           </div>
         </div>
       </div>

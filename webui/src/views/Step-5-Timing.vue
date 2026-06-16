@@ -1,9 +1,7 @@
 <template>
-  <div class="panel-body">
-    <br />
+  <div class="panel-body" style="padding-top: 1rem">
     <div class="text-center">Timing:</div>
-    <br />
-    <div class="container grid-lg">
+    <div class="container grid-lg" style="margin-top: 1rem">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <ul class="tab tab-block">
@@ -14,13 +12,9 @@
               <a class="pointer">Time Scheduled</a>
             </li>
           </ul>
-          <div v-if="timing_type === 'periodic'" class="tabcontent">
-            <br />
-            <br />
+          <div v-if="timing_type === 'periodic'" class="tabcontent" style="margin-top: 1rem">
             <div class="columns flex-centered">
               <SInput label="Sleep Period (s)" v-model:value="timing_period" @update:value="sleepPeriodUpdated" />
-              <br />
-              <br />
               <SSwitch
                 label="Light sleep ON"
                 v-model:value="timing_light_sleep_on"
@@ -53,13 +47,9 @@
               <div class="column col-5 col-mr-auto"></div>
             </div>
           </div>
-          <div v-if="timing_type === 'scheduled'" class="tabcontent">
-            <br />
-            <br />
+          <div v-if="timing_type === 'scheduled'" class="tabcontent" style="margin-top: 1rem">
             Run two times in a day, at the timestamps defined below:
-            <br />
-            <br />
-            <div class="columns flex-centered">
+            <div class="columns flex-centered" style="margin-top: 1rem">
               <div class="column col-1 col-sm-12">
                 <label class="form-label" for="input-scheduled-time-a">A:</label>
               </div>
@@ -75,8 +65,7 @@
               <div class="column col-6 col-mr-auto"></div>
             </div>
           </div>
-          <div>
-            <br />
+          <div style="margin-top: 1rem">
             <hr />
             <div class="columns flex-centered">
               <div class="columns col-12">
@@ -86,8 +75,7 @@
                   @update:value="batchUploadStatusChanged"
                 />
               </div>
-              <div class="column col-12" v-show="timing_batch_enabled">
-                <br />
+              <div class="column col-12" v-show="timing_batch_enabled" style="margin-top: 1rem">
                 <div class="columns">
                   <div class="column col-1 col-mr-auto"></div>
                   <SInput
@@ -102,8 +90,6 @@
                 </div>
               </div>
             </div>
-            <br />
-            <br />
           </div>
 
           <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
