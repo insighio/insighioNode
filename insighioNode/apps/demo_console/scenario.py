@@ -162,7 +162,7 @@ def executeMeasureAndUploadLoop():
             SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND,
         )
 
-        (buffered_upload_enabled, rtc_clock_ok) = (  # execute_connection_procedure,
+        buffered_upload_enabled, rtc_clock_ok = (  # execute_connection_procedure,
             determine_message_buffering_and_network_connection_necessity()
         )
         logging.debug("buffered_upload_enabled: {}, rtc_clock_ok: {}".format(buffered_upload_enabled, rtc_clock_ok))
@@ -376,10 +376,6 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
         if is_connected:
             device_info.set_led_color("green")
 
-            # create packet
-
-            # message_sent = network.send_message(cfg, network.create_message(cfg.get("device_id"), measurements))
-            # logging.info("measurement sent: {}".format(message_sent))
             message_sent = message_buffer.parse_stored_measurements_and_upload(network)
 
             if cfg.get("_CHECK_FOR_OTA"):  # and (not light_sleep_on or (light_sleep_on and is_first_run)):
@@ -398,13 +394,6 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
 
     if selected_network == "cellular":
         network.prepareForGPS()
-
-    # if not message_sent:
-    #     if cfg.get("_STORE_MEASUREMENT_IF_FAILED_CONNECTION"):
-    #         logging.info("Message transmission failed, storing for later")
-    #         scenario_utils.storeMeasurement(measurements, True)
-    #     else:
-    #         logging.info("Message transmission failed, ignoring message")
 
     # disconnect from network
     if not light_sleep_on or not is_connected:
@@ -448,7 +437,7 @@ def executeDeviceStatisticsUpload(cfg, network):
         logging.error("no srcInfo file found")
 
     stats["hw_version"] = device_info.get_hw_module_version()
-    (major, minor, patch, commit) = device_info.get_firmware_version()
+    major, minor, patch, commit = device_info.get_firmware_version()
     stats["fw_v_major"] = major
     stats["fw_v_minor"] = minor
     stats["fw_v_patch"] = patch
@@ -499,6 +488,9 @@ def executeDeviceConfigurationUpload(cfg, network):
         if message_sent:
             utils.deleteFlagFile("/ota_applied_flag")
             utils.deleteFile("/ota_applied_flag")
+        else:
+            # if the statistics upload failed, we will try again next time, so we keep the flag file
+            utils.writeToFlagFile("/ota_applied_flag", "1")
 
 
 def notifyConnected(network):
