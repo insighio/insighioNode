@@ -44,6 +44,8 @@ def set_value(measurements, key, value, unit=None):
         if custom_unit is not None:
             record["unit"] = custom_unit
         measurements[get_meas_name(key)] = record
+        return True
+    return False
 
 
 def set_value_int(measurements, key, value, unit=None):
@@ -52,12 +54,19 @@ def set_value_int(measurements, key, value, unit=None):
             set_value(measurements, key, round(float(value)), unit)
         except Exception as e:
             logging.exception(e, "set_value_int error: [{}]".format(value))
+            return False
+        return True
+    return None
 
 
 def set_value_float(measurements, key, value, unit=None, precision=3, multiplier=1):
     if value is not None:
         if isinstance(value, str):
-            value = float(value) * multiplier
+            try:
+                value = float(value) * multiplier
+            except Exception as e:
+                logging.exception(e, "set_value_float error: [{}]".format(value))
+                return False
         elif isinstance(value, int) or isinstance(value, float):
             value = value * multiplier
 
@@ -70,6 +79,9 @@ def set_value_float(measurements, key, value, unit=None, precision=3, multiplier
             )
         except Exception as e:
             logging.exception(e, "set_value_float error: [{}]".format(value))
+
+        return True
+    return None
 
 
 def _has(obj, key):
