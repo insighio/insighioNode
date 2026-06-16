@@ -190,8 +190,12 @@ def parse_generic_sdi12(address, responseArray, measurements, prefix="gen", unit
         variable_prefix = prefix + "_" + address + location_info + postfix
 
         for i, val in enumerate(responseArray):
+            status = None
             try:
-                set_value_float(measurements, variable_prefix + "_" + str(i), val, unit)
+                status = set_value_float(measurements, variable_prefix + "_" + str(i), val, unit)
+
+                if status == False:
+                    set_value(measurements, variable_prefix + "_" + str(i), val, unit)
             except Exception as e:
                 logging.exception(e, "Error processing generic sdi responseArray: [{}]".format(val))
     except Exception as e:
