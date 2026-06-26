@@ -37,7 +37,7 @@
         <label class="form-label"></label>
       </div>
       <div class="column col-8 col-sm-12">
-        <button class="btn btn-primary" @click="startCalibration()" style="margin-left: 30px">Calibrate</button>
+        <button class="btn btn-primary ml-30" @click="startCalibration()">Calibrate</button>
       </div>
     </div>
     <SSwitch
@@ -157,46 +157,15 @@
               >
             </p>
             <div class="empty-action">
-              <button
-                class="btn btn-primary"
-                :disabled="isLoading"
-                style="margin-top: 5px; margin-right: 5px"
-                @click="recalibrate()"
-              >
+              <button class="btn btn-primary btn-spaced" :disabled="isLoading" @click="recalibrate()">
                 Recalibrate
               </button>
-              <button
-                class="btn btn-primary"
-                :disabled="isLoading"
-                style="margin-top: 5px; margin-right: 5px"
-                @click="requestMeasure()"
-              >
+              <button class="btn btn-primary btn-spaced" :disabled="isLoading" @click="requestMeasure()">
                 Measure
               </button>
-              <button
-                class="btn btn-primary"
-                :disabled="isLoading"
-                style="margin-top: 5px; margin-right: 5px"
-                @click="requestTare()"
-              >
-                Tare
-              </button>
-              <button
-                class="btn btn-primary"
-                :disabled="isLoading"
-                style="margin-top: 5px; margin-right: 5px"
-                @click="goToPreviousStep()"
-              >
-                Back
-              </button>
-              <button
-                class="btn btn-primary"
-                :disabled="isLoading"
-                style="margin-top: 5px; margin-right: 5px"
-                @click="saveCalibration()"
-              >
-                Save
-              </button>
+              <button class="btn btn-primary btn-spaced" :disabled="isLoading" @click="requestTare()">Tare</button>
+              <button class="btn btn-primary btn-spaced" :disabled="isLoading" @click="goToPreviousStep()">Back</button>
+              <button class="btn btn-primary btn-spaced" :disabled="isLoading" @click="saveCalibration()">Save</button>
             </div>
           </div>
         </div>

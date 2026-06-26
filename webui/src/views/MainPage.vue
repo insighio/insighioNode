@@ -58,7 +58,7 @@
 
     <div class="panel panel-custom">
       <div class="columns">
-        <div class="panel-nav col-12 hide-sm" style="padding-top: 1rem">
+        <div class="panel-nav col-12 hide-sm pt-1">
           <div class="toast" v-if="showToast">{{ toastMessage }}</div>
 
           <ul class="step">
@@ -258,7 +258,7 @@
 </template>
 
 <script>
-import "@/assets/css/spectre.min.css"
+import "@/assets/css/style.css"
 import Step1Login from "@/views/Step-1-Login.vue"
 import Step2Network from "@/views/Step-2-Network.vue"
 import Step3APIKeys from "@/views/Step-3-APIKeys.vue"

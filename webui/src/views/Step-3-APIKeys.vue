@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-body" style="padding-top: 1rem">
+  <div class="panel-body pt-1">
     <div class="text-center">Set API keys that were generated during device creation in console.insigh.io.</div>
     <div class="container grid-lg">
       <div class="columns flex-centered">
@@ -7,21 +7,21 @@
           <div class="form-group">
             <div class="columns">
               <div class="column col-3 col-sm-12">
-                <label class="form-label" for="input-id" style="margin-top: 1rem">ID</label>
+                <label class="form-label mt-1" for="input-id">ID</label>
               </div>
-              <div class="column col-9 col-sm-12" style="margin-top: 1rem">
+              <div class="column col-9 col-sm-12 mt-1">
                 <input class="form-input constr-field" type="text" v-model="insighio_id" @paste="fillClipboardData" />
               </div>
-              <div class="column col-3 col-sm-12" style="margin-top: 1rem">
+              <div class="column col-3 col-sm-12 mt-1">
                 <label class="form-label" for="input-key">KEY</label>
               </div>
-              <div class="column col-9 col-sm-12" style="margin-top: 1rem">
+              <div class="column col-9 col-sm-12 mt-1">
                 <input class="form-input constr-field" type="text" v-model="insighio_key" @paste="fillClipboardData" />
               </div>
-              <div class="column col-3 col-sm-12" style="margin-top: 1rem">
+              <div class="column col-3 col-sm-12 mt-1">
                 <label class="form-label" for="input-channel">Data Channel</label>
               </div>
-              <div class="column col-9 col-sm-12" style="margin-top: 1rem">
+              <div class="column col-9 col-sm-12 mt-1">
                 <input
                   class="form-input constr-field"
                   type="text"
@@ -29,10 +29,10 @@
                   @paste="fillClipboardData"
                 />
               </div>
-              <div class="column col-3 col-sm-12" style="margin-top: 1rem">
+              <div class="column col-3 col-sm-12 mt-1">
                 <label class="form-label" for="input-controlChannel">Control Channel</label>
               </div>
-              <div class="column col-9 col-sm-12" style="margin-top: 1rem">
+              <div class="column col-9 col-sm-12 mt-1">
                 <input
                   class="form-input constr-field"
                   type="text"

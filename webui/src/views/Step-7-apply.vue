@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-body" style="padding-top: 1rem">
+  <div class="panel-body pt-1">
     <div v-if="isLoading" class="loading loading-lg"></div>
     <div class="empty">
       <div v-show="!isLoading" class="empty-icon">

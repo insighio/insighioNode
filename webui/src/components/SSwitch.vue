@@ -11,7 +11,7 @@
       </div>
       <div :class="'column col-' + colsInput + ' col-sm-12'">
         <label class="form-switch">
-          <input :disabled="disabled" type="checkbox" v-model="internalValue" />
+          <input :id="label" :disabled="disabled" type="checkbox" v-model="internalValue" />
           <i class="form-icon"></i>
         </label>
       </div>

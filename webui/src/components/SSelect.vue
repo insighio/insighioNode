@@ -10,7 +10,7 @@
         </label>
       </div>
       <div :class="'column col-' + colsInput + ' col-sm-12'">
-        <select :disabled="disabled" class="form-select" v-model="internalValue">
+        <select :id="label" :disabled="disabled" class="form-select" v-model="internalValue">
           <option v-for="opt in valueOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
       </div>

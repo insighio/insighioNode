@@ -11,7 +11,7 @@
       </div>
       <div :class="'column ol-' + colsInput + ' col-sm-12'">
         <label v-for="opt in valueOptions" :key="opt.value" class="form-radio">
-          <input :disabled="disabled" type="radio" :value="opt.value" v-model="internalValue" />
+          <input :id="label" :disabled="disabled" type="radio" :value="opt.value" v-model="internalValue" />
           <i class="form-icon"></i> {{ opt.label }}
         </label>
       </div>

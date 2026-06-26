@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-body" style="padding-top: 1rem">
+  <div class="panel-body pt-1">
     <hr />
     <div class="container">
       <div class="columns flex-centered">
@@ -21,7 +21,7 @@
               v-model="password"
               @keyup.enter="checkPassword()"
             />
-            <div class="flex-centered" style="margin-top: 1rem">
+            <div class="flex-centered mt-1">
               <button class="btn btn-primary constr-field" @click="checkPassword()" :disabled="isLoggingIn">
                 <span v-if="isLoggingIn">Logging in...</span>
                 <span v-else>Login</span>
@@ -35,8 +35,6 @@
 </template>
 
 <script>
-import "@/assets/css/spectre.min.css"
-import "@/assets/css/style.css"
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import { fetchInternal } from "@/js/utils.js"
 

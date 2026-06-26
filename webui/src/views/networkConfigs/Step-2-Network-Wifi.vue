@@ -1,5 +1,5 @@
 <template>
-  <div class="form-group" style="padding-top: 1rem">
+  <div class="form-group pt-1">
     <div class="columns">
       <SDivider label="Connection Configuration" />
       <SInput label="SSID" v-model:value="wifi_ssid" @update:value="wifi_ssid = $event" :colsLabel="3" :colsInput="9" />
