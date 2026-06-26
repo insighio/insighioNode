@@ -1,27 +1,29 @@
 <template>
-  <div class="panel-body" style="padding-top: 1rem">
+  <div class="panel-body ui-pt-1">
     <hr />
     <div class="container">
       <div class="columns flex-centered">
         <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
           <div class="form-group">
-            <label class="form-label" for="input-example-1">Username</label>
+            <label class="form-label" for="input-username">Username</label>
             <input
+              id="input-username"
               class="form-input constr-field"
               type="text"
               placeholder="Username"
               v-model="username"
               @keyup.enter="checkPassword()"
             />
-            <label class="form-label" for="input-example-1">Password</label>
+            <label class="form-label" for="input-password">Password</label>
             <input
+              id="input-password"
               class="form-input constr-field"
               type="password"
               placeholder="Password"
               v-model="password"
               @keyup.enter="checkPassword()"
             />
-            <div class="flex-centered" style="margin-top: 1rem">
+            <div class="flex-centered ui-mt-1 ui-mb-1">
               <button class="btn btn-primary constr-field" @click="checkPassword()" :disabled="isLoggingIn">
                 <span v-if="isLoggingIn">Logging in...</span>
                 <span v-else>Login</span>
@@ -35,8 +37,6 @@
 </template>
 
 <script>
-import "@/assets/css/spectre.min.css"
-import "@/assets/css/style.css"
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import { fetchInternal } from "@/js/utils.js"
 

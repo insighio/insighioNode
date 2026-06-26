@@ -1,8 +1,8 @@
 <template>
-  <div class="panel-body" style="padding-top: 1rem">
+  <div class="panel-body ui-mt-1">
     <div class="text-center">Select network technology to be used:</div>
-    <div v-show="localLoading" class="loading loading-lg" style="margin-top: 1rem"></div>
-    <div class="container grid-lg">
+    <div v-show="localLoading" class="loading loading-lg ui-mt-1"></div>
+    <div class="container grid-lg ui-mt-1">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="btn-group btn-group-block img-center">
@@ -44,7 +44,7 @@
           <NetworkSatAstro ref="satelliteComponent" />
         </div>
       </div>
-      <div class="columns" style="margin-top: 1rem">
+      <div class="columns ui-mt-1">
         <WebuiFooter :showBackButton="false" @savePressed="handleSave" @backPressed="handleBack" />
       </div>
     </div>
@@ -52,9 +52,6 @@
 </template>
 
 <script>
-import "@/assets/css/spectre.min.css"
-import "@/assets/css/style.css"
-
 import NetworkWifi from "@/views/networkConfigs/Step-2-Network-Wifi.vue"
 import NetworkCellular from "@/views/networkConfigs/Step-2-Network-Cellular.vue"
 import NetworkLoRa from "@/views/networkConfigs/Step-2-Network-Lora.vue"

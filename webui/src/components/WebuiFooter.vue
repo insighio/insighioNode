@@ -1,5 +1,5 @@
 <template>
-  <div class="column col-12" style="margin-top: 2rem; margin-bottom: 3rem">
+  <div class="column col-12 ui-mb-3 ui-mt-2">
     <button v-if="showSaveButton" class="btn btn-primary float-right" @click="savePressed()" style="margin-left: 30px">
       Save
     </button>

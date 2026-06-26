@@ -1,7 +1,7 @@
 <script>
-import "@/assets/css/spectre-icons.min.css"
-import "@/assets/css/spectre.min.css"
-import "@/assets/css/style.css"
+// import "@/assets/css/spectre-icons.min.css"
+// import "@/assets/css/spectre.min.css"
+// import "@/assets/css/style.css"
 
 export default {
   data() {

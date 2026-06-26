@@ -19,12 +19,12 @@
           <tr v-for="(row, index) in sdi12Rows" :key="index">
             <td>{{ "SDI-12 n." + (index + 1) }}</td>
             <td>
-              <select class="form-select" v-model="row.sensorId">
+              <select :id="`sdi12-sensorId-${index}`" class="form-select" v-model="row.sensorId">
                 <option v-for="opt in sdi12SensorIdOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </td>
             <td>
-              <select class="form-select" v-model="row.boardLocation">
+              <select :id="`sdi12-boardLocation-${index}`" class="form-select" v-model="row.boardLocation">
                 <option v-for="opt in sdi12LocationOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </td>

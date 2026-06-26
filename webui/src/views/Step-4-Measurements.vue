@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-body" style="padding-top: 1rem">
+  <div class="panel-body ui-pt-1">
     <!--div class="loading loading-lg"></div-->
     <div class="container grid-lg">
       <div class="columns flex-centered">
@@ -52,10 +52,22 @@
                         <tbody>
                           <tr v-for="(pair, index) in keyValuePairs" :key="index">
                             <td>
-                              <input type="text" v-model="pair.key" placeholder="key name" style="width: 100%" />
+                              <input
+                                type="text"
+                                :id="`key-${index}`"
+                                v-model="pair.key"
+                                placeholder="key name"
+                                style="width: 100%"
+                              />
                             </td>
                             <td>
-                              <input type="text" v-model="pair.value" placeholder="key value" style="width: 100%" />
+                              <input
+                                type="text"
+                                :id="`value-${index}`"
+                                v-model="pair.value"
+                                placeholder="key value"
+                                style="width: 100%"
+                              />
                             </td>
                             <td>
                               <button class="btn btn-primary" @click="keyValuePairs.splice(index, 1)">
@@ -142,6 +154,8 @@ import ShieldDigitalAnalog from "./shields/ShieldDigitalAnalog.vue"
 import ShieldAdvind from "./shields/ShieldAdvind.vue"
 import ShieldEnviro from "./shields/ShieldEnviro.vue"
 import CustomNamingDialog from "@/views/aux/CustomNamingDialog.vue"
+
+import "@/assets/css/special-tabs.css"
 
 export default {
   name: "Step4Measurements",

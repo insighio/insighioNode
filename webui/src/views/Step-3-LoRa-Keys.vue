@@ -1,7 +1,7 @@
 <template>
-  <div class="panel-body" style="padding-top: 1rem">
+  <div class="panel-body ui-pt-1">
     <div class="text-center">Set keys provided by the LoRa Server.</div>
-    <div class="container grid-lg" style="margin-top: 1rem">
+    <div class="container grid-lg ui-mt-1">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="form-group">

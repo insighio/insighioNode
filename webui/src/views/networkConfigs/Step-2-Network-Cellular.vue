@@ -1,5 +1,5 @@
 <template>
-  <div class="form-group" style="padding-top: 1rem">
+  <div class="form-group ui-pt-1">
     <div class="columns">
       <SDivider label="Connection Configuration" />
 
@@ -31,25 +31,22 @@
           :colsInput="9"
         />
 
-        <div class="column col-12" style="margin-top: 1rem"></div>
+        <div class="column col-12 ui-mt-1"></div>
         <!-- Network Discovery Section -->
         <div class="column col-12" v-if="cell_mcc_mnc_enabled">
           <button class="btn btn-primary" :disabled="discoverLoading" type="button" @click="discoverNetworks()">
             Discover Networks
           </button>
-          <div
-            v-show="discoverLoading"
-            style="margin-left: 5px; display: inline-block; width: 200px; vertical-align: middle"
-          >
+          <div v-show="discoverLoading" class="ui-loading-inline ui-ml-5">
             <progress class="progress" :value="discoverProgress" max="200"></progress>
             <!--span style="margin-left: 5px; font-size: 0.9rem">{{ discoverProgress }} / 200s</span-->
           </div>
         </div>
-        <div class="column col-12" style="margin-top: 1rem"></div>
+        <div class="column col-12 ui-mt-1"></div>
 
         <!-- Networks Table -->
         <div class="column col-12" v-if="discoveredNetworks.length > 0">
-          <div class="card" style="padding: 0.8rem; margin-top: 1rem">
+          <div class="card ui-card-spaced">
             <div class="card-header">
               <div class="card-title h5">Available Networks</div>
             </div>
@@ -122,20 +119,20 @@
       <div class="column col-12 text-normal">
         Modem Connection:
         <button class="btn btn-primary" :disabled="localLoading" type="button" @click="updateModemInfo()">Test</button>
-        <div v-show="localLoading" class="loading loading-lg" style="margin-left: 5px"></div>
+        <div v-show="localLoading" class="loading loading-lg ui-ml-5"></div>
       </div>
-      <div class="column col-12" style="margin-top: 1rem"></div>
+      <div class="column col-12 ui-mt-1"></div>
 
       <div class="column col-12">
-        <div v-if="modemInfo.updated" class="card" style="padding: 0.8rem">
+        <div v-if="modemInfo.updated" class="card ui-p-08">
           <div class="card-header">
             <div class="card-title h5">Modem Information</div>
           </div>
           <div class="card-body" style="padding: 0.4rem 0">
             <!-- Connection Status Section -->
-            <div style="margin-bottom: 1rem">
-              <div class="text-bold text-primary" style="margin-bottom: 0.5rem">Connection Status</div>
-              <table class="table" style="margin-bottom: 0">
+            <div class="ui-mb-1">
+              <div class="text-bold text-primary ui-mb-05">Connection Status</div>
+              <table class="table ui-mb-0">
                 <tbody>
                   <tr>
                     <td style="width: 40%; font-weight: 500">Status</td>
@@ -169,9 +166,9 @@
             </div>
 
             <!-- Signal Quality Section -->
-            <div style="margin-bottom: 1rem">
-              <div class="text-bold text-primary" style="margin-bottom: 0.5rem">Signal Quality</div>
-              <table class="table" style="margin-bottom: 0">
+            <div class="ui-mb-1">
+              <div class="text-bold text-primary ui-mb-05">Signal Quality</div>
+              <table class="table ui-mb-0">
                 <tbody>
                   <tr>
                     <td style="width: 40%; font-weight: 500">Quality</td>
@@ -188,7 +185,7 @@
                     <td style="font-weight: 500">RSSI</td>
                     <td>
                       <div>{{ modemInfo.rssi }} dBm</div>
-                      <div class="bar" style="height: 8px; margin-top: 4px">
+                      <div class="bar ui-bar-spaced">
                         <div
                           class="bar-item"
                           :style="{
@@ -204,7 +201,7 @@
                     <td>
                       <div v-if="modemInfo.technology !== 'GSM'">
                         <div>{{ modemInfo.rsrp }} dBm</div>
-                        <div class="bar" style="height: 8px; margin-top: 4px">
+                        <div class="bar ui-bar-spaced">
                           <div
                             class="bar-item"
                             :style="{
@@ -222,7 +219,7 @@
                     <td>
                       <div v-if="modemInfo.technology !== 'GSM'">
                         <div>{{ modemInfo.rsrq }} dB</div>
-                        <div class="bar" style="height: 8px; margin-top: 4px">
+                        <div class="bar ui-bar-spaced">
                           <div
                             class="bar-item"
                             :style="{
@@ -241,8 +238,8 @@
 
             <!-- Connection Timing Section -->
             <div>
-              <div class="text-bold text-primary" style="margin-bottom: 0.5rem">Connection Timing</div>
-              <table class="table" style="margin-bottom: 0">
+              <div class="text-bold text-primary ui-mb-05">Connection Timing</div>
+              <table class="table ui-mb-0">
                 <tbody>
                   <tr>
                     <td style="width: 40%; font-weight: 500">Activation</td>

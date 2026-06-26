@@ -1,6 +1,6 @@
 <template>
-  <div class="container" style="margin-bottom: 1rem">
-    <div :class="'columns col-' + colsSum" style="padding-right: 0px; padding-left: 0px">
+  <div class="container ui-mb-1">
+    <div :class="'columns col-' + colsSum + ' ui-pr-0 ui-pl-0'">
       <div :class="'column col-' + colsLabel + ' col-sm-12'">
         <label class="form-label">
           {{ label }}
@@ -11,7 +11,7 @@
       </div>
       <div :class="'column col-' + colsInput + ' col-sm-12'">
         <input
-          id="inputField"
+          :id="label"
           :disabled="disabled"
           :type="inputType"
           class="form-input constr-field"
