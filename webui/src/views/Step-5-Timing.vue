@@ -1,7 +1,7 @@
 <template>
-  <div class="panel-body pt-1">
+  <div class="panel-body ui-pt-1">
     <div class="text-center">Timing:</div>
-    <div class="container grid-lg mt-1">
+    <div class="container grid-lg ui-mt-1">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <ul class="tab tab-block">
@@ -12,7 +12,7 @@
               <a class="pointer">Time Scheduled</a>
             </li>
           </ul>
-          <div v-if="timing_type === 'periodic'" class="tabcontent mt-1">
+          <div v-if="timing_type === 'periodic'" class="tabcontent ui-mt-1">
             <div class="columns flex-centered">
               <SInput label="Sleep Period (s)" v-model:value="timing_period" @update:value="sleepPeriodUpdated" />
               <SSwitch
@@ -47,9 +47,9 @@
               <div class="column col-5 col-mr-auto"></div>
             </div>
           </div>
-          <div v-if="timing_type === 'scheduled'" class="tabcontent mt-1">
+          <div v-if="timing_type === 'scheduled'" class="tabcontent ui-mt-1">
             Run two times in a day, at the timestamps defined below:
-            <div class="columns flex-centered mt-1">
+            <div class="columns flex-centered ui-mt-1">
               <div class="column col-1 col-sm-12">
                 <label class="form-label" for="input-scheduled-time-a">A:</label>
               </div>
@@ -65,7 +65,7 @@
               <div class="column col-6 col-mr-auto"></div>
             </div>
           </div>
-          <div class="mt-1">
+          <div class="ui-mt-1">
             <hr />
             <div class="columns flex-centered">
               <div class="columns col-12">
@@ -75,7 +75,7 @@
                   @update:value="batchUploadStatusChanged"
                 />
               </div>
-              <div class="column col-12 mt-1" v-show="timing_batch_enabled">
+              <div class="column col-12 ui-mt-1" v-show="timing_batch_enabled">
                 <div class="columns">
                   <div class="column col-1 col-mr-auto"></div>
                   <SInput

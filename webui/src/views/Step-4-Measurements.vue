@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-body pt-1">
+  <div class="panel-body ui-pt-1">
     <!--div class="loading loading-lg"></div-->
     <div class="container grid-lg">
       <div class="columns flex-centered">

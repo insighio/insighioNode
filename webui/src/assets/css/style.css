@@ -98,91 +98,91 @@ a:focus {
 }
 
 /* Utility spacing classes - reduces need for inline styles */
-.mb-0 {
+.ui-mb-0 {
   margin-bottom: 0;
 }
-.mb-05 {
+.ui-mb-05 {
   margin-bottom: 0.5rem;
 }
-.mb-1 {
+.ui-mb-1 {
   margin-bottom: 1rem;
 }
-.mb-2 {
+.ui-mb-2 {
   margin-bottom: 2rem;
 }
-.mb-3 {
+.ui-mb-3 {
   margin-bottom: 3rem;
 }
-.mt-1 {
+.ui-mt-1 {
   margin-top: 1rem;
 }
-.mt-1-5 {
+.ui-mt-1-5 {
   margin-top: 1.5rem;
 }
-.mt-2 {
+.ui-mt-2 {
   margin-top: 2rem;
 }
-.ml-5 {
+.ui-ml-5 {
   margin-left: 5px;
 }
-.ml-30 {
+.ui-ml-30 {
   margin-left: 30px;
 }
-.mr-5 {
+.ui-mr-5 {
   margin-right: 5px;
 }
-.mr-10 {
+.ui-mr-10 {
   margin-right: 10px;
 }
-.pt-2 {
+.ui-pt-2 {
   padding-top: 2rem;
 }
-.pt-1 {
+.ui-pt-1 {
   padding-top: 1rem;
 }
-.p-08 {
+.ui-p-08 {
   padding: 0.8rem;
 }
 
-.pr-0 {
+.ui-pr-0 {
   padding-right: 0;
 }
-.pl-0 {
+.ui-pl-0 {
   padding-left: 0;
 }
 
 /* Combined utilities for common patterns */
-.mt-05 {
+.ui-mt-05 {
   margin-top: 0.5rem;
 }
-.mt-4px {
+.ui-mt-4px {
   margin-top: 4px;
 }
-.mt-5px {
+.ui-mt-5px {
   margin-top: 5px;
 }
 
 /* Component-specific utilities */
-.card-padding {
+.ui-card-padding {
   padding: 0.8rem;
 }
-.card-spaced {
+.ui-card-spaced {
   padding: 0.8rem;
   margin-top: 1rem;
 }
-.bar-height {
+.ui-bar-height {
   height: 8px;
 }
-.bar-spaced {
+.ui-bar-spaced {
   height: 8px;
   margin-top: 4px;
 }
-.loading-inline {
+.ui-loading-inline {
   display: inline-block;
   width: 200px;
   vertical-align: middle;
 }
-.btn-spaced {
+.ui-btn-spaced {
   margin-top: 5px;
   margin-right: 5px;
 }

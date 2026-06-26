@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-body pt-1">
+  <div class="panel-body ui-pt-1">
     <div class="empty">
       <div class="empty-icon">
         <i class="icon icon-2x icon-download"></i>
@@ -14,7 +14,7 @@
         <button class="btn btn-primary" @click="requestGoNext()">Finish</button>
       </div>
 
-      <SDivider label="Key/Values" class="mt-1" />
+      <SDivider label="Key/Values" class="ui-mt-1" />
       <div class="columns" style="border-color: #c8c8c8">
         <div class="column col-6 col-sm-12">
           <table class="table">

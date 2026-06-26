@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-body pt-1">
+  <div class="panel-body ui-pt-1">
     <div class="text-center">Set API keys that were generated during device creation in console.insigh.io.</div>
     <div class="container grid-lg">
       <div class="columns flex-centered">
@@ -7,9 +7,9 @@
           <div class="form-group">
             <div class="columns">
               <div class="column col-3 col-sm-12">
-                <label class="form-label mt-1" for="input-id">ID</label>
+                <label class="form-label ui-mt-1" for="input-id">ID</label>
               </div>
-              <div class="column col-9 col-sm-12 mt-1">
+              <div class="column col-9 col-sm-12 ui-mt-1">
                 <input
                   id="input-id"
                   class="form-input constr-field"
@@ -18,10 +18,10 @@
                   @paste="fillClipboardData"
                 />
               </div>
-              <div class="column col-3 col-sm-12 mt-1">
+              <div class="column col-3 col-sm-12 ui-mt-1">
                 <label class="form-label" for="input-key">KEY</label>
               </div>
-              <div class="column col-9 col-sm-12 mt-1">
+              <div class="column col-9 col-sm-12 ui-mt-1">
                 <input
                   id="input-key"
                   class="form-input constr-field"
@@ -30,10 +30,10 @@
                   @paste="fillClipboardData"
                 />
               </div>
-              <div class="column col-3 col-sm-12 mt-1">
+              <div class="column col-3 col-sm-12 ui-mt-1">
                 <label class="form-label" for="input-channel">Data Channel</label>
               </div>
-              <div class="column col-9 col-sm-12 mt-1">
+              <div class="column col-9 col-sm-12 ui-mt-1">
                 <input
                   id="input-channel"
                   class="form-input constr-field"
@@ -42,10 +42,10 @@
                   @paste="fillClipboardData"
                 />
               </div>
-              <div class="column col-3 col-sm-12 mt-1">
+              <div class="column col-3 col-sm-12 ui-mt-1">
                 <label class="form-label" for="input-controlChannel">Control Channel</label>
               </div>
-              <div class="column col-9 col-sm-12 mt-1">
+              <div class="column col-9 col-sm-12 ui-mt-1">
                 <input
                   id="input-controlChannel"
                   class="form-input constr-field"

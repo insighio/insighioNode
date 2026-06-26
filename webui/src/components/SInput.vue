@@ -1,6 +1,6 @@
 <template>
-  <div class="container mb-1">
-    <div :class="'columns col-' + colsSum + ' pr-0 pl-0'">
+  <div class="container ui-mb-1">
+    <div :class="'columns col-' + colsSum + ' ui-pr-0 ui-pl-0'">
       <div :class="'column col-' + colsLabel + ' col-sm-12'">
         <label class="form-label">
           {{ label }}
