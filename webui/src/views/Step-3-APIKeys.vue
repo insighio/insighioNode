@@ -10,19 +10,32 @@
                 <label class="form-label mt-1" for="input-id">ID</label>
               </div>
               <div class="column col-9 col-sm-12 mt-1">
-                <input class="form-input constr-field" type="text" v-model="insighio_id" @paste="fillClipboardData" />
+                <input
+                  id="input-id"
+                  class="form-input constr-field"
+                  type="text"
+                  v-model="insighio_id"
+                  @paste="fillClipboardData"
+                />
               </div>
               <div class="column col-3 col-sm-12 mt-1">
                 <label class="form-label" for="input-key">KEY</label>
               </div>
               <div class="column col-9 col-sm-12 mt-1">
-                <input class="form-input constr-field" type="text" v-model="insighio_key" @paste="fillClipboardData" />
+                <input
+                  id="input-key"
+                  class="form-input constr-field"
+                  type="text"
+                  v-model="insighio_key"
+                  @paste="fillClipboardData"
+                />
               </div>
               <div class="column col-3 col-sm-12 mt-1">
                 <label class="form-label" for="input-channel">Data Channel</label>
               </div>
               <div class="column col-9 col-sm-12 mt-1">
                 <input
+                  id="input-channel"
                   class="form-input constr-field"
                   type="text"
                   v-model="insighio_channel"
@@ -34,6 +47,7 @@
               </div>
               <div class="column col-9 col-sm-12 mt-1">
                 <input
+                  id="input-controlChannel"
                   class="form-input constr-field"
                   type="text"
                   v-model="insighio_control_channel"

@@ -613,7 +613,7 @@ html:lang(ko) {
   opacity: 0.95;
 }
 .btn.btn-clear::before {
-  content: "✕";
+  content: "x";
 }
 .btn-group {
   display: inline-flex;
@@ -677,7 +677,7 @@ legend {
   appearance: none;
   background: #fff;
   background-image: none;
-  border: 0.05rem solid #bcc3ce;
+  border: 0.05rem solid #a3a9b2;
   border-radius: 0.1rem;
   color: #3b4351;
   display: block;
@@ -700,13 +700,13 @@ legend {
   box-shadow: 0 0 0 0.1rem rgba(87, 85, 217, 0.2);
 }
 .form-input::-moz-placeholder {
-  color: #bcc3ce;
+  color: #a3a9b2;
 }
 .form-input:-ms-input-placeholder {
-  color: #bcc3ce;
+  color: #a3a9b2;
 }
 .form-input::placeholder {
-  color: #bcc3ce;
+  color: #a3a9b2;
 }
 .form-input.input-sm {
   font-size: 0.7rem;
@@ -732,7 +732,7 @@ textarea.form-input.input-sm {
   height: auto;
 }
 .form-input-hint {
-  color: #bcc3ce;
+  color: #a3a9b2;
   font-size: 0.7rem;
   margin-top: 0.2rem;
 }
@@ -749,7 +749,7 @@ textarea.form-input.input-sm {
   -moz-appearance: none;
   appearance: none;
   background: #fff;
-  border: 0.05rem solid #bcc3ce;
+  border: 0.05rem solid #a3a9b2;
   border-radius: 0.1rem;
   color: inherit;
   font-size: 0.8rem;
@@ -853,7 +853,7 @@ textarea.form-input.input-sm {
 .form-checkbox .form-icon,
 .form-radio .form-icon,
 .form-switch .form-icon {
-  border: 0.05rem solid #bcc3ce;
+  border: 0.05rem solid #a3a9b2;
   cursor: pointer;
   display: inline-block;
   position: absolute;
@@ -938,7 +938,7 @@ textarea.form-input.input-sm {
   padding-left: 2rem;
 }
 .form-switch .form-icon {
-  background: #bcc3ce;
+  background: #a3a9b2;
   background-clip: padding-box;
   border-radius: 0.45rem;
   height: 0.9rem;
@@ -974,7 +974,7 @@ textarea.form-input.input-sm {
 }
 .input-group .input-group-addon {
   background: #f7f8f9;
-  border: 0.05rem solid #bcc3ce;
+  border: 0.05rem solid #a3a9b2;
   border-radius: 0.1rem;
   line-height: 1.2rem;
   padding: 0.25rem 0.4rem;
@@ -1195,7 +1195,7 @@ code {
   position: relative;
 }
 .code::before {
-  color: #bcc3ce;
+  color: #a3a9b2;
   content: attr(data-lang);
   font-size: 0.7rem;
   position: absolute;
@@ -1834,7 +1834,7 @@ summary.accordion-header::-webkit-details-marker {
   z-index: 2;
 }
 .avatar .avatar-presence {
-  background: #bcc3ce;
+  background: #a3a9b2;
   border-radius: 50%;
   box-shadow: 0 0 0 0.1rem #fff;
   height: 0.5em;
@@ -2419,7 +2419,7 @@ summary.accordion-header::-webkit-details-marker {
   background: #dadee4;
 }
 .step .step-item.active ~ .step-item a {
-  color: #bcc3ce;
+  color: #a3a9b2;
 }
 .step .step-item.active ~ .step-item a::before {
   background: #dadee4;
@@ -2686,7 +2686,7 @@ a.text-secondary:visited {
   color: #fafafe;
 }
 .text-gray {
-  color: #bcc3ce !important;
+  color: #a3a9b2 !important;
 }
 a.text-gray:focus,
 a.text-gray:hover {
@@ -2840,7 +2840,7 @@ a.text-error:visited {
 .divider-vert[data-content]::after,
 .divider[data-content]::after {
   background: #fff;
-  color: #bcc3ce;
+  color: #747a85;
   content: attr(data-content);
   display: inline-block;
   font-size: 0.7rem;

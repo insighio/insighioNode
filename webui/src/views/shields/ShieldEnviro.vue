@@ -35,19 +35,25 @@
           <tr v-for="(row, index) in sdi12Sensors" :key="index">
             <td>{{ "SDI-12 n." + (index + 1) }}</td>
             <td>
-              <select class="form-select" v-model="row.address">
+              <select :id="`sdi12-addr-${index}`" class="form-select" v-model="row.address">
                 <option v-for="opt in sdi12sensorAddressOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </option>
               </select>
             </td>
             <td>
-              <select class="form-select" v-model="row.measCmd">
+              <select :id="`sdi12-cmd-${index}`" class="form-select" v-model="row.measCmd">
                 <option v-for="opt in sdi12CommandOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </td>
             <td>
-              <input type="text" class="form-input" maxlength="5" v-model="row.measSubCmd" />
+              <input
+                :id="`sdi12-subcmd-${index}`"
+                type="text"
+                class="form-input"
+                maxlength="5"
+                v-model="row.measSubCmd"
+              />
             </td>
             <td>
               <button class="btn btn-primary" @click="sdi12Sensors.splice(index, 1)">
