@@ -2,6 +2,7 @@ import "@/assets/css/style.css"
 import "@/assets/css/spectre.min.css"
 import "@/assets/css/spectre-icons.min.css"
 import "@/assets/css/special-tabs.css"
+//import "@/assets/main.css"
 
 import { createApp } from "vue"
 import App from "./App.vue"

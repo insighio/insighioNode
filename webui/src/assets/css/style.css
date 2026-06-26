@@ -144,6 +144,13 @@ a:focus {
   padding: 0.8rem;
 }
 
+.pr-0 {
+  padding-right: 0;
+}
+.pl-0 {
+  padding-left: 0;
+}
+
 /* Combined utilities for common patterns */
 .mt-05 {
   margin-top: 0.5rem;

@@ -21,7 +21,7 @@
               v-model="password"
               @keyup.enter="checkPassword()"
             />
-            <div class="flex-centered mt-1">
+            <div class="flex-centered mt-1 mb-1">
               <button class="btn btn-primary constr-field" @click="checkPassword()" :disabled="isLoggingIn">
                 <span v-if="isLoggingIn">Logging in...</span>
                 <span v-else>Login</span>

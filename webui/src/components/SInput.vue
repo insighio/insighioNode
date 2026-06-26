@@ -1,6 +1,6 @@
 <template>
-  <div class="container" style="margin-bottom: 1rem">
-    <div :class="'columns col-' + colsSum" style="padding-right: 0px; padding-left: 0px">
+  <div class="container mb-1">
+    <div :class="'columns col-' + colsSum + ' pr-0 pl-0'">
       <div :class="'column col-' + colsLabel + ' col-sm-12'">
         <label class="form-label">
           {{ label }}
