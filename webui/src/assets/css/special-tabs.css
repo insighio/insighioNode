@@ -1,3 +1,23 @@
+.tab .tab-item > a {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.tab .tab-item.active {
+  color: #49b7ab;
+  border-bottom-color: #49b7ab;
+}
+
+.tab .tab-item.active > a,
+.tab .tab-item > a:hover,
+.tab .tab-item > a:focus,
+.tab .tab-item > a:active,
+.tab .tab-item > a:visited {
+  color: inherit;
+  text-decoration: none;
+}
+
 .tab-item > label:hover {
   cursor: pointer;
 }
