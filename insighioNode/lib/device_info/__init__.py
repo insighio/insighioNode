@@ -348,7 +348,7 @@ def _bq_set_vbat_mv(i2c, bq_addr, target_mv):
     if accepted_mV > 4200:
         accepted_mV = 4200
 
-    code = hex(accepted_mV)
+    code = int(accepted_mV / 10)
     _bq_write_u16(i2c, bq_addr, 0x04, code << 3)
 
 
@@ -371,7 +371,8 @@ def bq_charger_setup(i2c, bq_addr):
 
         # Enable ADC (by default it is disabled: 0x30)
         REG0x26_ADC_Control = 0x26
-        _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, 0x80)
+        # _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, 0x80)
+        _bq_update_bits(i2c, bq_addr, REG0x26_ADC_Control, 0xF0, 0xB0)
 
 
 def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
