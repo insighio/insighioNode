@@ -32,6 +32,14 @@ _CONST_ESP32S2 = "esp32s2"
 _CONST_ESP32S3 = "esp32s3"
 _CONST_ESP8266 = "esp8266"
 
+_CHARGER_VERSION_1_ = "bq24297"
+_CHARGER_VERSION_2_ = "bq25622e"
+
+MAIN_VERSION_V1 = "v1"
+MAIN_VERSION_V2 = "v2"
+
+_main_version = None
+
 
 def is_wdt_enabled():
     return wdt is not None
@@ -231,7 +239,7 @@ def get_heap_memory():
 def get_free_flash(partition_path="/"):
     import uos
 
-    (f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _) = uos.statvfs(partition_path)
+    f_bsize, _, f_blocks, f_bfree, _, _, _, _, _, _ = uos.statvfs(partition_path)
     freesize = f_bsize * f_bfree
     return freesize
 
@@ -246,6 +254,17 @@ def bq_charger_exec(bq_func, *args, **kwargs):
     except Exception as e:
         logging.exception(e, "No BQ charger detected")
     return status
+
+
+def bq_charger_identify(i2c, bq_addr):
+    try:
+        val = i2c.readfrom_mem(bq_addr, 0x38, 1)
+        if val & b"\x18" == b"\x18":
+            return _CHARGER_VERSION_2_
+        return _CHARGER_VERSION_1_
+    except Exception as e:
+        logging.exception(e, "No BQ charger detected")
+        return None
 
 
 def bq_charger_setup(i2c, bq_addr):
@@ -318,3 +337,25 @@ def bq_charger_is_on_external_power(i2c, bq_addr):
     # is_charging = True  # this is the proper, though for some reason it does not work: (int.from_bytes(val, "big") & 0x30) > 0
     is_charging = (int.from_bytes(val, "big") & 0x30) > 0
     return is_charging and power_good
+
+
+def initialize_main_version():
+    global _main_version
+    if _main_version is not None:
+        return
+
+    charger_version = bq_charger_exec(bq_charger_identify)
+    if charger_version == _CHARGER_VERSION_1_:
+        _main_version = MAIN_VERSION_V1
+    elif charger_version == _CHARGER_VERSION_2_:
+        _main_version = MAIN_VERSION_V2
+    else:
+        logging.warning("Unknown charger version: {}".format(charger_version))
+        _main_version = MAIN_VERSION_V1
+
+
+def get_main_version():
+    global _main_version
+    if _main_version is None:
+        initialize_main_version()
+    return _main_version
