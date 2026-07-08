@@ -32,13 +32,14 @@ _CONST_ESP32S2 = "esp32s2"
 _CONST_ESP32S3 = "esp32s3"
 _CONST_ESP8266 = "esp8266"
 
-_CHARGER_VERSION_1_ = "bq24297"
-_CHARGER_VERSION_2_ = "bq25622e"
+_CHARGER_VERSION_1 = "bq24297"
+_CHARGER_VERSION_2 = "bq25622e"
 
-MAIN_VERSION_V1 = "v1"
-MAIN_VERSION_V2 = "v2"
+_MAIN_VERSION_V1 = "v1"
+_MAIN_VERSION_V2 = "v2"
 
 _main_version = None
+_bq_charger_version = None
 
 
 def is_wdt_enabled():
@@ -257,68 +258,147 @@ def bq_charger_exec(bq_func, *args, **kwargs):
 
 
 def bq_charger_identify(i2c, bq_addr):
+    global _bq_charger_version
+    if _bq_charger_version is not None:
+        return _bq_charger_version
+
     try:
-        val = i2c.readfrom_mem(bq_addr, 0x38, 1)
-        if val & b"\x18" == b"\x18":
-            return _CHARGER_VERSION_2_
-        return _CHARGER_VERSION_1_
+        val = _bq_read_u8(i2c, bq_addr, 0x38)
+        if val & 0x18 == 0x18:
+            _bq_charger_version = _CHARGER_VERSION_2
+            return _bq_charger_version
+    except Exception:
+        pass
+
+    try:
+        # bq24297 part number is in REG0A[7:5] and equals 0b011.
+        val = _bq_read_u8(i2c, bq_addr, 0x0A)
+        if ((val >> 5) & 0x07) == 0x03:
+            _bq_charger_version = _CHARGER_VERSION_1
+            return _bq_charger_version
     except Exception as e:
         logging.exception(e, "No BQ charger detected")
-        return None
+
+    return None
+
+
+def _bq_read_u8(i2c, bq_addr, reg):
+    return int.from_bytes(i2c.readfrom_mem(bq_addr, reg, 1), "big")
+
+
+def _bq_write_u8(i2c, bq_addr, reg, value):
+    i2c.writeto_mem(bq_addr, reg, bytes((value & 0xFF,)))
+
+
+def _bq_read_u16(i2c, bq_addr, reg):
+    raw = i2c.readfrom_mem(bq_addr, reg, 2)
+    return (raw[0] << 8) | raw[1]
+
+
+def _bq_update_bits(i2c, bq_addr, reg, mask, value):
+    curr = _bq_read_u8(i2c, bq_addr, reg)
+    new_val = (curr & (~mask & 0xFF)) | (value & mask)
+    _bq_write_u8(i2c, bq_addr, reg, new_val)
+    return new_val
+
+
+def _bq_get_version(i2c, bq_addr):
+    version = bq_charger_identify(i2c, bq_addr)
+    if version is None:
+        return _CHARGER_VERSION_1
+    return version
+
+
+def _bq_set_vbat_mv(i2c, bq_addr, target_mv):
+    version = _bq_get_version(i2c, bq_addr)
+
+    # bq24297: REG04[7:2], 16mV step, 3504mV offset.
+    if version == _CHARGER_VERSION_1:
+        step_mv = 16
+        base_mv = 3504
+        code = int((target_mv - base_mv) / step_mv)
+        if code < 0:
+            code = 0
+        if code > 0x3F:
+            code = 0x3F
+        _bq_update_bits(i2c, bq_addr, 0x04, 0xFC, code << 2)
+        return
+
+    # bq25622e: REG04[7:3], 32mV step, 3856mV offset.
+    step_mv = 32
+    base_mv = 3856
+    code = int((target_mv - base_mv) / step_mv)
+    if code < 0:
+        code = 0
+    if code > 0x1F:
+        code = 0x1F
+    _bq_update_bits(i2c, bq_addr, 0x04, 0xF8, code << 3)
 
 
 def bq_charger_setup(i2c, bq_addr):
     logging.debug("Battery: initialization")
-    i2c.writeto_mem(bq_addr, 5, b"\x84")
-    i2c.writeto_mem(bq_addr, 2, b"\x20")
+    version = _bq_get_version(i2c, bq_addr)
+
+    # Disable watchdog to keep host register configuration active.
+    _bq_update_bits(i2c, bq_addr, 0x05, 0x30, 0x00)
+
+    if version == _CHARGER_VERSION_1:
+        # Preserve the previous bq24297 fast-charge current default.
+        _bq_write_u8(i2c, bq_addr, 0x02, 0x20)
+    else:
+        # bq25622e has a different current encoding than bq24297.
+        # Keep chip default current unless explicitly configured elsewhere.
+        pass
 
 
 def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
     logging.debug("Battery: max charge 3952mV")
-    i2c.writeto_mem(bq_addr, 4, b"\x72")  # 3.952V -> (3.952 - 3.504) / 0.016 = 28 -> 0b011100 -> reg 0x04 = 0b01110010 = 0x72
+    _bq_set_vbat_mv(i2c, bq_addr, 3952)
 
 
 def bq_charger_set_max_charge_4200_mv(i2c, bq_addr):
     logging.debug("Battery: max charge 4208mV")
-    i2c.writeto_mem(bq_addr, 4, b"\xb2")  # Default: 4.208 V
+    _bq_set_vbat_mv(i2c, bq_addr, 4208)
 
 
 def bq_charger_set_charging_on(i2c, bq_addr):
     logging.debug("Battery: settings charge on")
-    i2c.writeto_mem(bq_addr, 1, b"\x3b")
+    _bq_update_bits(i2c, bq_addr, 0x01, 0x10, 0x10)
 
 
 def bq_charger_set_charging_off(i2c, bq_addr):
     logging.debug("Battery: settings charge off")
-    i2c.writeto_mem(bq_addr, 1, b"\x0b")
+    _bq_update_bits(i2c, bq_addr, 0x01, 0x10, 0x00)
 
 
 def bq_charger_get_is_charging_on(i2c, bq_addr):
-    val = i2c.readfrom_mem(bq_addr, 1, 1)
-    logging.debug("BQ charger is charging on: {}".format(ubinascii.hexlify(val)))
-    return (int.from_bytes(val, "big") & 0x30) > 0
+    val = _bq_read_u8(i2c, bq_addr, 0x01)
+    logging.debug("BQ charger is charging on: {}".format(hex(val)))
+    return (val & 0x10) > 0
 
 
 def bq_charger_get_is_charging(i2c, bq_addr):
-    val = i2c.readfrom_mem(bq_addr, 8, 1)
-    logging.debug("BQ charger state: {}".format(ubinascii.hexlify(val)))
-    is_charging = (int.from_bytes(val, "big") & 0x30) > 0
+    val = _bq_read_u8(i2c, bq_addr, 0x08)
+    logging.debug("BQ charger state: {}".format(hex(val)))
+    is_charging = (val & 0x30) > 0
     return is_charging
 
 
 def bq_charger_set_hiz_mode_on(i2c, bq_addr):
     logging.debug("Battery: settings Hi-Z mode on")
-    i2c.writeto_mem(bq_addr, 0, b"\xa2")
+    _bq_update_bits(i2c, bq_addr, 0x00, 0x80, 0x80)
 
 
 def bq_charger_set_hiz_mode_off(i2c, bq_addr):
     logging.debug("Battery: settings Hi-Z mode off")
-    i2c.writeto_mem(bq_addr, 0, b"\x22")
+    _bq_update_bits(i2c, bq_addr, 0x00, 0x80, 0x00)
 
 
 def bq_charger_get_regs(i2c, bq_addr):
+    version = _bq_get_version(i2c, bq_addr)
     regs = []
-    for i in range(0, 9):
+    max_reg = 0x0C if version == _CHARGER_VERSION_2 else 0x08
+    for i in range(0, max_reg + 1):
         v = i2c.readfrom_mem(bq_addr, i, 1)
         regs.append(v)
 
@@ -326,17 +406,47 @@ def bq_charger_get_regs(i2c, bq_addr):
 
 
 def bq_charger_set_regs(i2c, bq_addr, regs):
-    for i in range(0, 8):
+    for i in range(0, len(regs)):
         i2c.writeto_mem(bq_addr, i, regs[i])
 
 
 def bq_charger_is_on_external_power(i2c, bq_addr):
-    val = i2c.readfrom_mem(bq_addr, 8, 1)
-    logging.debug("BQ charger state: {}".format(ubinascii.hexlify(val)))
-    power_good = (int.from_bytes(val, "big") & 0x4) > 0
+    val = _bq_read_u8(i2c, bq_addr, 0x08)
+    logging.debug("BQ charger state: {}".format(hex(val)))
+    power_good = (val & 0x4) > 0
     # is_charging = True  # this is the proper, though for some reason it does not work: (int.from_bytes(val, "big") & 0x30) > 0
-    is_charging = (int.from_bytes(val, "big") & 0x30) > 0
+    is_charging = (val & 0x30) > 0
     return is_charging and power_good
+
+
+def bq_charger_get_ibus_adc(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return None
+    return _bq_read_u16(i2c, bq_addr, 0x28)
+
+
+def bq_charger_get_ibat_adc(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return None
+    return _bq_read_u16(i2c, bq_addr, 0x2A)
+
+
+def bq_charger_get_vbus_adc(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return None
+    return _bq_read_u16(i2c, bq_addr, 0x2C)
+
+
+def bq_charger_get_vbat_adc(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return None
+    return _bq_read_u16(i2c, bq_addr, 0x30)
+
+
+def bq_charger_get_vsys_adc(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return None
+    return _bq_read_u16(i2c, bq_addr, 0x32)
 
 
 def initialize_main_version():
@@ -345,13 +455,13 @@ def initialize_main_version():
         return
 
     charger_version = bq_charger_exec(bq_charger_identify)
-    if charger_version == _CHARGER_VERSION_1_:
-        _main_version = MAIN_VERSION_V1
-    elif charger_version == _CHARGER_VERSION_2_:
-        _main_version = MAIN_VERSION_V2
+    if charger_version == _CHARGER_VERSION_1:
+        _main_version = _MAIN_VERSION_V1
+    elif charger_version == _CHARGER_VERSION_2:
+        _main_version = _MAIN_VERSION_V2
     else:
-        logging.warning("Unknown charger version: {}".format(charger_version))
-        _main_version = MAIN_VERSION_V1
+        logging.error("Unknown charger version: {}".format(charger_version))
+        _main_version = _MAIN_VERSION_V1
 
 
 def get_main_version():
