@@ -290,6 +290,10 @@ def _bq_write_u8(i2c, bq_addr, reg, value):
     i2c.writeto_mem(bq_addr, reg, bytes((value & 0xFF,)))
 
 
+def _bq_write_u16(i2c, bq_addr, reg, value):
+    i2c.writeto_mem(bq_addr, reg, bytes(((value >> 8) & 0xFF, value & 0xFF)))
+
+
 def _bq_read_u16(i2c, bq_addr, reg):
     raw = i2c.readfrom_mem(bq_addr, reg, 2)
     return (raw[0] << 8) | raw[1]
@@ -339,16 +343,22 @@ def bq_charger_setup(i2c, bq_addr):
     logging.debug("Battery: initialization")
     version = _bq_get_version(i2c, bq_addr)
 
-    # Disable watchdog to keep host register configuration active.
-    _bq_update_bits(i2c, bq_addr, 0x05, 0x30, 0x00)
-
     if version == _CHARGER_VERSION_1:
+        # Disable watchdog to keep host register configuration active.
+        _bq_update_bits(i2c, bq_addr, 0x05, 0x30, 0x00)
+
         # Preserve the previous bq24297 fast-charge current default.
         _bq_write_u8(i2c, bq_addr, 0x02, 0x20)
     else:
-        # bq25622e has a different current encoding than bq24297.
-        # Keep chip default current unless explicitly configured elsewhere.
-        pass
+        REG0x16_Charger_Control_1 = 0x16
+        # DISABLE WATCHDOG or else current will be halved every 50s!!!!!!!!!
+        _bq_write_u8(i2c, bq_addr, REG0x16_Charger_Control_1, 0xA0)
+
+        _bq_write_u16(i2c, bq_addr, 0x02, 0x0980)  # 3000mA
+
+        # Enable ADC (by default it is disabled: 0x30)
+        REG0x26_ADC_Control = 0x26
+        _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, 0x80)
 
 
 def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
