@@ -291,12 +291,25 @@ def _bq_write_u8(i2c, bq_addr, reg, value):
 
 
 def _bq_write_u16(i2c, bq_addr, reg, value):
-    i2c.writeto_mem(bq_addr, reg, bytes(((value >> 8) & 0xFF, value & 0xFF)))
+    # BQ25622E uses consecutive little-endian register pairs (LSB at reg, MSB at reg+1).
+    i2c.writeto_mem(bq_addr, reg, bytes((value & 0xFF, (value >> 8) & 0xFF)))
 
 
 def _bq_read_u16(i2c, bq_addr, reg):
     raw = i2c.readfrom_mem(bq_addr, reg, 2)
-    return (raw[0] << 8) | raw[1]
+    return (raw[1] << 8) | raw[0]
+
+
+def _bq_twos_complement(val, bits):
+    sign = 1 << (bits - 1)
+    return val - (1 << bits) if (val & sign) else val
+
+
+def _bq_decode_adc_u16_le(raw_u16, lsb_bit, width, signed, lsb_scale):
+    raw = (raw_u16 >> lsb_bit) & ((1 << width) - 1)
+    if signed:
+        raw = _bq_twos_complement(raw, width)
+    return raw * lsb_scale
 
 
 def _bq_update_bits(i2c, bq_addr, reg, mask, value):
@@ -328,15 +341,15 @@ def _bq_set_vbat_mv(i2c, bq_addr, target_mv):
         _bq_update_bits(i2c, bq_addr, 0x04, 0xFC, code << 2)
         return
 
-    # bq25622e: REG04[7:3], 32mV step, 3856mV offset.
-    step_mv = 32
-    base_mv = 3856
-    code = int((target_mv - base_mv) / step_mv)
-    if code < 0:
-        code = 0
-    if code > 0x1F:
-        code = 0x1F
-    _bq_update_bits(i2c, bq_addr, 0x04, 0xF8, code << 3)
+    # bq25622e: REG04[11:3], Little-endian register pair.
+    accepted_mV = target_mv
+    if accepted_mV < 3500:
+        accepted_mV = 3500
+    if accepted_mV > 4200:
+        accepted_mV = 4200
+
+    code = hex(accepted_mV)
+    _bq_write_u16(i2c, bq_addr, 0x04, code << 3)
 
 
 def bq_charger_setup(i2c, bq_addr):
@@ -354,7 +367,7 @@ def bq_charger_setup(i2c, bq_addr):
         # DISABLE WATCHDOG or else current will be halved every 50s!!!!!!!!!
         _bq_write_u8(i2c, bq_addr, REG0x16_Charger_Control_1, 0xA0)
 
-        _bq_write_u16(i2c, bq_addr, 0x02, 0x0980)  # 3000mA
+        _bq_write_u16(i2c, bq_addr, 0x02, 0x0100)
 
         # Enable ADC (by default it is disabled: 0x30)
         REG0x26_ADC_Control = 0x26
@@ -372,36 +385,63 @@ def bq_charger_set_max_charge_4200_mv(i2c, bq_addr):
 
 
 def bq_charger_set_charging_on(i2c, bq_addr):
-    logging.debug("Battery: settings charge on")
-    _bq_update_bits(i2c, bq_addr, 0x01, 0x10, 0x10)
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        logging.debug("Battery: settings charge on")
+        _bq_update_bits(i2c, bq_addr, 0x01, 0x10, 0x10)
+    else:
+        logging.debug("Battery: settings charge on")
+        _bq_update_bits(i2c, bq_addr, 0x16, 0x20, 0x20)
 
 
 def bq_charger_set_charging_off(i2c, bq_addr):
-    logging.debug("Battery: settings charge off")
-    _bq_update_bits(i2c, bq_addr, 0x01, 0x10, 0x00)
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        logging.debug("Battery: settings charge off")
+        _bq_update_bits(i2c, bq_addr, 0x01, 0x10, 0x00)
+    else:
+        logging.debug("Battery: settings charge off")
+        _bq_update_bits(i2c, bq_addr, 0x16, 0x20, 0x00)
 
 
 def bq_charger_get_is_charging_on(i2c, bq_addr):
-    val = _bq_read_u8(i2c, bq_addr, 0x01)
-    logging.debug("BQ charger is charging on: {}".format(hex(val)))
-    return (val & 0x10) > 0
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        val = _bq_read_u8(i2c, bq_addr, 0x01)
+        logging.debug("BQ charger is charging on: {}".format(hex(val)))
+        return (val & 0x10) > 0
+    else:
+        val = _bq_read_u8(i2c, bq_addr, 0x16)
+        logging.debug("BQ charger is charging on: {}".format(hex(val)))
+        return (val & 0x20) > 0
 
 
 def bq_charger_get_is_charging(i2c, bq_addr):
-    val = _bq_read_u8(i2c, bq_addr, 0x08)
-    logging.debug("BQ charger state: {}".format(hex(val)))
-    is_charging = (val & 0x30) > 0
-    return is_charging
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        val = _bq_read_u8(i2c, bq_addr, 0x08)
+        logging.debug("BQ charger state: {}".format(hex(val)))
+        is_charging = (val & 0x30) > 0
+        return is_charging
+    else:
+        REG0x1E_Charger_Status_1 = 0x1E
+        val = _bq_read_u8(i2c, bq_addr, REG0x1E_Charger_Status_1)
+        logging.debug("BQ charger state: {}".format(hex(val)))
+        return (val & 0x18) > 0
 
 
 def bq_charger_set_hiz_mode_on(i2c, bq_addr):
-    logging.debug("Battery: settings Hi-Z mode on")
-    _bq_update_bits(i2c, bq_addr, 0x00, 0x80, 0x80)
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        logging.debug("Battery: settings Hi-Z mode on")
+        _bq_update_bits(i2c, bq_addr, 0x00, 0x80, 0x80)
+    else:
+        logging.debug("Battery: settings Hi-Z mode on")
+        _bq_update_bits(i2c, bq_addr, 0x16, 0x10, 0x10)
 
 
 def bq_charger_set_hiz_mode_off(i2c, bq_addr):
-    logging.debug("Battery: settings Hi-Z mode off")
-    _bq_update_bits(i2c, bq_addr, 0x00, 0x80, 0x00)
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        logging.debug("Battery: settings Hi-Z mode off")
+        _bq_update_bits(i2c, bq_addr, 0x00, 0x80, 0x00)
+    else:
+        logging.debug("Battery: settings Hi-Z mode off")
+        _bq_update_bits(i2c, bq_addr, 0x16, 0x10, 0x00)
 
 
 def bq_charger_get_regs(i2c, bq_addr):
@@ -421,42 +461,58 @@ def bq_charger_set_regs(i2c, bq_addr, regs):
 
 
 def bq_charger_is_on_external_power(i2c, bq_addr):
-    val = _bq_read_u8(i2c, bq_addr, 0x08)
-    logging.debug("BQ charger state: {}".format(hex(val)))
-    power_good = (val & 0x4) > 0
-    # is_charging = True  # this is the proper, though for some reason it does not work: (int.from_bytes(val, "big") & 0x30) > 0
-    is_charging = (val & 0x30) > 0
-    return is_charging and power_good
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        val = _bq_read_u8(i2c, bq_addr, 0x08)
+        logging.debug("BQ charger state: {}".format(hex(val)))
+        power_good = (val & 0x4) > 0
+        # is_charging = True  # this is the proper, though for some reason it does not work: (int.from_bytes(val, "big") & 0x30) > 0
+        is_charging = (val & 0x30) > 0
+        return is_charging and power_good
+    else:
+        REG0x1E_Charger_Status_1 = 0x1E
+        val = _bq_read_u8(i2c, bq_addr, REG0x1E_Charger_Status_1)
+        logging.debug("BQ charger state: {}".format(hex(val)))
+        return val & 0x18 > 0
 
 
 def bq_charger_get_ibus_adc(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
         return None
-    return _bq_read_u16(i2c, bq_addr, 0x28)
+    # REG0x28/0x29: bits[15:1], signed, 2mA/LSB.
+    raw = _bq_read_u16(i2c, bq_addr, 0x28)
+    return _bq_decode_adc_u16_le(raw, lsb_bit=1, width=15, signed=True, lsb_scale=2.0)
 
 
 def bq_charger_get_ibat_adc(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
         return None
-    return _bq_read_u16(i2c, bq_addr, 0x2A)
+    # REG0x2A/0x2B: bits[15:2], signed, 4mA/LSB.
+    raw = _bq_read_u16(i2c, bq_addr, 0x2A)
+    return _bq_decode_adc_u16_le(raw, lsb_bit=2, width=14, signed=True, lsb_scale=4.0)
 
 
 def bq_charger_get_vbus_adc(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
         return None
-    return _bq_read_u16(i2c, bq_addr, 0x2C)
+    # REG0x2C/0x2D: bits[14:2], unsigned, 3.97mV/LSB.
+    raw = _bq_read_u16(i2c, bq_addr, 0x2C)
+    return _bq_decode_adc_u16_le(raw, lsb_bit=2, width=13, signed=False, lsb_scale=3.97)
 
 
 def bq_charger_get_vbat_adc(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
         return None
-    return _bq_read_u16(i2c, bq_addr, 0x30)
+    # REG0x30/0x31: bits[12:1], unsigned, 1.99mV/LSB.
+    raw = _bq_read_u16(i2c, bq_addr, 0x30)
+    return _bq_decode_adc_u16_le(raw, lsb_bit=1, width=12, signed=False, lsb_scale=1.99)
 
 
 def bq_charger_get_vsys_adc(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
         return None
-    return _bq_read_u16(i2c, bq_addr, 0x32)
+    # REG0x32/0x33: bits[12:1], unsigned, 1.99mV/LSB.
+    raw = _bq_read_u16(i2c, bq_addr, 0x32)
+    return _bq_decode_adc_u16_le(raw, lsb_bit=1, width=12, signed=False, lsb_scale=1.99)
 
 
 def initialize_main_version():
