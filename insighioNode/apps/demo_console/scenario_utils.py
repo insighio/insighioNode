@@ -63,7 +63,6 @@ def execute_battery_setup():
                 logging.exception(e, "Battery settings error")
                 battery_settings_applied = False
 
-
         if not battery_settings_applied:
             logging.debug("Battery settings default")
             # device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
@@ -124,10 +123,35 @@ def get_measurements(cfg_dummy=None):
             )
 
         if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
-            (mem_alloc, mem_free) = device_info.get_heap_memory()
-            set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
-            set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
+            # mem_alloc, mem_free = device_info.get_heap_memory()
+            # set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
+            # set_value(measurements, "mem_free", mem_free, SenmlUnits.SENML_UNIT_BYTE)
 
+            if device_info.get_main_version() == device_info._MAIN_VERSION_V2:
+                set_value_int(
+                    measurements,
+                    "ibus",
+                    device_info.bq_charger_exec(device_info.bq_charger_get_ibus_adc),
+                    SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE,
+                )
+                set_value_int(
+                    measurements,
+                    "ibat",
+                    device_info.bq_charger_exec(device_info.bq_charger_get_ibat_adc),
+                    SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIAMPERE,
+                )
+                set_value_int(
+                    measurements,
+                    "vbus",
+                    device_info.bq_charger_exec(device_info.bq_charger_get_vbus_adc),
+                    SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
+                )
+                set_value_int(
+                    measurements,
+                    "vsys",
+                    device_info.bq_charger_exec(device_info.bq_charger_get_vsys_adc),
+                    SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
+                )
             try:
                 from machine import SoftI2C, Pin
 
@@ -159,7 +183,7 @@ def get_measurements(cfg_dummy=None):
             elif cfg.get("_UC_INTERNAL_TEMP_HUM_SENSOR") == cfg.get("_CONST_SENSOR_SHT40"):
                 from sensors import sht40 as sens
 
-            (board_temp, board_humidity) = sens.get_reading(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"))
+            board_temp, board_humidity = sens.get_reading(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"))
             set_value_float(
                 measurements,
                 "board_temp",
@@ -181,7 +205,7 @@ def get_measurements(cfg_dummy=None):
 
             scenario_advind_utils.shield_measurements(measurements)
         elif shield_name == cfg.get("_CONST_SHIELD_ENVIRO") or shield_name == cfg.get("_CONST_SHIELD_ENVIRO_V2"):
-            (fw_major, fw_minor, _, _) = device_info.get_firmware_version()
+            fw_major, fw_minor, _, _ = device_info.get_firmware_version()
 
             if fw_major == 1 and fw_minor >= 18 and fw_minor <= 19:
                 from . import scenario_enviro_utils_custom_mpy as scenario_enviro_utils
@@ -234,28 +258,40 @@ def delete_pulse_counter_state():
 
 
 def read_battery_voltage():
-    # BATT VOLTAGE
-    current = None
-    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 1)
+    if device_info.get_main_version() == device_info._MAIN_VERSION_V1:
+        is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
 
-    is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
+        if is_charging:
+            device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
-    if is_charging:
-        device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+        sleep_ms(500)
 
-    # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
+        vbat = device_info.bq_charger_exec(device_info.bq_charger_get_vbat_adc)
+        if is_charging:
+            device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+        return vbat
+    else:
+        # BATT VOLTAGE
+        gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 1)
 
-    sleep_ms(500)
+        is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
 
-    vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
+        if is_charging:
+            device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
-    if is_charging:
-        device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+        # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
 
-    # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
+        sleep_ms(500)
 
-    gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
-    return vbatt
+        vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
+
+        if is_charging:
+            device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+
+        # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
+
+        gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
+        return vbatt
 
 
 def add_explicit_key_values(measurements):
