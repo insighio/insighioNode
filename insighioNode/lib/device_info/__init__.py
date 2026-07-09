@@ -477,6 +477,20 @@ def bq_charger_get_hiz_mode(i2c, bq_addr):
         return (val & 0x10) > 0
 
 
+def bq_charger_has_battery(i2c, bq_addr):
+    # read 10 values from ibat and 1 vbat. If all values from ibat are 0 and vbat is not 0 then battery is not present.
+    ibat_is_zero = True
+    for i in range(0, 10):
+        ibat = bq_charger_get_ibat_adc(i2c, bq_addr)
+        if ibat != 0:
+            ibat_is_zero = False
+            break
+    vbat = bq_charger_get_vbat_adc(i2c, bq_addr)
+    if ibat_is_zero and vbat != 0:
+        return False
+    return True
+
+
 # def bq_charger_get_regs(i2c, bq_addr):
 #     version = _bq_get_version(i2c, bq_addr)
 #     regs = []

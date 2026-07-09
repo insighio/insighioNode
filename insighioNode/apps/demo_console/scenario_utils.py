@@ -283,21 +283,25 @@ def read_battery_voltage():
     else:
         is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
         is_hiz_on = device_info.bq_charger_exec(device_info.bq_charger_get_hiz_mode)
+        has_battery = device_info.bq_charger_exec(device_info.bq_charger_has_battery)
 
-        if is_charging:
-            device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+        if has_battery:
+            if is_charging:
+                device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
 
-        if not is_hiz_on:
-            device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
+            if not is_hiz_on:
+                device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
 
         sleep_ms(500)
 
         vbat = device_info.bq_charger_exec(device_info.bq_charger_get_vbat_adc)
-        if is_charging:
-            device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
 
-        if not is_hiz_on:
-            device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
+        if has_battery:
+            if is_charging:
+                device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+
+            if not is_hiz_on:
+                device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
 
         return vbat
 
