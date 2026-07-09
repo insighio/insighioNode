@@ -322,8 +322,11 @@ def _bq_update_bits(i2c, bq_addr, reg, mask, value):
     logging.debug("_bq_update_bits: start")
     curr = _bq_read_u8(i2c, bq_addr, reg)
     new_val = (curr & (~mask & 0xFF)) | (value & mask)
-    _bq_write_u8(i2c, bq_addr, reg, new_val)
-    logging.debug("_bq_update_bits: end")
+    if curr != new_val:
+        _bq_write_u8(i2c, bq_addr, reg, new_val)
+        logging.debug("_bq_update_bits: end")
+    else:
+        logging.debug("_bq_update_bits: end (no change)")
     return new_val
 
 
@@ -382,7 +385,7 @@ def bq_charger_setup(i2c, bq_addr):
         # Enable ADC (by default it is disabled: 0x30)
         REG0x26_ADC_Control = 0x26
         # _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, 0x80)
-        _bq_update_bits(i2c, bq_addr, REG0x26_ADC_Control, 0xF0, 0xB0)
+        _bq_update_bits(i2c, bq_addr, REG0x26_ADC_Control, 0xF0, 0x80)
 
 
 # def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
@@ -431,10 +434,18 @@ def bq_charger_get_is_charging(i2c, bq_addr):
         is_charging = (val & 0x30) > 0
         return is_charging
     else:
+        return bq_charger_get_charging_state(i2c, bq_addr) > 0
+
+
+def bq_charger_get_charging_state(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return -1
+    else:
         REG0x1E_Charger_Status_1 = 0x1E
         val = _bq_read_u8(i2c, bq_addr, REG0x1E_Charger_Status_1)
+        val = (val & 0x18) >> 3
         logging.debug("BQ charger state: {}".format(hex(val)))
-        return (val & 0x18) > 0
+        return val
 
 
 def bq_charger_set_hiz_mode_on(i2c, bq_addr):
@@ -453,6 +464,17 @@ def bq_charger_set_hiz_mode_off(i2c, bq_addr):
     else:
         logging.debug("Battery: settings Hi-Z mode off")
         _bq_update_bits(i2c, bq_addr, 0x16, 0x10, 0x00)
+
+
+def bq_charger_get_hiz_mode(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        val = _bq_read_u8(i2c, bq_addr, 0x00)
+        logging.debug("BQ charger Hi-Z mode: {}".format(hex(val)))
+        return (val & 0x80) > 0
+    else:
+        val = _bq_read_u8(i2c, bq_addr, 0x16)
+        logging.debug("BQ charger Hi-Z mode: {}".format(hex(val)))
+        return (val & 0x10) > 0
 
 
 # def bq_charger_get_regs(i2c, bq_addr):
@@ -539,6 +561,7 @@ def initialize_main_version():
     else:
         logging.error("Unknown charger version: {}".format(charger_version))
         _main_version = _MAIN_VERSION_V1
+    logging.debug("Main version: {}".format(_main_version))
 
 
 def get_main_version():

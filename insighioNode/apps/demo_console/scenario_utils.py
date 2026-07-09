@@ -13,7 +13,7 @@ enableBatteryLifeOptimization = False
 
 
 def device_init():
-    execute_battery_setup()
+    # execute_battery_setup()
     if cfg.get("_NOTIFICATION_LED_ENABLED"):
         if cfg.get("_UC_IO_RGB_DIN") and cfg.get("_UC_RGB_VDD"):
             device_info.set_led_enabled(cfg.get("_NOTIFICATION_LED_ENABLED"), cfg.get("_UC_RGB_VDD"), cfg.get("_UC_IO_RGB_DIN"))
@@ -113,15 +113,6 @@ def get_measurements(cfg_dummy=None):
     measurements = {}
 
     try:
-        if cfg.get("_MEAS_BATTERY_STAT_ENABLE"):
-            vbatt = read_battery_voltage()
-            set_value_int(
-                measurements,
-                "vbatt",
-                vbatt,
-                SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
-            )
-
         if cfg.get("_MEAS_BOARD_STAT_ENABLE"):
             # mem_alloc, mem_free = device_info.get_heap_memory()
             # set_value(measurements, "mem_alloc", mem_alloc, SenmlUnits.SENML_UNIT_BYTE)
@@ -152,6 +143,8 @@ def get_measurements(cfg_dummy=None):
                     device_info.bq_charger_exec(device_info.bq_charger_get_vsys_adc),
                     SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
                 )
+
+                set_value_int(measurements, "chg_stat", device_info.bq_charger_exec(device_info.bq_charger_get_charging_state))
             try:
                 from machine import SoftI2C, Pin
 
@@ -164,6 +157,15 @@ def get_measurements(cfg_dummy=None):
                 logging.exception(e, "Error getting i2c_devices.")
 
             set_value(measurements, "is_charging", 1 if device_info.bq_charger_exec(device_info.bq_charger_get_is_charging) else 0)
+
+        if cfg.get("_MEAS_BATTERY_STAT_ENABLE"):
+            vbatt = read_battery_voltage()
+            set_value_int(
+                measurements,
+                "vbatt",
+                vbatt,
+                SenmlSecondaryUnits.SENML_SEC_UNIT_MILLIVOLT,
+            )
 
     except Exception as e:
         logging.exception(e, "unable to measure board sensors")
@@ -280,15 +282,23 @@ def read_battery_voltage():
         return vbatt
     else:
         is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
+        is_hiz_on = device_info.bq_charger_exec(device_info.bq_charger_get_hiz_mode)
 
         if is_charging:
             device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+
+        if not is_hiz_on:
+            device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
 
         sleep_ms(500)
 
         vbat = device_info.bq_charger_exec(device_info.bq_charger_get_vbat_adc)
         if is_charging:
             device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+
+        if not is_hiz_on:
+            device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
+
         return vbat
 
 
