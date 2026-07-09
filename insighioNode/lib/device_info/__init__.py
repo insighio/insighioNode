@@ -283,21 +283,27 @@ def bq_charger_identify(i2c, bq_addr):
 
 
 def _bq_read_u8(i2c, bq_addr, reg):
-    return int.from_bytes(i2c.readfrom_mem(bq_addr, reg, 1), "big")
+    val = int.from_bytes(i2c.readfrom_mem(bq_addr, reg, 1), "big")
+    logging.debug("_bq_read_u8[{}] = {}".format(hex(reg), hex(val)))
+    return val
 
 
 def _bq_write_u8(i2c, bq_addr, reg, value):
     i2c.writeto_mem(bq_addr, reg, bytes((value & 0xFF,)))
+    logging.debug("_bq_write_u8[{}] = {}".format(hex(reg), hex(value & 0xFF)))
 
 
 def _bq_write_u16(i2c, bq_addr, reg, value):
     # BQ25622E uses consecutive little-endian register pairs (LSB at reg, MSB at reg+1).
     i2c.writeto_mem(bq_addr, reg, bytes((value & 0xFF, (value >> 8) & 0xFF)))
+    logging.debug("_bq_write_u16[{}] = {}".format(hex(reg), hex(value & 0xFFFF)))
 
 
 def _bq_read_u16(i2c, bq_addr, reg):
     raw = i2c.readfrom_mem(bq_addr, reg, 2)
-    return (raw[1] << 8) | raw[0]
+    val = (raw[1] << 8) | raw[0]
+    logging.debug("_bq_read_u16[{}] = {}".format(hex(reg), hex(val)))
+    return val
 
 
 def _bq_twos_complement(val, bits):
@@ -313,9 +319,11 @@ def _bq_decode_adc_u16_le(raw_u16, lsb_bit, width, signed, lsb_scale):
 
 
 def _bq_update_bits(i2c, bq_addr, reg, mask, value):
+    logging.debug("_bq_update_bits: start")
     curr = _bq_read_u8(i2c, bq_addr, reg)
     new_val = (curr & (~mask & 0xFF)) | (value & mask)
     _bq_write_u8(i2c, bq_addr, reg, new_val)
+    logging.debug("_bq_update_bits: end")
     return new_val
 
 
@@ -361,13 +369,15 @@ def bq_charger_setup(i2c, bq_addr):
         _bq_update_bits(i2c, bq_addr, 0x05, 0x30, 0x00)
 
         # Preserve the previous bq24297 fast-charge current default.
+
         _bq_write_u8(i2c, bq_addr, 0x02, 0x20)
     else:
         REG0x16_Charger_Control_1 = 0x16
         # DISABLE WATCHDOG or else current will be halved every 50s!!!!!!!!!
-        _bq_write_u8(i2c, bq_addr, REG0x16_Charger_Control_1, 0xA0)
+        _bq_update_bits(i2c, bq_addr, REG0x16_Charger_Control_1, 0x03, 0x00)
 
-        _bq_write_u16(i2c, bq_addr, 0x02, 0x0100)
+        REG0x02_Charge_Current_Limit = 0x02
+        _bq_write_u16(i2c, bq_addr, REG0x02_Charge_Current_Limit, 0x0240)  # 740mA
 
         # Enable ADC (by default it is disabled: 0x30)
         REG0x26_ADC_Control = 0x26
@@ -375,9 +385,9 @@ def bq_charger_setup(i2c, bq_addr):
         _bq_update_bits(i2c, bq_addr, REG0x26_ADC_Control, 0xF0, 0xB0)
 
 
-def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
-    logging.debug("Battery: max charge 3952mV")
-    _bq_set_vbat_mv(i2c, bq_addr, 3952)
+# def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
+#     logging.debug("Battery: max charge 3952mV")
+#     _bq_set_vbat_mv(i2c, bq_addr, 3952)
 
 
 def bq_charger_set_max_charge_4200_mv(i2c, bq_addr):
@@ -445,20 +455,20 @@ def bq_charger_set_hiz_mode_off(i2c, bq_addr):
         _bq_update_bits(i2c, bq_addr, 0x16, 0x10, 0x00)
 
 
-def bq_charger_get_regs(i2c, bq_addr):
-    version = _bq_get_version(i2c, bq_addr)
-    regs = []
-    max_reg = 0x0C if version == _CHARGER_VERSION_2 else 0x08
-    for i in range(0, max_reg + 1):
-        v = i2c.readfrom_mem(bq_addr, i, 1)
-        regs.append(v)
+# def bq_charger_get_regs(i2c, bq_addr):
+#     version = _bq_get_version(i2c, bq_addr)
+#     regs = []
+#     max_reg = 0x0C if version == _CHARGER_VERSION_2 else 0x08
+#     for i in range(0, max_reg + 1):
+#         v = i2c.readfrom_mem(bq_addr, i, 1)
+#         regs.append(v)
 
-    return regs
+#     return regs
 
 
-def bq_charger_set_regs(i2c, bq_addr, regs):
-    for i in range(0, len(regs)):
-        i2c.writeto_mem(bq_addr, i, regs[i])
+# def bq_charger_set_regs(i2c, bq_addr, regs):
+#     for i in range(0, len(regs)):
+#         i2c.writeto_mem(bq_addr, i, regs[i])
 
 
 def bq_charger_is_on_external_power(i2c, bq_addr):

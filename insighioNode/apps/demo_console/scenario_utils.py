@@ -29,7 +29,7 @@ def execute_battery_setup():
         device_info.get_hw_module_version() != device_info._CONST_ESP32
         and device_info.get_hw_module_version() != device_info._CONST_ESP32_WROOM
     ):
-        device_info.bq_charger_exec(device_info.bq_charger_setup)
+        # device_info.bq_charger_exec(device_info.bq_charger_setup)
         device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
 
         battery_settings_applied = False
@@ -259,6 +259,26 @@ def delete_pulse_counter_state():
 
 def read_battery_voltage():
     if device_info.get_main_version() == device_info._MAIN_VERSION_V1:
+        # BATT VOLTAGE
+        gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 1)
+
+        is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
+
+        if is_charging:
+            device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+            # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on) #?
+
+        sleep_ms(500)
+
+        vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
+
+        if is_charging:
+            device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+            # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off) #?
+
+        gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
+        return vbatt
+    else:
         is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
 
         if is_charging:
@@ -270,28 +290,6 @@ def read_battery_voltage():
         if is_charging:
             device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
         return vbat
-    else:
-        # BATT VOLTAGE
-        gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 1)
-
-        is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging_on)
-
-        if is_charging:
-            device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
-
-        # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
-
-        sleep_ms(500)
-
-        vbatt = gpio_handler.get_input_voltage(cfg.get("_UC_IO_BAT_READ"), cfg.get("_BAT_VDIV"), cfg.get("_BAT_ATT"))
-
-        if is_charging:
-            device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
-
-        # device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
-
-        gpio_handler.set_pin_value(cfg.get("_UC_IO_BAT_MEAS_ON"), 0)
-        return vbatt
 
 
 def add_explicit_key_values(measurements):
