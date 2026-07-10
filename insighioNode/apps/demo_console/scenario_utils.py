@@ -38,7 +38,8 @@ def execute_battery_setup():
 
             try:
                 _system_settings = json.loads(cfg.get("_SYSTEM_SETTINGS"))
-                if _system_settings and "enableBatteryLifeOptimization" in _system_settings:
+                _has_battery = device_info.bq_charger_exec(device_info.bq_charger_has_battery)
+                if _system_settings and "enableBatteryLifeOptimization" in _system_settings and _has_battery:
                     enableBatteryLifeOptimization = _system_settings["enableBatteryLifeOptimization"]
 
                     if enableBatteryLifeOptimization:

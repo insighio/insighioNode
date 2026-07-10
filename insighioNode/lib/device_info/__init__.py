@@ -486,7 +486,8 @@ def bq_charger_has_battery(i2c, bq_addr):
             ibat_is_zero = False
             break
     vbat = bq_charger_get_vbat_adc(i2c, bq_addr)
-    if ibat_is_zero and vbat != 0:
+    is_charging = bq_charger_get_is_charging(i2c, bq_addr)
+    if ibat_is_zero and vbat != 0 and is_charging:
         return False
     return True
 
@@ -516,10 +517,8 @@ def bq_charger_is_on_external_power(i2c, bq_addr):
         is_charging = (val & 0x30) > 0
         return is_charging and power_good
     else:
-        REG0x1E_Charger_Status_1 = 0x1E
-        val = _bq_read_u8(i2c, bq_addr, REG0x1E_Charger_Status_1)
-        logging.debug("BQ charger state: {}".format(hex(val)))
-        return val & 0x18 > 0
+        val = bq_charger_get_charging_state(i2c, bq_addr)
+        return val > 0
 
 
 def bq_charger_get_ibus_adc(i2c, bq_addr):
