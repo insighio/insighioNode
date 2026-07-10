@@ -59,7 +59,8 @@ export default {
           key === "meas-modbus" ||
           key === "meas-adc" ||
           key === "meas-pulseCounter" ||
-          key === "system-settings"
+          key === "system-settings" ||
+          key === "secondary-measurement-transmission-info"
         ) {
           encodedParams[key] = encodeURIComponent(value)
           config[key] = value

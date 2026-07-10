@@ -248,7 +248,8 @@ export default {
         "enable-secondary-measurement-transmission",
         this.boolToPyStr(this.enable_secondary_measurement_transmission)
       )
-      this.$storage.set("secondary-measurement-transmission-info", this.secondary_measurement_transmission_info)
+      if (this.enable_secondary_measurement_transmission)
+        this.$storage.set("secondary-measurement-transmission-info", this.secondary_measurement_transmission_info)
 
       this.requestGoNext()
     }
