@@ -1,84 +1,87 @@
 <template>
   <div class="form-group columns">
-    <SSelect
-      label="I2C #1"
-      v-model:value="i2c1"
-      @update:value="i2c1 = $event"
-      :valueOptions="i2cOptions"
-      :colsLabel="4"
-      :colsInput="8"
-    />
-    <SSelect
-      label="Analog / Digital P1"
-      v-model:value="analogDigitalP1"
-      @update:value="analogDigitalP1 = $event"
-      :valueOptions="adcOptions"
-      :colsLabel="4"
-      :colsInput="8"
-    />
+    <SDivider label="Settings" />
+    <div class="column col-12 ui-option-area">
+      <SSelect
+        label="I2C #1"
+        v-model:value="i2c1"
+        @update:value="i2c1 = $event"
+        :valueOptions="i2cOptions"
+        :colsLabel="4"
+        :colsInput="8"
+      />
+      <SSelect
+        label="Analog / Digital P1"
+        v-model:value="analogDigitalP1"
+        @update:value="analogDigitalP1 = $event"
+        :valueOptions="adcOptions"
+        :colsLabel="4"
+        :colsInput="8"
+      />
 
-    <div v-if="adc1TransformationIsVisible" class="column col-12">
-      <div class="form-group columns">
-        <div class="column col-1 col-mr-auto"></div>
-        <div class="column col-9 col-mr-auto">
-          <SInput
-            label="P1 transformation"
-            v-model:value="analogDigitalP1Transformation"
-            @update:value="analogDigitalP1Transformation = $event"
-            :colsLabel="4"
-            :colsInput="8"
-            :tooltip="tooltip"
-          />
+      <div v-if="adc1TransformationIsVisible" class="column col-12">
+        <div class="form-group columns">
+          <div class="column col-1 col-mr-auto"></div>
+          <div class="column col-9 col-mr-auto">
+            <SInput
+              label="P1 transformation"
+              v-model:value="analogDigitalP1Transformation"
+              @update:value="analogDigitalP1Transformation = $event"
+              :colsLabel="4"
+              :colsInput="8"
+              :tooltip="tooltip"
+            />
+          </div>
+          <div class="column col-2 col-mr-auto"></div>
         </div>
-        <div class="column col-2 col-mr-auto"></div>
       </div>
-    </div>
-    <SSelect
-      label="Analog / Digital P2"
-      v-model:value="analogDigitalP2"
-      @update:value="analogDigitalP2 = $event"
-      :valueOptions="adcOptions"
-      :colsLabel="4"
-      :colsInput="8"
-    />
-    <div v-if="adc2TransformationIsVisible" class="column col-12">
-      <div class="form-group columns">
-        <div class="column col-1 col-mr-auto"></div>
-        <div class="column col-9 col-mr-auto">
-          <SInput
-            label="P2 transformation"
-            v-model:value="analogDigitalP2Transformation"
-            @update:value="analogDigitalP2Transformation = $event"
-            :colsLabel="4"
-            :colsInput="8"
-            :tooltip="tooltip"
-          />
+      <SSelect
+        label="Analog / Digital P2"
+        v-model:value="analogDigitalP2"
+        @update:value="analogDigitalP2 = $event"
+        :valueOptions="adcOptions"
+        :colsLabel="4"
+        :colsInput="8"
+      />
+      <div v-if="adc2TransformationIsVisible" class="column col-12">
+        <div class="form-group columns">
+          <div class="column col-1 col-mr-auto"></div>
+          <div class="column col-9 col-mr-auto">
+            <SInput
+              label="P2 transformation"
+              v-model:value="analogDigitalP2Transformation"
+              @update:value="analogDigitalP2Transformation = $event"
+              :colsLabel="4"
+              :colsInput="8"
+              :tooltip="tooltip"
+            />
+          </div>
+          <div class="column col-2 col-mr-auto"></div>
         </div>
-        <div class="column col-2 col-mr-auto"></div>
       </div>
-    </div>
-    <SSelect
-      label="Analog / Digital P3"
-      v-model:value="analogDigitalP3"
-      @update:value="analogDigitalP3 = $event"
-      :valueOptions="adcOptions"
-      :colsLabel="4"
-      :colsInput="8"
-    />
-    <div v-if="adc3TransformationIsVisible" class="column col-12">
-      <div class="form-group columns">
-        <div class="column col-1 col-mr-auto"></div>
-        <div class="column col-9 col-mr-auto">
-          <SInput
-            label="P3 transformation"
-            v-model:value="analogDigitalP3Transformation"
-            @update:value="analogDigitalP3Transformation = $event"
-            :colsLabel="4"
-            :colsInput="8"
-            :tooltip="tooltip"
-          />
+      <SSelect
+        label="Analog / Digital P3"
+        v-model:value="analogDigitalP3"
+        @update:value="analogDigitalP3 = $event"
+        :valueOptions="adcOptions"
+        :colsLabel="4"
+        :colsInput="8"
+      />
+      <div v-if="adc3TransformationIsVisible" class="column col-12">
+        <div class="form-group columns">
+          <div class="column col-1 col-mr-auto"></div>
+          <div class="column col-9 col-mr-auto">
+            <SInput
+              label="P3 transformation"
+              v-model:value="analogDigitalP3Transformation"
+              @update:value="analogDigitalP3Transformation = $event"
+              :colsLabel="4"
+              :colsInput="8"
+              :tooltip="tooltip"
+            />
+          </div>
+          <div class="column col-2 col-mr-auto"></div>
         </div>
-        <div class="column col-2 col-mr-auto"></div>
       </div>
     </div>
     <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
@@ -91,11 +94,12 @@ import ShieldCommonData from "@/components/mixins/ShieldCommonData.vue"
 import WebuiFooter from "@/components/WebuiFooter.vue"
 import SInput from "@/components/SInput.vue"
 import SSelect from "@/components/SSelect.vue"
+import SDivider from "@/components/SDivider.vue"
 
 export default {
   name: "ShieldDigitalAnalog",
   mixins: [CommonTools, ShieldCommonData],
-  components: { SSelect, WebuiFooter, SInput },
+  components: { SSelect, WebuiFooter, SInput, SDivider },
   data() {
     return {
       // Add your component data here

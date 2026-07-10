@@ -8,7 +8,7 @@
       :valueOptions="shieldVersionOptions"
     />
     <SDivider label="SDI12" />
-    <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+    <div class="column col-12 ui-option-area">
       <SDivider label="General Settings" />
       <SInput
         label="Warmup time (ms)"
@@ -65,7 +65,7 @@
       </table>
     </div>
     <SDivider label="MODBUS" />
-    <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+    <div class="column col-12 ui-option-area">
       <div class="columns">
         <SDivider label="General Settings" />
         <SSelect
@@ -152,7 +152,7 @@
       </div>
     </div>
     <SDivider label="ADC" />
-    <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+    <div class="column col-12 ui-option-area">
       <div class="columns">
         <div class="container" v-for="adc in adcConfig" :key="adc.id">
           <SSwitch :label="'Analog Sensor' + adc.id" v-model:value="adc.enabled" />
@@ -186,7 +186,7 @@
       </div>
     </div>
     <SDivider label="Pulse Counter" />
-    <div class="column col-12" style="border-color: #a0a0a0; border-width: 1px; border-style: solid; padding: 10px">
+    <div class="column col-12 ui-option-area">
       <div class="container" v-for="pc in pulseCounterConfig" :key="pc.id">
         <SSwitch :label="'Pulse Counter ' + pc.id" v-model:value="pc.enabled" />
         <div v-if="pc.enabled" class="column col-12">

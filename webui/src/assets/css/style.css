@@ -43,6 +43,15 @@ a:focus {
   font-weight: bold;
 }
 
+/* Increase divider contrast so section separators remain visible on light backgrounds. */
+.divider {
+  border-top-color: #cfd5dd;
+}
+
+.divider-vert::before {
+  border-left-color: #cfd5dd;
+}
+
 .body-custom {
   background-color: #f2f2f2;
 }
@@ -187,6 +196,12 @@ a:focus {
   margin-right: 5px;
 }
 
+.ui-option-area {
+  border-color: #a0a0a0;
+  border-width: 1px;
+  border-style: solid;
+  padding: 10px;
+}
 /*
 .container {
   width: 1000px;

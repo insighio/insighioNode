@@ -1,52 +1,55 @@
 <template>
   <div class="form-group columns">
-    <SSelect
-      label="I2C #1"
-      v-model:value="i2c1"
-      @update:value="i2c1 = $event"
-      :valueOptions="i2cOptions"
-      :colsLabel="4"
-      :colsInput="8"
-    />
+    <SDivider label="Settings" />
+    <div class="column col-12 ui-option-area">
+      <SSelect
+        label="I2C #1"
+        v-model:value="i2c1"
+        @update:value="i2c1 = $event"
+        :valueOptions="i2cOptions"
+        :colsLabel="4"
+        :colsInput="8"
+      />
 
-    <SSelect
-      label="I2C #2"
-      v-model:value="i2c2"
-      @update:value="i2c2 = $event"
-      :valueOptions="i2cOptions"
-      :colsLabel="4"
-      :colsInput="8"
-    />
-    <SSelect
-      label="Analog / Digital P1"
-      v-model:value="adcP1"
-      @update:value="adcP1 = $event"
-      :valueOptions="adcOptions"
-      :colsLabel="4"
-      :colsInput="8"
-    />
-    <SSwitch
-      label="Weight Scale"
-      v-model:value="scaleEnabled"
-      @update:value="scaleEnabled = $event"
-      :colsLabel="4"
-      :colsInput="8"
-    />
-    <div v-if="scaleEnabled" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-      <div class="column col-4 col-sm-12">
-        <label class="form-label"></label>
+      <SSelect
+        label="I2C #2"
+        v-model:value="i2c2"
+        @update:value="i2c2 = $event"
+        :valueOptions="i2cOptions"
+        :colsLabel="4"
+        :colsInput="8"
+      />
+      <SSelect
+        label="Analog / Digital P1"
+        v-model:value="adcP1"
+        @update:value="adcP1 = $event"
+        :valueOptions="adcOptions"
+        :colsLabel="4"
+        :colsInput="8"
+      />
+      <SSwitch
+        label="Weight Scale"
+        v-model:value="scaleEnabled"
+        @update:value="scaleEnabled = $event"
+        :colsLabel="4"
+        :colsInput="8"
+      />
+      <div v-if="scaleEnabled" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
+        <div class="column col-4 col-sm-12">
+          <label class="form-label"></label>
+        </div>
+        <div class="column col-8 col-sm-12">
+          <button class="btn btn-primary ui-ml-30" @click="startCalibration()">Calibrate</button>
+        </div>
       </div>
-      <div class="column col-8 col-sm-12">
-        <button class="btn btn-primary ui-ml-30" @click="startCalibration()">Calibrate</button>
-      </div>
+      <SSwitch
+        label="[Debug] Enable Scale Sensor Monitoring"
+        v-model:value="scaleMonitoring"
+        @update:value="scaleMonitoring = $event"
+        :colsLabel="4"
+        :colsInput="8"
+      />
     </div>
-    <SSwitch
-      label="[Debug] Enable Scale Sensor Monitoring"
-      v-model:value="scaleMonitoring"
-      @update:value="scaleMonitoring = $event"
-      :colsLabel="4"
-      :colsInput="8"
-    />
     <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
 
     <!-- Wizard Dialog -->
@@ -164,8 +167,12 @@
                 Measure
               </button>
               <button class="btn btn-primary ui-btn-spaced" :disabled="isLoading" @click="requestTare()">Tare</button>
-              <button class="btn btn-primary ui-btn-spaced" :disabled="isLoading" @click="goToPreviousStep()">Back</button>
-              <button class="btn btn-primary ui-btn-spaced" :disabled="isLoading" @click="saveCalibration()">Save</button>
+              <button class="btn btn-primary ui-btn-spaced" :disabled="isLoading" @click="goToPreviousStep()">
+                Back
+              </button>
+              <button class="btn btn-primary ui-btn-spaced" :disabled="isLoading" @click="saveCalibration()">
+                Save
+              </button>
             </div>
           </div>
         </div>
@@ -182,11 +189,12 @@ import { fetchInternal } from "@/js/utils.js"
 
 import SSwitch from "@/components/SSwitch.vue"
 import SSelect from "@/components/SSelect.vue"
+import SDivider from "@/components/SDivider.vue"
 
 export default {
   name: "ShieldScale",
   mixins: [CommonTools, ShieldCommonData],
-  components: { SSwitch, WebuiFooter, SSelect },
+  components: { SSwitch, WebuiFooter, SSelect, SDivider },
   data() {
     return {
       i2c1: "",

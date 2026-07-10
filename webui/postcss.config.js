@@ -49,7 +49,11 @@ export default {
                 /^columns$/
               ],
               deep: [],
-              greedy: []
+              greedy: [
+                // Keep Spectre divider variants used by SDivider data-content labels.
+                /divider/,
+                /data-content/
+              ]
             }
           })
         ]

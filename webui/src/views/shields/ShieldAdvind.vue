@@ -1,6 +1,7 @@
 <template>
   <div class="form-group columns">
-    <div class="column col-12">
+    <SDivider label="SDI12" />
+    <div class="column col-12 ui-option-area">
       <table class="table table-striped table-hover">
         <thead>
           <tr>
@@ -53,7 +54,7 @@
     <!--div class="column col-12">
       <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">Add SDI-12 sensor</button>
     </div-->
-    <div class="column col-12">
+    <div class="column col-12 ui-option-area">
       <div class="columns">
         <SDivider label="4-20mA sensing" />
         <SSwitch label="Sensor 1 enable" v-model:value="sens_4_20_num1_enable" />
@@ -89,7 +90,7 @@
         </div>
       </div>
     </div>
-    <div class="column col-12">
+    <div class="column col-12 ui-option-area">
       <SDivider label="Pulse Counter" />
       <SSwitch label="Pulse Counter enable" v-model:value="pulseCounterEnable" />
       <div v-if="pulseCounterEnable" class="column col-12">
