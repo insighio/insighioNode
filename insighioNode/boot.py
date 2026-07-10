@@ -57,117 +57,12 @@ if not utils.existsFile("/perfOk") and "esp32s3" in uos.uname().machine.lower().
 else:
     print("[boot]: performance ok")
 
+import sys
 
-##################################################################
-# check voltage
-
-print("[boot] Checking Voltage")
-
-import uos
-from machine import SoftI2C, Pin, ADC, deepsleep
-
-voltage = None
-i2c = None
-_is_esp32s3 = "esp32s3" in uos.uname().machine.lower()
-_UC_IO_BAT_MEAS_ON = 14 if _is_esp32s3 else 27
-_UC_IO_BAT_READ = 3 if _is_esp32s3 else 36
-
-bq_addr = 0x6B
-
-##################################################################
-# initialize BQ charger setup
-try:
-    i2c = SoftI2C(scl=Pin(38), sda=Pin(39))  # cfg._UC_IO_I2C_SCL, cfg._UC_IO_I2C_SDA
-    # setup fast charing
-    i2c.writeto_mem(bq_addr, 5, b"\x84")
-    i2c.writeto_mem(bq_addr, 0, b"\x22")
-except Exception as e:
-    print("[boot] No BQ charger detected")
-
-_is_charging = True
-_check_charging_state = True  # must be deactivated for devices always conneced to USB charger
-
-if _check_charging_state:
-    try:
-        val = i2c.readfrom_mem(bq_addr, 8, 1)
-        _is_charging = (int.from_bytes(val, "big") & 0x4) > 0
-    except Exception as e:
-        print("[boot] can not check charging state")
-
-if not _is_charging:
-    from gpio_handler import set_pin_value, get_input_voltage
-    from utime import sleep_ms
-
-    ##################################################################
-    # if not charging, check battery voltage
-    import utils
-
-    voltage_flag_file = "/voltage_low"
-    low_voltage_flag_exists = utils.existsFlagFile(voltage_flag_file)
-
-    ##################################################################
-    # # set charging off
-    try:
-        if i2c:
-            i2c.writeto_mem(bq_addr, 1, b"\x0b")
-    except Exception as e:
-        print("[boot] can not close charging")
-
-    ##################################################################
-    # check voltage
-    set_pin_value(_UC_IO_BAT_MEAS_ON, 1)
-
-    check_cnt_max = 30
-    check_cnt = 0
-
-    voltage_low = False
-    voltage_mid = False
-    voltage_ok = False
-
-    VOLTAGE_LOW = 3500
-    VOLTAGE_MIN_OPERATING = 3600
-
-    while check_cnt < check_cnt_max:
-        sleep_ms(100)
-        voltage = get_input_voltage(_UC_IO_BAT_READ, 2, ADC.ATTN_11DB)
-
-        if voltage < VOLTAGE_LOW:
-            voltage_low = True
-        elif voltage >= VOLTAGE_LOW and voltage < VOLTAGE_MIN_OPERATING and low_voltage_flag_exists:
-            voltage_mid = True
-        else:
-            voltage_ok = True
-            break
-        check_cnt += 1
-    print("[boot] batt voltage: {}".format(voltage))
-
-    set_pin_value(_UC_IO_BAT_MEAS_ON, 0)
-
-    ##################################################################
-    # set charging on
-
-    try:
-        if i2c:
-            # set charging on
-            i2c.writeto_mem(bq_addr, 1, b"\x1b")
-    except Exception as e:
-        print("[boot] can not open charging")
-
-    ##################################################################
-    # execute deepsleep if needed
-    if voltage_ok and low_voltage_flag_exists:
-        utils.deleteFlagFile(voltage_flag_file)
-    elif voltage_mid:
-        print("Low voltage, sleeping for an hour")
-        deepsleep(3600000)
-    elif voltage_low:
-        print("Low voltage, sleeping for a day")
-        utils.writeToFlagFile(voltage_flag_file, "charging")
-        deepsleep(86400000)
-else:
-    print("[boot] device charging")
-
-print("[boot] Voltage OK")
+sys.path.clear()
+sys.path.append("/lib")
+sys.path.append(".frozen")
+sys.path.append("")
 
 ##################################################################
 # setup data paritition
@@ -194,5 +89,97 @@ except OSError:
         utils.update_USE_DATA_DIR()
     except OSError:
         print("[boot] Failed mounting /data")
+
+##################################################################
+# check voltage
+
+print("[boot] Checking Voltage")
+
+from machine import Pin, ADC
+import device_info
+
+hw_version = device_info.get_main_version()
+
+voltage = None
+_UC_IO_BAT_MEAS_ON = 14 if hw_version == device_info._MAIN_VERSION_V1 else None
+_UC_IO_BAT_READ = 3 if hw_version == device_info._MAIN_VERSION_V1 else None
+
+try:
+    device_info.bq_charger_exec(device_info.bq_charger_setup)
+except Exception as e:
+    print("[boot] No BQ charger detected")
+
+_is_charging = True
+_check_charging_state = True  # must be deactivated for devices always connected to USB charger
+
+if _check_charging_state:
+    _is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging)
+
+if not _is_charging:
+    from gpio_handler import set_pin_value, get_input_voltage
+    from utime import sleep_ms
+
+    ##################################################################
+    # if not charging, check battery voltage
+    import utils
+
+    voltage_flag_file = "/voltage_low"
+    low_voltage_flag_exists = utils.existsFlagFile(voltage_flag_file)
+
+    if hw_version == device_info._MAIN_VERSION_V1:
+        set_pin_value(_UC_IO_BAT_MEAS_ON, 1)
+
+    check_cnt_max = 30
+    check_cnt = 0
+
+    voltage_low = False
+    voltage_mid = False
+    voltage_ok = False
+
+    VOLTAGE_LOW = 3500
+    VOLTAGE_MIN_OPERATING = 3600
+
+    while check_cnt < check_cnt_max:
+        sleep_ms(100)
+        if hw_version == device_info._MAIN_VERSION_V1:
+            voltage = get_input_voltage(_UC_IO_BAT_READ, 2, ADC.ATTN_11DB)
+        else:
+            voltage = device_info.bq_charger_exec(device_info.bq_charger_get_vbat_adc)
+
+        if voltage < VOLTAGE_LOW:
+            voltage_low = True
+        elif voltage >= VOLTAGE_LOW and voltage < VOLTAGE_MIN_OPERATING and low_voltage_flag_exists:
+            voltage_mid = True
+        else:
+            voltage_ok = True
+            break
+        check_cnt += 1
+    print("[boot] batt voltage: {}".format(voltage))
+
+    if hw_version == device_info._MAIN_VERSION_V1:
+        set_pin_value(_UC_IO_BAT_MEAS_ON, 0)
+
+    ##################################################################
+    # execute deepsleep if needed
+    if voltage_ok and low_voltage_flag_exists:
+        utils.deleteFlagFile(voltage_flag_file)
+        print("[boot] Battery recovered")
+    elif voltage_mid:
+        print("[boot] Low voltage, sleeping for an hour")
+        from machine import deepsleep
+
+        deepsleep(3600000)
+    elif voltage_low:
+        print("[boot] Low voltage, sleeping for a day")
+        utils.writeToFlagFile(voltage_flag_file, "charging")
+        from machine import deepsleep
+
+        deepsleep(86400000)
+    else:
+        print("[boot] Battery not charging: {}mV".format(voltage))
+else:
+    print("[boot] device charging")
+
+print("[boot] Voltage OK")
 
 ##################################################################
