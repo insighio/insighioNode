@@ -146,6 +146,8 @@ def get_measurements(cfg_dummy=None):
                 )
 
                 set_value_int(measurements, "chg_stat", device_info.bq_charger_exec(device_info.bq_charger_get_charging_state))
+
+                device_info.bq_charger_exec(device_info.bq_charger_reset_ibat)
             try:
                 from machine import SoftI2C, Pin
 
