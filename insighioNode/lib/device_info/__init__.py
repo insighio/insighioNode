@@ -363,6 +363,9 @@ def _bq_set_vbat_mv(i2c, bq_addr, target_mv):
     _bq_write_u16(i2c, bq_addr, 0x04, code << 3)
 
 
+_ENABLE_IBAT_AVERAGING = False
+
+
 def bq_charger_setup(i2c, bq_addr):
     logging.debug("Battery: initialization")
     version = _bq_get_version(i2c, bq_addr)
@@ -384,8 +387,10 @@ def bq_charger_setup(i2c, bq_addr):
 
         # Enable ADC (by default it is disabled: 0x30)
         REG0x26_ADC_Control = 0x26
-        # _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, 0x80)
-        _bq_update_bits(i2c, bq_addr, REG0x26_ADC_Control, 0xF0, 0x80)
+        _bq_write_u8(
+            i2c, bq_addr, REG0x26_ADC_Control, 0x80 | (0x04 if _ENABLE_IBAT_AVERAGING else 0x00)
+        )  # enable ADC, continuos measurements with averaging
+        # _bq_update_bits(i2c, bq_addr, REG0x26_ADC_Control, 0xF0, 0x80)
 
 
 # def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
@@ -535,6 +540,16 @@ def bq_charger_get_ibat_adc(i2c, bq_addr):
     # REG0x2A/0x2B: bits[15:2], signed, 4mA/LSB.
     raw = _bq_read_u16(i2c, bq_addr, 0x2A)
     return _bq_decode_adc_u16_le(raw, lsb_bit=2, width=14, signed=True, lsb_scale=4.0)
+
+
+def bq_charger_reset_ibat(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return None
+
+    if _ENABLE_IBAT_AVERAGING:
+        _bq_write_u8(i2c, bq_addr, 0x26, 0x30)
+        sleep_ms(10)
+        _bq_write_u8(i2c, bq_addr, 0x26, 0x80 | (0x04 if _ENABLE_IBAT_AVERAGING else 0x00))
 
 
 def bq_charger_get_vbus_adc(i2c, bq_addr):
