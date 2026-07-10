@@ -96,16 +96,23 @@ except OSError:
 print("[boot] Checking Voltage")
 
 from machine import Pin, ADC
-import device_info
+from device_info import (
+    get_main_version,
+    _MAIN_VERSION_V1,
+    bq_charger_exec,
+    bq_charger_setup,
+    bq_charger_get_is_charging,
+    bq_charger_get_vbat_adc,
+)
 
-hw_version = device_info.get_main_version()
+hw_version = get_main_version()
 
 voltage = None
-_UC_IO_BAT_MEAS_ON = 14 if hw_version == device_info._MAIN_VERSION_V1 else None
-_UC_IO_BAT_READ = 3 if hw_version == device_info._MAIN_VERSION_V1 else None
+_UC_IO_BAT_MEAS_ON = 14 if hw_version == _MAIN_VERSION_V1 else None
+_UC_IO_BAT_READ = 3 if hw_version == _MAIN_VERSION_V1 else None
 
 try:
-    device_info.bq_charger_exec(device_info.bq_charger_setup)
+    bq_charger_exec(bq_charger_setup)
 except Exception as e:
     print("[boot] No BQ charger detected")
 
@@ -113,7 +120,7 @@ _is_charging = True
 _check_charging_state = True  # must be deactivated for devices always connected to USB charger
 
 if _check_charging_state:
-    _is_charging = device_info.bq_charger_exec(device_info.bq_charger_get_is_charging)
+    _is_charging = bq_charger_exec(bq_charger_get_is_charging)
 
 if not _is_charging:
     from gpio_handler import set_pin_value, get_input_voltage
@@ -126,7 +133,7 @@ if not _is_charging:
     voltage_flag_file = "/voltage_low"
     low_voltage_flag_exists = utils.existsFlagFile(voltage_flag_file)
 
-    if hw_version == device_info._MAIN_VERSION_V1:
+    if hw_version == _MAIN_VERSION_V1:
         set_pin_value(_UC_IO_BAT_MEAS_ON, 1)
 
     check_cnt_max = 30
@@ -141,10 +148,10 @@ if not _is_charging:
 
     while check_cnt < check_cnt_max:
         sleep_ms(100)
-        if hw_version == device_info._MAIN_VERSION_V1:
+        if hw_version == _MAIN_VERSION_V1:
             voltage = get_input_voltage(_UC_IO_BAT_READ, 2, ADC.ATTN_11DB)
         else:
-            voltage = device_info.bq_charger_exec(device_info.bq_charger_get_vbat_adc)
+            voltage = bq_charger_exec(bq_charger_get_vbat_adc)
 
         if voltage < VOLTAGE_LOW:
             voltage_low = True
@@ -156,7 +163,7 @@ if not _is_charging:
         check_cnt += 1
     print("[boot] batt voltage: {}".format(voltage))
 
-    if hw_version == device_info._MAIN_VERSION_V1:
+    if hw_version == _MAIN_VERSION_V1:
         set_pin_value(_UC_IO_BAT_MEAS_ON, 0)
 
     ##################################################################
