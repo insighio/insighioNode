@@ -116,7 +116,7 @@ def executeMeasureAndUploadLoop():
     if light_sleep_on_period is None:
         light_sleep_on_period = cfg.get("_DEEP_SLEEP_PERIOD_SEC")
 
-    do_round_measurement_timestamp_in_minutes = light_sleep_on_period > 60
+    do_round_measurement_timestamp_in_minutes = light_sleep_on_period >= 60
 
     if light_sleep_on_period and cfg.get("_LIGHT_SLEEP_NETWORK_ACTIVE"):
         try:
