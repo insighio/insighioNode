@@ -88,6 +88,10 @@ def debug(msg, *args):
     getLogger(None).debug(msg, *args)
 
 
+def warning(msg, *args):
+    getLogger(None).warning(msg, *args)
+
+
 def error(msg, *args):
     getLogger(None).error(msg, *args)
 
