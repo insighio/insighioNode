@@ -7,7 +7,7 @@ import logging
 from utime import sleep_ms, ticks_ms, ticks_diff
 from .dictionary_utils import set_value, set_value_float, set_value_int
 
-from utils import is_system_time_valid
+from device_info.rtc import system_time
 
 transfer_client = None
 transfer_secondary_client = None
@@ -160,8 +160,9 @@ def connect(cfg):
                     1 if tc_secondary_success else 0,
                 )
 
-        logging.info("system time valid: {}".format(is_system_time_valid()))
-        if tc_success and not is_system_time_valid():
+        _, valid = system_time()
+        logging.info("system time valid: {}".format(valid))
+        if tc_success and not valid:
             # if system time is invalid, try to update it from network time
             cellular.update_rtc_from_network_time(modem_instance, True)
 

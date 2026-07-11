@@ -106,11 +106,11 @@ def supports_rtc_chip():
     return _supports_rtc_chip
 
 
-def system_time_is_valid():
+def system_time():
     epoch = time() + _ESP32_SYS_TIME_OFFSET
 
     # Friday, April 15, 2022
-    return epoch > 1650000000
+    return (epoch, epoch > 1650000000)
 
 
 def i2c_rtc_is_valid():
@@ -136,7 +136,8 @@ def i2c_rtc_is_valid():
 
 
 def update_time_from_rtc():
-    if system_time_is_valid():
+    _, valid = system_time()
+    if valid:
         logging.info("System time is valid. Not updating from RTC.")
         return
 

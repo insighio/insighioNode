@@ -13,7 +13,7 @@ message_buffer_size = cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER")
 
 mutex = _thread.allocate_lock()
 
-_ESP32_SYS_TIME_OFFSET = 946684800
+from device_info.rtc import system_time, _ESP32_SYS_TIME_OFFSET
 
 
 def buffered_measurements_count():
@@ -21,21 +21,21 @@ def buffered_measurements_count():
 
 
 def timestamp_measurements(measurements, round_seconds=False):
-    epoch = utime.time() + _ESP32_SYS_TIME_OFFSET
+    epoch, valid = system_time()
 
     # Friday, April 15, 2022
-    if epoch > 1650000000:
+    if valid:
         measurements["dt"] = {"value": epoch - (epoch % 60 if round_seconds else 0)}  # time offset 1970 -> 2000
     else:
         measurements["diff_dt"] = {"value": utime.time()}
 
 
 def update_timestamp_based_on_diff_dt(measurements, round_seconds=False):
-    epoch = utime.time() + _ESP32_SYS_TIME_OFFSET
+    epoch, valid = system_time()
 
     # Friday, April 15, 2022
     if "diff_dt" in measurements and "dt" not in measurements:
-        if epoch > 1650000000:
+        if valid:
             # get time jump offset (seconds)
             epoch_diff = utils.readFromFlagFile("/epoch_diff")
             try:
