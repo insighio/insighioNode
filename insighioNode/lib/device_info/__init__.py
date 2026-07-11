@@ -245,16 +245,25 @@ def get_free_flash(partition_path="/"):
     return freesize
 
 
-def bq_charger_exec(bq_func, *args, **kwargs):
+def i2c_obj():
     from machine import SoftI2C, Pin
 
-    status = False
     try:
         i2c = SoftI2C(scl=Pin(38), sda=Pin(39))  # cfg._UC_IO_I2C_SCL, cfg._UC_IO_I2C_SDA
-        status = bq_func(i2c, 0x6B, *args, **kwargs)  # cfg._I2C_BQ_ADDRESS
+        return i2c
     except Exception as e:
-        logging.exception(e, "No BQ charger detected")
-    return status
+        logging.exception(e, "I2C could not be created")
+    return None
+
+
+def bq_charger_exec(bq_func, *args, **kwargs):
+    i2c = i2c_obj()
+    if i2c is None:
+        logging.error("BQ charger: I2C not available")
+        return None
+
+    bq_addr = 0x6B
+    return bq_func(i2c, bq_addr, *args, **kwargs)
 
 
 def bq_charger_identify(i2c, bq_addr):

@@ -214,6 +214,7 @@ def connect(cfg):
 def update_rtc_from_network_time(modem, use_ntp_update=False):
     try:
         from machine import RTC
+        from device_info.rtc import update_time_from_tuple
 
         if use_ntp_update:
             retries = 0
@@ -260,7 +261,7 @@ def update_rtc_from_network_time(modem, use_ntp_update=False):
             logging.debug("Setting cellular RTC with: " + str(time_tuple))
 
             epoch_before = time()
-            rtc.datetime(time_tuple)
+            update_time_from_tuple(time_tuple)
             epoch_diff = time() - epoch_before
             utils.writeToFlagFile("/epoch_diff", "{}".format(epoch_diff))
 

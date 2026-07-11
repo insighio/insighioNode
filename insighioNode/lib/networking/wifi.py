@@ -3,6 +3,7 @@ import network
 from machine import RTC
 from utime import ticks_ms, sleep_ms, time, ticks_diff, ticks_add
 import logging
+from device_info.rtc import update_time_ntp
 
 wl = None
 
@@ -85,7 +86,7 @@ def connect(known_nets, max_connection_attempt_time_sec, force_no_scan=True):
             pwd = known_nets[net_to_use]["pwd"]
             logging.debug(net_to_use, sec, pwd)
 
-        (connection_status, conn_attempt_duration, _, channel, rssi) = connect_to_network(net_to_use, pwd, max_connection_attempt_time_sec)
+        connection_status, conn_attempt_duration, _, channel, rssi = connect_to_network(net_to_use, pwd, max_connection_attempt_time_sec)
         return (connection_status, conn_attempt_duration, scan_attempt_duration, channel, rssi)
 
     except Exception as e:
@@ -115,30 +116,6 @@ def deactivate():
         logging.debug("WiFi disconnecting ignored.")
 
     return (deactivation_status, ticks_diff(ticks_ms(), start_time_deactivation))
-
-
-def update_time_ntp():
-    import ntptime
-    import utils
-
-    rtc = RTC()
-
-    logging.info("time before sync: " + str(rtc.datetime()))
-    ntptime.host = "pool.ntp.org"
-    cnt = 0
-    max_tries = 5
-    while cnt < max_tries:
-        try:
-            epoch_before = time()
-            ntptime.settime()
-            logging.info("time set")
-            break
-        except:
-            logging.info("time failed")
-        cnt += 1
-    epoch_diff = time() - epoch_before
-    utils.writeToFlagFile("/epoch_diff", "{}".format(epoch_diff))
-    logging.info("time after sync: " + str(rtc.datetime()))
 
 
 def getSignalQuality():

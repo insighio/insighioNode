@@ -16,6 +16,8 @@ logging.debug("start timestamp: " + str(ticks_ms()))
 import device_info
 import gpio_handler
 
+# device_info._ENABLE_IBAT_AVERAGING = True
+
 ##################################################################
 # Device Setup
 gpio_handler.set_pin_value(12, 1)
@@ -28,6 +30,9 @@ device_info.blink_led(0x252525)
 import utils
 import machine
 import gc
+from device_info import rtc
+
+rtc.update_time_from_rtc()
 
 demo_config_exists = False
 try:
