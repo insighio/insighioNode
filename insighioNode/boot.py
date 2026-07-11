@@ -183,7 +183,7 @@ if not _is_charging:
 
         deepsleep(86400000)
     else:
-        print("[boot] Battery not charging: {}mV".format(voltage))
+        print("[boot] Battery not charging")
 else:
     print("[boot] device charging")
 
