@@ -38,6 +38,8 @@ _CHARGER_VERSION_2 = "bq25622e"
 _MAIN_VERSION_V1 = "v1"
 _MAIN_VERSION_V2 = "v2"
 
+_ENABLE_IBAT_AVERAGING = False
+
 _main_version = None
 _bq_charger_version = None
 
@@ -105,11 +107,6 @@ def get_device_id():
     """Returns a device id based on machine unique id in readable format and raw format"""
     # this seems to be the same with WiFi STA MAC given by WLAN().mac()[0]
     return (ubinascii.hexlify(machine.unique_id()).decode("utf-8"), machine.unique_id())
-
-
-def _try_get_lora_mac_bytes(force_init_region=False):
-    mac = None
-    return mac
 
 
 def get_lora_mac():
@@ -372,7 +369,9 @@ def _bq_set_vbat_mv(i2c, bq_addr, target_mv):
     _bq_write_u16(i2c, bq_addr, 0x04, code << 3)
 
 
-_ENABLE_IBAT_AVERAGING = False
+def bq_set_ibat_averaging_enabled(enabled):
+    global _ENABLE_IBAT_AVERAGING
+    _ENABLE_IBAT_AVERAGING = enabled
 
 
 def bq_charger_setup(i2c, bq_addr):
@@ -394,12 +393,18 @@ def bq_charger_setup(i2c, bq_addr):
         REG0x02_Charge_Current_Limit = 0x02
         _bq_write_u16(i2c, bq_addr, REG0x02_Charge_Current_Limit, 0x0240)  # 740mA
 
-        # Enable ADC (by default it is disabled: 0x30)
-        REG0x26_ADC_Control = 0x26
-        _bq_write_u8(
-            i2c, bq_addr, REG0x26_ADC_Control, 0x80 | (0x04 if _ENABLE_IBAT_AVERAGING else 0x00)
-        )  # enable ADC, continuos measurements with averaging
-        # _bq_update_bits(i2c, bq_addr, REG0x26_ADC_Control, 0xF0, 0x80)
+        _bq_charger_enable_adc_averaging(i2c, bq_addr)
+
+
+def _bq_charger_enable_adc_averaging(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return
+
+    REG0x26_ADC_Control = 0x26
+    reg26_val = _bq_read_u8(i2c, bq_addr, REG0x26_ADC_Control)
+    expected_val = 0x80 | (0x08 if _ENABLE_IBAT_AVERAGING else 0x00)
+    if reg26_val != expected_val:
+        _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, expected_val)  # enable ADC, continuous measurements with averaging
 
 
 # def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
@@ -556,9 +561,13 @@ def bq_charger_reset_ibat(i2c, bq_addr):
         return None
 
     if _ENABLE_IBAT_AVERAGING:
-        _bq_write_u8(i2c, bq_addr, 0x26, 0x30)
+        # reset the averaging by disabling and enabling it again
+        REG0x26_ADC_Control = 0x26
+        _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, 0x30)  # enable ADC, continuos measurements with averaging
         sleep_ms(10)
-        _bq_write_u8(i2c, bq_addr, 0x26, 0x80 | (0x04 if _ENABLE_IBAT_AVERAGING else 0x00))
+        # reset averaging session
+        _bq_write_u8(i2c, bq_addr, 0x26, 0x80 | (0x0C if _ENABLE_IBAT_AVERAGING else 0x00))
+        # _bq_charger_enable_adc_averaging(i2c, bq_addr)
 
 
 def bq_charger_get_vbus_adc(i2c, bq_addr):

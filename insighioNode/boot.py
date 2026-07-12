@@ -64,6 +64,10 @@ sys.path.append("/lib")
 sys.path.append(".frozen")
 sys.path.append("")
 
+import logging
+
+logging.setLevel(logging.DEBUG)
+
 ##################################################################
 # setup data paritition
 from esp32 import Partition
@@ -103,6 +107,8 @@ from device_info import (
     bq_charger_setup,
     bq_charger_get_is_charging,
     bq_charger_get_vbat_adc,
+    bq_set_ibat_averaging_enabled,
+    bq_charger_get_ibat_adc,
 )
 
 hw_version = get_main_version()
@@ -110,6 +116,10 @@ hw_version = get_main_version()
 voltage = None
 _UC_IO_BAT_MEAS_ON = 14 if hw_version == _MAIN_VERSION_V1 else None
 _UC_IO_BAT_READ = 3 if hw_version == _MAIN_VERSION_V1 else None
+
+bq_set_ibat_averaging_enabled(True)
+
+print("ibat: {}".format(bq_charger_exec(bq_charger_get_ibat_adc)))
 
 try:
     bq_charger_exec(bq_charger_setup)

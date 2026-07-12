@@ -29,7 +29,6 @@ def execute_battery_setup():
         device_info.get_hw_module_version() != device_info._CONST_ESP32
         and device_info.get_hw_module_version() != device_info._CONST_ESP32_WROOM
     ):
-        # device_info.bq_charger_exec(device_info.bq_charger_setup)
         device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
 
         battery_settings_applied = False

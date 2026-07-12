@@ -16,13 +16,9 @@ logging.debug("start timestamp: " + str(ticks_ms()))
 import device_info
 import gpio_handler
 
-# device_info._ENABLE_IBAT_AVERAGING = True
-
 ##################################################################
 # Device Setup
-gpio_handler.set_pin_value(12, 1)
-
-device_info.bq_charger_exec(device_info.bq_charger_setup)
+gpio_handler.set_pin_value(12, 1)  # Enable external sensors power
 
 device_info.initialize_led()
 device_info.blink_led(0x252525)
