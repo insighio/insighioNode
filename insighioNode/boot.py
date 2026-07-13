@@ -163,15 +163,22 @@ if not _is_charging:
         else:
             voltage = bq_charger_exec(bq_charger_get_vbat_adc)
 
+        print("[boot] batt voltage: {}".format(voltage))
+
         if voltage < VOLTAGE_LOW:
             voltage_low = True
+            voltage_mid = False
+            voltage_ok = False
         elif voltage >= VOLTAGE_LOW and voltage < VOLTAGE_MIN_OPERATING and low_voltage_flag_exists:
+            voltage_low = False
             voltage_mid = True
+            voltage_ok = False
         else:
+            voltage_low = False
+            voltage_mid = False
             voltage_ok = True
             break
         check_cnt += 1
-    print("[boot] batt voltage: {}".format(voltage))
 
     if hw_version == _MAIN_VERSION_V1:
         set_pin_value(_UC_IO_BAT_MEAS_ON, 0)
