@@ -92,7 +92,9 @@
             </div>
           </div>
 
-          <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
+          <div class="columns ui-mt-1">
+            <WebuiFooter @savePressed="validateMyForm" @backPressed="requestGoBack" />
+          </div>
         </div>
       </div>
     </div>
