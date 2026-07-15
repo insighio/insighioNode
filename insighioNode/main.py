@@ -51,6 +51,7 @@ except Exception as e:
         logging.error("Device never configured")
 
 
+charger_current_set = False
 if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
     try:
         import json
@@ -64,8 +65,22 @@ if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):
             except Exception as e:
                 logging.exception(e, "Error setting logging level")
                 pass
+
+        if _system_settings and "enableChargingLowCurrent" in _system_settings:
+            try:
+                if _system_settings["enableChargingLowCurrent"]:
+                    device_info.bq_charger_exec(device_info.bq_charger_set_low_charging_current)
+                    charger_current_set = True
+            except Exception as e:
+                logging.exception(e, "Error setting charging low current")
     except Exception as e:
         logging.exception(e, "Error loading system settings")
+
+if not charger_current_set:
+    try:
+        device_info.bq_charger_exec(device_info.bq_charger_set_high_charging_current)
+    except Exception as e:
+        logging.exception(e, "Error setting charging high current")
 
 if demo_config_exists and hasattr(cfg, "_NOTIFICATION_LED_ENABLED"):
     try:

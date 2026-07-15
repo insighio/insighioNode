@@ -108,6 +108,11 @@
                       :tooltip="batteryLifeOptimizationTooltip"
                       v-model:value="systemSettings.enableBatteryLifeOptimization"
                     />
+                    <SSwitch
+                      label="Battery low charging current"
+                      :tooltip="batteryLowChargingCurrentTooltip"
+                      v-model:value="systemSettings.enableChargingLowCurrent"
+                    />
                   </div>
                 </div>
               </div>
@@ -221,19 +226,23 @@ export default {
       systemDefaultSettings: {
         loggingLevel: "DEBUG",
         enableFileSystemOptimization: true,
-        enableBatteryLifeOptimization: false
+        enableBatteryLifeOptimization: false,
+        enableChargingLowCurrent: false
       },
       systemSettings: {
         loggingLevel: "DEBUG",
         enableFileSystemOptimization: true,
-        enableBatteryLifeOptimization: false
+        enableBatteryLifeOptimization: false,
+        enableChargingLowCurrent: false
       },
       transitionDirection: "slide-left", // Default transition direction
       isMeasurementNamingDialogOpen: false,
       measurements: [],
       unitOptions: ["Celsius", "Fahrenheit", "Kelvin"], // Example units
       batteryLifeOptimizationTooltip:
-        "Enabling this will charge keep the battery\ncharge around 80% to prolong battery life"
+        "Enabling this will charge keep the battery\ncharge around 80% to prolong battery life",
+      batteryLowChargingCurrentTooltip:
+        "Enabling this will charge the battery at a lower current (240mA)\nwhich will prolong battery life but increase charging time"
     }
   },
   mounted() {
