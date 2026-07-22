@@ -305,6 +305,9 @@ def execute_sdi12_measurements(measurements):
             sdi12.set_dual_direction_pins(cfg.get("_UC_IO_SDI_12_TX_ON"), cfg.get("_UC_IO_SDI_12_RX_ON"), 1, 0, 0, 1)
             gpio_handler.set_pin_value(cfg.get("_UC_IO_SDI_12_REG_ON"), 1)  # set SDI-12 regulator always on for v2 shield
             sdi12.set_data_levels_inverted(True)
+            sdi12.sleep_period_us_before_write = 100
+            sdi12.sleep_period_us_after_write = 50
+            sdi12.write_wait_extra_characters = 0
         else:
             logging.error("Unsupported shield version: {}".format(SHIELD_VERSION))
             return
