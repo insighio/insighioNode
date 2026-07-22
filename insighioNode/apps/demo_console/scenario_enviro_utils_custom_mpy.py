@@ -327,8 +327,8 @@ def execute_sdi12_measurements(measurements):
     if sdi12:
         sdi12.close()
 
-    if shield_version == CONST_SHIELD_V2:
-        UC_IO_SDI_12_REG_ON = cfg.get("_UC_IO_RCV_ON")
+    if SHIELD_VERSION == CONST_SHIELD_V2:
+        UC_IO_SDI_12_REG_ON = cfg.get("_UC_IO_SDI_12_REG_ON")
         gpio_handler.set_pin_value(UC_IO_SDI_12_REG_ON, 0)
 
     _exec_i2c_op(io_expander_power_off_sdi12_sensors)
