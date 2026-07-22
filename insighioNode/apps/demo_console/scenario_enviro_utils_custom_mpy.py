@@ -308,6 +308,8 @@ def execute_sdi12_measurements(measurements):
             sdi12.sleep_period_us_before_write = 100
             sdi12.sleep_period_us_after_write = 50
             sdi12.write_wait_extra_characters = 0
+            sdi12.break_level_multiplier = 2
+            sdi12.mark_level_multiplier = 1.5
         else:
             logging.error("Unsupported shield version: {}".format(SHIELD_VERSION))
             return
