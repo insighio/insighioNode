@@ -308,8 +308,8 @@ def execute_sdi12_measurements(measurements):
             sdi12.sleep_period_us_before_write = 100
             sdi12.sleep_period_us_after_write = 50
             sdi12.write_wait_extra_characters = 0
-            sdi12.break_level_multiplier = 2
-            sdi12.mark_level_multiplier = 1.5
+            sdi12.break_level_multiplier = 1.5
+            sdi12.mark_level_multiplier = 1
         else:
             logging.error("Unsupported shield version: {}".format(SHIELD_VERSION))
             return
@@ -317,11 +317,24 @@ def execute_sdi12_measurements(measurements):
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
-        for sensor in sensor_list:
-            read_sdi12_sensor(sdi12, measurements, sensor)
-            wdt_reset()
-            if not cfg.get("_LOW_LATENCY_MODE_ON"):
-                sleep_ms(500)
+        config_index = 0
+        while config_index >= 0:
+            detected, config_index = sdi12_detect_timing(sdi12, sensor_list, measurements, config_index)
+            if config_index < 0:
+                break
+
+            sensors_meas_were_read = True
+            for sensor in sensor_list:
+                stat = read_sdi12_sensor(sdi12, measurements, sensor)
+                wdt_reset()
+                if not stat:
+                    sensors_meas_were_read = False
+                if not cfg.get("_LOW_LATENCY_MODE_ON"):
+                    sleep_ms(500)
+            if sensors_meas_were_read:
+                break
+            config_index += 1
+
     except Exception as e:
         set_value(measurements, "sdi12_e", "{}".format(e), None)
         logging.exception(e, "Exception while reading SDI-12 data")
@@ -334,6 +347,89 @@ def execute_sdi12_measurements(measurements):
         gpio_handler.set_pin_value(UC_IO_SDI_12_REG_ON, 0)
 
     _exec_i2c_op(io_expander_power_off_sdi12_sensors)
+
+
+def sdi12_detect_timing(sdi12, sensor_list, measurements, start_index=0):
+    logging.debug("sdi12 detect_timing - Detecting SDI12 timing settings for sensors: {}".format(sensor_list))
+    # sdi12.break_level_multiplier, sdi12.mark_level_multiplier, sdi12.sleep_period_us_before_write, sdi12.sleep_period_us_after_write
+    timing_options = [
+        # [1.5, 1.0, 160, 140],
+        # [1.5, 1.0, 160, 180],
+        # [1.5, 1.2, 160, 160],
+        # [1.5, 1.4, 160, 100],
+        # [1.5, 1.4, 160, 20],
+        # [1.5, 1.6, 160, 160],
+        # [1.5, 1.6, 160, 40],
+        [1.5, 1.0, 100, 50],
+        [1.5, 1.1, 160, 110],
+        [1.7, 1.0, 160, 80],
+        [1.7, 1.2, 160, 160],
+        [1.9, 1.2, 160, 100],
+        [1.9, 1.2, 160, 80],
+        [1.9, 1.8, 160, 140],
+        [1.9, 1.8, 160, 20],
+        [1.9, 1.8, 160, 40],
+        [2.1, 1.0, 160, 0],
+        [2.1, 1.4, 160, 140],
+        [2.1, 1.4, 160, 160],
+        [2.1, 1.6, 160, 80],
+        [2.1, 1.8, 160, 0],
+        [2.3, 1.0, 160, 140],
+        [2.3, 1.0, 160, 40],
+        [2.3, 1.2, 160, 180],
+        [2.3, 1.4, 160, 160],
+        [2.3, 1.4, 160, 40],
+        [2.3, 1.6, 160, 120],
+        [2.3, 1.6, 160, 40],
+        [2.3, 1.8, 160, 160],
+    ]
+
+    if start_index >= len(timing_options):
+        logging.error("sdi12_detect_timing - Invalid start_index: {}, timing_options length: {}".format(start_index, len(timing_options)))
+        return (False, -1)
+
+    cnt = start_index
+    while cnt < len(timing_options):
+        # for timing in timing_options:
+        timing = timing_options[cnt]
+        sdi12.break_level_multiplier = timing[0]
+        sdi12.mark_level_multiplier = timing[1]
+        sdi12.sleep_period_us_before_write = timing[2]
+        sdi12.sleep_period_us_after_write = timing[3]
+
+        logging.debug(
+            "sdi12_detect_timing - Trying timing: break_level_multiplier: {}, mark_level_multiplier: {}, sleep_period_us_before_write: {}, sleep_period_us_after_write: {}".format(
+                sdi12.break_level_multiplier,
+                sdi12.mark_level_multiplier,
+                sdi12.sleep_period_us_before_write,
+                sdi12.sleep_period_us_after_write,
+            )
+        )
+
+        # find the first timing setting that works for all sensors
+        all_sensors_active = True
+        for sensor in sensor_list:
+            wdt_reset()
+            address = str(_get(sensor, "address"))
+            is_active = sdi12.is_active(address)
+            all_sensors_active = all_sensors_active and is_active
+            if not is_active:
+                break
+
+        if all_sensors_active:
+            logging.debug(
+                "sdi12_detect_timing - Found working timing: break_level_multiplier: {}, mark_level_multiplier: {}, sleep_period_us_before_write: {}, sleep_period_us_after_write: {}".format(
+                    sdi12.break_level_multiplier,
+                    sdi12.mark_level_multiplier,
+                    sdi12.sleep_period_us_before_write,
+                    sdi12.sleep_period_us_after_write,
+                )
+            )
+            set_value(measurements, "sdi12_timing", "{}".format(timing), None)
+            return (True, cnt)
+        cnt += 1
+
+    return (False, cnt)
 
 
 def read_sdi12_sensor(sdi12, measurements, sensor):
@@ -357,12 +453,18 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
         if not is_active:
             set_value(measurements, "sdi12_{}_e".format(address), "not_found", None)
             logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
-            return
+            return False
 
         manufacturer, model = sdi12.get_sensor_info(address)
         manufacturer = manufacturer.lower().strip() if manufacturer else ""
         model = model.lower().strip() if model else ""
         logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
+
+        if manufacturer:
+            set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
+
+        if model:
+            set_value(measurements, "sdi12_{}_m".format(address), model, None)
 
         command_to_execute = command + sub_cmd
         force_wait = True if manufacturer == "in-situ" and (model == "at500" or model == "at400") else False
@@ -370,7 +472,7 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
         if not responseArray:
             set_value(measurements, "sdi12_{}_e".format(address), "no_response", None)
             logging.error("read_sdi12_sensor - No response from sensor in address: [" + str(address) + "]")
-            return
+            return False
 
         parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements)
 
@@ -381,13 +483,13 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
     except Exception as e:
         set_value(measurements, "sdi12_{}_e".format(address), "{}".format(e), None)
         logging.exception(e, "Exception while reading SDI-12 data for address: {}".format(address))
-        return
+        return False
+
+    return True
 
 
 def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements):
     location = "1"
-    set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
-    set_value(measurements, "sdi12_{}_m".format(address), model, None)
 
     if manufacturer == "meter":
         parse_sensor_meter(model, command_to_execute, address, responseArray, measurements, location)
