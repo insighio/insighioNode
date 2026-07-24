@@ -16,7 +16,7 @@ import utime
 from math import ceil
 from device_info import wdt_reset
 
-_PCNT_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
+_BOARD_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
 
 _i2c = None
 _io_expander_addr = None
@@ -317,23 +317,11 @@ def execute_sdi12_measurements(measurements):
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
-        config_index = 0
-        while config_index >= 0:
-            detected, config_index = sdi12_detect_timing(sdi12, sensor_list, measurements, config_index)
-            if config_index < 0:
-                break
-
-            sensors_meas_were_read = True
-            for sensor in sensor_list:
-                stat = read_sdi12_sensor(sdi12, measurements, sensor)
-                wdt_reset()
-                if not stat:
-                    sensors_meas_were_read = False
-                if not cfg.get("_LOW_LATENCY_MODE_ON"):
-                    sleep_ms(500)
-            if sensors_meas_were_read:
-                break
-            config_index += 1
+        for sensor in sensor_list:
+            read_sdi12_sensor(sdi12, measurements, sensor)
+            wdt_reset()
+            if not cfg.get("_LOW_LATENCY_MODE_ON"):
+                sleep_ms(500)
 
     except Exception as e:
         set_value(measurements, "sdi12_e", "{}".format(e), None)
@@ -349,7 +337,7 @@ def execute_sdi12_measurements(measurements):
     _exec_i2c_op(io_expander_power_off_sdi12_sensors)
 
 
-def sdi12_detect_timing(sdi12, sensor_list, measurements, start_index=0):
+def sdi12_detect_timing(sdi12, sensor_list, measurements, address, start_index=0):
     logging.debug("sdi12 detect_timing - Detecting SDI12 timing settings for sensors: {}".format(sensor_list))
     # sdi12.break_level_multiplier, sdi12.mark_level_multiplier, sdi12.sleep_period_us_before_write, sdi12.sleep_period_us_after_write
     timing_options = [
@@ -369,19 +357,19 @@ def sdi12_detect_timing(sdi12, sensor_list, measurements, start_index=0):
         [1.9, 1.8, 160, 140],
         [1.9, 1.8, 160, 20],
         [1.9, 1.8, 160, 40],
-        [2.1, 1.0, 160, 0],
-        [2.1, 1.4, 160, 140],
-        [2.1, 1.4, 160, 160],
-        [2.1, 1.6, 160, 80],
-        [2.1, 1.8, 160, 0],
-        [2.3, 1.0, 160, 140],
-        [2.3, 1.0, 160, 40],
-        [2.3, 1.2, 160, 180],
-        [2.3, 1.4, 160, 160],
-        [2.3, 1.4, 160, 40],
-        [2.3, 1.6, 160, 120],
-        [2.3, 1.6, 160, 40],
-        [2.3, 1.8, 160, 160],
+        # [2.1, 1.0, 160, 0],
+        # [2.1, 1.4, 160, 140],
+        # [2.1, 1.4, 160, 160],
+        # [2.1, 1.6, 160, 80],
+        # [2.1, 1.8, 160, 0],
+        # [2.3, 1.0, 160, 140],
+        # [2.3, 1.0, 160, 40],
+        # [2.3, 1.2, 160, 180],
+        # [2.3, 1.4, 160, 160],
+        # [2.3, 1.4, 160, 40],
+        # [2.3, 1.6, 160, 120],
+        # [2.3, 1.6, 160, 40],
+        # [2.3, 1.8, 160, 160],
     ]
 
     if start_index >= len(timing_options):
@@ -425,7 +413,8 @@ def sdi12_detect_timing(sdi12, sensor_list, measurements, start_index=0):
                     sdi12.sleep_period_us_after_write,
                 )
             )
-            set_value(measurements, "sdi12_timing", "{}".format(timing), None)
+            if _BOARD_DEBUG_ON:
+                set_value(measurements, "sdi12_{}_t".format(address), "{}".format(timing), None)
             return (True, cnt)
         cnt += 1
 
@@ -441,51 +430,60 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
 
     logging.debug("read_sdi12_sensor - address: {}, command: {}, sub_cmd: {}".format(address, command, sub_cmd))
 
-    try:
-        is_active = False
+    # first detect settings
 
-        for i in range(0, 3):
-            is_active = sdi12.is_active(address)
-            logging.debug("read_sdi12_sensor - is_active: {}".format(is_active))
-            if is_active:
-                break
+    config_index = 0
+    while config_index >= 0:
+        detected, config_index = sdi12_detect_timing(sdi12, [sensor], measurements, address, config_index)
+        if config_index < 0:
+            break
 
-        if not is_active:
-            set_value(measurements, "sdi12_{}_e".format(address), "not_found", None)
-            logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
-            return False
+        try:
+            is_active = False
 
-        manufacturer, model = sdi12.get_sensor_info(address)
-        manufacturer = manufacturer.lower().strip() if manufacturer else ""
-        model = model.lower().strip() if model else ""
-        logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
+            for i in range(0, 3):
+                is_active = sdi12.is_active(address)
+                logging.debug("read_sdi12_sensor - is_active: {}".format(is_active))
+                if is_active:
+                    break
 
-        if manufacturer:
-            set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
+            if not is_active:
+                set_value(measurements, "sdi12_{}_e".format(address), "not_found", None)
+                logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
+                config_index += 1
+                continue
 
-        if model:
-            set_value(measurements, "sdi12_{}_m".format(address), model, None)
+            manufacturer, model = sdi12.get_sensor_info(address)
+            manufacturer = manufacturer.lower().strip() if manufacturer else ""
+            model = model.lower().strip() if model else ""
+            logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
 
-        command_to_execute = command + sub_cmd
-        force_wait = True if manufacturer == "in-situ" and (model == "at500" or model == "at400") else False
-        responseArray = sdi12.get_measurement(address, command_to_execute, 1, force_wait)
-        if not responseArray:
-            set_value(measurements, "sdi12_{}_e".format(address), "no_response", None)
-            logging.error("read_sdi12_sensor - No response from sensor in address: [" + str(address) + "]")
-            return False
+            if manufacturer:
+                set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
 
-        parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements)
+            if model:
+                set_value(measurements, "sdi12_{}_m".format(address), model, None)
 
-        # post-parse actions
-        if "li-cor" in manufacturer and command_to_execute == "M0":
-            sdi12._send(address + "XT!")  # trigger next round of measurements
+            command_to_execute = command + sub_cmd
+            force_wait = True  # if manufacturer == "in-situ" and (model == "at500" or model == "at400") else False
+            responseArray = sdi12.get_measurement(address, command_to_execute, 1, force_wait)
+            if not responseArray:
+                set_value(measurements, "sdi12_{}_e".format(address), "no_response", None)
+                logging.error("read_sdi12_sensor - No response from sensor in address: [" + str(address) + "]")
+                config_index += 1
+                continue
 
-    except Exception as e:
-        set_value(measurements, "sdi12_{}_e".format(address), "{}".format(e), None)
-        logging.exception(e, "Exception while reading SDI-12 data for address: {}".format(address))
-        return False
+            parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements)
 
-    return True
+            # post-parse actions
+            if "li-cor" in manufacturer and command_to_execute == "M0":
+                sdi12._send(address + "XT!")  # trigger next round of measurements
+
+            break
+        except Exception as e:
+            set_value(measurements, "sdi12_{}_e".format(address), "{}".format(e), None)
+            logging.exception(e, "Exception while reading SDI-12 data for address: {}".format(address))
+            break
 
 
 def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements):
@@ -940,7 +938,7 @@ def execute_pulse_counter_measurements(measurements):
                 pcnt_1_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_1_interrupt)
 
                 # print(f"pcnt_1_timer_callback: voltage={v}, edge_level={edge_level}")
-                if _PCNT_DEBUG_ON:
+                if _BOARD_DEBUG_ON:
                     if v < pcnt_1_voltage_min:
                         pcnt_1_voltage_min = v
                     if v > pcnt_1_voltage_max:
@@ -981,7 +979,7 @@ def execute_pulse_counter_measurements(measurements):
                 # pcnt_2_pin = Pin(pcnt_2_gpio, Pin.IN)
                 pcnt_2_pin.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=pcnt_2_interrupt)
 
-                if _PCNT_DEBUG_ON:
+                if _BOARD_DEBUG_ON:
                     if v < pcnt_2_voltage_min:
                         pcnt_2_voltage_min = v
                     if v > pcnt_2_voltage_max:
@@ -1032,7 +1030,7 @@ def execute_pulse_counter_measurements(measurements):
 
                 pcnt_1_readings += 1
 
-                if _PCNT_DEBUG_ON:
+                if _BOARD_DEBUG_ON:
                     if v < pcnt_1_voltage_min:
                         pcnt_1_voltage_min = v
                     if v > pcnt_1_voltage_max:
@@ -1104,7 +1102,7 @@ def execute_pulse_counter_measurements(measurements):
 
                 pcnt_2_readings += 1
 
-                if _PCNT_DEBUG_ON:
+                if _BOARD_DEBUG_ON:
                     if v < pcnt_2_voltage_min:
                         pcnt_2_voltage_min = v
                     if v > pcnt_2_voltage_max:
@@ -1169,7 +1167,7 @@ def execute_pulse_counter_measurements(measurements):
                 set_value_float(measurements, "pcnt_period_s_{}".format(id), 0, SenmlUnits.SENML_UNIT_SECOND)
                 set_value_float(measurements, "pcnt_count_formula_{}".format(id), 0)
                 # Add filtered edge count for debugging
-                if _PCNT_DEBUG_ON:
+                if _BOARD_DEBUG_ON:
                     set_value_int(measurements, "pcnt_filtered_edges_{}".format(id), 0, SenmlUnits.SENML_UNIT_COUNTER)
     else:
         time_diff = -1
@@ -1233,7 +1231,7 @@ def store_pulse_counter_measurements(
     set_value_int(measurements, "pcnt_edge_count_{}".format(id), edge_cnt, SenmlUnits.SENML_UNIT_COUNTER)
     set_value_float(measurements, "pcnt_period_s_{}".format(id), time_diff_from_prev, SenmlUnits.SENML_UNIT_SECOND, 3)
 
-    if _PCNT_DEBUG_ON:
+    if _BOARD_DEBUG_ON:
 
         set_value_int(measurements, "pcnt_filtered_edges_{}".format(id), filtered_edges_cnt, SenmlUnits.SENML_UNIT_COUNTER)
         set_value_int(measurements, "pcnt_readings_{}".format(id), readings_cnt, SenmlUnits.SENML_UNIT_COUNTER)
