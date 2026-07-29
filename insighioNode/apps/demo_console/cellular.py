@@ -62,9 +62,9 @@ def updateSignalQuality(cfg, measurements):
     mcc, mnc = modem_instance.get_registered_mcc_mnc()
     lac, ci = modem_instance.get_lac_n_cell_id()
 
-    set_value_float(measurements, "cell_rssi", rssi, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
-    set_value_float(measurements, "cell_rsrp", rsrp, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
-    set_value_float(measurements, "cell_rsrq", rsrq, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT)
+    set_value_float(measurements, "cell_rssi", rssi, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, 1)
+    set_value_float(measurements, "cell_rsrp", rsrp, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, 1)
+    set_value_float(measurements, "cell_rsrq", rsrq, SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, 1)
 
     set_value_int(measurements, "cell_mcc", mcc)
     set_value_int(measurements, "cell_mnc", mnc)
