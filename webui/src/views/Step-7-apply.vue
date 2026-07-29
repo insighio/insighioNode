@@ -95,7 +95,12 @@ export default {
         })
     },
     startOver() {
-      this.$emit("startOver")
+      this.$nextTick(() => {
+        this.$storage.clear()
+        this.tabActive = 0
+        this.$storage.set("activeTab", this.tabActive)
+        window.location.reload()
+      })
     }
   }
 }
