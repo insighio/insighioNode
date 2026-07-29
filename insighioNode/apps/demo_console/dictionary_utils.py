@@ -71,10 +71,18 @@ def set_value_float(measurements, key, value, unit=None, precision=3, multiplier
             value = value * multiplier
 
         try:
+            # Use fixed-point rounding to keep the intended precision stable on
+            # MicroPython targets where float formatting can expose artifacts.
+            scale = 10**precision if precision is not None and precision >= 0 else 1
+            if scale > 1:
+                if value >= 0:
+                    value = int(value * scale + 0.5) / scale
+                else:
+                    value = int(value * scale - 0.5) / scale
             set_value(
                 measurements,
                 key,
-                float("%0.*f" % (precision, value)),
+                value,
                 unit,
             )
         except Exception as e:
