@@ -188,18 +188,8 @@ def get_measurements(cfg_dummy=None):
                 from sensors import sht40 as sens
 
             board_temp, board_humidity = sens.get_reading(cfg.get("_UC_IO_I2C_SDA"), cfg.get("_UC_IO_I2C_SCL"))
-            set_value_float(
-                measurements,
-                "board_temp",
-                board_temp,
-                SenmlUnits.SENML_UNIT_DEGREES_CELSIUS,
-            )
-            set_value_float(
-                measurements,
-                "board_humidity",
-                board_humidity,
-                SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY,
-            )
+            set_value_float(measurements, "board_temp", board_temp, SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, 1)
+            set_value_float(measurements, "board_humidity", board_humidity, SenmlUnits.SENML_UNIT_RELATIVE_HUMIDITY, 1)
 
         shield_name = cfg.get("_SELECTED_SHIELD")
         if shield_name is not None and (
