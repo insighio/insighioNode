@@ -1,5 +1,6 @@
 import logging
 from . import cfg
+import re
 
 _name_mapping = cfg.get("_MEAS_NAME_EXT_MAPPING")
 
@@ -73,12 +74,21 @@ def set_value_float(measurements, key, value, unit=None, precision=3, multiplier
         try:
             # Use fixed-point rounding to keep the intended precision stable on
             # MicroPython targets where float formatting can expose artifacts.
-            scale = 10**precision if precision is not None and precision >= 0 else 1
-            if scale > 1:
-                if value >= 0:
-                    value = int(value * scale + 0.5) / scale
-                else:
-                    value = int(value * scale - 0.5) / scale
+            # scale = 10**precision if precision is not None and precision >= 0 else 1
+            # if scale > 1:
+            #     if value >= 0:
+            #         value = int(value * scale + 0.5) / scale
+            #     else:
+            #         value = int(value * scale - 0.5) / scale
+            subparts_re = re.match(r"(\d+)(\.(\d+))?", str(value))
+
+            if subparts_re:
+                integer_part = subparts_re.group(1)
+                decimal_part = subparts_re.group(3) if subparts_re.group(3) else ""
+                if precision is not None and precision >= 0:
+                    decimal_part = decimal_part[:precision]
+                value = float(f"{integer_part}.{decimal_part}") if decimal_part else float(integer_part)
+
             set_value(
                 measurements,
                 key,
