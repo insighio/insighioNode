@@ -119,21 +119,20 @@ _UC_IO_BAT_READ = 3 if hw_version == _MAIN_VERSION_V1 else None
 
 bq_set_ibat_averaging_enabled(True)
 
-print("ibat: {}".format(bq_charger_exec(bq_charger_get_ibat_adc)))
-
 try:
     bq_charger_exec(bq_charger_setup)
 except Exception as e:
     print("[boot] No BQ charger detected")
 
 _is_charging = True
-_check_charging_state = True  # must be deactivated for devices always connected to USB charger
+_check_charging_state = True  # must be deactivated for devices always connected to USB charger - without battery
 
 if _check_charging_state:
     _is_charging = bq_charger_exec(bq_charger_get_is_charging)
 
 if not _is_charging:
-    from gpio_handler import set_pin_value, get_input_voltage
+    if hw_version == _MAIN_VERSION_V1:
+        from gpio_handler import set_pin_value, get_input_voltage
     from utime import sleep_ms
 
     ##################################################################
@@ -192,13 +191,13 @@ if not _is_charging:
         print("[boot] Low voltage, sleeping for an hour")
         from machine import deepsleep
 
-        deepsleep(3600000)
+        deepsleep(3600000)  # 1 hour
     elif voltage_low:
         print("[boot] Low voltage, sleeping for a day")
         utils.writeToFlagFile(voltage_flag_file, "charging")
         from machine import deepsleep
 
-        deepsleep(86400000)
+        deepsleep(28800000)  # 8 hours
     else:
         print("[boot] Battery not charging")
 else:
