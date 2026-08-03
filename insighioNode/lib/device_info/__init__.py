@@ -290,25 +290,25 @@ def bq_charger_identify(i2c, bq_addr):
 
 def _bq_read_u8(i2c, bq_addr, reg):
     val = int.from_bytes(i2c.readfrom_mem(bq_addr, reg, 1), "big")
-    logging.debug("_bq_read_u8[{}] = {}".format(hex(reg), hex(val)))
+    # logging.debug("_bq_read_u8[{}] = {}".format(hex(reg), hex(val)))
     return val
 
 
 def _bq_write_u8(i2c, bq_addr, reg, value):
     i2c.writeto_mem(bq_addr, reg, bytes((value & 0xFF,)))
-    logging.debug("_bq_write_u8[{}] = {}".format(hex(reg), hex(value & 0xFF)))
+    # logging.debug("_bq_write_u8[{}] = {}".format(hex(reg), hex(value & 0xFF)))
 
 
 def _bq_write_u16(i2c, bq_addr, reg, value):
     # BQ25622E uses consecutive little-endian register pairs (LSB at reg, MSB at reg+1).
     i2c.writeto_mem(bq_addr, reg, bytes((value & 0xFF, (value >> 8) & 0xFF)))
-    logging.debug("_bq_write_u16[{}] = {}".format(hex(reg), hex(value & 0xFFFF)))
+    # logging.debug("_bq_write_u16[{}] = {}".format(hex(reg), hex(value & 0xFFFF)))
 
 
 def _bq_read_u16(i2c, bq_addr, reg):
     raw = i2c.readfrom_mem(bq_addr, reg, 2)
     val = (raw[1] << 8) | raw[0]
-    logging.debug("_bq_read_u16[{}] = {}".format(hex(reg), hex(val)))
+    # logging.debug("_bq_read_u16[{}] = {}".format(hex(reg), hex(val)))
     return val
 
 
@@ -325,14 +325,14 @@ def _bq_decode_adc_u16_le(raw_u16, lsb_bit, width, signed, lsb_scale):
 
 
 def _bq_update_bits(i2c, bq_addr, reg, mask, value):
-    logging.debug("_bq_update_bits: start")
+    #logging.debug("_bq_update_bits: start")
     curr = _bq_read_u8(i2c, bq_addr, reg)
     new_val = (curr & (~mask & 0xFF)) | (value & mask)
     if curr != new_val:
         _bq_write_u8(i2c, bq_addr, reg, new_val)
-        logging.debug("_bq_update_bits: end")
-    else:
-        logging.debug("_bq_update_bits: end (no change)")
+        #logging.debug("_bq_update_bits: end")
+    #else:
+        #logging.debug("_bq_update_bits: end (no change)")
     return new_val
 
 

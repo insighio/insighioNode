@@ -121,7 +121,6 @@ def i2c_rtc_is_valid():
     dt = i2c_rtc_get_datetime(i2c)
     year, month, day, hour, minute, second, weekday, os_flag = dt
 
-    print("OS flag:", os_flag)
     if os_flag == 1:
         logging.warning("RTC OS flag is set. RTC time is invalid.")
         return False
