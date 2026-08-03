@@ -459,6 +459,11 @@ def executeDeviceStatisticsUpload(cfg, network):
 
 
 def executeDeviceConfigurationUpload(cfg, network):
+    selected_network = cfg.get("network")
+    if selected_network == "lora" or selected_network == "satellite":
+        logging.info("Configuration upload not supported for network: {}".format(selected_network))
+        return
+
     # check for configuration pending for upload
     configUploadFileContent = utils.readFromFlagFile("/configLog")
     logging.debug("configUploadFileContent: {}".format(configUploadFileContent))
