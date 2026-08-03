@@ -141,6 +141,66 @@ def test_4_20_alias_location_uses_current_channel_location():
     assert payload == expected
 
 
+def test_pcnt_edge_count_uses_dedicated_type():
+    measurement = {"pcnt_edge_count_1": {"value": 7}}
+
+    payload = lora_custom_encoding.create_message("", measurement)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBH", 0x40, 0x83, 7)
+
+    assert payload == expected
+
+
+def test_pcnt_period_s_maps_to_period_type():
+    measurement = {"pcnt_period_s_1": {"value": 2.5}}
+
+    payload = lora_custom_encoding.create_message("", measurement)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBH", 0x2B, 0x83, 25)
+
+    assert payload == expected
+
+
+def test_adc_raw_maps_to_voltage_and_adp_location():
+    measurement = {"adc_1_raw": {"value": 735.063}}
+
+    payload = lora_custom_encoding.create_message("", measurement)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBH", 0x16, 0x40, 735)
+
+    assert payload == expected
+
+
+def test_meter_count_vwc_is_encoded_as_count_type():
+    measurement = {"meter_2_1_count_vwc": {"value": 1832.09}}
+
+    payload = lora_custom_encoding.create_message("", measurement)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBH", 0x29, 0x52, 18321)
+
+    assert payload == expected
+
+
+def test_modbus_uses_dedicated_location_and_float_type():
+    measurement = {"modbus_1_1_uint16_f1_d0_msw1_le0": {"value": 2}}
+
+    payload = lora_custom_encoding.create_message("", measurement)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBf", 0x50, 0xB1, 2.0)
+
+    assert payload == expected
+
+
+def test_modbus_slave_id_is_masked_to_low_nibble():
+    measurement = {"modbus_17_1_uint16_f1_d0_msw1_le0": {"value": 12.5}}
+
+    payload = lora_custom_encoding.create_message("", measurement)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBf", 0x50, 0xB1, 12.5)
+
+    assert payload == expected
+
+
 def test_audit_scenario_representative_numeric_measurements_are_encodable():
     # Representative numeric keys from scenario.py/scenario_utils.py,
     # scenario_digital_adc_utils.py, scenario_advind_utils.py,

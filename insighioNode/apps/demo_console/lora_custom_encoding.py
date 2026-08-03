@@ -17,6 +17,7 @@ LOCATION_SDI12 = 0x50
 LOCATION_4_20 = 0x60
 LOCATION_MODEM = 0x70
 LOCATION_GPS = 0x71
+LOCATION_MODBUS = 0xB0
 LOCATION_WEATHER_STATION = 0x80
 LOCATION_RAIN_GAUGE = 0x81
 LOCATION_SOLAR_SENSOR = 0x82
@@ -65,6 +66,8 @@ TYPE_DIRECTION_DEG = 0x2D
 TYPE_DIRECTION_ID = 0x2E
 TYPE_SPEED = 0x2F
 TYPE_FORMULA = 0x30
+TYPE_EDGE_COUNT = 0x40
+TYPE_MODBUS_VALUE = 0x50
 TYPE_LORA_JOIN_DUR = 0xC1
 TYPE_GPS_HDOP = 0xD0
 TYPE_GPS_LAT = 0xD1
@@ -112,6 +115,18 @@ def get_location_by_key(key):
             return LOCATION_I2C + 5
         elif loc_name == "sunrise":
             return LOCATION_I2C + 6
+        elif loc_name == "modbus":
+            # Encode slave id in lower nibble: modbus_<slave>_...
+            slave = 0
+            if position and position[0] >= "0" and position[0] <= "9":
+                try:
+                    slave = int(position)
+                except:
+                    slave = 0
+            return LOCATION_MODBUS + (slave & 0x0F)
+        elif loc_name == "adc" and position[0] >= "0" and position[0] <= "9":
+            # ADS channels are represented as adc_<channel>_raw.
+            return LOCATION_AD_P + (int(position[0]) - 1)
         elif loc_name == "4-20" and position[0] >= "0" and position[0] <= "9":
             return LOCATION_4_20 + int(position[0])
         elif loc_name == "4" and position == "20" and len(parts) >= 3 and parts[2][0] >= "0" and parts[2][0] <= "9":
@@ -226,15 +241,23 @@ def create_message(device_id, measurements):
                 data_to_add = struct.pack(">BBi", TYPE_GPS_LON, LOCATION_GPS, round(value * 100000))
             elif key == "gps_dur":
                 data_to_add = struct.pack(">BBI", TYPE_UPTIME, LOCATION_GPS, value)
+            elif key.startswith("modbus_"):
+                # MODBUS values are already parsed and scaled at source side.
+                # Encode as IEEE754 float to support uint16/int16/uint32/int32/float uniformly.
+                data_to_add = struct.pack(">BBf", TYPE_MODBUS_VALUE, get_location_by_key(key), float(value))
 
             elif key.endswith("_deviation"):
                 data_to_add = struct.pack(">BBh", TYPE_DEVIATION, get_location_by_key(key), round(value * 100))
             elif key.endswith("_radiation"):
                 data_to_add = struct.pack(">BBH", TYPE_RADIATION, get_location_by_key(key), round(value))
+            elif key.endswith("_edge_count"):
+                data_to_add = struct.pack(">BBH", TYPE_EDGE_COUNT, get_location_by_key(key), round(value))
             elif key.endswith("_count"):
                 data_to_add = struct.pack(">BBH", TYPE_COUNT, get_location_by_key(key), round(value * 10))
             elif key.endswith("_height"):
                 data_to_add = struct.pack(">BBH", TYPE_HEIGHT, get_location_by_key(key), round(value * 10))
+            elif key.endswith("_period_s"):
+                data_to_add = struct.pack(">BBH", TYPE_PERIOD, get_location_by_key(key), round(value * 10))
             elif key.endswith("_period"):
                 data_to_add = struct.pack(">BBH", TYPE_PERIOD, get_location_by_key(key), round(value * 10))
             elif key.endswith("_noise"):
@@ -249,6 +272,8 @@ def create_message(device_id, measurements):
                     data_to_add = struct.pack(">BBH", TYPE_DIRECTION_DEG, get_location_by_key(key), round(value * 10))
             elif key.endswith("_speed"):
                 data_to_add = struct.pack(">BBh", TYPE_SPEED, get_location_by_key(key), round(value * 100))
+            elif key.endswith("_raw") and key.startswith("adc_"):
+                data_to_add = struct.pack(">BBH", TYPE_VOLTAGE, get_location_by_key(key), round(value))
 
             # explicit cases should be added here
             # elif key == "new_explicit_value"
@@ -267,6 +292,8 @@ def create_message(device_id, measurements):
                 data_to_add = struct.pack(">BBH", TYPE_GAS, get_location_by_key(key), round(value))
             elif key.endswith("_volt"):
                 data_to_add = struct.pack(">BBH", TYPE_VOLTAGE, get_location_by_key(key), round(value))
+            elif key.endswith("_count_vwc"):
+                data_to_add = struct.pack(">BBH", TYPE_COUNT, get_location_by_key(key), round(value * 10))
             elif key.endswith("_vwc"):
                 data_to_add = struct.pack(">BBH", TYPE_VWC, get_location_by_key(key), round(value * 100))
             elif key.endswith("_rel_perm"):
