@@ -270,7 +270,7 @@ def bq_charger_identify(i2c, bq_addr):
 
     try:
         val = _bq_read_u8(i2c, bq_addr, 0x38)
-        if ((val >> 3) & 0x7) == 0x18:
+        if ((val >> 3) & 0x7) == 0x03:
             _bq_charger_version = _CHARGER_VERSION_2
             return _bq_charger_version
     except Exception:
