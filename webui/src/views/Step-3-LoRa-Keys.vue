@@ -80,7 +80,7 @@ export default {
       this.clearCookies()
 
       this.$storage.set("lora-dev-eui", this.lora_dev_eui.trim())
-      this.$storage.set("lora-app-eui", this.lora_app_eui.trim())
+      this.$storage.set("lora-app-eui", this.lora_app_eui ? this.lora_app_eui.trim() : "0000000000000001")
       this.$storage.set("lora-app-key", this.lora_app_key.trim())
 
       this.requestGoNext()
