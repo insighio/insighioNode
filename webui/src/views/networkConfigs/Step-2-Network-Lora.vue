@@ -106,9 +106,6 @@ export default {
       this.storeData()
       return true
     }
-  },
-  computed: {
-    // Add your computed properties here
   }
 }
 </script>

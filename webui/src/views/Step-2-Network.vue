@@ -6,16 +6,16 @@
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <div class="btn-group btn-group-block img-center">
-            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('WiFi')">
+            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('wifi')">
               WiFi
             </button>
-            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('Cellular')">
+            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('cellular')">
               Cellular
             </button>
-            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('LoRa')">
+            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('lora')">
               LoRa
             </button>
-            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('Satellite')">
+            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('satellite')">
               Satellite
             </button>
           </div>

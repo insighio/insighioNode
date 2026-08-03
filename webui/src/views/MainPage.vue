@@ -78,7 +78,7 @@
           @goBack="goToPreviousStep"
         />
         <Step3APIKeys
-          v-else-if="tabActive === 2 && networkTech !== 'lora'"
+          v-else-if="tabActive === 2 && (networkTech === 'cellular' || networkTech === 'wifi')"
           :key="'step3api-' + configVersion"
           @goNext="goToNextStep"
           @goBack="goToPreviousStep"
@@ -338,6 +338,8 @@ export default {
         await this.synchSettings()
       }
 
+      this.networkTech = this.$storage.get("network")
+
       this.$nextTick(() => {
         this.tabActive += 1
 
@@ -347,6 +349,14 @@ export default {
         if (this.tabActive === 1) {
           this.updateDeviceSystemTime()
         }
+
+        if (this.tabActive === 2 && this.networkTech === "satellite") {
+          this.tabActive += 1
+          this.$storage.set("activeTab", this.tabActive)
+        }
+
+        console.log("networkTech: ", this.networkTech, "tabActive: ", this.tabActive)
+        console.log(this.tabActive === 2 && this.networkTech === "lora")
       })
     },
     async synchSettings() {
@@ -372,6 +382,11 @@ export default {
       console.log("goToPrevStep: ", this.tabActive)
       if (this.tabActive === 1) {
         this.updateDeviceSystemTime()
+      }
+
+      if (this.tabActive === 2 && this.networkTech === "satellite") {
+        this.tabActive -= 1
+        this.$storage.set("activeTab", this.tabActive)
       }
     },
     goToStart() {
