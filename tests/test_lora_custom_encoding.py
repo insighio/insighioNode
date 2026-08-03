@@ -201,6 +201,33 @@ def test_modbus_slave_id_is_masked_to_low_nibble():
     assert payload == expected
 
 
+def test_system_measurements_are_mapped_to_dedicated_types():
+    measurement = {
+        "chg_stat": {"value": 0},
+        "ibat": {"value": -108},
+        "ibus": {"value": 0},
+        "is_charging": {"value": 1},
+        "diff_dt": {"value": 19},
+        "ulp_heartbeat": {"value": 18343},
+        "vbus": {"value": 0},
+        "vsys": {"value": 3853},
+    }
+
+    payload = lora_custom_encoding.create_message("", measurement)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4"
+    expected += struct.pack(">BBB", 0x60, 0x10, 0)
+    expected += struct.pack(">BBH", 0x64, 0x10, 19)
+    expected += struct.pack(">BBh", 0x61, 0x10, -108)
+    expected += struct.pack(">BBh", 0x62, 0x10, 0)
+    expected += struct.pack(">BBB", 0x63, 0x10, 1)
+    expected += struct.pack(">BBI", 0x65, 0x10, 18343)
+    expected += struct.pack(">BBH", 0x66, 0x10, 0)
+    expected += struct.pack(">BBH", 0x67, 0x10, 3853)
+
+    assert payload == expected
+
+
 def test_audit_scenario_representative_numeric_measurements_are_encodable():
     # Representative numeric keys from scenario.py/scenario_utils.py,
     # scenario_digital_adc_utils.py, scenario_advind_utils.py,

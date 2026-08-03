@@ -72,6 +72,14 @@ TYPE_LORA_JOIN_DUR = 0xC1
 TYPE_GPS_HDOP = 0xD0
 TYPE_GPS_LAT = 0xD1
 TYPE_GPS_LON = 0xD2
+TYPE_CHG_STAT = 0x60
+TYPE_IBAT = 0x61
+TYPE_IBUS = 0x62
+TYPE_IS_CHARGING = 0x63
+TYPE_TIME_DIFF = 0x64
+TYPE_ULP_HEARTBEAT = 0x65
+TYPE_VBUS = 0x66
+TYPE_VSYS = 0x67
 TYPE_GENERIC = 0xE0
 
 
@@ -232,6 +240,22 @@ def create_message(device_id, measurements):
                 data_to_add = struct.pack(">BBI", TYPE_MEM_FREE, LOCATION_INTERNAL_BOARD, value)
             elif key == "lora_join_duration":
                 data_to_add = struct.pack(">BBH", TYPE_LORA_JOIN_DUR, LOCATION_MODEM, value)
+            elif key == "chg_stat":
+                data_to_add = struct.pack(">BBB", TYPE_CHG_STAT, LOCATION_INTERNAL_BOARD, round(value))
+            elif key == "ibat":
+                data_to_add = struct.pack(">BBh", TYPE_IBAT, LOCATION_INTERNAL_BOARD, round(value))
+            elif key == "ibus":
+                data_to_add = struct.pack(">BBh", TYPE_IBUS, LOCATION_INTERNAL_BOARD, round(value))
+            elif key == "is_charging":
+                data_to_add = struct.pack(">BBB", TYPE_IS_CHARGING, LOCATION_INTERNAL_BOARD, round(value))
+            elif key == "time_diff" or key == "diff_dt":
+                data_to_add = struct.pack(">BBH", TYPE_TIME_DIFF, LOCATION_INTERNAL_BOARD, round(value))
+            elif key == "ulp_heartbeat":
+                data_to_add = struct.pack(">BBI", TYPE_ULP_HEARTBEAT, LOCATION_INTERNAL_BOARD, round(value))
+            elif key == "vbus":
+                data_to_add = struct.pack(">BBH", TYPE_VBUS, LOCATION_INTERNAL_BOARD, round(value))
+            elif key == "vsys":
+                data_to_add = struct.pack(">BBH", TYPE_VSYS, LOCATION_INTERNAL_BOARD, round(value))
 
             elif key == "gps_hdop":
                 data_to_add = struct.pack(">BBB", TYPE_GPS_HDOP, LOCATION_GPS, round(value * 10))
@@ -344,7 +368,7 @@ def create_message(device_id, measurements):
                 binary_data += data_to_add
             logging.info("message: size[{}], data:[{}]".format(len(binary_data), ubinascii.hexlify(binary_data).decode("utf-8")))
     except Exception as e:
-        logging.exception(e, "Error encoding lora message")
+        logging.exception("Error encoding lora message: {}".format(e))
         return ""
 
     return binary_data
