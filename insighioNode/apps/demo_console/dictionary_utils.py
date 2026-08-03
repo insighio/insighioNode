@@ -72,7 +72,7 @@ def set_value_float(measurements, key, value, unit=None, precision=3, multiplier
             value = value * multiplier
 
         try:
-            value = float("%s" % (repr(round(value, precision))))
+            value = round(value, precision)
 
             set_value(
                 measurements,
