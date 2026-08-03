@@ -45,7 +45,7 @@ class ModemGPSL76L(modem_base.Modem):
             logging.info("i2c devices: {}, GPS found: {}".format(devs, modem_ok))
             if modem_ok:
                 break
-            utime.sleep_ms(500)
+            sleep_ms(500)
 
         return modem_ok
 
