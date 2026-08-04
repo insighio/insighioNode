@@ -80,6 +80,7 @@ TYPE_VSYS = 0x67
 TYPE_PERCENTAGE = 0x68
 TYPE_MILLISECONDS = 0x69
 TYPE_PARTS_PER_MILLION = 0x6A
+TYPE_UNIX_TIME = 0x6B
 #####
 TYPE_LORA_JOIN_DUR = 0xC1
 TYPE_GPS_HDOP = 0xD0
@@ -272,6 +273,8 @@ def create_message(device_id, measurements):
                 data_to_add = struct.pack(">BBB", TYPE_RESET_CAUSE, LOCATION_INTERNAL_BOARD, value)
             elif key == "uptime":
                 data_to_add = struct.pack(">BBI", TYPE_UPTIME, LOCATION_INTERNAL_BOARD, value)
+            elif key == "dt":
+                data_to_add = struct.pack(">BBI", TYPE_UNIX_TIME, LOCATION_INTERNAL_BOARD, value)
             elif key == "mem_alloc":
                 data_to_add = struct.pack(">BBI", TYPE_MEM_ALLOC, LOCATION_INTERNAL_BOARD, value)
             elif key == "mem_free":

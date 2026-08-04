@@ -54,6 +54,16 @@ def test_uptime_is_4_bytes():
     assert payload == b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBI", 0x03, 0x10, 70000)
 
 
+def test_dt_is_encoded_as_dedicated_unix_time_type():
+    measurement = {"dt": {"value": 1785854700}}
+
+    payload = lora_custom_encoding.create_message("", measurement)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBI", 0x6B, 0x10, 1785854700)
+
+    assert payload == expected
+
+
 def test_signed_values_for_gps_and_formula():
     measurement = {
         "gps_lat": {"value": -12.34567},
@@ -314,6 +324,6 @@ def test_generic_unknown_uses_unit_mapped_subtype_when_available():
 
     payload = lora_custom_encoding.create_message("", measurements)
 
-    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBi", 0xE8, 0x00, 1234)
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBi", 0x16, 0x00, 1234)
 
     assert payload == expected
