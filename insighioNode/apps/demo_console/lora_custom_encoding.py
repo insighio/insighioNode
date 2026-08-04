@@ -68,10 +68,6 @@ TYPE_SPEED = 0x2F
 TYPE_FORMULA = 0x30
 TYPE_EDGE_COUNT = 0x40
 TYPE_MODBUS_VALUE = 0x50
-TYPE_LORA_JOIN_DUR = 0xC1
-TYPE_GPS_HDOP = 0xD0
-TYPE_GPS_LAT = 0xD1
-TYPE_GPS_LON = 0xD2
 TYPE_CHG_STAT = 0x60
 TYPE_IBAT = 0x61
 TYPE_IBUS = 0x62
@@ -80,7 +76,47 @@ TYPE_TIME_DIFF = 0x64
 TYPE_ULP_HEARTBEAT = 0x65
 TYPE_VBUS = 0x66
 TYPE_VSYS = 0x67
+### new
+TYPE_PERCENTAGE = 0x68
+TYPE_MILLISECONDS = 0x69
+TYPE_PARTS_PER_MILLION = 0x6A
+#####
+TYPE_LORA_JOIN_DUR = 0xC1
+TYPE_GPS_HDOP = 0xD0
+TYPE_GPS_LAT = 0xD1
+TYPE_GPS_LON = 0xD2
 TYPE_GENERIC = 0xE0
+
+# Generic subtypes 0xE8-0xEF are reserved for generic values with known units.
+_GENERIC_UNIT_TYPE_MAP = {
+    "mv": TYPE_VOLTAGE,
+    "ma": TYPE_CURRENT,
+    "cel": TYPE_TEMPERATURE_CEL,
+    "/100": TYPE_PERCENTAGE,
+    "count": TYPE_COUNT,
+    "s": TYPE_PERIOD,
+    "ms": TYPE_MILLISECONDS,
+    "hpa": TYPE_PRESSURE,
+    "ppm": TYPE_PARTS_PER_MILLION,
+    "%rh": TYPE_HUMIDITY,
+}
+
+_GENERIC_UNIT_ALIASES = {
+    "c": "cel",
+    "%": "/100",
+    "sec": "s",
+    "second": "s",
+    "seconds": "s",
+}
+
+
+def _resolve_generic_type_by_unit(unit, fallback_type):
+    if type(unit) is not str:
+        return fallback_type
+
+    normalized = unit.strip().lower()
+    normalized = _GENERIC_UNIT_ALIASES.get(normalized, normalized)
+    return _GENERIC_UNIT_TYPE_MAP.get(normalized, fallback_type)
 
 
 def get_location_by_key(key):
@@ -211,8 +247,10 @@ def create_message(device_id, measurements):
     try:
         for key in sorted(measurements.keys()):
             logging.debug("Processing [{}]={}".format(key, measurements[key]))
+            measurement_unit = None
             try:
                 value = measurements[key]["value"]
+                measurement_unit = measurements[key].get("unit")
             except:
                 value = measurements[key]
             keyparts = key.split("_")
@@ -358,9 +396,19 @@ def create_message(device_id, measurements):
 
             else:
                 index = measurement_index if measurement_index is not None else 0
+                logging.debug("Unidentified measurement: key: {}, value: {}, type: {}".format(key, value, type(value)))
 
                 if type(value) == int or type(value) == float:
-                    data_to_add = struct.pack(">BBi", TYPE_GENERIC + index, get_location_by_key(key), round(value * 100))
+                    generic_type = TYPE_GENERIC + index
+                    if measurement_index is None:
+                        logging.debug("No index found for key: {}, using default generic type: {}".format(key, hex(generic_type)))
+                        generic_type = _resolve_generic_type_by_unit(measurement_unit, generic_type)
+                    logging.debug(
+                        "Resolved generic type for key: {}, unit: {}, generic_type: {}, location: {}".format(
+                            key, measurement_unit, hex(generic_type), hex(get_location_by_key(key))
+                        )
+                    )
+                    data_to_add = struct.pack(">BBi", generic_type, get_location_by_key(key), round(value * 100))
                 else:
                     logging.error("Unidentified or unaccepted measurement: key: {}, value: {}, type: {}".format(key, value, type(value)))
             if data_to_add:

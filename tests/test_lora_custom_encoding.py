@@ -305,3 +305,15 @@ def test_audit_unknown_numeric_keys_fall_back_to_generic_without_failure():
     assert isinstance(payload, (bytes, bytearray))
     assert len(payload) > 6
     assert payload[:6] == b"\xf4\x12\xfa\xc3\xb9\xc4"
+
+
+def test_generic_unknown_uses_unit_mapped_subtype_when_available():
+    measurements = {
+        "mystery_voltage": {"value": 12.34, "unit": "mV"},
+    }
+
+    payload = lora_custom_encoding.create_message("", measurements)
+
+    expected = b"\xf4\x12\xfa\xc3\xb9\xc4" + struct.pack(">BBi", 0xE8, 0x00, 1234)
+
+    assert payload == expected
