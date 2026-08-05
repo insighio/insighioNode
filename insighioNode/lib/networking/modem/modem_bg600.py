@@ -156,6 +156,11 @@ class ModemBG600(modem_base.Modem):
 
     def power_off(self):
         res, lines = self.send_at_cmd("AT+QPOWD", 15000, r"\s*POWERED DOWN\s*")
+
+        from machine import Pin
+
+        p0 = Pin(self.modem_power_on, Pin.OUT)
+        p0.off()
         return res
 
     def disconnect(self):

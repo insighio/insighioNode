@@ -41,6 +41,18 @@ def set_pins(power_on=None, power_key=None, modem_tx=None, modem_rx=None, gps_tx
     pin_modem_power_key = power_key
 
 
+def enable_uart_for_internal_modem():
+    from machine import Pin
+
+    Pin(pin_modem_power_on, Pin.OUT).on()
+
+
+def disable_uart_for_internal_modem():
+    from machine import Pin
+
+    Pin(pin_modem_power_on, Pin.OUT).off()
+
+
 def detect_modem():
     global cellular_model
     from networking.modem.modem_base import Modem

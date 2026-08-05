@@ -25,12 +25,15 @@ def init(cfg):
         cfg.get("_UC_UART_MODEM_RX"),
     )
 
+    cellular.enable_uart_for_internal_modem()
+
     is_secondary_transfer_protocol_enabled = cfg.get("ENABLE_SECONDARY_MEASUREMENT_TRANSMISSION")
 
 
 def deinit():
     logging.info("Deactivate cellular: {}".format(cellular.deactivate()))
     cellular.reset_modem_instance()
+    cellular.disable_uart_for_internal_modem()
 
 
 def prepareForConnectAndUpload():
@@ -334,6 +337,12 @@ def disconnect():
     if transfer_secondary_client is not None:
         transfer_secondary_client.disconnect()
         transfer_secondary_client = None
+
+
+def deactivate():
+    cellular.deactivate()
+    cellular.disable_uart_for_internal_modem()
+    cellular.reset_modem_instance()
 
 
 def check_and_apply_ota(cfg):

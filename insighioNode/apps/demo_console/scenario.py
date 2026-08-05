@@ -311,8 +311,9 @@ def executeConnectAndUpload(cfg, measurements, is_first_run, light_sleep_on):
 
     try:
         network.init(cfg)
-    except:
+    except Exception as e:
         logging.error("Unsupported network selection: [{}]".format(selected_network))
+        logging.exception(e, "Exception during network initialization:")
         return False
 
     logging.debug("Network modules loaded")

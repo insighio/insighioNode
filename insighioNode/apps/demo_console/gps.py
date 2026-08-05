@@ -16,11 +16,16 @@ def deinit():
 def get_gps_position(cfg, measurements, keep_open=False):
     try:
         if cfg.get("_MEAS_GPS_ENABLE") and (not cfg.get("_MEAS_GPS_ONLY_ON_BOOT") or (get_reset_cause() == 0 or get_reset_cause() == 1)):
-            gps_status = False
             if cfg.get("network") == "cellular" or cfg.get("network") == "wifi":
                 return internal_modem_get_position(cfg, measurements, keep_open)
             elif cfg.get("network") == "lora" or cfg.get("network") == "satellite":
-                return external_modem_get_position(cfg, measurements, keep_open)
+                gps_status = external_modem_get_position(cfg, measurements, keep_open)
+                if gps_status:
+                    return True
+
+                gps_status = internal_modem_get_position(cfg, measurements, False, True)
+            else:
+                return False
     except Exception as e:
         logging.exception(e, "GPS Exception:")
 
@@ -36,7 +41,7 @@ def coord_to_double(part1, part2, part3):
         return None
 
 
-def internal_modem_get_position(cfg, measurements, always_on):
+def internal_modem_get_position(cfg, measurements, always_on, power_off_after_operation=False):
     from . import cellular as network_gps
 
     network_gps.init(cfg)
@@ -44,8 +49,8 @@ def internal_modem_get_position(cfg, measurements, always_on):
     gps_status = network_gps.get_gps_position(cfg, measurements, always_on)
 
     # close modem after operation if it is not going to be used for connection
-    if cfg.get("network") != "cellular":
-        network_gps.disconnect()
+    if cfg.get("network") != "cellular" and not always_on and power_off_after_operation:
+        network_gps.deactivate()
     return gps_status
 
 
@@ -77,7 +82,7 @@ def external_modem_get_position(cfg, measurements, always_on):
         if cfg.has("_MEAS_GPS_SATELLITE_FIX_NUM"):
             min_satellite_fix_num = cfg.get("_MEAS_GPS_SATELLITE_FIX_NUM")
 
-        (gps_timestamp, lat, lon, num_of_sat, hdop) = modem.get_gps_position(timeout_ms, min_satellite_fix_num)
+        gps_timestamp, lat, lon, num_of_sat, hdop = modem.get_gps_position(timeout_ms, min_satellite_fix_num)
         set_value(measurements, "gps_dur", ticks_diff(ticks_ms(), start_time), SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         if lat is not None and lon is not None:
             latD = coord_to_double(lat[0], lat[1], lat[2])
