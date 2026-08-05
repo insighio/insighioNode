@@ -168,7 +168,7 @@ def get_location_by_key(key):
                     slave = int(position)
                 except:
                     slave = 0
-            return LOCATION_MODBUS + (slave & 0x0F)
+            return slave & 0xFF  # LOCATION_MODBUS + (slave & 0x0F)
         elif loc_name == "adc" and position[0] >= "0" and position[0] <= "9":
             # ADS channels are represented as adc_<channel>_raw.
             return LOCATION_AD_P + (int(position[0]) - 1)
