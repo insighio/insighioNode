@@ -400,7 +400,8 @@ def sdi12_detect_timing(sdi12, sensor_list, measurements, address, start_index=0
             wdt_reset()
             address = str(_get(sensor, "address"))
             is_active = sdi12.is_active(address)
-            all_sensors_active = all_sensors_active and is_active
+            manufacturer, model = sdi12.get_sensor_info(address)
+            all_sensors_active = all_sensors_active and is_active and manufacturer and model
             if not is_active:
                 break
 
@@ -453,7 +454,15 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
                 config_index += 1
                 continue
 
-            manufacturer, model = sdi12.get_sensor_info(address)
+            manufacturer = ""
+            model = ""
+
+            for i in range(0, 3):
+                manufacturer, model = sdi12.get_sensor_info(address)
+                logging.debug("read_sdi12_sensor - manufacturer: {}, model: {}".format(manufacturer, model))
+                if manufacturer and model:
+                    break
+
             manufacturer = manufacturer.lower().strip() if manufacturer else ""
             model = model.lower().strip() if model else ""
             logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
