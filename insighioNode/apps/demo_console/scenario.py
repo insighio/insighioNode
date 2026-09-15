@@ -446,6 +446,7 @@ def executeDeviceStatisticsUpload(cfg, network):
     stats["free_flash"] = device_info.get_free_flash()
     stats["free_data_flash"] = device_info.get_free_flash("/data")
     stats["serial"] = device_info.get_device_id()[0]
+    stats["ins_main_version"] = device_info.get_main_version()
     try:
         import platform
 
