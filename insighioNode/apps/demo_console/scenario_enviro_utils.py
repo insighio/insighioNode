@@ -14,7 +14,7 @@ import gpio_handler
 import _thread
 import utime
 from math import ceil
-from device_info import wdt_reset
+from device_info import get_firmware_version, wdt_reset
 
 _BOARD_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
 
@@ -60,32 +60,25 @@ DEBOUNCE_TIME_LOW_FREQ_US = 5000  # Debounce period in microseconds for low freq
 DEBOUNCE_TIME_HIGH_FREQ_US = 500  # Debounce period in microseconds for high frequency signals
 
 
-def _read_pcnt_adc(adc_inst):
-    return adc_inst.read_uv()
+_fw_major, _fw_minor, _, _ = get_firmware_version()
+if _fw_major == 1 and _fw_minor is not None and 18 <= _fw_minor <= 19:
 
+    def _read_pcnt_adc(adc_inst):
+        return adc_inst.read_voltage(1)
 
-_PCNT_HIGH_MASK = 0x200000
-_PCNT_LOW_MASK = 0x100000
-_PCNT_VOLTAGE_MAX = 3300000
-_PCNT_RAW_TO_MILLIVOLTS_DIVISOR = 1000
+    _PCNT_HIGH_MASK = 0x800
+    _PCNT_LOW_MASK = 0x400
+    _PCNT_VOLTAGE_MAX = 3300
+    _PCNT_RAW_TO_MILLIVOLTS_DIVISOR = 1
+else:
 
+    def _read_pcnt_adc(adc_inst):
+        return adc_inst.read_uv()
 
-def configure_pcnt_adc_backend(read_adc, high_mask, low_mask, voltage_max, raw_to_millivolts_divisor):
-    global _read_pcnt_adc
-    global _PCNT_HIGH_MASK
-    global _PCNT_LOW_MASK
-    global _PCNT_VOLTAGE_MAX
-    global _PCNT_RAW_TO_MILLIVOLTS_DIVISOR
-    global pcnt_1_voltage_min
-    global pcnt_2_voltage_min
-
-    _read_pcnt_adc = read_adc
-    _PCNT_HIGH_MASK = high_mask
-    _PCNT_LOW_MASK = low_mask
-    _PCNT_VOLTAGE_MAX = voltage_max
-    _PCNT_RAW_TO_MILLIVOLTS_DIVISOR = raw_to_millivolts_divisor
-    pcnt_1_voltage_min = voltage_max
-    pcnt_2_voltage_min = voltage_max
+    _PCNT_HIGH_MASK = 0x200000
+    _PCNT_LOW_MASK = 0x100000
+    _PCNT_VOLTAGE_MAX = 3300000
+    _PCNT_RAW_TO_MILLIVOLTS_DIVISOR = 1000
 
 
 pcnt_1_debounce_timer = Timer(1)

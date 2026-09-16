@@ -199,12 +199,7 @@ def get_measurements(cfg_dummy=None):
 
             scenario_advind_utils.shield_measurements(measurements)
         elif shield_name == cfg.get("_CONST_SHIELD_ENVIRO") or shield_name == cfg.get("_CONST_SHIELD_ENVIRO_V2"):
-            fw_major, fw_minor, _, _ = device_info.get_firmware_version()
-
-            if fw_major == 1 and fw_minor >= 18 and fw_minor <= 19:
-                from . import scenario_enviro_utils_custom_mpy as scenario_enviro_utils
-            else:
-                from . import scenario_enviro_utils
+            from . import scenario_enviro_utils
 
             scenario_enviro_utils.shield_measurements(measurements)
         elif shield_name == cfg.get("_CONST_SHIELD_ACCELEROMETER"):
