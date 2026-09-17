@@ -181,6 +181,7 @@ def executeMeasureAndUploadLoop():
             or message_buffer.buffered_measurements_count() >= cfg.get("_BATCH_UPLOAD_MESSAGE_BUFFER")
             or not rtc_clock_ok
             or not measurementStored
+            or device_info.get_reset_cause() <= 1
         )
 
         logging.debug(
