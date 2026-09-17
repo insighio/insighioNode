@@ -38,8 +38,6 @@ _CHARGER_VERSION_2 = "bq25622e"
 _MAIN_VERSION_V1 = "v1"
 _MAIN_VERSION_V2 = "v2"
 
-_ENABLE_IBAT_AVERAGING = False
-
 _main_version = None
 _bq_charger_version = None
 
@@ -325,14 +323,14 @@ def _bq_decode_adc_u16_le(raw_u16, lsb_bit, width, signed, lsb_scale):
 
 
 def _bq_update_bits(i2c, bq_addr, reg, mask, value):
-    #logging.debug("_bq_update_bits: start")
+    # logging.debug("_bq_update_bits: start")
     curr = _bq_read_u8(i2c, bq_addr, reg)
     new_val = (curr & (~mask & 0xFF)) | (value & mask)
     if curr != new_val:
         _bq_write_u8(i2c, bq_addr, reg, new_val)
-        #logging.debug("_bq_update_bits: end")
-    #else:
-        #logging.debug("_bq_update_bits: end (no change)")
+        # logging.debug("_bq_update_bits: end")
+    # else:
+    # logging.debug("_bq_update_bits: end (no change)")
     return new_val
 
 
@@ -367,11 +365,6 @@ def _bq_set_vbat_mv(i2c, bq_addr, target_mv):
 
     code = int(accepted_mV / 10)
     _bq_write_u16(i2c, bq_addr, 0x04, code << 3)
-
-
-def bq_set_ibat_averaging_enabled(enabled):
-    global _ENABLE_IBAT_AVERAGING
-    _ENABLE_IBAT_AVERAGING = enabled
 
 
 def bq_charger_setup(i2c, bq_addr):
@@ -416,11 +409,13 @@ def bq_charger_enable_adc_averaging(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
         return
 
+    # the chip's ADC_AVG is just a short-window smoothing filter (confirmed empirically), not a duty-cycle
+    # energy accumulator, so it is always kept on and never needs a per-cycle reset.
     REG0x26_ADC_Control = 0x26
     reg26_val = _bq_read_u8(i2c, bq_addr, REG0x26_ADC_Control)
-    expected_val = 0x80 | (0x08 if _ENABLE_IBAT_AVERAGING else 0x00)
+    expected_val = 0x88  # ADC_EN=1, ADC_SAMPLE=12-bit, ADC_AVG=1
     if reg26_val != expected_val:
-        _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, expected_val)  # enable ADC, continuous measurements with averaging
+        _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, expected_val)
 
 
 # def bq_charger_set_max_charge_3950_mv(i2c, bq_addr):
@@ -514,12 +509,14 @@ def bq_charger_get_hiz_mode(i2c, bq_addr):
 
 def bq_charger_has_battery(i2c, bq_addr):
     # read 10 values from ibat and 1 vbat. If all values from ibat are 0 and vbat is not 0 then battery is not present.
+    # a delay is required between reads since IBAT_ADC only updates once per conversion cycle, not on every I2C read.
     ibat_is_zero = True
     for i in range(0, 10):
         ibat = bq_charger_get_ibat_adc(i2c, bq_addr)
         if ibat != 0:
             ibat_is_zero = False
             break
+        sleep_ms(50)
     vbat = bq_charger_get_vbat_adc(i2c, bq_addr)
     is_charging = bq_charger_get_is_charging(i2c, bq_addr)
     if ibat_is_zero and vbat != 0 and is_charging:
@@ -572,20 +569,6 @@ def bq_charger_get_ibat_adc(i2c, bq_addr):
     return _bq_decode_adc_u16_le(raw, lsb_bit=2, width=14, signed=True, lsb_scale=4.0)
 
 
-def bq_charger_reset_ibat(i2c, bq_addr):
-    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
-        return None
-
-    if _ENABLE_IBAT_AVERAGING:
-        # reset the averaging by disabling and enabling it again
-        REG0x26_ADC_Control = 0x26
-        _bq_write_u8(i2c, bq_addr, REG0x26_ADC_Control, 0x30)  # enable ADC, continuos measurements with averaging
-        sleep_ms(10)
-        # reset averaging session
-        _bq_write_u8(i2c, bq_addr, 0x26, 0x80 | (0x0C if _ENABLE_IBAT_AVERAGING else 0x00))
-        # bq_charger_enable_adc_averaging(i2c, bq_addr)
-
-
 def bq_charger_get_vbus_adc(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
         return None
@@ -608,6 +591,21 @@ def bq_charger_get_vsys_adc(i2c, bq_addr):
     # REG0x32/0x33: bits[12:1], unsigned, 1.99mV/LSB.
     raw = _bq_read_u16(i2c, bq_addr, 0x32)
     return _bq_decode_adc_u16_le(raw, lsb_bit=1, width=12, signed=False, lsb_scale=1.99)
+
+
+def bq_charger_get_status_registers(i2c, bq_addr):
+    if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
+        return None
+
+    REG0x16_Charger_Control_1 = 0x16
+    REG0x1E_Charger_Status_1 = 0x1E
+    REG0x1F_FAULT_Status_0 = 0x1F
+
+    regs = []
+    regs.append(_bq_read_u8(i2c, bq_addr, REG0x16_Charger_Control_1))
+    regs.append(_bq_read_u8(i2c, bq_addr, REG0x1E_Charger_Status_1))
+    regs.append(_bq_read_u8(i2c, bq_addr, REG0x1F_FAULT_Status_0))
+    return regs
 
 
 def initialize_main_version():
