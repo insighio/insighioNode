@@ -242,6 +242,7 @@ export default {
       this.$storage.remove("meas-scale-monitoring-enabled")
       this.$storage.remove("meas-scale-offset")
       this.$storage.remove("meas-scale-scale")
+      this.$storage.remove("shield-version")
     },
 
     storeData() {

@@ -156,6 +156,7 @@ export default {
       this.$storage.remove("meas-sensor-a-d-p2-t")
       this.$storage.remove("meas-sensor-a-d-p3")
       this.$storage.remove("meas-sensor-a-d-p3-t")
+      this.$storage.remove("shield-version")
     },
 
     storeData() {

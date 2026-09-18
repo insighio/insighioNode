@@ -202,6 +202,8 @@ export default {
       this.$storage.remove("meas-pcnt-1-formula")
       this.$storage.remove("meas-pcnt-1-high-freq")
 
+      this.$storage.remove("shield-version")
+
       this.$storage.remove("meas-sdi-warmup-time")
 
       for (let i = 1; i < 11; ++i) {
