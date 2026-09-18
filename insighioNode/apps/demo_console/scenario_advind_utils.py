@@ -1,6 +1,5 @@
 from utime import sleep_ms
 
-from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
@@ -11,6 +10,8 @@ from .sdi12_measurements import detect_timing, identify_sensor, read_measurement
 
 
 from . import cfg
+
+_BOARD_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
 
 _sdi12_sensor_switch_list = []
 
@@ -114,14 +115,11 @@ def shield_measurements(measurements):
 def read_sdi12_sensor(sdi12, address, measurements, location=None):
     logging.debug("Reading sensor with address: {}".format(address))
 
-    timing_index = 0
-    timing_detected = False
-    while timing_index >= 0:
-        timing_detected, timing_index, _ = detect_timing(sdi12, [str(address)], timing_index, wdt_reset)
-        if timing_detected:
-            break
-
-    if not timing_detected:
+    timing_detected, _, timing = detect_timing(sdi12, [str(address)], 0, wdt_reset)
+    if timing_detected:
+        if _BOARD_DEBUG_ON:
+            set_value(measurements, "sdi12_{}_t".format(address), "{}".format(list(timing)), None)
+    else:
         logging.error("Could not detect SDI-12 timing for sensor at address: [{}]".format(address))
         return
 
