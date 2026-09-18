@@ -158,7 +158,10 @@ def get_measurements(cfg_dummy=None):
 
             set_value(measurements, "is_charging", 1 if device_info.bq_charger_exec(device_info.bq_charger_get_is_charging) else 0)
 
-            set_value(measurements, "chr_status_reg", "{}".format(device_info.bq_charger_exec(device_info.bq_charger_get_status_registers)))
+            if device_info.get_main_version() == device_info._MAIN_VERSION_V2:
+                set_value(
+                    measurements, "chr_status_reg", "{}".format(device_info.bq_charger_exec(device_info.bq_charger_get_status_registers))
+                )
 
         if cfg.get("_MEAS_BATTERY_STAT_ENABLE"):
             vbatt = read_battery_voltage()
