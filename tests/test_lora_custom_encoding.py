@@ -241,7 +241,7 @@ def test_system_measurements_are_mapped_to_dedicated_types():
 def test_audit_scenario_representative_numeric_measurements_are_encodable():
     # Representative numeric keys from scenario.py/scenario_utils.py,
     # scenario_digital_adc_utils.py, scenario_advind_utils.py,
-    # scenario_enviro_utils.py/scenario_enviro_utils_custom_mpy.py,
+    # scenario_enviro_utils.py,
     # scenario_pcnt_ulp.py, scenario_accel_utils.py and scenario_scale_utils.py.
     measurements = {
         "reset_cause": {"value": 1},
