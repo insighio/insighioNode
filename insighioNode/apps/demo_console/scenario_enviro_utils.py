@@ -6,7 +6,11 @@ from sensors import set_sensor_power_on, set_sensor_power_off
 
 from .dictionary_utils import set_value, set_value_float, set_value_int, _get, _has
 
-from .sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
+from .sdi12_measurements import detect_timing
+from .sdi12_measurements import identify_sensor
+from .sdi12_measurements import parse_sdi12_sensor_response
+from .sdi12_measurements import read_measurement
+from .sdi12_measurements import set_no_response_error
 
 from . import cfg
 
@@ -359,87 +363,13 @@ def execute_sdi12_measurements(measurements):
 
 def sdi12_detect_timing(sdi12, sensor_list, measurements, address, start_index=0):
     logging.debug("sdi12 detect_timing - Detecting SDI12 timing settings for sensors: {}".format(sensor_list))
-    # sdi12.break_level_multiplier, sdi12.mark_level_multiplier, sdi12.sleep_period_us_before_write, sdi12.sleep_period_us_after_write
-    timing_options = [
-        # [1.5, 1.0, 160, 140],
-        # [1.5, 1.0, 160, 180],
-        # [1.5, 1.2, 160, 160],
-        # [1.5, 1.4, 160, 100],
-        # [1.5, 1.4, 160, 20],
-        # [1.5, 1.6, 160, 160],
-        # [1.5, 1.6, 160, 40],
-        [1.5, 1.0, 100, 50],
-        [1.5, 1.1, 160, 110],
-        [1.7, 1.0, 160, 80],
-        [1.7, 1.2, 160, 160],
-        [1.9, 1.2, 160, 100],
-        [1.9, 1.2, 160, 80],
-        [1.9, 1.8, 160, 140],
-        [1.9, 1.8, 160, 20],
-        [1.9, 1.8, 160, 40],
-        # [2.1, 1.0, 160, 0],
-        # [2.1, 1.4, 160, 140],
-        # [2.1, 1.4, 160, 160],
-        # [2.1, 1.6, 160, 80],
-        # [2.1, 1.8, 160, 0],
-        # [2.3, 1.0, 160, 140],
-        # [2.3, 1.0, 160, 40],
-        # [2.3, 1.2, 160, 180],
-        # [2.3, 1.4, 160, 160],
-        # [2.3, 1.4, 160, 40],
-        # [2.3, 1.6, 160, 120],
-        # [2.3, 1.6, 160, 40],
-        # [2.3, 1.8, 160, 160],
-    ]
+    addresses = [str(_get(sensor, "address")) for sensor in sensor_list]
+    detected, timing_index, timing = detect_timing(sdi12, addresses, start_index, wdt_reset)
 
-    if start_index >= len(timing_options):
-        logging.error("sdi12_detect_timing - Invalid start_index: {}, timing_options length: {}".format(start_index, len(timing_options)))
-        return (False, -1)
+    if detected and _BOARD_DEBUG_ON:
+        set_value(measurements, "sdi12_{}_t".format(address), "{}".format(list(timing)), None)
 
-    cnt = start_index
-    while cnt < len(timing_options):
-        # for timing in timing_options:
-        timing = timing_options[cnt]
-        sdi12.break_level_multiplier = timing[0]
-        sdi12.mark_level_multiplier = timing[1]
-        sdi12.sleep_period_us_before_write = timing[2]
-        sdi12.sleep_period_us_after_write = timing[3]
-
-        logging.debug(
-            "sdi12_detect_timing - Trying timing: break_level_multiplier: {}, mark_level_multiplier: {}, sleep_period_us_before_write: {}, sleep_period_us_after_write: {}".format(
-                sdi12.break_level_multiplier,
-                sdi12.mark_level_multiplier,
-                sdi12.sleep_period_us_before_write,
-                sdi12.sleep_period_us_after_write,
-            )
-        )
-
-        # find the first timing setting that works for all sensors
-        all_sensors_active = True
-        for sensor in sensor_list:
-            wdt_reset()
-            address = str(_get(sensor, "address"))
-            is_active = sdi12.is_active(address)
-            manufacturer, model = sdi12.get_sensor_info(address)
-            all_sensors_active = all_sensors_active and is_active and manufacturer and model
-            if not is_active:
-                break
-
-        if all_sensors_active:
-            logging.debug(
-                "sdi12_detect_timing - Found working timing: break_level_multiplier: {}, mark_level_multiplier: {}, sleep_period_us_before_write: {}, sleep_period_us_after_write: {}".format(
-                    sdi12.break_level_multiplier,
-                    sdi12.mark_level_multiplier,
-                    sdi12.sleep_period_us_before_write,
-                    sdi12.sleep_period_us_after_write,
-                )
-            )
-            if _BOARD_DEBUG_ON:
-                set_value(measurements, "sdi12_{}_t".format(address), "{}".format(timing), None)
-            return (True, cnt)
-        cnt += 1
-
-    return (False, cnt)
+    return (detected, timing_index)
 
 
 def read_sdi12_sensor(sdi12, measurements, sensor):
@@ -460,49 +390,20 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
             break
 
         try:
-            is_active = False
-
-            for i in range(0, 3):
-                is_active = sdi12.is_active(address)
-                logging.debug("read_sdi12_sensor - is_active: {}".format(is_active))
-                if is_active:
-                    break
-
+            is_active, manufacturer, model = identify_sensor(sdi12, address, measurements)
             if not is_active:
-                set_value(measurements, "sdi12_{}_e".format(address), "not_found", None)
-                logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
                 config_index += 1
                 continue
 
-            manufacturer = ""
-            model = ""
-
-            for i in range(0, 3):
-                manufacturer, model = sdi12.get_sensor_info(address)
-                logging.debug("read_sdi12_sensor - manufacturer: {}, model: {}".format(manufacturer, model))
-                if manufacturer and model:
-                    break
-
-            manufacturer = manufacturer.lower().strip() if manufacturer else ""
-            model = model.lower().strip() if model else ""
             logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
-
-            if manufacturer:
-                set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
-
-            if model:
-                set_value(measurements, "sdi12_{}_m".format(address), model, None)
 
             command_to_execute = command + sub_cmd
             force_wait = True  # if manufacturer == "in-situ" and (model == "at500" or model == "at400") else False
-            responseArray = sdi12.get_measurement(address, command_to_execute, 1, force_wait)
+            responseArray = read_measurement(sdi12, measurements, address, manufacturer, model, command_to_execute, "1", force_wait)
             if not responseArray:
-                set_value(measurements, "sdi12_{}_e".format(address), "no_response", None)
-                logging.error("read_sdi12_sensor - No response from sensor in address: [" + str(address) + "]")
+                set_no_response_error(measurements, address)
                 config_index += 1
                 continue
-
-            parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements)
 
             # post-parse actions
             if "li-cor" in manufacturer and command_to_execute == "M0":
@@ -516,33 +417,7 @@ def read_sdi12_sensor(sdi12, measurements, sensor):
 
 
 def parse_sdi12_sensor_response_array(manufacturer, model, address, command_to_execute, responseArray, measurements):
-    location = "1"
-
-    if manufacturer == "meter":
-        parse_sensor_meter(model, command_to_execute, address, responseArray, measurements, location)
-    elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
-        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
-    elif manufacturer == "acclima" and command_to_execute == "M":
-        parse_sensor_acclima(model, command_to_execute, address, responseArray, measurements, location)
-    elif manufacturer == "implexx" and command_to_execute == "M":
-        parse_sensor_implexx(model, command_to_execute, address, responseArray, measurements, location)
-    elif manufacturer == "ep100g":
-        if command_to_execute == "C":  # EnviroPro
-            parse_generic_sdi12(address, responseArray, measurements, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location)
-        elif command_to_execute == "C1":  # EnviroPro
-            parse_generic_sdi12(address, responseArray, measurements, "ep_ec", "uS/cm", "", location)  # dS/m
-
-        elif command_to_execute == "C2":  # EnviroPro
-            parse_generic_sdi12(address, responseArray, measurements, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location)
-        elif command_to_execute == "C5":
-            parse_generic_sdi12(
-                address, responseArray, measurements, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location
-            )
-
-    elif "li-cor" in manufacturer and command_to_execute == "M0":
-        parse_sensor_licor(model, command_to_execute, address, responseArray, measurements, location)
-    else:
-        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "_" + command_to_execute.lower(), location)
+    parse_sdi12_sensor_response(manufacturer, model, address, command_to_execute, responseArray, measurements, "1")
 
 
 #### Modbus functions #####

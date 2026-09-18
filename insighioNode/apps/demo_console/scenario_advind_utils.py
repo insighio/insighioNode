@@ -6,8 +6,7 @@ import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
 
 from .dictionary_utils import set_value, set_value_float
-
-from .sdi12_response_parsers import parse_sensor_meter, parse_sensor_acclima, parse_sensor_implexx, parse_sensor_licor, parse_generic_sdi12
+from .sdi12_measurements import identify_sensor, read_measurement, set_no_response_error
 
 
 from . import cfg
@@ -112,74 +111,47 @@ def shield_measurements(measurements):
 
 
 def read_sdi12_sensor(sdi12, address, measurements, location=None):
-    manufacturer = None
-    model = None
-    responseArray = None
-    if sdi12.is_active(address):
-        manufacturer, model = sdi12.get_sensor_info(address)
-        manufacturer = manufacturer.lower().strip() if manufacturer else ""
-        model = model.lower().strip() if model else ""
-        logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
-        set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
-        set_value(measurements, "sdi12_{}_m".format(address), model, None)
-    else:
-        set_value(measurements, "sdi12_{}_e".format(address), "not_found", None)
+    logging.debug("Reading sensor with address: {}".format(address))
 
-    if not manufacturer:
-        logging.error("read_sdi12_sensor - No sensor found in address: [" + str(address) + "]")
+    is_active, manufacturer, model = identify_sensor(sdi12, address, measurements)
+    if not is_active:
         return
 
-    if manufacturer == "meter" and (model == "ter12" or model == "atm14"):
-        responseArray = sdi12.get_measurement(address)
-        parse_sensor_meter(model, "M", address, responseArray, measurements, location)
-    elif manufacturer == "meter" and (model == "at41g2" or model == "atm41"):
-        responseArray = sdi12.get_measurement(address, "C", 2)
-        parse_sensor_meter(model, "C", address, responseArray, measurements, location)
-    elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
-        responseArray = sdi12.get_measurement(address, "C", 1, True)
-        parse_generic_sdi12(address, responseArray, measurements, "sdi12", None, "", location)
-    elif manufacturer == "acclima":
-        responseArray = sdi12.get_measurement(address)
-        parse_sensor_acclima(model, "M", address, responseArray, measurements, location)
-    elif manufacturer == "implexx":
-        responseArray = sdi12.get_measurement(address)
-        parse_sensor_implexx(model, "M", address, responseArray, measurements, location)
-    elif manufacturer == "ep100g":  # EnviroPro
-        responseArrayMoisture = sdi12.get_measurement(address, "C")  # moisture with salinity
-        responseArraySalinity = sdi12.get_measurement(address, "C1")  # salinity
+    logging.debug("manufacturer: {}, model: {}".format(manufacturer, model))
+    response = None
 
-        parse_generic_sdi12(
-            address, responseArrayMoisture, measurements, "ep_vwc", SenmlSecondaryUnits.SENML_SEC_UNIT_PERCENT, "", location
-        )
-        parse_generic_sdi12(address, responseArraySalinity, measurements, "ep_ec", "uS/cm", "", location)  # dS/m
+    if manufacturer == "meter" and (model == "ter12" or model == "atm14"):
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "M", location)
+    elif manufacturer == "meter" and (model == "at41g2" or model == "atm41"):
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "C", location, measurement_count=2)
+    elif manufacturer == "in-situ" and (model == "at500" or model == "at400"):
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "C", location)
+    elif manufacturer == "acclima":
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "M", location)
+    elif manufacturer == "implexx":
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "M", location)
+    elif manufacturer == "ep100g":  # EnviroPro
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "C", location)
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "C1", location) or response
 
         cfg_is_celsius = cfg.get("_MEAS_TEMP_UNIT_IS_CELSIUS")
         if cfg_is_celsius:
-            responseArrayTemperature = sdi12.get_measurement(address, "C2")
-            parse_generic_sdi12(
-                address, responseArrayTemperature, measurements, "ep_temp", SenmlUnits.SENML_UNIT_DEGREES_CELSIUS, "", location
-            )
+            temperature_response = read_measurement(sdi12, measurements, address, manufacturer, model, "C2", location)
         else:
-            responseArrayTemperature = sdi12.get_measurement(address, "C5")
-            parse_generic_sdi12(
-                address, responseArrayTemperature, measurements, "ep_temp", SenmlSecondaryUnits.SENML_SEC_UNIT_FAHRENHEIT, "", location
-            )
+            temperature_response = read_measurement(sdi12, measurements, address, manufacturer, model, "C5", location)
+        response = temperature_response or response
     elif "li-cor" in manufacturer:
-        responseArray = sdi12.get_measurement(address, "M0")
-        parse_sensor_licor(model, "M0", address, responseArray, measurements, location)
-        responseArray = sdi12._send(address + "XT!")  # trigger next round of measurements
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "M0", location)
+        sdi12._send(address + "XT!")  # trigger next round of measurements
     elif "rika" in manufacturer or ("kisters_" in manufacturer and model == "hyquan"):
-        responseArrayM = sdi12.get_measurement(address, "M", 1)
-        parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "M", location)
     else:
-        set_value(measurements, "sdi12_{}_i".format(address), manufacturer, None)
-        responseArrayC = sdi12.get_measurement(address, "C", 2)
-        responseArrayM = sdi12.get_measurement(address, "M", 1)
-        parse_generic_sdi12(address, responseArrayC, measurements, "sdi12", None, "_c", location)
-        parse_generic_sdi12(address, responseArrayM, measurements, "sdi12", None, "_m", location)
+        response = read_measurement(sdi12, measurements, address, manufacturer, model, "C", location, measurement_count=2)
+        response_m = read_measurement(sdi12, measurements, address, manufacturer, model, "M", location)
+        response = response_m or response
 
-    if not responseArray and not responseArrayC and not responseArrayM:
-        set_value(measurements, "sdi12_{}_e".format(address), "no_response", None)
+    if not response:
+        set_no_response_error(measurements, address)
 
 
 def current_sense_4_20mA(measurements):
