@@ -4,9 +4,10 @@ from external.kpn_senml.senml_unit import SenmlUnits
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
+from device_info import wdt_reset
 
 from .dictionary_utils import set_value, set_value_float
-from .sdi12_measurements import identify_sensor, read_measurement, set_no_response_error
+from .sdi12_measurements import detect_timing, identify_sensor, read_measurement, set_no_response_error
 
 
 from . import cfg
@@ -112,6 +113,17 @@ def shield_measurements(measurements):
 
 def read_sdi12_sensor(sdi12, address, measurements, location=None):
     logging.debug("Reading sensor with address: {}".format(address))
+
+    timing_index = 0
+    timing_detected = False
+    while timing_index >= 0:
+        timing_detected, timing_index, _ = detect_timing(sdi12, [str(address)], timing_index, wdt_reset)
+        if timing_detected:
+            break
+
+    if not timing_detected:
+        logging.error("Could not detect SDI-12 timing for sensor at address: [{}]".format(address))
+        return
 
     is_active, manufacturer, model = identify_sensor(sdi12, address, measurements)
     if not is_active:
