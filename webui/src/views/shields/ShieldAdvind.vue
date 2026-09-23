@@ -219,7 +219,7 @@ export default {
       for (let i = 0; i < this.sdi12Rows.length; ++i) {
         const config_index = i + 1
         this.$storage.set("meas-sdi-" + config_index + "-enabled", this.boolToPyStr(this.sdi12Rows[i].active))
-        this.$storage.set("meas-sdi-" + config_index + "-address", this.sdi12Rows[i].sensorId)
+        this.$storage.set("meas-sdi-" + config_index + "-address", "" + this.sdi12Rows[i].sensorId)
         this.$storage.set("meas-sdi-" + config_index + "-loc", this.sdi12Rows[i].boardLocation)
       }
 
