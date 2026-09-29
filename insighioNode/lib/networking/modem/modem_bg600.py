@@ -680,9 +680,9 @@ class ModemBG600(modem_base.Modem):
         requestHeader = (
             "GET " + url_request_route + " HTTP/1.1\r\n"
             "Host: " + url_base + "\r\n"
-            "User-Agent: curl/7.74.0\r\n"
-            "Accept: */*\r\n"
-            "Content-Type: application/json\r\n"
+            # "User-Agent: insighio-device/1.0\r\n"
+            # "Accept: */*\r\n"
+            # "Content-Type: application/json\r\n"
             "Authorization: " + auth_token + "\r\n"
             "\r\n"
         )
@@ -713,7 +713,7 @@ class ModemBG600(modem_base.Modem):
 
         return file_downloaded
 
-    def http_post_with_auth_header(self, url_base, url_request_route, auth_token, post_body, timeout_ms=60000):
+    def _http_aux_with_body_and_auth_header(self, method, url_base, url_request_route, auth_token, post_body, timeout_ms=60000):
         file_downloaded = False
         file_size = -1
 
@@ -729,22 +729,23 @@ class ModemBG600(modem_base.Modem):
         else:
             post_body_str = str(post_body)
 
-        logging.debug("POST body: {}".format(post_body_str))
+        logging.debug("{} body: {}".format(method, post_body_str))
 
         # enable executing http request with custom headers
         self.send_at_cmd('AT+QHTTPCFG="requestheader",1')
         self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
         url = "https://" + url_base
         requestHeader = (
-            "POST " + url_request_route + " HTTP/1.1\r\n"
+            method + " " + url_request_route + " HTTP/1.1\r\n"
             "Host: " + url_base + "\r\n"
-            "User-Agent: insighio-device/1.0\r\n"
-            "Accept: application/json\r\n"
-            "Content-Type: application/json\r\n"
             "Content-Length: " + str(len(post_body_str)) + "\r\n"
             "Authorization: " + auth_token + "\r\n"
             "\r\n"
         )
+
+        # "User-Agent: insighio-device/1.0\r\n"
+        #             "Accept: application/json\r\n"
+        #             "Content-Type: application/json\r\n"
 
         logging.debug("Request header: {}".format(requestHeader.replace("\r\n", "\\r\\n")))
 
@@ -756,17 +757,23 @@ class ModemBG600(modem_base.Modem):
         if not url_setup:
             return None
 
-        url_req_ready, _ = self.send_at_cmd("AT+QHTTPPOST={},80".format(len(requestHeader) + len(post_body_str)), 125000, "CONNECT")
+        url_req_ready, _ = self.send_at_cmd("AT+QHTTP{}={},80".format(method, len(requestHeader) + len(post_body_str)), 125000, "CONNECT")
         if not url_req_ready:
             return None
 
-        url_req_body_ready, lines = self.send_at_cmd(requestHeader + post_body_str, timeout_ms, r"\+QHTTPPOST:.*")
+        url_req_body_ready, lines = self.send_at_cmd(requestHeader + post_body_str, timeout_ms, r"\+QHTTP{}:.*".format(method))
 
         if not url_req_body_ready:
             return None
 
-        line_matches = self._match_regex(r"\+QHTTPPOST:\s*(\d+)(,(\d+)(,(\d+))?)?", lines)
+        line_matches = self._match_regex(r"\+QHTTP{}:\s*(\d+)(,(\d+)(,(\d+))?)?".format(method), lines)
         return line_matches and line_matches.group(1) == "0"  # 0 means success
+
+    def http_post_with_auth_header(self, url_base, url_request_route, auth_token, post_body, timeout_ms=60000):
+        return self._http_aux_with_body_and_auth_header("POST", url_base, url_request_route, auth_token, post_body, timeout_ms=timeout_ms)
+
+    def http_put_with_auth_header(self, url_base, url_request_route, auth_token, post_body, timeout_ms=60000):
+        return self._http_aux_with_body_and_auth_header("PUT", url_base, url_request_route, auth_token, post_body, timeout_ms=timeout_ms)
 
     def coap_connect(self, server_ip, server_port):
         context_activated, _ = self.send_at_cmd('AT+QCOAPCFG="pdpcid",2,1')

@@ -18,9 +18,9 @@ def execute(useExistingConfiguration=False):
     cfg.set("_SECRET_KEY", "000000000000000000000")
 
     headers = {"Authorization": cfg.get("_SECRET_KEY"), "accept": "application/json"}
-    URL_base = "console.insigh.io"
+    URL_BASE = "console.insigh.io"
     URL_PATH = "/things/bootstrap/{}".format(_DEVICE_ID)
-    url = "{}://{}{}".format("http" if device_info.get_hw_module_verison() == "esp32wroom" else "https", URL_base, URL_PATH)
+    url = "{}://{}{}".format("http" if device_info.get_hw_module_verison() == "esp32wroom" else "https", URL_BASE, URL_PATH)
 
     try:
         from utils import httpclient

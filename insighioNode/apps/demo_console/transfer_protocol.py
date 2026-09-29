@@ -27,7 +27,7 @@ class TransferProtocol:
         logging.info("Control packet not supported for: " + self.protocol)
         return False
 
-    def get_control_message(self):
+    def get_mqtt_first_control_message(self):
         return logging.info("Control packet not supported for: " + self.protocol)
 
     def clear_retained(self, topic):
@@ -154,17 +154,17 @@ class TransferProtocolModemAT(TransferProtocol):
             return False
 
         logging.info("About to send config message")
-        URL_base = self.protocol_config.server_ip
+        URL_BASE = self.protocol_config.server_ip
         URL_PATH = "/http/channels/{}/messages/{}{}".format(
             self.protocol_config.control_channel_id, self.protocol_config.thing_id, "/configResponse"
         )
 
         post_body = [{"n": "config", "vs": message}, {"n": "e", "v": 9}]
         return self.modem_instance.http_post_with_auth_header(
-            URL_base, URL_PATH, self.protocol_config.thing_token, post_body, timeout_ms=125000
+            URL_BASE, URL_PATH, self.protocol_config.thing_token, post_body, timeout_ms=125000
         )
 
-    def get_control_message(self):
+    def get_mqtt_first_control_message(self):
         if not self.connected:
             logging.info("TransferProtocol not connected")
             return None
@@ -248,7 +248,7 @@ class TransferProtocolMQTT(TransferProtocol):
         with locks.network_transmit_mutex:
             return self.client.sendControlMessage(message, subtopic)
 
-    def get_control_message(self):
+    def get_mqtt_first_control_message(self):
         if not self.connected:
             logging.info("TransferProtocol not connected")
             return None
