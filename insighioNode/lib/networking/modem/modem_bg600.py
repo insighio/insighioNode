@@ -490,117 +490,117 @@ class ModemBG600(modem_base.Modem):
 
         return statusMqttDisconnect or statusNetworkClose
 
-    def get_next_bytes_from_file(self, file_handle, num_of_bytes, timeout_ms=2000):
-        # clear incoming message buffer
-        while self.uart.any():
-            self.uart.readline()
+    # def get_next_bytes_from_file(self, file_handle, num_of_bytes, timeout_ms=2000):
+    #     # clear incoming message buffer
+    #     while self.uart.any():
+    #         self.uart.readline()
 
-        status = None
-        buffer = None
-        responseLines = []
-        is_echo_on = True
-        start_timestamp = ticks_ms()
-        timeout_timestamp = ticks_add(start_timestamp, timeout_ms)
-        success_regex = "^([\\w\\s\\+]+)?OK$"
-        error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
+    #     status = None
+    #     buffer = None
+    #     responseLines = []
+    #     is_echo_on = True
+    #     start_timestamp = ticks_ms()
+    #     timeout_timestamp = ticks_add(start_timestamp, timeout_ms)
+    #     success_regex = "^([\\w\\s\\+]+)?OK$"
+    #     error_regex = "^((\\w+\\s+)?(ERROR|FAIL)$)|(\\+CM[ES] ERROR)"
 
-        # send command
-        command = "AT+QFREAD={},{}".format(file_handle, num_of_bytes)
-        write_success = self.uart.write(command + "\r\n")
-        if not write_success:
-            return buffer
+    #     # send command
+    #     command = "AT+QFREAD={},{}".format(file_handle, num_of_bytes)
+    #     write_success = self.uart.write(command + "\r\n")
+    #     if not write_success:
+    #         return buffer
 
-        while 1:
-            wdt_reset()
+    #     while 1:
+    #         wdt_reset()
 
-            remaining_bytes = self.uart.any()
-            if ticks_diff(ticks_ms(), timeout_timestamp) >= 0:
-                if status is None:
-                    status = False
-                break
+    #         remaining_bytes = self.uart.any()
+    #         if ticks_diff(ticks_ms(), timeout_timestamp) >= 0:
+    #             if status is None:
+    #                 status = False
+    #             break
 
-            # if OK or ERROR has already been read though there are still
-            # data on the UART, keep reading
-            if status is not None and remaining_bytes == 0:
-                break
+    #         # if OK or ERROR has already been read though there are still
+    #         # data on the UART, keep reading
+    #         if status is not None and remaining_bytes == 0:
+    #             break
 
-            line = self.uart.readline()
+    #         line = self.uart.readline()
 
-            try:
-                line = line if line is None else line.decode("utf8").strip()
-            except Exception as e:
-                logging.error("! " + str(line))
-                line = ""
+    #         try:
+    #             line = line if line is None else line.decode("utf8").strip()
+    #         except Exception as e:
+    #             logging.error("! " + str(line))
+    #             line = ""
 
-            if line == command:
-                is_echo_on = False
-            elif line == "CONNECT " + str(num_of_bytes):
-                data_read = 0
-                buffer = self.uart.read(num_of_bytes)
-            else:
-                responseLines.append(line)
-                if ure.search(success_regex, line) is not None:
-                    status = True
-                elif ure.search(error_regex, line) is not None:
-                    status = False
+    #         if line == command:
+    #             is_echo_on = False
+    #         elif line == "CONNECT " + str(num_of_bytes):
+    #             data_read = 0
+    #             buffer = self.uart.read(num_of_bytes)
+    #         else:
+    #             responseLines.append(line)
+    #             if ure.search(success_regex, line) is not None:
+    #                 status = True
+    #             elif ure.search(error_regex, line) is not None:
+    #                 status = False
 
-            sleep_ms(50)
+    #         sleep_ms(50)
 
-        if status is None:
-            status = False
+    #     if status is None:
+    #         status = False
 
-        return buffer if status else None
+    #     return buffer if status else None
 
-    def get_file_size(self, source):
-        # read file size
-        file_found, lines = self.send_at_cmd('AT+QFLST="' + source + '"')
-        reg = r'\+QFLST: ".*",(\d+)'
-        res = ure.match(reg, lines[0])
-        return int(res.group(1)) if res else None
+    # def get_file_size(self, source):
+    #     # read file size
+    #     file_found, lines = self.send_at_cmd('AT+QFLST="' + source + '"')
+    #     reg = r'\+QFLST: ".*",(\d+)'
+    #     res = ure.match(reg, lines[0])
+    #     return int(res.group(1)) if res else None
 
-    def open_file_read_only(self, source):
-        # If the file exists, it is opened directly and is read only. If the file does not exist, an error is returned.
-        file_open_status, lines = self.send_at_cmd('AT+QFOPEN="' + source + '",2')
-        reg = r"\+QFOPEN:\s+(\d+)"
-        res = ure.match(reg, lines[0])
-        return res.group(1) if res else None
+    # def open_file_read_only(self, source):
+    #     # If the file exists, it is opened directly and is read only. If the file does not exist, an error is returned.
+    #     file_open_status, lines = self.send_at_cmd('AT+QFOPEN="' + source + '",2')
+    #     reg = r"\+QFOPEN:\s+(\d+)"
+    #     res = ure.match(reg, lines[0])
+    #     return res.group(1) if res else None
 
-    def get_file(self, source, destination, timeoutms=250000):
-        file_size = self.get_file_size(source)
-        if not file_size:
-            return False
+    # def get_file(self, source, destination, timeoutms=250000):
+    #     file_size = self.get_file_size(source)
+    #     if not file_size:
+    #         return False
 
-        logging.debug("about to read file: {} of size: {} into: {}".format(source, file_size, destination))
-        file_handle = self.open_file_read_only(source)
-        logging.debug("File opened with handle: " + file_handle)
+    #     logging.debug("about to read file: {} of size: {} into: {}".format(source, file_size, destination))
+    #     file_handle = self.open_file_read_only(source)
+    #     logging.debug("File opened with handle: " + file_handle)
 
-        data_read = 0
-        CHUNKSIZE = 256
-        # CHUNKSIZE = 384 good
-        # CHUNKSIZE = 448
-        # CHUNKSIZE = 470 no
+    #     data_read = 0
+    #     CHUNKSIZE = 256
+    #     # CHUNKSIZE = 384 good
+    #     # CHUNKSIZE = 448
+    #     # CHUNKSIZE = 470 no
 
-        fw = open(destination, "wb")
-        logging.debug("reading file contents")
-        while data_read < file_size:
-            data_remaining = file_size - data_read
-            byte_length_to_request = CHUNKSIZE if data_remaining >= CHUNKSIZE else data_remaining
-            logging.debug("  {}/{}: requesting: {}".format(data_read, file_size, byte_length_to_request))
-            buffer = self.get_next_bytes_from_file(file_handle, byte_length_to_request)
-            if not buffer:
-                logging.error("error reading file from modem")
-                fw.close()
-                return False
-            fw.write(buffer)
-            data_read += byte_length_to_request
-            sleep_ms(10)
-        fw.close()
-        file_close_status, _ = self.send_at_cmd("AT+QFCLOSE=" + file_handle)
-        return data_read == file_size
+    #     fw = open(destination, "wb")
+    #     logging.debug("reading file contents")
+    #     while data_read < file_size:
+    #         data_remaining = file_size - data_read
+    #         byte_length_to_request = CHUNKSIZE if data_remaining >= CHUNKSIZE else data_remaining
+    #         logging.debug("  {}/{}: requesting: {}".format(data_read, file_size, byte_length_to_request))
+    #         buffer = self.get_next_bytes_from_file(file_handle, byte_length_to_request)
+    #         if not buffer:
+    #             logging.error("error reading file from modem")
+    #             fw.close()
+    #             return False
+    #         fw.write(buffer)
+    #         data_read += byte_length_to_request
+    #         sleep_ms(10)
+    #     fw.close()
+    #     file_close_status, _ = self.send_at_cmd("AT+QFCLOSE=" + file_handle)
+    #     return data_read == file_size
 
-    def delete_file(self, destination):
-        status, _ = self.send_at_cmd('AT+QFDEL="' + destination + '"')
-        return status
+    # def delete_file(self, destination):
+    #     status, _ = self.send_at_cmd('AT+QFDEL="' + destination + '"')
+    #     return status
 
     # --- persistent SSL socket -------------------------------------------------
     # A single SSL socket is kept open towards the console so that the TLS
@@ -895,16 +895,17 @@ class ModemBG600(modem_base.Modem):
         """Downloads url straight into the local file destination_file. Returns (success, bytes_written)."""
         if url.startswith("https://"):
             return self._ssl_http_get_file(url, destination_file, timeout_ms)
+        return (False, -1)
 
-        # plain HTTP has no shared socket, so the modem stages the file in its own filesystem first
-        modem_file = destination_file.split("/")[-1]
-        downloaded, file_size = self._modem_fs_http_get_file(url, modem_file, timeout_ms)
-        if not downloaded:
-            return (False, file_size)
+        # # plain HTTP has no shared socket, so the modem stages the file in its own filesystem first
+        # modem_file = destination_file.split("/")[-1]
+        # downloaded, file_size = self._modem_fs_http_get_file(url, modem_file, timeout_ms)
+        # if not downloaded:
+        #     return (False, file_size)
 
-        copied = self.get_file(modem_file, destination_file)
-        self.delete_file(modem_file)
-        return (copied, file_size)
+        # copied = self.get_file(modem_file, destination_file)
+        # self.delete_file(modem_file)
+        # return (copied, file_size)
 
     def _split_url(self, url):
         scheme_separator = url.find("://")
@@ -1039,40 +1040,40 @@ class ModemBG600(modem_base.Modem):
         logging.debug("downloaded {} bytes into {}".format(bytes_written, destination_file))
         return (True, bytes_written)
 
-    def _modem_fs_http_get_file(self, url, destination_file, timeout_ms=250000):
-        file_downloaded = False
-        file_size = -1
+    # def _modem_fs_http_get_file(self, url, destination_file, timeout_ms=250000):
+    #     file_downloaded = False
+    #     file_size = -1
 
-        context_ready, _ = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
+    #     context_ready, _ = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
 
-        if not context_ready:
-            return (file_downloaded, file_size)
+    #     if not context_ready:
+    #         return (file_downloaded, file_size)
 
-        self.send_at_cmd('AT+QHTTPCFG="requestheader",0')
-        self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
-        url_ready, _ = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
-        if not url_ready:
-            self.http_context_disconnect()
-            return (file_downloaded, file_size)
+    #     self.send_at_cmd('AT+QHTTPCFG="requestheader",0')
+    #     self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
+    #     url_ready, _ = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
+    #     if not url_ready:
+    #         self.http_context_disconnect()
+    #         return (file_downloaded, file_size)
 
-        url_setup, _ = self.send_at_cmd(url, 80)
-        if not url_setup:
-            self.http_context_disconnect()
-            return (file_downloaded, file_size)
+    #     url_setup, _ = self.send_at_cmd(url, 80)
+    #     if not url_setup:
+    #         self.http_context_disconnect()
+    #         return (file_downloaded, file_size)
 
-        get_requested, lines = self.send_at_cmd("AT+QHTTPGET=80", timeout_ms, r"\+QHTTPGET:.*")
-        line_maches = self._match_regex(r"\+QHTTPGET:\s*(\d+),(\d+),(\d+)", lines)
-        file_size = -1
-        if line_maches:
-            file_size = int(line_maches.group(3))
+    #     get_requested, lines = self.send_at_cmd("AT+QHTTPGET=80", timeout_ms, r"\+QHTTPGET:.*")
+    #     line_maches = self._match_regex(r"\+QHTTPGET:\s*(\d+),(\d+),(\d+)", lines)
+    #     file_size = -1
+    #     if line_maches:
+    #         file_size = int(line_maches.group(3))
 
-        if not get_requested or not line_maches or file_size < 0:
-            self.http_context_disconnect()
-            return (file_downloaded, file_size)
+    #     if not get_requested or not line_maches or file_size < 0:
+    #         self.http_context_disconnect()
+    #         return (file_downloaded, file_size)
 
-        file_downloaded, lines = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:\s*")
+    #     file_downloaded, lines = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:\s*")
 
-        return (file_downloaded, file_size)
+    #     return (file_downloaded, file_size)
 
     # url_base = "console.insigh.io"
     # url_request_route = /mf-rproxy/channels/list
