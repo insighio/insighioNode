@@ -406,71 +406,71 @@ class ModemBG600(modem_base.Modem):
             general_retry_num += 1
         return mqtt_send_ready and mqtt_send_ok and message_sent
 
-    def mqtt_get_message(self, topic, timeout_ms=5000, explicit_client_id=None):
-        temp_client_id = explicit_client_id if explicit_client_id else self._mqtt_client_id
-        if not temp_client_id:
-            self._mqtt_client_id = 1
-            temp_client_id = self._mqtt_client_id
-
-        import random
-
-        # channels/f1937d78-6745-4b6b-98c3-62e2201c21ab/messages/5de93307-344f-48f2-a66d-1d2f7e359504/#
-        # reg = r"\+QMTRECV:\s*\d+,\d+,\"([a-z\-0-9\/]+)\",\"(.*)\"" -> can not be used as it causes: RuntimeError: maximum recursion depth exceeded
-        reg = r"\+QMTRECV:.*"
-        # subscribe and receive message if any
-        message_id = int(random.random() * 65530) + 1
-        status_subscribed, lines = self.send_at_cmd('AT+QMTSUB={},{},"{}",1'.format(temp_client_id, message_id, topic), timeout_ms, reg)
-        # unsubscribe
-        status_unsubscribed, _ = self.send_at_cmd('AT+QMTUNS={},{},"{}"'.format(temp_client_id, message_id, topic), 30000, r"\+QMTUNS:.*")
-
-        selected_line = None
-        for line in lines:
-            line = line.strip()
-            # search for the line that contains the info of the received message
-            if line.startswith("+QMTRECV:"):
-                selected_line = line
-                break
-
-        if selected_line:
-            return self.extract_topic_message_without_regex(selected_line)
-
-        return None
-
-    def extract_topic_message_without_regex(self, line):
-        topic = ""
-        message = ""
-        topic_reached = False
-        topic_parsed = False
-        message_reached = False
-
-        i = -1
-        last_quote_index = len(line)
-        message_quote_index = 0
-        for c in list(line):
-            i += 1
-            if c == '"':
-                if not topic_reached:
-                    topic_reached = True
-                    continue
-                elif topic_reached and not topic_parsed:
-                    topic_parsed = True
-                    continue
-                elif topic_parsed and not message_reached:
-                    message_reached = True
-                    message_quote_index = i
-                    continue
-                else:
-                    last_quote_index = i
-
-            if topic_reached and not topic_parsed:
-                topic += c
-            elif message_reached:
-                message += c
-
-        res = dict()
-        res["topic"] = topic
-        res["message"] = message[0 : (last_quote_index - message_quote_index - 1)]
-        return res
+    # def mqtt_get_message(self, topic, timeout_ms=5000, explicit_client_id=None):
+    #     temp_client_id = explicit_client_id if explicit_client_id else self._mqtt_client_id
+    #     if not temp_client_id:
+    #         self._mqtt_client_id = 1
+    #         temp_client_id = self._mqtt_client_id
+    #
+    #     import random
+    #
+    #     # channels/f1937d78-6745-4b6b-98c3-62e2201c21ab/messages/5de93307-344f-48f2-a66d-1d2f7e359504/#
+    #     # reg = r"\+QMTRECV:\s*\d+,\d+,\"([a-z\-0-9\/]+)\",\"(.*)\"" -> can not be used as it causes: RuntimeError: maximum recursion depth exceeded
+    #     reg = r"\+QMTRECV:.*"
+    #     # subscribe and receive message if any
+    #     message_id = int(random.random() * 65530) + 1
+    #     status_subscribed, lines = self.send_at_cmd('AT+QMTSUB={},{},"{}",1'.format(temp_client_id, message_id, topic), timeout_ms, reg)
+    #     # unsubscribe
+    #     status_unsubscribed, _ = self.send_at_cmd('AT+QMTUNS={},{},"{}"'.format(temp_client_id, message_id, topic), 30000, r"\+QMTUNS:.*")
+    #
+    #     selected_line = None
+    #     for line in lines:
+    #         line = line.strip()
+    #         # search for the line that contains the info of the received message
+    #         if line.startswith("+QMTRECV:"):
+    #             selected_line = line
+    #             break
+    #
+    #     if selected_line:
+    #         return self.extract_topic_message_without_regex(selected_line)
+    #
+    #     return None
+    #
+    # def extract_topic_message_without_regex(self, line):
+    #     topic = ""
+    #     message = ""
+    #     topic_reached = False
+    #     topic_parsed = False
+    #     message_reached = False
+    #
+    #     i = -1
+    #     last_quote_index = len(line)
+    #     message_quote_index = 0
+    #     for c in list(line):
+    #         i += 1
+    #         if c == '"':
+    #             if not topic_reached:
+    #                 topic_reached = True
+    #                 continue
+    #             elif topic_reached and not topic_parsed:
+    #                 topic_parsed = True
+    #                 continue
+    #             elif topic_parsed and not message_reached:
+    #                 message_reached = True
+    #                 message_quote_index = i
+    #                 continue
+    #             else:
+    #                 last_quote_index = i
+    #
+    #         if topic_reached and not topic_parsed:
+    #             topic += c
+    #         elif message_reached:
+    #             message += c
+    #
+    #     res = dict()
+    #     res["topic"] = topic
+    #     res["message"] = message[0 : (last_quote_index - message_quote_index - 1)]
+    #     return res
 
     def mqtt_disconnect(self, explicit_client_id=None):
         temp_client_id = explicit_client_id if explicit_client_id else self._mqtt_client_id
@@ -613,7 +613,7 @@ class ModemBG600(modem_base.Modem):
         ctx = self._ssl_context_id
         self.send_at_cmd('AT+QSSLCFG="sslversion",{},4'.format(ctx))  # all TLS versions
         self.send_at_cmd('AT+QSSLCFG="ciphersuite",{},0xFFFF'.format(ctx))  # support all cipher suites
-        self.send_at_cmd('AT+QSSLCFG="seclevel",{},0'.format(ctx))  # no certificate authentication
+        self.send_at_cmd('AT+QSSLCFG="seclevel",{},0'.format(ctx))  # no certificate authentication -> do we need to enable this?
         self.send_at_cmd('AT+QSSLCFG="sni",{},1'.format(ctx))
         self.send_at_cmd('AT+QSSLCFG="session",{},1'.format(ctx))  # allow session resumption
         self.send_at_cmd('AT+QSSLCFG="ignorelocaltime",{},1'.format(ctx))
@@ -749,15 +749,74 @@ class ModemBG600(modem_base.Modem):
             body = body[index + 4 + size :]
         return result
 
-    def _ssl_read_http_response(self, timeout_ms):
-        """Returns (status_code, body_string) or (None, None) on failure."""
+    def _ssl_read_http_headers(self, timeout_ms):
+        """Returns (status_code, headers_dict, leftover_body_bytes) or (None, None, None) on failure."""
         raw = b""
-        header_end = -1
-        content_length = None
-        chunked = False
         timeout_timestamp = ticks_add(ticks_ms(), timeout_ms)
 
         while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
+            chunk = self._ssl_recv_raw()
+            if chunk is None:
+                return (None, None, None)
+
+            if not chunk:
+                sleep_ms(100)
+                continue
+
+            raw += chunk
+            header_end = raw.find(b"\r\n\r\n")
+            if header_end < 0:
+                continue
+
+            lines = raw[:header_end].decode("utf8", "ignore").split("\r\n")
+
+            status_code = None
+            status_match = ure.search(r"HTTP/1\.[01]\s+(\d+)", lines[0])
+            if status_match:
+                status_code = int(status_match.group(1))
+
+            headers = {}
+            for line in lines[1:]:
+                separator = line.find(":")
+                if separator > 0:
+                    headers[line[:separator].strip().lower()] = line[separator + 1 :].strip()
+
+            return (status_code, headers, raw[header_end + 4 :])
+
+        logging.error("SSL socket: timed out waiting for HTTP response headers")
+        return (None, None, None)
+
+    def _ssl_body_delimiters(self, headers):
+        content_length = None
+        try:
+            content_length = int(headers["content-length"])
+        except Exception:
+            content_length = None
+        return (content_length, "chunked" in headers.get("transfer-encoding", "").lower())
+
+    def _ssl_read_http_response(self, timeout_ms):
+        """Returns (status_code, body_string) or (None, None) on failure."""
+        status_code, headers, body = self._ssl_read_http_headers(timeout_ms)
+        if status_code is None:
+            return (None, None)
+
+        content_length, chunked = self._ssl_body_delimiters(headers)
+        timeout_timestamp = ticks_add(ticks_ms(), timeout_ms)
+
+        while True:
+            if chunked:
+                if body.endswith(b"0\r\n\r\n"):
+                    return (status_code, self._ssl_dechunk(body).decode("utf8", "ignore"))
+            elif content_length is not None:
+                if len(body) >= content_length:
+                    return (status_code, body[:content_length].decode("utf8", "ignore"))
+            else:
+                return (status_code, body.decode("utf8", "ignore"))
+
+            if ticks_diff(ticks_ms(), timeout_timestamp) >= 0:
+                logging.error("SSL socket: timed out waiting for HTTP response body")
+                return (None, None)
+
             chunk = self._ssl_recv_raw()
             if chunk is None:
                 return (None, None)
@@ -766,41 +825,7 @@ class ModemBG600(modem_base.Modem):
                 sleep_ms(200)
                 continue
 
-            raw += chunk
-
-            if header_end < 0:
-                header_end = raw.find(b"\r\n\r\n")
-                if header_end < 0:
-                    continue
-                for line in raw[:header_end].decode("utf8", "ignore").split("\r\n"):
-                    lowercase_line = line.lower()
-                    if lowercase_line.startswith("content-length:"):
-                        try:
-                            content_length = int(line.split(":", 1)[1].strip())
-                        except Exception:
-                            content_length = None
-                    elif lowercase_line.startswith("transfer-encoding:") and "chunked" in lowercase_line:
-                        chunked = True
-
-            body = raw[header_end + 4 :]
-            if chunked:
-                if not body.endswith(b"0\r\n\r\n"):
-                    continue
-                body = self._ssl_dechunk(body)
-            elif content_length is not None:
-                if len(body) < content_length:
-                    continue
-                body = body[:content_length]
-
-            status_code = None
-            status_match = ure.search(r"HTTP/1\.[01]\s+(\d+)", raw[:header_end].decode("utf8", "ignore"))
-            if status_match:
-                status_code = int(status_match.group(1))
-
-            return (status_code, body.decode("utf8", "ignore"))
-
-        logging.error("SSL socket: timed out waiting for HTTP response")
-        return (None, None)
+            body += chunk
 
     def _ssl_http_request(self, method, url_base, url_request_route, auth_token, body=None, timeout_ms=60000):
         """Executes an HTTP request over the shared SSL socket. Returns (status_code, body_string)."""
@@ -867,18 +892,161 @@ class ModemBG600(modem_base.Modem):
         return res
 
     def http_get_file(self, url, destination_file, timeout_ms=250000):
+        """Downloads url straight into the local file destination_file. Returns (success, bytes_written)."""
+        if url.startswith("https://"):
+            return self._ssl_http_get_file(url, destination_file, timeout_ms)
+
+        # plain HTTP has no shared socket, so the modem stages the file in its own filesystem first
+        modem_file = destination_file.split("/")[-1]
+        downloaded, file_size = self._modem_fs_http_get_file(url, modem_file, timeout_ms)
+        if not downloaded:
+            return (False, file_size)
+
+        copied = self.get_file(modem_file, destination_file)
+        self.delete_file(modem_file)
+        return (copied, file_size)
+
+    def _split_url(self, url):
+        scheme_separator = url.find("://")
+        remainder = url[scheme_separator + 3 :] if scheme_separator >= 0 else url
+
+        route_separator = remainder.find("/")
+        host = remainder if route_separator < 0 else remainder[:route_separator]
+        route = "/" if route_separator < 0 else remainder[route_separator:]
+
+        port = 443
+        port_separator = host.find(":")
+        if port_separator >= 0:
+            try:
+                port = int(host[port_separator + 1 :])
+            except Exception:
+                pass
+            host = host[:port_separator]
+
+        return (host, port, route)
+
+    def _ssl_http_get_file(self, url, destination_file, timeout_ms):
+        for redirect in range(0, 4):
+            host, port, route = self._split_url(url)
+
+            request = "GET " + route + " HTTP/1.1\r\n" "Host: " + host + "\r\n" "Accept: */*\r\n" "Connection: keep-alive\r\n" "\r\n"
+
+            logging.debug("downloading https://{}{} into {}".format(host, route, destination_file))
+
+            status_code = None
+            headers = None
+            body = None
+            # the server may have dropped the idle socket, so allow one reconnect attempt
+            for attempt in range(0, 2):
+                if not self.ssl_socket_connect(host, port):
+                    return (False, -1)
+
+                if not self._ssl_send_raw(request):
+                    logging.error("SSL socket send failed, attempt {}".format(attempt + 1))
+                    self.ssl_socket_close()
+                    continue
+
+                status_code, headers, body = self._ssl_read_http_headers(timeout_ms)
+                if status_code is not None:
+                    break
+
+                self.ssl_socket_close()
+
+            if status_code is None:
+                return (False, -1)
+
+            if status_code in (301, 302, 303, 307, 308):
+                location = headers.get("location")
+                if not location:
+                    logging.error("redirect without location header")
+                    return (False, -1)
+                if location.startswith("/"):
+                    location = "https://" + host + location
+                logging.debug("following redirect to: " + location)
+                url = location
+                continue
+
+            if status_code != 200:
+                logging.error("file download failed with HTTP status: {}".format(status_code))
+                return (False, -1)
+
+            return self._ssl_stream_body_to_file(destination_file, headers, body, timeout_ms)
+
+        logging.error("too many redirects while downloading file")
+        return (False, -1)
+
+    def _ssl_stream_body_to_file(self, destination_file, headers, initial_body, timeout_ms):
+        content_length, chunked = self._ssl_body_delimiters(headers)
+        if content_length is None and not chunked:
+            logging.error("file download response has neither content-length nor chunked encoding")
+            return (False, -1)
+
+        pending = initial_body
+        bytes_written = 0
+        finished = False
+        timeout_timestamp = ticks_add(ticks_ms(), timeout_ms)
+
+        fw = open(destination_file, "wb")
+        try:
+            while not finished:
+                if chunked:
+                    while True:
+                        index = pending.find(b"\r\n")
+                        if index < 0:
+                            break
+                        try:
+                            size = int(pending[:index].split(b";")[0].decode("utf8", "ignore"), 16)
+                        except Exception:
+                            logging.error("malformed chunk header while downloading file")
+                            return (False, bytes_written)
+                        if size == 0:
+                            finished = True
+                            break
+                        # chunk is only complete once its trailing CRLF has arrived
+                        if len(pending) < index + 2 + size + 2:
+                            break
+                        fw.write(pending[index + 2 : index + 2 + size])
+                        bytes_written += size
+                        pending = pending[index + 4 + size :]
+                elif pending:
+                    if bytes_written + len(pending) > content_length:
+                        pending = pending[: content_length - bytes_written]
+                    fw.write(pending)
+                    bytes_written += len(pending)
+                    pending = b""
+                    finished = bytes_written >= content_length
+
+                if finished:
+                    break
+
+                if ticks_diff(ticks_ms(), timeout_timestamp) >= 0:
+                    logging.error("timed out after {} bytes while downloading file".format(bytes_written))
+                    return (False, bytes_written)
+
+                chunk = self._ssl_recv_raw()
+                if chunk is None:
+                    return (False, bytes_written)
+
+                if not chunk:
+                    sleep_ms(200)
+                    continue
+
+                pending += chunk
+                wdt_reset()
+        finally:
+            fw.close()
+
+        logging.debug("downloaded {} bytes into {}".format(bytes_written, destination_file))
+        return (True, bytes_written)
+
+    def _modem_fs_http_get_file(self, url, destination_file, timeout_ms=250000):
         file_downloaded = False
         file_size = -1
 
-        context_ready, _ = self.send_at_cmd('AT+QHTTPCFG="contextid",1')  # 3')
+        context_ready, _ = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
 
         if not context_ready:
             return (file_downloaded, file_size)
-
-        # http_context_connected = self.http_context_connect()
-        # if not http_context_connected:
-        #     logging.debug("http context not connected")
-        #     return (file_downloaded, file_size)
 
         self.send_at_cmd('AT+QHTTPCFG="requestheader",0')
         self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
@@ -903,12 +1071,6 @@ class ModemBG600(modem_base.Modem):
             return (file_downloaded, file_size)
 
         file_downloaded, lines = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:\s*")
-
-        # need to handle => read all lines and search for 0 code.
-        # [DEBUG:115569]   +QMTSTAT: 1,1
-        # [DEBUG:115585]   +QHTTPREADFILE: Http socket close
-        # [DEBUG:115597]   +QIURC: "pdpdeact",1
-        # self.http_context_disconnect()
 
         return (file_downloaded, file_size)
 

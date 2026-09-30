@@ -180,20 +180,22 @@ class TransferProtocolModemAT(TransferProtocol):
         )
 
     def get_mqtt_first_control_message(self):
-        if not self.connected:
-            logging.info("TransferProtocol not connected")
-            return None
-
-        if self.is_secondary_transfer_protocol:
-            logging.info("Control packet not supported for secondary transfer protocol")
-            return None
-
-        topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
-        return self.modem_instance.mqtt_get_message(topic, 5000)
+        return None
+        # if not self.connected:
+        #     logging.info("TransferProtocol not connected")
+        #     return None
+        #
+        # if self.is_secondary_transfer_protocol:
+        #     logging.info("Control packet not supported for secondary transfer protocol")
+        #     return None
+        #
+        # topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+        # return self.modem_instance.mqtt_get_message(topic, 5000)
 
     def clear_retained(self, topic):
-        logging.info("About to clear retained message of topic: " + topic)
-        return self.modem_instance.mqtt_publish(topic, "", 3, True)
+        return None
+        # logging.info("About to clear retained message of topic: " + topic)
+        # return self.modem_instance.mqtt_publish(topic, "", 3, True)
 
 
 class TransferProtocolMQTT(TransferProtocol):
