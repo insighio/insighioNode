@@ -817,6 +817,7 @@ class ModemBG600(modem_base.Modem):
             method + " " + url_request_route + " HTTP/1.1\r\n"
             "Host: " + url_base + "\r\n"
             "Authorization: " + auth_token + "\r\n"
+            "Content-Type: application/json\r\n"
             "Connection: keep-alive\r\n"
             "Content-Length: " + str(len(body_str)) + "\r\n"
             "\r\n" + body_str
