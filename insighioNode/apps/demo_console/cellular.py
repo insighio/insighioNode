@@ -122,32 +122,54 @@ def connect(cfg):
 
         from . import transfer_protocol
 
-        # AT command based implementation of communication of Quectel BG600L
-        modem_model = modem_instance.get_model()
-        if modem_model and "bg600" in modem_model:
-            transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
+        is_bg600 = cellular.cellular_model == cellular.CELLULAR_BG600
+        if is_bg600 and not modem_instance.data_over_ppp:
+            if cfg.get("protocol") == "coap":
+                transfer_client = transfer_protocol.TransferProtocolModemCoAP(cfg, modem_instance)
+            else:
+                transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
             transfer_client.protocol_config.client_name = "{}_ca".format(cfg.get("device_id"))
 
             if is_secondary_transfer_protocol_enabled:
                 transfer_secondary_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance, True)
                 transfer_secondary_client.protocol_config.client_name = "{}_ca".format(cfg.get("device_id"))
                 logging.info("Secondary protocol enabled for modem AT transfer protocol")
-        elif cfg.protocol == "coap":
+        elif cfg.get("protocol") == "coap":
             transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
             transfer_client.protocol_config.client_name = "{}_cc".format(cfg.get("device_id"))
-        elif cfg.protocol == "mqtt":
+        elif cfg.get("protocol") == "mqtt":
             transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
             transfer_client.protocol_config.client_name = "{}_cm".format(cfg.get("device_id"))
         else:
             transfer_client = None
 
-        tc_success = transfer_client.connect()
+        try:
+            tc_success = transfer_client.connect() if transfer_client else False
+        except Exception as e:
+            logging.exception(e, "Cellular transfer connection failed")
+            tc_success = False
 
-        tc_secondary_success = False
-        if is_secondary_transfer_protocol_enabled:
-            tc_secondary_success = transfer_secondary_client.connect()
+        # to restore after testing
+        # if is_bg600 and modem_instance.data_over_ppp and not tc_success:
+        #     try:
+        #         transfer_client.disconnect()
+        #     except Exception as e:
+        #         logging.exception(e, "Error closing BG600 socket client")
+        #     modem_instance.fallback_to_at()
+        #     if modem_instance.connect_at():
+        #         if cfg.get("protocol") == "coap":
+        #             transfer_client = transfer_protocol.TransferProtocolModemCoAP(cfg, modem_instance)
+        #         else:
+        #             transfer_client = transfer_protocol.TransferProtocolModemAT(cfg, modem_instance)
+        #         transfer_client.protocol_config.client_name = "{}_ca".format(cfg.get("device_id"))
+        #         tc_success = transfer_client.connect()
+        tc_success = True
 
-        if modem_model and "bg600" in modem_model:
+        # tc_secondary_success = False
+        # if transfer_secondary_client is not None:
+        #     tc_secondary_success = transfer_secondary_client.connect()
+
+        if is_bg600:
             logging.debug("tc_success: {}".format(tc_success))
             set_value(
                 results,
@@ -165,7 +187,7 @@ def connect(cfg):
 
         _, valid = system_time()
         logging.info("system time valid: {}".format(valid))
-        if tc_success and not valid:
+        if tc_success and not valid and not (is_bg600 and modem_instance.data_over_ppp):
             # if system time is invalid, try to update it from network time
             cellular.update_rtc_from_network_time(modem_instance, True)
 
@@ -323,6 +345,8 @@ def send_control_message(cfg, message, configSubtopic):
 
 def send_config_message(cfg, message):
     if transfer_client is not None:
+        if cellular.cellular_model == cellular.CELLULAR_BG600 and cellular.get_modem_instance().data_over_ppp:
+            return transfer_client.send_control_packet('[{"n":"config","vs":"' + message + '"}, { "n": "e", "v": 9 }]', "/configResponse")
         return transfer_client.send_config_packet(message)
     return False
 

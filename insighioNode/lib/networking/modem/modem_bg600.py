@@ -12,6 +12,7 @@ class ModemBG600(modem_base.Modem):
         super().__init__(power_on, power_key, modem_tx, modem_rx)
         self.connection_status = False
         self.data_over_ppp = True
+        self.use_ppp = False
         self._last_prioritization_is_gnss = None
         self._mqtt_client_id = 1
 
@@ -25,6 +26,8 @@ class ModemBG600(modem_base.Modem):
 
     def init(self, ip_version, apn, technology, mcc_mnc=None):
         status = super().init(ip_version, apn, technology, mcc_mnc)
+
+        self.send_at_cmd('AT+QSSLCFG="session",1,1')
         return status
 
     def reset_to_factory(self):
@@ -134,6 +137,63 @@ class ModemBG600(modem_base.Modem):
             sleep_ms(100)
 
     def connect(self, timeoutms=30000):
+        if self.use_ppp:
+            try:
+                status, lines = self.send_at_cmd("ATD*99#", 30000, "CONNECT")
+                if not status:
+                    return False
+
+                from network import PPP
+
+                self.ppp = PPP(self.uart)
+                self.ppp.active(True)
+                logging.debug("BG600 entering PPP data mode")
+                self.ppp.connect()
+                logging.debug("BG600 PPP connection initiated")
+
+                start_timestamp = ticks_ms()
+                timeout_timestamp = ticks_add(start_timestamp, timeoutms)
+                while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
+                    self.connected = self.is_connected()
+                    if self.connected:
+                        break
+                    sleep_ms(100)
+
+                logging.debug("BG600 PPP connection status: {}".format(self.connected))
+
+                logging.debug("self.ppp.status: {}".format(self.ppp.status()))
+                logging.debug("ifconfig: {}".format(self.ppp.ifconfig()))
+                if self.connected:
+                    return True
+            except Exception as e:
+                logging.exception(e, "BG600 PPP connection failed")
+
+            logging.debug("BG600 PPP connection failed, falling back to AT mode")
+            self.fallback_to_at(True)
+        return self.connect_at()
+
+    def fallback_to_at(self, escape_data_mode=False):
+        if self.ppp is not None:
+            try:
+                self.ppp.active(False)
+            except Exception as e:
+                logging.exception(e, "BG600 PPP shutdown failed")
+            self.ppp = None
+
+            escape_data_mode = True
+
+        if escape_data_mode:
+            sleep_ms(1100)
+            self.uart.write("+++")
+            sleep_ms(1100)
+            self.reset_uart()
+
+        self.connected = False
+        self.data_over_ppp = False
+        logging.info("BG600 using modem AT protocols")
+
+    def connect_at(self):
+        self.data_over_ppp = False
         for i in range(0, 5):
             status, lines = self.send_at_cmd("AT+CGACT=1,1")
             if status:
@@ -151,10 +211,14 @@ class ModemBG600(modem_base.Modem):
         self.send_at_cmd('AT+QNTP=1,"pool.ntp.org"', 125000, "\+QNTP")
 
     def is_connected(self):
+        if self.data_over_ppp and self.ppp is not None:
+            return self.ppp.isconnected()
         status, lines = self.send_at_cmd("AT+CGACT?")
         return status and len(lines) > 0 and "1,1" in lines[0]
 
     def power_off(self):
+        if self.ppp is not None:
+            self.fallback_to_at()
         res, lines = self.send_at_cmd("AT+QPOWD", 15000, r"\s*POWERED DOWN\s*")
 
         from machine import Pin
@@ -164,6 +228,8 @@ class ModemBG600(modem_base.Modem):
         return res
 
     def disconnect(self):
+        if self.ppp is not None:
+            self.fallback_to_at()
         res, lines = self.send_at_cmd("AT+QIDEACT=1")
         return res
 
@@ -601,6 +667,8 @@ class ModemBG600(modem_base.Modem):
 
         status1, _ = self.send_at_cmd('AT+QICSGP=3,1,"' + self.apn + '"')
         status2, _ = self.send_at_cmd("AT+QIACT=3")
+
+        # AT+QSSLCFG="session",3,1
 
         return status1 and status2
 

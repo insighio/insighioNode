@@ -465,9 +465,9 @@ class Modem:
         status = None
         responseLines = []
 
-        if self.connected:
-            responseLines = ["error: ppp connection active"]
-            return (status, responseLines)
+        # if self.connected:
+        #     responseLines = ["error: ppp connection active"]
+        #     return (status, responseLines)
 
         if self.uart is None:
             responseLines = ["error: invalid uart"]

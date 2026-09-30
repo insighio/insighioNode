@@ -7,4 +7,5 @@ _APN = "<cell-apn>"
 _BAND = "<cell-band>"
 _IP_VERSION = "<ipversion>"
 _CELLULAR_TECHNOLOGY = "<cell-tech>"
+_BG600_USE_PPP = False
 _CELLULAR_MCC_MNC = "<cell-mcc-mnc>"

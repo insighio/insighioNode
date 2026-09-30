@@ -83,6 +83,8 @@ ampy -p /dev/ttyUSB0 -b 115200 put www $ROOT_PATH/www
 
 The configuration of the device operation, security keys, network connection etc. can be done through the implemented [Web UI configuration wizard](https://docs.insigh.io/gettingstarted/configuration/).
 
+For a BG600 PPP trial, set `_BG600_USE_PPP = True` in the generated cellular `demo_config.py` and reboot. The default is `False` (AT commands). When PPP connects, MQTT/CoAP and HTTP use the socket clients; if PPP or the socket protocol connection fails, the device returns to the BG600 AT clients. Check the device log for `BG600 using modem AT protocols` to identify fallback. IPv6 custom sockets and secondary measurement transmission continue using AT mode. Test PPP and the escape back to AT on the BG600LM3LAR02A04 firmware before enabling this on deployed devices.
+
 After following the [Getting Started](https://docs.insigh.io/gettingstarted/) steps, the device will be ready to measure and upload!
 
 # Future Work

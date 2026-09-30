@@ -181,6 +181,47 @@ class TransferProtocolModemAT(TransferProtocol):
         return self.modem_instance.mqtt_publish(topic, "", 3, True)
 
 
+class TransferProtocolModemCoAP(TransferProtocol):
+    def __init__(self, cfg, modem_instance):
+        super().__init__(cfg, modem_instance)
+        self.modem_instance = modem_instance
+        self.modem_based = True
+
+    def connect(self):
+        self.connected = self.modem_instance.coap_connect(self.protocol_config.server_ip, self.protocol_config.server_port)
+        return self.connected
+
+    def is_connected(self):
+        return self.modem_instance.coap_is_connected()
+
+    def disconnect(self):
+        self.modem_instance.coap_disconnect()
+        self.connected = False
+
+    def send_packet(self, message, channel=None):
+        if not self.connected:
+            return False
+        topic = "channels/{}/messages/{}".format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
+        self.modem_instance.coap_setup_options(self.protocol_config.server_ip, topic, self.protocol_config.thing_token)
+        return self.modem_instance.coap_publish(topic, message)
+
+    def send_control_packet(self, message, subtopic):
+        if not self.connected:
+            return False
+        topic = "channels/{}/messages/{}{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, subtopic)
+        self.modem_instance.coap_setup_options(self.protocol_config.server_ip, topic, self.protocol_config.thing_token)
+        return self.modem_instance.coap_publish(topic, message)
+
+    def send_config_packet(self, message):
+        url_path = "/http/channels/{}/messages/{}/configResponse".format(
+            self.protocol_config.control_channel_id, self.protocol_config.thing_id
+        )
+        body = [{"n": "config", "vs": message}, {"n": "e", "v": 9}]
+        return self.modem_instance.http_post_with_auth_header(
+            self.protocol_config.server_ip, url_path, self.protocol_config.thing_token, body, timeout_ms=125000
+        )
+
+
 class TransferProtocolMQTT(TransferProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -281,7 +322,8 @@ class TransferProtocolCoAP(TransferProtocol):
 
         connectionStatus = self.client.start()
         logging.info("CoAP connection status: " + str(connectionStatus))
-        self.connected = True  # TODO: temp solution till we resolve what values are returned from connect function
+        self.connected = self.client.is_connected()
+        return self.connected
 
     def is_connected(self):
         return self.client.is_connected()

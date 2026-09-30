@@ -149,6 +149,13 @@ def connect(cfg):
     try:
         logging.debug("Initializing modem")
         modemInst = get_modem_instance()
+        if cellular_model == CELLULAR_BG600:
+            modemInst.use_ppp = (
+                getattr(cfg, "_BG600_USE_PPP", False)
+                and cfg._IP_VERSION != "IPV6"
+                and not getattr(cfg, "ENABLE_SECONDARY_MEASUREMENT_TRANSMISSION", False)
+            )
+            modemInst.data_over_ppp = modemInst.use_ppp
         mcc_mnc = None
         try:
             mcc_mnc = cfg._CELLULAR_MCC_MNC
@@ -198,11 +205,11 @@ def connect(cfg):
                 logging.debug("Signal Quality - RSSI/RSRP/RSRQ: {}, {}, {}".format(rssi, rsrp, rsrq))
 
                 # ready to connect
-                if modemInst.has_data_over_ppp():
+                if cellular_model == CELLULAR_BG600 or modemInst.has_data_over_ppp():
                     logging.debug("Entering Data State. Modem connecting...")
                     start_connection_duration = ticks_ms()
                     connection_timeout = ticks_add(start_connection_duration, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000)
-                    if not modemInst.is_connected():
+                    if not modemInst.is_connected() or (cellular_model == CELLULAR_BG600 and modemInst.use_ppp and modemInst.ppp is None):
                         modemInst.connect()
 
                     if modemInst.is_connected():
