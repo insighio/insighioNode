@@ -163,23 +163,12 @@ def _http_get_with_fallback(url, headers=None, saveToFile=None):
 def _modem_get_content_with_auth_header(client, url_path, query_params, tmp_file, timeout_ms=120000):
     """Downloads content from a control-channel endpoint via the modem's authenticated HTTP GET and returns it as a string."""
     protocol_config = cfg.get_protocol_config()
-    file_downloaded = client.modem_instance.http_get_with_auth_header(
+    return client.modem_instance.http_get_with_auth_header(
         "console.insigh.io",
         url_path + "?" + query_params,
         protocol_config.thing_token,
-        tmp_file,
         timeout_ms,
     )
-    if not file_downloaded:
-        return None
-
-    local_file_name = utils.decorateFlagPath(device_info.get_device_root_folder() + tmp_file)
-    is_file_locally = client.modem_instance.get_file(tmp_file, local_file_name)
-    if not is_file_locally:
-        return None
-
-    client.modem_instance.delete_file(tmp_file)
-    return utils.readFromFile(local_file_name)
 
 
 def _fetch_control_content(client, url_path, query_params, tmp_file, timeout_ms=120000):
@@ -380,10 +369,9 @@ def delete_action(client, id):
 
     if client.modem_based:
         # NOTE: modem client has no HTTP DELETE support, reuses the PUT-based content
-        content = client.modem_instance.http_put_with_auth_header(
+        return client.modem_instance.http_put_with_auth_header(
             "console.insigh.io", "{}?{}".format(URL_PATH, URL_QUERY_PARAMS), protocol_config.thing_token, ""
         )
-        return content is not None
     try:
         from utils import httpclient
 

@@ -14,6 +14,12 @@ class ModemBG600(modem_base.Modem):
         self.data_over_ppp = True
         self._last_prioritization_is_gnss = None
         self._mqtt_client_id = 1
+        self._ssl_pdp_context_id = 1
+        self._ssl_context_id = 1
+        self._ssl_client_id = 6
+        self._ssl_socket_host = None
+        self._ssl_socket_port = None
+        self._ssl_context_configured = False
 
     # even though this function is correct for BG600, it is normally called
     # while waiting for the modem to power on, where at that time we are not aware
@@ -25,6 +31,8 @@ class ModemBG600(modem_base.Modem):
 
     def init(self, ip_version, apn, technology, mcc_mnc=None):
         status = super().init(ip_version, apn, technology, mcc_mnc)
+
+        self.send_at_cmd('AT+QSSLCFG="session",1,1')
         return status
 
     def reset_to_factory(self):
@@ -155,6 +163,8 @@ class ModemBG600(modem_base.Modem):
         return status and len(lines) > 0 and "1,1" in lines[0]
 
     def power_off(self):
+        if self._ssl_socket_host is not None:
+            self.ssl_socket_close()
         res, lines = self.send_at_cmd("AT+QPOWD", 15000, r"\s*POWERED DOWN\s*")
 
         from machine import Pin
@@ -164,6 +174,8 @@ class ModemBG600(modem_base.Modem):
         return res
 
     def disconnect(self):
+        if self._ssl_socket_host is not None:
+            self.ssl_socket_close()
         res, lines = self.send_at_cmd("AT+QIDEACT=1")
         return res
 
@@ -590,6 +602,247 @@ class ModemBG600(modem_base.Modem):
         status, _ = self.send_at_cmd('AT+QFDEL="' + destination + '"')
         return status
 
+    # --- persistent SSL socket -------------------------------------------------
+    # A single SSL socket is kept open towards the console so that the TLS
+    # handshake (~10s over NBIoT) is paid only once for all HTTP requests.
+
+    def _ssl_configure_context(self):
+        if self._ssl_context_configured:
+            return
+
+        ctx = self._ssl_context_id
+        self.send_at_cmd('AT+QSSLCFG="sslversion",{},4'.format(ctx))  # all TLS versions
+        self.send_at_cmd('AT+QSSLCFG="ciphersuite",{},0xFFFF'.format(ctx))  # support all cipher suites
+        self.send_at_cmd('AT+QSSLCFG="seclevel",{},0'.format(ctx))  # no certificate authentication
+        self.send_at_cmd('AT+QSSLCFG="sni",{},1'.format(ctx))
+        self.send_at_cmd('AT+QSSLCFG="session",{},1'.format(ctx))  # allow session resumption
+        self.send_at_cmd('AT+QSSLCFG="ignorelocaltime",{},1'.format(ctx))
+        self.send_at_cmd('AT+QSSLCFG="negotiatetime",{},300'.format(ctx))
+        self._ssl_context_configured = True
+
+    def ssl_socket_is_connected(self):
+        status, lines = self.send_at_cmd("AT+QSSLSTATE={}".format(self._ssl_client_id), 5000)
+        if not status:
+            return False
+        # +QSSLSTATE: <clientID>,"SSLClient","<host>",<port>,<lport>,<socket_state>,...
+        match = self._match_regex(r'\+QSSLSTATE:\s*{},"[^"]*","[^"]*",\d+,\d+,(\d+)'.format(self._ssl_client_id), lines)
+        return match is not None and match.group(1) == "2"
+
+    def ssl_socket_connect(self, host, port=443, timeout_ms=150000):
+        if self._ssl_socket_host == host and self._ssl_socket_port == port and self.ssl_socket_is_connected():
+            return True
+
+        self.ssl_socket_close()
+        self._ssl_configure_context()
+
+        status, lines = self.send_at_cmd(
+            'AT+QSSLOPEN={},{},{},"{}",{},0'.format(self._ssl_pdp_context_id, self._ssl_context_id, self._ssl_client_id, host, port),
+            timeout_ms,
+            r"\+QSSLOPEN:\s*{},\d+".format(self._ssl_client_id),
+        )
+
+        match = self._match_regex(r"\+QSSLOPEN:\s*{},(\d+)".format(self._ssl_client_id), lines)
+        if not status or match is None or match.group(1) != "0":
+            logging.error("SSL socket open to {}:{} failed: {}".format(host, port, lines))
+            self.ssl_socket_close()
+            return False
+
+        self._ssl_socket_host = host
+        self._ssl_socket_port = port
+        logging.info("SSL socket open to {}:{}".format(host, port))
+        return True
+
+    def ssl_socket_close(self):
+        self._ssl_socket_host = None
+        self._ssl_socket_port = None
+        status, _ = self.send_at_cmd("AT+QSSLCLOSE={},10".format(self._ssl_client_id), 15000)
+        return status
+
+    def _wait_for_uart_response(self, regex, timeout_ms):
+        timeout_timestamp = ticks_add(ticks_ms(), timeout_ms)
+        while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
+            wdt_reset()
+            line = self.uart.readline()
+            if line is None:
+                sleep_ms(5)
+                continue
+            text = line.decode("utf8", "ignore").strip()
+            if not text:
+                continue
+            logging.debug("  " + text)
+            if ure.search(regex, text) is not None:
+                return True
+            if ure.search(r"(ERROR|FAIL)", text) is not None:
+                return False
+        return False
+
+    def _ssl_send_raw(self, payload):
+        if isinstance(payload, str):
+            payload = payload.encode("utf8")
+
+        ready, _ = self.send_at_cmd("AT+QSSLSEND={},{}".format(self._ssl_client_id, len(payload)), 10000, ">")
+        if not ready:
+            logging.error("SSL socket not ready to send")
+            return False
+
+        # raw write: the modem consumes exactly <len> bytes, no line terminator must follow
+        self.uart.write(payload)
+        return self._wait_for_uart_response(r"SEND OK", 30000)
+
+    def _ssl_recv_raw(self, max_bytes=1500, timeout_ms=10000):
+        """Reads up to max_bytes from the SSL socket buffer. Returns bytes (possibly empty) or None on error."""
+        while self.uart.any():
+            self.uart.read()
+
+        command = "AT+QSSLRECV={},{}".format(self._ssl_client_id, max_bytes)
+        logging.debug("> " + command)
+        if not self.uart.write(command + "\r\n"):
+            return None
+
+        timeout_timestamp = ticks_add(ticks_ms(), timeout_ms)
+        length = None
+        while length is None and ticks_diff(ticks_ms(), timeout_timestamp) < 0:
+            wdt_reset()
+            line = self.uart.readline()
+            if line is None:
+                sleep_ms(5)
+                continue
+            text = line.decode("utf8", "ignore").strip()
+            if not text:
+                continue
+            match = ure.search(r"\+QSSLRECV:\s*(\d+)", text)
+            if match is not None:
+                length = int(match.group(1))
+            elif ure.search(r"(ERROR|FAIL)", text) is not None:
+                logging.error("SSL socket read error: " + text)
+                return None
+
+        if length is None:
+            return None
+
+        data = b""
+        while len(data) < length and ticks_diff(ticks_ms(), timeout_timestamp) < 0:
+            wdt_reset()
+            chunk = self.uart.read(length - len(data))
+            if chunk:
+                data += chunk
+            else:
+                sleep_ms(5)
+
+        self._wait_for_uart_response(r"^OK", 5000)
+
+        return data if len(data) == length else None
+
+    def _ssl_dechunk(self, body):
+        result = b""
+        while True:
+            index = body.find(b"\r\n")
+            if index < 0:
+                break
+            try:
+                size = int(body[:index].split(b";")[0].decode("utf8", "ignore"), 16)
+            except Exception:
+                break
+            if size == 0:
+                break
+            result += body[index + 2 : index + 2 + size]
+            body = body[index + 4 + size :]
+        return result
+
+    def _ssl_read_http_response(self, timeout_ms):
+        """Returns (status_code, body_string) or (None, None) on failure."""
+        raw = b""
+        header_end = -1
+        content_length = None
+        chunked = False
+        timeout_timestamp = ticks_add(ticks_ms(), timeout_ms)
+
+        while ticks_diff(ticks_ms(), timeout_timestamp) < 0:
+            chunk = self._ssl_recv_raw()
+            if chunk is None:
+                return (None, None)
+
+            if not chunk:
+                sleep_ms(200)
+                continue
+
+            raw += chunk
+
+            if header_end < 0:
+                header_end = raw.find(b"\r\n\r\n")
+                if header_end < 0:
+                    continue
+                for line in raw[:header_end].decode("utf8", "ignore").split("\r\n"):
+                    lowercase_line = line.lower()
+                    if lowercase_line.startswith("content-length:"):
+                        try:
+                            content_length = int(line.split(":", 1)[1].strip())
+                        except Exception:
+                            content_length = None
+                    elif lowercase_line.startswith("transfer-encoding:") and "chunked" in lowercase_line:
+                        chunked = True
+
+            body = raw[header_end + 4 :]
+            if chunked:
+                if not body.endswith(b"0\r\n\r\n"):
+                    continue
+                body = self._ssl_dechunk(body)
+            elif content_length is not None:
+                if len(body) < content_length:
+                    continue
+                body = body[:content_length]
+
+            status_code = None
+            status_match = ure.search(r"HTTP/1\.[01]\s+(\d+)", raw[:header_end].decode("utf8", "ignore"))
+            if status_match:
+                status_code = int(status_match.group(1))
+
+            return (status_code, body.decode("utf8", "ignore"))
+
+        logging.error("SSL socket: timed out waiting for HTTP response")
+        return (None, None)
+
+    def _ssl_http_request(self, method, url_base, url_request_route, auth_token, body=None, timeout_ms=60000):
+        """Executes an HTTP request over the shared SSL socket. Returns (status_code, body_string)."""
+        if body is None:
+            body_str = ""
+        elif isinstance(body, dict) or isinstance(body, list):
+            import json
+
+            body_str = json.dumps(body)
+        else:
+            body_str = str(body)
+
+        request = (
+            method + " " + url_request_route + " HTTP/1.1\r\n"
+            "Host: " + url_base + "\r\n"
+            "Authorization: " + auth_token + "\r\n"
+            "Connection: keep-alive\r\n"
+            "Content-Length: " + str(len(body_str)) + "\r\n"
+            "\r\n" + body_str
+        )
+
+        logging.debug("{} https://{}{} ({} body bytes)".format(method, url_base, url_request_route, len(body_str)))
+
+        # the server may have dropped the idle socket, so allow one reconnect attempt
+        for attempt in range(0, 2):
+            if not self.ssl_socket_connect(url_base):
+                return (None, None)
+
+            if not self._ssl_send_raw(request):
+                logging.error("SSL socket send failed, attempt {}".format(attempt + 1))
+                self.ssl_socket_close()
+                continue
+
+            status_code, response_body = self._ssl_read_http_response(timeout_ms)
+            if status_code is not None:
+                logging.debug("response {}: {}".format(status_code, response_body))
+                return (status_code, response_body)
+
+            self.ssl_socket_close()
+
+        return (None, None)
+
     def http_context_connect(self, timeoutms=30000):
         # for i in range(0, 5):
         #     (status, lines) = self.send_at_cmd("AT+CGACT=3,1")
@@ -660,114 +913,16 @@ class ModemBG600(modem_base.Modem):
 
     # url_base = "console.insigh.io"
     # url_request_route = /mf-rproxy/channels/list
-    def http_get_with_auth_header(self, url_base, url_request_route, auth_token, destination_file, timeout_ms=60000):
-        file_downloaded = False
-        file_size = -1
-
-        context_ready, _ = self.send_at_cmd('AT+QHTTPCFG="contextid",1')  # 3')
-        if not context_ready:
-            return (file_downloaded, file_size)
-
-        # http_context_connected = self.http_context_connect()
-        # if not http_context_connected:
-        #     logging.debug("http context not connected")
-        #     return (file_downloaded, file_size)
-
-        # enable executing http request with custom headers
-        self.send_at_cmd('AT+QHTTPCFG="requestheader",1')
-        self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
-        url = "https://" + url_base  # "http://console.insigh.io/mf-rproxy/channels/list"
-        requestHeader = (
-            "GET " + url_request_route + " HTTP/1.1\r\n"
-            "Host: " + url_base + "\r\n"
-            # "User-Agent: insighio-device/1.0\r\n"
-            # "Accept: */*\r\n"
-            # "Content-Type: application/json\r\n"
-            "Authorization: " + auth_token + "\r\n"
-            "\r\n"
-        )
-
-        url_ready, _ = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
-        if not url_ready:
+    def http_get_with_auth_header(self, url_base, url_request_route, auth_token, timeout_ms=60000):
+        """Performs an authenticated GET over the shared SSL socket and returns the response body, or None on failure."""
+        status_code, body = self._ssl_http_request("GET", url_base, url_request_route, auth_token, None, timeout_ms)
+        if status_code is None or status_code >= 300:
             return None
-
-        url_setup, _ = self.send_at_cmd(url, 80)
-        if not url_setup:
-            return None
-
-        url_req_ready, _ = self.send_at_cmd("AT+QHTTPGET=80," + str(len(requestHeader)), 125000, "CONNECT")
-        if not url_req_ready:
-            return None
-
-        url_req_body_ready, _ = self.send_at_cmd(requestHeader, timeout_ms, r"\+QHTTPGET:.*")
-        if not url_req_body_ready:
-            return None
-
-        response = None
-        # (url_resp_received, lines) = self.send_at_cmd('AT+QHTTPREAD=120')
-        # if url_resp_received and len(lines) > 1:
-        #     response = lines[1]
-        file_downloaded, _ = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:.*")
-
-        # self.http_context_disconnect()
-
-        return file_downloaded
+        return body
 
     def _http_aux_with_body_and_auth_header(self, method, url_base, url_request_route, auth_token, post_body, timeout_ms=60000):
-        file_downloaded = False
-        file_size = -1
-
-        context_ready, _ = self.send_at_cmd('AT+QHTTPCFG="contextid",1')  # 3')
-        if not context_ready:
-            return (file_downloaded, file_size)
-
-        # Ensure post_body is properly formatted JSON string
-        if isinstance(post_body, dict) or isinstance(post_body, list):
-            import json
-
-            post_body_str = json.dumps(post_body)
-        else:
-            post_body_str = str(post_body)
-
-        logging.debug("{} body: {}".format(method, post_body_str))
-
-        # enable executing http request with custom headers
-        self.send_at_cmd('AT+QHTTPCFG="requestheader",1')
-        self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
-        url = "https://" + url_base
-        requestHeader = (
-            method + " " + url_request_route + " HTTP/1.1\r\n"
-            "Host: " + url_base + "\r\n"
-            "Content-Length: " + str(len(post_body_str)) + "\r\n"
-            "Authorization: " + auth_token + "\r\n"
-            "\r\n"
-        )
-
-        # "User-Agent: insighio-device/1.0\r\n"
-        #             "Accept: application/json\r\n"
-        #             "Content-Type: application/json\r\n"
-
-        logging.debug("Request header: {}".format(requestHeader.replace("\r\n", "\\r\\n")))
-
-        url_ready, _ = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
-        if not url_ready:
-            return None
-
-        url_setup, _ = self.send_at_cmd(url, 80)
-        if not url_setup:
-            return None
-
-        url_req_ready, _ = self.send_at_cmd("AT+QHTTP{}={},80".format(method, len(requestHeader) + len(post_body_str)), 125000, "CONNECT")
-        if not url_req_ready:
-            return None
-
-        url_req_body_ready, lines = self.send_at_cmd(requestHeader + post_body_str, timeout_ms, r"\+QHTTP{}:.*".format(method))
-
-        if not url_req_body_ready:
-            return None
-
-        line_matches = self._match_regex(r"\+QHTTP{}:\s*(\d+)(,(\d+)(,(\d+))?)?".format(method), lines)
-        return line_matches and line_matches.group(1) == "0"  # 0 means success
+        status_code, _ = self._ssl_http_request(method, url_base, url_request_route, auth_token, post_body, timeout_ms)
+        return status_code is not None and status_code < 300
 
     def http_post_with_auth_header(self, url_base, url_request_route, auth_token, post_body, timeout_ms=60000):
         return self._http_aux_with_body_and_auth_header("POST", url_base, url_request_route, auth_token, post_body, timeout_ms=timeout_ms)
