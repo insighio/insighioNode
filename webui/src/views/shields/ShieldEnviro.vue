@@ -376,7 +376,7 @@ export default {
       this.sdi12Sensors =
         this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").sensors
           ? this.getJsonObjectFromCookies("meas-sdi12").sensors
-          : []
+          : {}
 
       this.sdi12Config =
         this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").config
@@ -386,7 +386,7 @@ export default {
       this.modbusSensors =
         this.getJsonObjectFromCookies("meas-modbus") && this.getJsonObjectFromCookies("meas-modbus").sensors
           ? this.getJsonObjectFromCookies("meas-modbus").sensors
-          : []
+          : {}
 
       this.modbusConfig =
         this.getJsonObjectFromCookies("meas-modbus") && this.getJsonObjectFromCookies("meas-modbus").config
@@ -396,9 +396,19 @@ export default {
       this.adcConfig = this.getJsonObjectFromCookies("meas-adc")
         ? this.getJsonObjectFromCookies("meas-adc")
         : this.adcDefaultConfig
+
+      if (JSON.stringify(this.adcConfig) === "{}") {
+        this.adcConfig = this.adcDefaultConfig
+      }
+
       this.pulseCounterConfig = this.getJsonObjectFromCookies("meas-pulseCounter")
         ? this.getJsonObjectFromCookies("meas-pulseCounter")
         : this.pulseCounterDefaultConfig
+
+      if (JSON.stringify(this.pulseCounterConfig) === "{}") {
+        this.pulseCounterConfig = this.pulseCounterDefaultConfig
+      }
+
       this.shieldVersion = this.getJsonObjectFromCookies("shield-version")
         ? this.getJsonObjectFromCookies("shield-version")
         : ""
