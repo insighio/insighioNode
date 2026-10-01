@@ -59,7 +59,6 @@ configDict = {
     "_APN": "cell_apn",
     "_APP_EUI": "lora_app_eui",
     "_APP_KEY": "lora_app_key",
-    "_BAND": "cell_band",
     "_BATCH_UPLOAD_MESSAGE_BUFFER": "batch_upload_buffer_size",
     "_BOARD_TYPE": "selected_board",
     "_CELLULAR_TECHNOLOGY": "cell_tech",
