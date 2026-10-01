@@ -43,9 +43,9 @@ class TransferProtocolModemAT(TransferProtocol):
         self.is_secondary_transfer_protocol = is_secondary_transfer_protocol
 
         if not self.is_secondary_transfer_protocol:
-            self.require_message_delivery_ack = utils.get_var_from_module(self.protocol_config, "REQ_MESG_DEL_ACK")
-            if self.require_message_delivery_ack is None:
-                self.require_message_delivery_ack = True  # enable if configuration is missing
+            # self.require_message_delivery_ack = utils.get_var_from_module(self.protocol_config, "REQ_MESG_DEL_ACK")
+            # if self.require_message_delivery_ack is None:
+            #     self.require_message_delivery_ack = True  # enable if configuration is missing
             self.modem_client_id = 1
         else:
             self.require_message_delivery_ack = True
@@ -318,3 +318,55 @@ class TransferProtocolCoAP(TransferProtocol):
         self.client.postMessage(message)
         logging.info("Done.")
         return True
+
+
+class TransferProtocolHTTPS(TransferProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+    def connect(self):
+        self.connected = self.is_connected()
+        return self.connected
+
+    def is_connected(self):
+        from networking import wifi
+
+        return wifi.is_connected()
+
+    def disconnect(self):
+        self.connected = False
+        logging.info("Disconnected")
+
+    def send_packet(self, message, channel=None):
+        path = "/http/channels/{}/messages/{}".format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
+        return self._post(message, path + (channel if channel is not None else ""))
+
+    def send_control_packet(self, message, subtopic):
+        path = "/http/channels/{}/messages/{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+        return self._post(message, path + subtopic)
+
+    def _post(self, message, path):
+        if not self.connected or not self.is_connected():
+            logging.info("TransferProtocol not connected")
+            return False
+
+        from utils import httpclient
+
+        url = "https://{}{}".format(self.protocol_config.server_ip, path)
+        headers = {"Authorization": self.protocol_config.thing_token, "Content-Type": "application/json"}
+        try:
+            with locks.network_transmit_mutex:
+                response = httpclient.HttpClient(headers).post(url, data=message.encode("utf-8"))
+                try:
+                    return 200 <= response.status_code < 300
+                finally:
+                    response.close()
+        except Exception as e:
+            logging.exception(e, "Failed to send HTTPS packet")
+            return False
+
+    def get_mqtt_first_control_message(self):
+        return None
+
+    def clear_retained(self, topic):
+        return None

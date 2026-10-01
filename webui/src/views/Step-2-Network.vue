@@ -132,7 +132,6 @@ export default {
     clearCookies() {
       const cookieKeys = [
         "cell-apn",
-        "cell-band",
         "cell-tech",
         "cell-mcc-mnc",
         "ipversion",
@@ -142,7 +141,6 @@ export default {
         "lora-region",
         "lora-retries",
         "network",
-        "protocol",
         "sat-astro-devkit-en",
         "sat-astro-devkit-pass",
         "sat-astro-devkit-ssid",

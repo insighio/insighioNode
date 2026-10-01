@@ -50,18 +50,14 @@ def connect(cfg, explicit_protocol=None):
             from . import transfer_protocol
 
             global transfer_client
-            if requested_protocol == "mqtt":
-                transfer_client = transfer_protocol.TransferProtocolMQTT(cfg)
-                transfer_client.protocol_config.client_name = "{}_wm".format(cfg.get("device_id"))
-                transferClientStatus = transfer_client.connect()
-                results["status"]["value"] = results["status"]["value"] and transferClientStatus
-            elif requested_protocol == "coap":
+            if requested_protocol == "coap":
                 transfer_client = transfer_protocol.TransferProtocolCoAP(cfg)
                 transfer_client.protocol_config.client_name = "{}_wc".format(cfg.get("device_id"))
                 transferClientStatus = transfer_client.connect()
                 results["status"]["value"] = results["status"]["value"] and transferClientStatus
             else:
-                transfer_client = None
+                transfer_client = transfer_protocol.TransferProtocolHTTPS(cfg)
+                results["status"]["value"] = results["status"]["value"] and transfer_client.connect()
 
         return results
 
