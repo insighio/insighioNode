@@ -27,11 +27,11 @@ class TransferProtocol:
         logging.info("Control packet not supported for: " + self.protocol)
         return False
 
-    def get_mqtt_first_control_message(self):
-        return logging.info("Control packet not supported for: " + self.protocol)
+    # def get_mqtt_first_control_message(self):
+    #     return logging.info("Control packet not supported for: " + self.protocol)
 
-    def clear_retained(self, topic):
-        return logging.info("Control packet not supported for: " + self.protocol)
+    # def clear_retained(self, topic):
+    #     return logging.info("Control packet not supported for: " + self.protocol)
 
 
 class TransferProtocolModemAT(TransferProtocol):
@@ -159,43 +159,21 @@ class TransferProtocolModemAT(TransferProtocol):
             URL_BASE, URL_PATH, self.protocol_config.thing_token, message, timeout_ms=125000
         )
 
-    def send_config_packet(self, message):
-        if not self.connected:
-            logging.info("TransferProtocol not connected")
-            return False
+    # def get_mqtt_first_control_message(self):
+    #     if not self.connected:
+    #         logging.info("TransferProtocol not connected")
+    #         return None
 
-        if self.is_secondary_transfer_protocol:
-            logging.info("Config packet not supported for secondary transfer protocol")
-            return False
+    #     if self.is_secondary_transfer_protocol:
+    #         logging.info("Control packet not supported for secondary transfer protocol")
+    #         return None
 
-        logging.info("About to send config message")
-        URL_BASE = self.protocol_config.server_ip
-        URL_PATH = "/http/channels/{}/messages/{}{}".format(
-            self.protocol_config.control_channel_id, self.protocol_config.thing_id, "/configResponse"
-        )
+    #     topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+    #     return self.modem_instance.mqtt_get_message(topic, 5000)
 
-        post_body = [{"n": "config", "vs": message}, {"n": "e", "v": 9}]
-        return self.modem_instance.http_post_with_auth_header(
-            URL_BASE, URL_PATH, self.protocol_config.thing_token, post_body, timeout_ms=125000
-        )
-
-    def get_mqtt_first_control_message(self):
-        return None
-        # if not self.connected:
-        #     logging.info("TransferProtocol not connected")
-        #     return None
-        #
-        # if self.is_secondary_transfer_protocol:
-        #     logging.info("Control packet not supported for secondary transfer protocol")
-        #     return None
-        #
-        # topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
-        # return self.modem_instance.mqtt_get_message(topic, 5000)
-
-    def clear_retained(self, topic):
-        return None
-        # logging.info("About to clear retained message of topic: " + topic)
-        # return self.modem_instance.mqtt_publish(topic, "", 3, True)
+    # def clear_retained(self, topic):
+    #     logging.info("About to clear retained message of topic: " + topic)
+    #     return self.modem_instance.mqtt_publish(topic, "", 3, True)
 
 
 class TransferProtocolMQTT(TransferProtocol):
@@ -265,18 +243,18 @@ class TransferProtocolMQTT(TransferProtocol):
         with locks.network_transmit_mutex:
             return self.client.sendControlMessage(message, subtopic)
 
-    def get_mqtt_first_control_message(self):
-        if not self.connected:
-            logging.info("TransferProtocol not connected")
-            return None
+    # def get_mqtt_first_control_message(self):
+    #     if not self.connected:
+    #         logging.info("TransferProtocol not connected")
+    #         return None
 
-        with locks.network_transmit_mutex:
-            return self.client.subscribe_and_get_first_message()
+    #     with locks.network_transmit_mutex:
+    #         return self.client.subscribe_and_get_first_message()
 
-    def clear_retained(self, topic):
-        logging.info("About to clear retained message of topic: " + topic)
-        with locks.network_transmit_mutex:
-            return self.client.sendMessage("", topic, True)
+    # def clear_retained(self, topic):
+    #     logging.info("About to clear retained message of topic: " + topic)
+    #     with locks.network_transmit_mutex:
+    #         return self.client.sendMessage("", topic, True)
 
 
 class TransferProtocolCoAP(TransferProtocol):
@@ -364,9 +342,3 @@ class TransferProtocolHTTPS(TransferProtocol):
         except Exception as e:
             logging.exception(e, "Failed to send HTTPS packet")
             return False
-
-    def get_mqtt_first_control_message(self):
-        return None
-
-    def clear_retained(self, topic):
-        return None

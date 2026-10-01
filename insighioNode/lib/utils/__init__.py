@@ -241,3 +241,11 @@ def deleteModule(module_name):
 
 def get_var_from_module(module, key):
     return getattr(module, key) if hasattr(module, key) else None
+
+
+def importAndExecute(file_path):
+    with open(file_path, "r") as source:
+        code = source.read()
+    namespace = {"__name__": "__config_validation__", "__file__": file_path}
+    exec(code, namespace)
+    return namespace

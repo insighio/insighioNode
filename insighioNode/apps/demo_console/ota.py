@@ -240,6 +240,21 @@ def sendOtaStatusMessage(client, fileId, success, reason_measage=None):
     client.send_control_packet(message.to_json(), "/ota")
 
 
+# Configuration Event codes (e)
+# 0: "Pending"
+# 1: "Applied"
+# 2: "Failed"
+# 3: "Cancelled"
+# 4: "Delivered"
+# 9: "Local Configuration"
+def sendConfigStatusMessage(client, configuration, success):
+    # client.send_config_message(configuration, 1 if success else 2)
+    client.send_control_packet(
+        '[{"n":"config","vs":"' + configuration + '"}, { "n": "e", "v": ' + str(1 if success else 2) + " }]",
+        "/configResponse",
+    )
+
+
 def downloadOTA(client, fileId, fileType, fileSize):
     logging.info("About to download OTA package: " + fileId + fileType)
 
@@ -307,20 +322,21 @@ def applyDeviceConfiguration(client, configuration_id, configurationParameters):
 
     urlDecodeComponentForKeys(keyValueDict)
 
-    configuration_handler.apply_configuration(keyValueDict)
+    configuration_successful = configuration_handler.apply_configuration(keyValueDict)
     delete_action(client, configuration_id)
-    client.disconnect()
-    import machine
 
-    logging.info("about to reset to use new configuration")
-    machine.reset()
+    sendConfigStatusMessage(client, configurationParameters, configuration_successful)
+
+    if configuration_successful:
+        client.disconnect()
+        import machine
+
+        logging.info("about to reset to use new configuration")
+        machine.reset()
+    else:
+        logging.error("Failed to apply device configuration: " + str(configuration_id))
 
 
-# _MEAS_SDI12 = '<meas-sdi12>'
-# _MEAS_MODBUS = '<meas-modbus>'
-# _MEAS_ADC = '<meas-adc>'
-# _MEAS_PULSECOUNTER = '<meas-pulseCounter>'
-# _SYSTEM_SETTINGS = '<system-settings>'
 def urlDecodeComponentForKeys(keyValueDict):
     from external.microUrllib import parse
 

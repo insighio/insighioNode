@@ -321,9 +321,12 @@ def send_control_message(cfg, message, configSubtopic):
     return False
 
 
-def send_config_message(cfg, message):
+def send_config_message(cfg, message, code):
     if transfer_client is not None:
-        return transfer_client.send_config_packet(message)
+        return transfer_client.send_control_packet(
+            '[{"n":"config","vs":"' + message + '"}, { "n": "e", "v": ' + str(code) + " }]",
+            "/configResponse",
+        )
     return False
 
 

@@ -44,9 +44,8 @@ def setApplicationName(newName="demo_console"):
                 logging.info("removing old module: {}".format(prev_module_path))
                 del sys.modules[prev_module_path]
 
-            new_module_path = getModulePathFromFile(config_file)
-            logging.info("loading module: {}".format(new_module_path))
-            exec("import {} as cfg".format(new_module_path))
+            logging.info("loading module: {}".format(config_file))
+            utils.importAndExecute(config_file)
             _config_is_valid = True
         except Exception as e:
             logging.exception(e, "error reloading configuration module")
@@ -263,6 +262,8 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
 
 
 def get_URI_param():
+    from external.microUrllib import parse
+
     configDict = get_config_values(False)
 
     uri_str = ""
@@ -270,7 +271,7 @@ def get_URI_param():
         for key in configDict.keys():
             if uri_str != "":
                 uri_str += "&"
-            uri_str += "{}={}".format(key.replace("_", "-"), configDict[key])
+            uri_str += "{}={}".format(key.replace("_", "-"), parse.quote(str(configDict[key])))
 
         return uri_str
     except Exception as e:
@@ -428,7 +429,19 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         contents += "\n" + get_file_config(app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary)
 
     # create new
-    utils.writeToFile(config_file_explicit, contents)
+    temp_config_to_test = config_file_explicit.replace(".py", "_test.py")
+    utils.writeToFile(temp_config_to_test, contents)
+
+    try:
+        # try to import file, if import fails, the file is considered invalid
+        utils.importAndExecute(temp_config_to_test)
+        logging.debug("Configuration test passed for file: " + temp_config_to_test)
+    except Exception as e:
+        logging.exception(e, "error testing configuration")
+        return False
+
+    # delete the temporary test configuration file
+    utils.renameFile(temp_config_to_test, config_file_explicit)
 
     utils.clearCachedStates()
 
@@ -436,3 +449,4 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         utils.requestFileSystemOptimization()
 
     gc.collect()
+    return True

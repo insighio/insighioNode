@@ -107,11 +107,11 @@ def send_control_message(cfg, message, subtopic):
     return None
 
 
-def send_config_message(cfg, message):
+def send_config_message(cfg, message, code):
     if transfer_client is not None:
         return send_control_message(
             cfg,
-            '[{"n":"config","vs":"' + message + '"}, { "n": "e", "v": 9 }]',
+            '[{"n":"config","vs":"' + message + '"}, { "n": "e", "v": ' + str(code) + " }]",
             "/configResponse",
         )
     return None

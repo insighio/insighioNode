@@ -96,12 +96,14 @@ def execute(useExistingConfiguration=False):
 
                 logging.info("about to apply: {}".format(keyValueDict))
                 configuration_handler.notifyServerWithNewConfig()
-                configuration_handler.apply_configuration(keyValueDict)
+                conf_status = configuration_handler.apply_configuration(keyValueDict)
+                if conf_status:
+                    logging.info("about to reboot to apply new config")
+                    from machine import reset
 
-                logging.info("about to reboot to apply new config")
-                from machine import reset
-
-                reset()
+                    reset()
+                else:
+                    logging.error("Failed to apply new configuration")
 
                 return resp
             except Exception as e:

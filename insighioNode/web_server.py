@@ -177,10 +177,13 @@ class Config:
         try:
             from utils import configuration_handler
 
-            configuration_handler.apply_configuration(
+            conf_status = configuration_handler.apply_configuration(
                 data["queryParams"], configuration_handler.config_file, data["requestFileSystemOptimization"] == "true"
             )
-            return {}, 200
+            if conf_status:
+                return {}, 200
+            else:
+                return {}, 500
         except Exception as e:
             logging.exception(e, "Error applying configuration")
             return {}, 500
@@ -193,8 +196,11 @@ class ConfigTemp:
         try:
             from utils import configuration_handler
 
-            configuration_handler.apply_configuration(data["queryParams"], "/apps/demo_temp_config.py", False)
-            return {}, 200
+            conf_status = configuration_handler.apply_configuration(data["queryParams"], "/apps/demo_temp_config.py", False)
+            if conf_status:
+                return {}, 200
+            else:
+                return {}, 500
         except Exception as e:
             logging.exception(e, "Error applying configuration")
             return {}, 500
