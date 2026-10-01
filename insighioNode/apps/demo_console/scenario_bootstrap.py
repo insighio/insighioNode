@@ -22,6 +22,7 @@ def execute(useExistingConfiguration=False):
     URL_PATH = "/things/bootstrap/{}".format(_DEVICE_ID)
     url = "{}://{}{}".format("http" if device_info.get_hw_module_verison() == "esp32wroom" else "https", URL_BASE, URL_PATH)
 
+    response = None
     try:
         from utils import httpclient
 
@@ -107,10 +108,12 @@ def execute(useExistingConfiguration=False):
                 logging.exception(e, " error reading response")
     except Exception as e:
         logging.exception(e, "error trying to execute bootstrap HTTP GET")
+    finally:
+        if response:
+            response.close()
+        utils.deleteModule("utils.httpclient")
 
     network.deinit()
-
-    utils.deleteModule("utils.httpclient")
 
     logging.error("failed to execute bootstrap")
     return False

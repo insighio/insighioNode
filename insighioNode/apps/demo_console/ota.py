@@ -153,9 +153,15 @@ def _http_get_with_fallback(url, headers=None, saveToFile=None):
         logging.exception(e, "error executing HTTP GET")
 
     if (not response or response.status_code != 200) and use_https:
+        if response:
+            response.close()
         logging.info("request failed, retrying without HTTPS")
         fallback_url = url.replace("https://", "http://")
-        response = http_client.get(fallback_url, saveToFile=saveToFile) if saveToFile else http_client.get(fallback_url)
+        try:
+            response = http_client.get(fallback_url, saveToFile=saveToFile) if saveToFile else http_client.get(fallback_url)
+        except Exception as e:
+            logging.exception(e, "error executing fallback HTTP GET")
+            response = None
 
     return response
 
@@ -183,11 +189,14 @@ def _fetch_control_content(client, url_path, query_params, tmp_file, timeout_ms=
             headers = {"Authorization": protocol_config.thing_token}
             url = "{}://{}{}?{}".format(_get_http_scheme(), "console.insigh.io", url_path, query_params)
             response = _http_get_with_fallback(url, headers)
-            if response and response.status_code == 200:
-                try:
+            try:
+                if response and response.status_code == 200:
                     content = response.content.decode("utf-8")
-                except Exception as e:
-                    logging.exception(e, "error reading response")
+            except Exception as e:
+                logging.exception(e, "error reading response")
+            finally:
+                if response:
+                    response.close()
         except Exception as e:
             logging.exception(e, "unable to instantiate httpclient")
         finally:
@@ -269,9 +278,16 @@ def downloadOTA(client, fileId, fileType, fileSize):
         )
         return None
     else:
+        success_status = False
         try:
             response = _http_get_with_fallback(URL, saveToFile=filename)
-            success_status = response and response.status_code == 200
+            try:
+                success_status = bool(response and response.status_code == 200)
+            finally:
+                if response:
+                    response.close()
+        except Exception as e:
+            logging.exception(e, "error downloading OTA package")
         finally:
             utils.deleteModule("utils.httpclient")
 
@@ -378,8 +394,15 @@ def delete_action(client, id):
             )
         )
 
-        return bool(response and response.status_code == 200)
+        if response:
+            try:
+                return response.status_code == 200
+            finally:
+                response.close()
+        return False
     except Exception as e:
         logging.exception(e, "unable to instantiate httpclient")
+    finally:
+        utils.deleteModule("utils.httpclient")
 
     return False

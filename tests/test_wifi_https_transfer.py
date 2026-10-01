@@ -114,5 +114,104 @@ class TestWifiHttpsTransfer(unittest.TestCase):
         socket.close.assert_called_once()
 
 
+class TestWifiHttpConsumers(unittest.TestCase):
+    def setUp(self):
+        self.module_patch = patch.dict(sys.modules, {})
+        self.module_patch.start()
+        self.addCleanup(self.module_patch.stop)
+
+        httpclient = types.ModuleType("utils.httpclient")
+        httpclient.HttpClient = Mock()
+        utils = types.ModuleType("utils")
+        utils.httpclient = httpclient
+        utils.deleteModule = Mock()
+        device_info = types.ModuleType("device_info")
+        device_info.get_hw_module_verison = Mock(return_value="esp32s3")
+        device_info.get_device_id = Mock(return_value=("device", None))
+        sys.modules.update({"utils": utils, "utils.httpclient": httpclient, "device_info": device_info})
+        self.httpclient = httpclient
+        self.utils = utils
+
+    def test_ota_fallback_closes_failed_https_response(self):
+        from insighioNode.apps.demo_console import ota
+
+        failed = Mock(status_code=503)
+        succeeded = Mock(status_code=200)
+        self.httpclient.HttpClient.return_value.get.side_effect = [failed, succeeded]
+        with patch.object(ota.gc, "mem_free", return_value=1024, create=True):
+            response = ota._http_get_with_fallback("https://console.insigh.io/path")
+
+        self.assertIs(response, succeeded)
+        failed.close.assert_called_once()
+        self.assertEqual(
+            [call.args[0] for call in self.httpclient.HttpClient.return_value.get.call_args_list],
+            ["https://console.insigh.io/path", "http://console.insigh.io/path"],
+        )
+        response.close()
+
+    def test_ota_delete_closes_response_and_unloads_client(self):
+        from insighioNode.apps.demo_console import ota
+
+        config = types.SimpleNamespace(thing_id="device", control_channel_id="control", thing_token="secret")
+        response = Mock(status_code=200)
+        self.httpclient.HttpClient.return_value.delete.return_value = response
+        with patch.object(ota.cfg, "get_protocol_config", return_value=config):
+            self.assertTrue(ota.delete_action(types.SimpleNamespace(modem_based=False), "action"))
+
+        response.close.assert_called_once()
+        self.utils.deleteModule.assert_called_once_with("utils.httpclient")
+
+    def test_ota_control_get_closes_response_and_unloads_client(self):
+        from insighioNode.apps.demo_console import ota
+
+        response = Mock(status_code=200, content=b'"[]"')
+        self.httpclient.HttpClient.return_value.get.return_value = response
+        config = types.SimpleNamespace(thing_token="secret")
+        with patch.object(ota.cfg, "get_protocol_config", return_value=config), patch.object(
+            ota.gc, "mem_free", return_value=1024, create=True
+        ):
+            content = ota._fetch_control_content(
+                types.SimpleNamespace(modem_based=False), "/mf-rproxy/device/pending-actions", "id=device", "tmpactions"
+            )
+
+        self.assertEqual(content, "[]")
+        response.close.assert_called_once()
+        self.utils.deleteModule.assert_called_once_with("utils.httpclient")
+
+    def test_ota_download_handles_failed_fallback(self):
+        from insighioNode.apps.demo_console import ota
+
+        self.httpclient.HttpClient.return_value.get.side_effect = [OSError("TLS failed"), OSError("HTTP failed")]
+        config = types.SimpleNamespace(server_ip="console.insigh.io", thing_id="device", thing_token="secret", control_channel_id="control")
+        with patch.object(ota, "hasEnoughFreeSpace", return_value=True), patch.object(
+            ota.device_info, "get_device_root_folder", return_value="/tmp/", create=True
+        ), patch.object(ota.cfg, "get_protocol_config", return_value=config), patch.object(
+            ota.gc, "mem_free", return_value=1024, create=True
+        ), patch.object(
+            ota.logging, "exception"
+        ):
+            self.assertIsNone(ota.downloadOTA(types.SimpleNamespace(modem_based=False), "file", ".bin", 12))
+
+        self.assertEqual(self.httpclient.HttpClient.return_value.get.call_count, 2)
+        self.utils.deleteModule.assert_called_once_with("utils.httpclient")
+
+    def test_bootstrap_failed_response_closes_and_unloads_client(self):
+        wifi = types.ModuleType("insighioNode.apps.demo_console.wifi")
+        wifi.init = Mock()
+        wifi.connect = Mock(return_value={"status": {"value": True}})
+        wifi.deinit = Mock()
+        sys.modules[wifi.__name__] = wifi
+        from insighioNode.apps.demo_console import scenario_bootstrap
+
+        response = Mock(status_code=401)
+        self.httpclient.HttpClient.return_value.get.return_value = response
+        with patch.object(scenario_bootstrap.cfg, "get", return_value="secret"), patch.object(scenario_bootstrap.cfg, "set"):
+            self.assertFalse(scenario_bootstrap.execute())
+
+        response.close.assert_called_once()
+        self.utils.deleteModule.assert_called_once_with("utils.httpclient")
+        wifi.deinit.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()
