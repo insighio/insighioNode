@@ -8,6 +8,12 @@ import math
 
 
 class ModemBG600(modem_base.Modem):
+    _SSL_RECV_MAX = 1500  # maximum payload AT+QSSLRECV returns per call
+    _SSL_SEND_MAX = 1460  # maximum payload AT+QSSLSEND accepts per call
+    _SSL_DOWNLOAD_ATTEMPTS = 1
+    _SSL_DOWNLOAD_PROGRESS_STEP = 16384
+    _SSL_DOWNLOAD_IDLE_TIMEOUT_MS = 30000
+
     def __init__(self, power_on, power_key, modem_tx, modem_rx):
         super().__init__(power_on, power_key, modem_tx, modem_rx)
         self.connection_status = False
@@ -20,6 +26,7 @@ class ModemBG600(modem_base.Modem):
         self._ssl_socket_host = None
         self._ssl_socket_port = None
         self._ssl_context_configured = False
+        self._ssl_peer_closed = False
 
     # even though this function is correct for BG600, it is normally called
     # while waiting for the modem to power on, where at that time we are not aware
@@ -649,6 +656,7 @@ class ModemBG600(modem_base.Modem):
 
         self._ssl_socket_host = host
         self._ssl_socket_port = port
+        self._ssl_peer_closed = False
         logging.info("SSL socket open to {}:{}".format(host, port))
         return True
 
@@ -669,7 +677,7 @@ class ModemBG600(modem_base.Modem):
             text = line.decode("utf8", "ignore").strip()
             if not text:
                 continue
-            logging.debug("  " + text)
+            # logging.debug("  " + text)
             if ure.search(regex, text) is not None:
                 return True
             if ure.search(r"(ERROR|FAIL)", text) is not None:
@@ -680,22 +688,37 @@ class ModemBG600(modem_base.Modem):
         if isinstance(payload, str):
             payload = payload.encode("utf8")
 
-        ready, _ = self.send_at_cmd("AT+QSSLSEND={},{}".format(self._ssl_client_id, len(payload)), 10000, ">")
-        if not ready:
-            logging.error("SSL socket not ready to send")
-            return False
+        for offset in range(0, len(payload), self._SSL_SEND_MAX):
+            segment = payload[offset : offset + self._SSL_SEND_MAX]
+            ready, _ = self.send_at_cmd("AT+QSSLSEND={},{}".format(self._ssl_client_id, len(segment)), 10000, ">")
+            if not ready:
+                logging.error("SSL socket not ready to send")
+                return False
 
-        # raw write: the modem consumes exactly <len> bytes, no line terminator must follow
-        self.uart.write(payload)
-        return self._wait_for_uart_response(r"SEND OK", 30000)
+            # raw write: the modem consumes exactly <len> bytes, no line terminator must follow
+            self.uart.write(segment)
+            if not self._wait_for_uart_response(r"SEND OK", 30000):
+                return False
+        return True
+
+    def _ssl_handle_urc(self, text):
+        if "+QSSLURC" not in text:
+            return
+        logging.debug("  urc: " + text.strip())
+        if '"closed"' in text:
+            self._ssl_peer_closed = True
 
     def _ssl_recv_raw(self, max_bytes=1500, timeout_ms=10000):
         """Reads up to max_bytes from the SSL socket buffer. Returns bytes (possibly empty) or None on error."""
-        while self.uart.any():
-            self.uart.read()
+        # uart.read() without a size blocks for the full UART timeout, so only read what is pending
+        pending = self.uart.any()
+        if pending:
+            leftover = self.uart.read(pending)
+            if leftover:
+                self._ssl_handle_urc(leftover.decode("utf8", "ignore"))
 
         command = "AT+QSSLRECV={},{}".format(self._ssl_client_id, max_bytes)
-        logging.debug("> " + command)
+        # logging.debug("> " + command)
         if not self.uart.write(command + "\r\n"):
             return None
 
@@ -716,8 +739,15 @@ class ModemBG600(modem_base.Modem):
             elif ure.search(r"(ERROR|FAIL)", text) is not None:
                 logging.error("SSL socket read error: " + text)
                 return None
+            else:
+                self._ssl_handle_urc(text)
 
         if length is None:
+            return None
+
+        if length == 0 and self._ssl_peer_closed:
+            self._wait_for_uart_response(r"^OK", 5000)
+            logging.error("SSL socket closed by the server")
             return None
 
         data = b""
@@ -927,12 +957,53 @@ class ModemBG600(modem_base.Modem):
         return (host, port, route)
 
     def _ssl_http_get_file(self, url, destination_file, timeout_ms):
+        bytes_written = 0
+        for attempt in range(0, self._SSL_DOWNLOAD_ATTEMPTS):
+            if attempt:
+                logging.info("download interrupted, resuming from byte {} (attempt {})".format(bytes_written, attempt + 1))
+
+            status_code, headers, body, url = self._ssl_get_following_redirects(url, bytes_written, timeout_ms)
+            if status_code is None:
+                self.ssl_socket_close()
+                continue
+
+            if status_code == 206 and headers.get("content-range", "").startswith("bytes {}-".format(bytes_written)):
+                mode = "ab"
+            elif status_code == 200:
+                if bytes_written:
+                    logging.info("server ignored the range request, restarting download")
+                bytes_written = 0
+                mode = "wb"
+            else:
+                logging.error("file download failed with HTTP status: {}".format(status_code))
+                self.ssl_socket_close()
+                return (False, bytes_written)
+
+            # the overall timeout does not fit a multi-hundred-KB NBIoT transfer, so the body uses an idle timeout
+            success, written = self._ssl_stream_body_to_file(
+                destination_file, mode, headers, body, bytes_written, self._SSL_DOWNLOAD_IDLE_TIMEOUT_MS
+            )
+            bytes_written += written
+            if success:
+                logging.debug("downloaded {} bytes into {}".format(bytes_written, destination_file))
+                return (True, bytes_written)
+
+            # the unread rest of the body would be parsed as the next response, so this socket is unusable
+            self.ssl_socket_close()
+
+        return (False, bytes_written)
+
+    def _ssl_get_following_redirects(self, url, range_start, timeout_ms):
+        """Returns (status_code, headers, leftover_body, final_url); status_code is None on failure."""
         for redirect in range(0, 4):
             host, port, route = self._split_url(url)
 
-            request = "GET " + route + " HTTP/1.1\r\n" "Host: " + host + "\r\n" "Accept: */*\r\n" "Connection: keep-alive\r\n" "\r\n"
+            request = "GET " + route + " HTTP/1.1\r\nHost: " + host + "\r\nAccept: */*\r\nConnection: keep-alive\r\n"
+            if range_start:
+                request += "Range: bytes={}-\r\n".format(range_start)
+            request += "\r\n"
 
-            logging.debug("downloading https://{}{} into {}".format(host, route, destination_file))
+            logging.debug("downloading https://{}{} from byte {}".format(host, route, range_start))
 
             status_code = None
             headers = None
@@ -940,7 +1011,7 @@ class ModemBG600(modem_base.Modem):
             # the server may have dropped the idle socket, so allow one reconnect attempt
             for attempt in range(0, 2):
                 if not self.ssl_socket_connect(host, port):
-                    return (False, -1)
+                    return (None, None, None, url)
 
                 if not self._ssl_send_raw(request):
                     logging.error("SSL socket send failed, attempt {}".format(attempt + 1))
@@ -954,91 +1025,135 @@ class ModemBG600(modem_base.Modem):
                 self.ssl_socket_close()
 
             if status_code is None:
-                return (False, -1)
+                return (None, None, None, url)
 
             if status_code in (301, 302, 303, 307, 308):
                 location = headers.get("location")
                 if not location:
                     logging.error("redirect without location header")
-                    return (False, -1)
+                    return (None, None, None, url)
                 if location.startswith("/"):
                     location = "https://" + host + location
                 logging.debug("following redirect to: " + location)
                 url = location
                 continue
 
-            if status_code != 200:
-                logging.error("file download failed with HTTP status: {}".format(status_code))
-                return (False, -1)
-
-            return self._ssl_stream_body_to_file(destination_file, headers, body, timeout_ms)
+            return (status_code, headers, body, url)
 
         logging.error("too many redirects while downloading file")
-        return (False, -1)
+        return (None, None, None, url)
 
-    def _ssl_stream_body_to_file(self, destination_file, headers, initial_body, timeout_ms):
+    def _ssl_stream_body_to_file(self, destination_file, mode, headers, initial_body, base, idle_timeout_ms):
+        """Returns (success, bytes_written_in_this_call)."""
         content_length, chunked = self._ssl_body_delimiters(headers)
         if content_length is None and not chunked:
             logging.error("file download response has neither content-length nor chunked encoding")
-            return (False, -1)
+            return (False, 0)
 
-        pending = initial_body
-        bytes_written = 0
-        finished = False
-        timeout_timestamp = ticks_add(ticks_ms(), timeout_ms)
-
-        fw = open(destination_file, "wb")
+        fw = open(destination_file, mode)
         try:
-            while not finished:
-                if chunked:
-                    while True:
-                        index = pending.find(b"\r\n")
-                        if index < 0:
-                            break
-                        try:
-                            size = int(pending[:index].split(b";")[0].decode("utf8", "ignore"), 16)
-                        except Exception:
-                            logging.error("malformed chunk header while downloading file")
-                            return (False, bytes_written)
-                        if size == 0:
-                            finished = True
-                            break
-                        # chunk is only complete once its trailing CRLF has arrived
-                        if len(pending) < index + 2 + size + 2:
-                            break
-                        fw.write(pending[index + 2 : index + 2 + size])
-                        bytes_written += size
-                        pending = pending[index + 4 + size :]
-                elif pending:
-                    if bytes_written + len(pending) > content_length:
-                        pending = pending[: content_length - bytes_written]
-                    fw.write(pending)
-                    bytes_written += len(pending)
-                    pending = b""
-                    finished = bytes_written >= content_length
-
-                if finished:
-                    break
-
-                if ticks_diff(ticks_ms(), timeout_timestamp) >= 0:
-                    logging.error("timed out after {} bytes while downloading file".format(bytes_written))
-                    return (False, bytes_written)
-
-                chunk = self._ssl_recv_raw()
-                if chunk is None:
-                    return (False, bytes_written)
-
-                if not chunk:
-                    sleep_ms(200)
-                    continue
-
-                pending += chunk
-                wdt_reset()
+            if chunked:
+                return self._ssl_stream_chunked_to_file(fw, initial_body, base, idle_timeout_ms)
+            return self._ssl_stream_sized_to_file(fw, initial_body, content_length, base, idle_timeout_ms)
         finally:
             fw.close()
 
-        logging.debug("downloaded {} bytes into {}".format(bytes_written, destination_file))
+    def _ssl_stream_sized_to_file(self, fw, initial_body, content_length, base, idle_timeout_ms):
+        """Streams a content-length delimited body straight to disk, without buffering it."""
+        bytes_written = 0
+        total = base + content_length
+        next_progress_log = self._SSL_DOWNLOAD_PROGRESS_STEP
+
+        if initial_body:
+            initial_body = initial_body[:content_length]
+            bytes_written = len(initial_body)
+            fw.write(initial_body)
+
+        idle_timestamp = ticks_add(ticks_ms(), idle_timeout_ms)
+        while bytes_written < content_length:
+            wdt_reset()
+
+            remaining = content_length - bytes_written
+            chunk = self._ssl_recv_raw(remaining if remaining < self._SSL_RECV_MAX else self._SSL_RECV_MAX)
+            if chunk is None:
+                logging.error("socket read error after {}/{} bytes".format(base + bytes_written, total))
+                return (False, bytes_written)
+
+            if not chunk:
+                if ticks_diff(ticks_ms(), idle_timestamp) >= 0:
+                    logging.error("download stalled at {}/{} bytes".format(base + bytes_written, total))
+                    return (False, bytes_written)
+                sleep_ms(100)
+                continue
+
+            fw.write(chunk)
+            bytes_written += len(chunk)
+            idle_timestamp = ticks_add(ticks_ms(), idle_timeout_ms)
+
+            if bytes_written >= next_progress_log:
+                logging.debug("  downloaded {}/{} bytes".format(base + bytes_written, total))
+                next_progress_log = bytes_written + self._SSL_DOWNLOAD_PROGRESS_STEP
+
         return (True, bytes_written)
+
+    def _ssl_stream_chunked_to_file(self, fw, initial_body, base, idle_timeout_ms):
+        """Streams a chunked body to disk, buffering only the chunk-size lines."""
+        bytes_written = 0
+        next_progress_log = self._SSL_DOWNLOAD_PROGRESS_STEP
+        chunk_remaining = 0
+        trailer_remaining = 0  # CRLF that follows each chunk payload
+        header_buffer = b""
+        data = initial_body
+
+        idle_timestamp = ticks_add(ticks_ms(), idle_timeout_ms)
+        while True:
+            while data:
+                if trailer_remaining:
+                    consumed = trailer_remaining if trailer_remaining < len(data) else len(data)
+                    trailer_remaining -= consumed
+                    data = data[consumed:]
+                elif chunk_remaining:
+                    consumed = chunk_remaining if chunk_remaining < len(data) else len(data)
+                    fw.write(data[:consumed])
+                    bytes_written += consumed
+                    chunk_remaining -= consumed
+                    data = data[consumed:]
+                    if not chunk_remaining:
+                        trailer_remaining = 2
+                else:
+                    header_buffer += data
+                    data = b""
+                    index = header_buffer.find(b"\r\n")
+                    if index < 0:
+                        break
+                    try:
+                        chunk_remaining = int(header_buffer[:index].split(b";")[0].decode("utf8", "ignore"), 16)
+                    except Exception:
+                        logging.error("malformed chunk header after {} bytes".format(bytes_written))
+                        return (False, bytes_written)
+                    data = header_buffer[index + 2 :]
+                    header_buffer = b""
+                    if chunk_remaining == 0:
+                        return (True, bytes_written)
+
+            if bytes_written >= next_progress_log:
+                logging.debug("  downloaded {} bytes".format(base + bytes_written))
+                next_progress_log = bytes_written + self._SSL_DOWNLOAD_PROGRESS_STEP
+
+            wdt_reset()
+            data = self._ssl_recv_raw(self._SSL_RECV_MAX)
+            if data is None:
+                logging.error("socket read error after {} bytes".format(base + bytes_written))
+                return (False, bytes_written)
+
+            if not data:
+                if ticks_diff(ticks_ms(), idle_timestamp) >= 0:
+                    logging.error("download stalled at {} bytes".format(base + bytes_written))
+                    return (False, bytes_written)
+                sleep_ms(100)
+                continue
+
+            idle_timestamp = ticks_add(ticks_ms(), idle_timeout_ms)
 
     # def _modem_fs_http_get_file(self, url, destination_file, timeout_ms=250000):
     #     file_downloaded = False
