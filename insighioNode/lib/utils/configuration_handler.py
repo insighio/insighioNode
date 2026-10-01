@@ -44,8 +44,9 @@ def setApplicationName(newName="demo_console"):
                 logging.info("removing old module: {}".format(prev_module_path))
                 del sys.modules[prev_module_path]
 
-            logging.info("loading module: {}".format(config_file))
-            utils.importAndExecute(config_file)
+            new_module_path = getModulePathFromFile(config_file)
+            logging.info("loading module: {}".format(new_module_path))
+            exec("import {} as cfg".format(new_module_path))
             _config_is_valid = True
         except Exception as e:
             logging.exception(e, "error reloading configuration module")

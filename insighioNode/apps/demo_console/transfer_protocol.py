@@ -65,6 +65,7 @@ class TransferProtocolModemAT(TransferProtocol):
                     logging.exception(
                         e, "Error parsing secondary measurement transmission info, cannot connect to secondary transfer protocol"
                     )
+            logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
 
         logging.info("Initialized TransferProtocolModemAT with modem client id: {}".format(self.modem_client_id))
         logging.info("Secondary transfer protocol enabled: {}".format(self.is_secondary_transfer_protocol))
@@ -73,8 +74,6 @@ class TransferProtocolModemAT(TransferProtocol):
                 self._secondary_protocol_info if self.is_secondary_transfer_protocol else "N/A"
             )
         )
-
-        logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
 
     def connect(self):
         if self.is_connected():
@@ -301,6 +300,7 @@ class TransferProtocolCoAP(TransferProtocol):
 class TransferProtocolHTTPS(TransferProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
+        self.protocol = "https"
 
     def connect(self):
         self.connected = self.is_connected()
