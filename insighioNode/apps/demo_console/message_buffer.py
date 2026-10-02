@@ -20,6 +20,21 @@ def buffered_measurements_count():
     return utils.countFlagFileLines(storage_file_name)
 
 
+def calculate_MAX_NUMBER_OF_FORCED_MESSAGES():
+    global MAX_NUMBER_OF_FORCED_MESSAGES
+    current_message_count = buffered_measurements_count()
+    file_size = utils.getFlagFileSize(storage_file_name)
+    logging.debug("Current file size: {}".format(file_size))
+
+    if current_message_count == 0:
+        MAX_NUMBER_OF_FORCED_MESSAGES = 1000
+    else:
+        average_message_size = file_size // current_message_count if current_message_count > 0 else 0
+        MAX_NUMBER_OF_FORCED_MESSAGES = utils.getFreeSpace() // average_message_size if average_message_size > 0 else 1000
+        MAX_NUMBER_OF_FORCED_MESSAGES -= 1
+        logging.debug("Updated MAX_NUMBER_OF_FORCED_MESSAGES to {}".format(MAX_NUMBER_OF_FORCED_MESSAGES))
+
+
 def timestamp_measurements(measurements, round_seconds=False):
     epoch, valid = system_time()
 
@@ -56,9 +71,11 @@ def update_timestamp_based_on_diff_dt(measurements, round_seconds=False):
 
 def store_measurement(measurements, force_store=False):
     global mutex
-    # +1 is added to count the current measurement that has not been stored to the file
-    number_of_measurements = buffered_measurements_count() + 1
+    number_of_measurements = buffered_measurements_count()
     logging.info("Message #" + str(number_of_measurements))
+
+    # if number_of_measurements > 10:
+    calculate_MAX_NUMBER_OF_FORCED_MESSAGES()
 
     if (
         message_buffer_size
