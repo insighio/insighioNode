@@ -174,7 +174,7 @@ export default {
         this.$storage.set("meas-sensor-a-d-p2-t", this.analogDigitalP2Transformation)
 
       if (this.adc3TransformationIsVisible)
-        this.$storage.set("meas-sensor-a-d-p3-t", this.analogDigitalP2Transformation)
+        this.$storage.set("meas-sensor-a-d-p3-t", this.analogDigitalP3Transformation)
 
       this.requestGoNext()
     }

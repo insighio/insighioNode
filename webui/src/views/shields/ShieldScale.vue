@@ -234,7 +234,7 @@ export default {
     },
     // Add your component methods here
     validateMyForm() {
-      this.requestGoNext()
+      this.storeData()
     },
 
     clearCookies() {
