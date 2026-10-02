@@ -1,5 +1,12 @@
 <script>
+import { useId } from "vue"
+
 export default {
+  data() {
+    return {
+      controlId: useId()
+    }
+  },
   props: {
     value: {
       type: Boolean,

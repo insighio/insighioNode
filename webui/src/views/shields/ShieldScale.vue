@@ -35,9 +35,7 @@
         :colsInput="8"
       />
       <div v-if="scaleEnabled" class="columns col-12" style="padding-right: 0px; padding-left: 0px">
-        <div class="column col-4 col-sm-12">
-          <label class="form-label"></label>
-        </div>
+        <div class="column col-4 col-sm-12"></div>
         <div class="column col-8 col-sm-12">
           <button class="btn btn-primary ui-ml-30" @click="startCalibration()">Calibrate</button>
         </div>
@@ -101,7 +99,13 @@
                 <label class="form-label p-centered" for="input-ref-weight">Reference Weight (g)</label>
               </div>
               <div class="column col-3 col-sm-12 col-mr-auto">
-                <input class="form-input p-centered" type="number" v-model="referenceWeight" style="width: 300px" />
+                <input
+                  id="input-ref-weight"
+                  class="form-input p-centered"
+                  type="number"
+                  v-model="referenceWeight"
+                  style="width: 300px"
+                />
               </div>
             </div>
             <div class="empty-action">
@@ -238,6 +242,10 @@ export default {
       this.$storage.remove("meas-i2c-2")
       this.$storage.remove("meas-sensor-a-d-p1")
       this.$storage.remove("meas-sensor-a-d-p1-t")
+      this.$storage.remove("meas-sensor-a-d-p2")
+      this.$storage.remove("meas-sensor-a-d-p2-t")
+      this.$storage.remove("meas-sensor-a-d-p3")
+      this.$storage.remove("meas-sensor-a-d-p3-t")
       this.$storage.remove("meas-sensor-scale-enabled")
       this.$storage.remove("meas-scale-monitoring-enabled")
       this.$storage.remove("meas-scale-offset")

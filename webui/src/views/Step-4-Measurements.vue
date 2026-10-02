@@ -164,6 +164,7 @@ import "@/assets/css/special-tabs.css"
 
 export default {
   name: "Step4Measurements",
+  emits: ["goNext", "goBack"],
   mixins: [CommonTools],
   components: {
     SSwitch,

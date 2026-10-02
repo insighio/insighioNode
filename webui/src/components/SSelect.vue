@@ -2,7 +2,7 @@
   <div class="container ui-mb-1">
     <div :class="'columns col-' + colsSum + ' ui-pr-0 ui-pl-0'">
       <div :class="'column col-' + colsLabel + ' col-sm-12'">
-        <label class="form-label"
+        <label class="form-label" :for="controlId"
           >{{ label }}
           <button v-if="tooltip" class="btn btn-link tooltip" :data-tooltip="tooltip">
             <i class="icon icon-flag"></i>
@@ -10,7 +10,7 @@
         </label>
       </div>
       <div :class="'column col-' + colsInput + ' col-sm-12'">
-        <select :id="label" :disabled="disabled" class="form-select" v-model="internalValue">
+        <select :id="controlId" :disabled="disabled" class="form-select" v-model="internalValue">
           <option v-for="opt in valueOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
       </div>

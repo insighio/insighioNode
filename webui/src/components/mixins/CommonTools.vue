@@ -71,7 +71,6 @@ export default {
     getJsonObjectFromCookies(cookieName) {
       const cookieValue = this.$storage.get(cookieName)
 
-      // console.log("Cookie: " + cookieName + ", value: " + cookieValue + ", type: " + typeof cookieValue)
       if (cookieValue) {
         try {
           return JSON.parse(cookieValue)
