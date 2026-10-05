@@ -29,7 +29,7 @@ def execute_battery_setup():
         device_info.get_hw_module_version() != device_info._CONST_ESP32
         and device_info.get_hw_module_version() != device_info._CONST_ESP32_WROOM
     ):
-        device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
+        device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4000_mv)
 
         battery_settings_applied = False
         if cfg.get("_SYSTEM_SETTINGS"):
@@ -65,7 +65,7 @@ def execute_battery_setup():
 
         if not battery_settings_applied:
             logging.debug("Battery settings default")
-            # device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
+            # device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4000_mv)
             device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
             device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
     else:

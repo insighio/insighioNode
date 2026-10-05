@@ -428,6 +428,11 @@ def bq_charger_set_max_charge_4200_mv(i2c, bq_addr):
     _bq_set_vbat_mv(i2c, bq_addr, 4208)
 
 
+def bq_charger_set_max_charge_4000_mv(i2c, bq_addr):
+    logging.debug("Battery: max charge 4000mV")
+    _bq_set_vbat_mv(i2c, bq_addr, 4000)
+
+
 def bq_charger_set_charging_on(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
         logging.debug("Battery: settings charge on")
