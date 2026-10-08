@@ -78,7 +78,7 @@
           @goBack="goToPreviousStep"
         />
         <Step3APIKeys
-          v-else-if="tabActive === 2 && (networkTech === 'cellular' || networkTech === 'wifi')"
+          v-else-if="tabActive === 2 && (networkTech === 'cellular' || networkTech === 'wifi' || !networkTech)"
           :key="'step3api-' + configVersion"
           @goNext="goToNextStep"
           @goBack="goToPreviousStep"

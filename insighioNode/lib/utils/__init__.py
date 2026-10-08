@@ -134,6 +134,15 @@ def countFileLines(source):
     return lines
 
 
+def getFileSize(source):
+    try:
+        import uos
+
+        return uos.stat(source)[6]
+    except:
+        return 0
+
+
 ############ Auxilary file system functions
 
 
@@ -183,6 +192,11 @@ def deleteFlagFile(destination):
 def countFlagFileLines(destination):
     destination = decorateFlagPath(destination)
     return countFileLines(destination)
+
+
+def getFlagFileSize(source):
+    source = decorateFlagPath(source)
+    return getFileSize(source)
 
 
 #########################################################3
@@ -249,3 +263,8 @@ def importAndExecute(file_path):
     namespace = {"__name__": "__config_validation__", "__file__": file_path}
     exec(code, namespace)
     return namespace
+
+
+def getFreeSpace(root_path="/"):
+    f_bsize, _, _, f_bfree, _, _, _, _, _, _ = uos.statvfs(root_path)
+    return f_bsize * f_bfree
