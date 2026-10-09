@@ -139,6 +139,7 @@ def connect(cfg):
         a list of time duration consumed for (activation,attachment,connection)
     """
     status = MODEM_DETTACHED
+    init_duration = -1
     activation_duration = -1
     attachment_duration = -1
     connection_duration = -1
@@ -155,7 +156,10 @@ def connect(cfg):
         except Exception:
             pass
 
+        start_init_duration = ticks_ms()
         modemInst.init(cfg._IP_VERSION, cfg._APN, cfg._CELLULAR_TECHNOLOGY, mcc_mnc)
+        init_duration = ticks_diff(ticks_ms(), start_init_duration)
+        logging.debug("Modem initialization duration: {} ms".format(init_duration))
 
         # force modem activation and query status
         # comment by ag: noticed that in many cases the modem is initially set to mode 4
@@ -196,30 +200,31 @@ def connect(cfg):
 
                 logging.debug("Signal Quality - RSSI/RSRP/RSRQ: {}, {}, {}".format(rssi, rsrp, rsrq))
 
-                # ready to connect
-                if modemInst.has_data_over_ppp():
-                    logging.debug("Entering Data State. Modem connecting...")
-                    start_connection_duration = ticks_ms()
-                    connection_timeout = ticks_add(start_connection_duration, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000)
-                    if not modemInst.is_connected():
-                        modemInst.connect()
+                # code used only for deprecated Quectel MC60
+                # # ready to connect
+                # if modemInst.has_data_over_ppp():
+                #     logging.debug("Entering Data State. Modem connecting...")
+                #     start_connection_duration = ticks_ms()
+                #     connection_timeout = ticks_add(start_connection_duration, cfg._MAX_CONNECTION_ATTEMPT_TIME_SEC * 1000)
+                #     if not modemInst.is_connected():
+                #         modemInst.connect()
 
-                    if modemInst.is_connected():
-                        # modemInst.force_time_update()
-                        # update_rtc_from_network_time(modemInst)
-                        status = MODEM_CONNECTED
-                        connection_duration = ticks_diff(ticks_ms(), start_connection_duration)
-                        logging.debug("Modem connected")
-                        device_info.set_led_color("yellow")
-                else:
-                    # when using AT commands we don't need to explicitly enter data mode
-                    status = MODEM_CONNECTED
+                #     if modemInst.is_connected():
+                #         # modemInst.force_time_update()
+                #         # update_rtc_from_network_time(modemInst)
+                #         status = MODEM_CONNECTED
+                #         connection_duration = ticks_diff(ticks_ms(), start_connection_duration)
+                #         logging.debug("Modem connected")
+                #         device_info.set_led_color("yellow")
+                # else:
+                #     # when using AT commands we don't need to explicitly enter data mode
+                status = MODEM_CONNECTED
             else:
                 logging.debug("Unable to attach in {} sec".format(cfg._MAX_ATTACHMENT_ATTEMPT_TIME_SEC))
     except Exception as e:
         logging.exception(e, "Outer Exception: {}".format(e))
 
-    return (status, activation_duration, attachment_duration, connection_duration)
+    return (status, init_duration, activation_duration, attachment_duration, connection_duration)
 
 
 def update_rtc_from_network_time(modem, use_ntp_update=False):

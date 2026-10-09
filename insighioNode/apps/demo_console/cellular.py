@@ -106,21 +106,25 @@ def connect(cfg):
     if modem_instance is None or not modem_instance.has_sim():
         return results
 
-    status, activation_duration, attachment_duration, connection_duration = cellular.connect(cfg.get_cfg_module())
+    status, init_duration, activation_duration, attachment_duration, _ = cellular.connect(cfg.get_cfg_module())
     set_value(results, "status", status == cellular.MODEM_CONNECTED)
 
     # if network statistics are enabled
     if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
+        set_value(results, "cell_init_duration", init_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         set_value(results, "cell_act_duration", activation_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
         set_value(results, "cell_att_duration", attachment_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
-        if not protocol_config.use_custom_socket:
-            set_value(results, "cell_con_duration", connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+
+    connection_duration = -1
+    sec_connection_duration = -1
 
     if status == cellular.MODEM_CONNECTED:
         global transfer_client
         global transfer_secondary_client
 
         from . import transfer_protocol
+
+        connection_start_ms = ticks_ms()
 
         # AT command based implementation of communication of Quectel BG600L
         modem_model = modem_instance.get_model()
@@ -142,10 +146,13 @@ def connect(cfg):
             transfer_client = None
 
         tc_success = transfer_client.connect()
+        connection_duration = ticks_diff(ticks_ms(), connection_start_ms)
 
         tc_secondary_success = False
         if is_secondary_transfer_protocol_enabled:
+            sec_connection_start_ms = ticks_ms()
             tc_secondary_success = transfer_secondary_client.connect()
+            sec_connection_duration = ticks_diff(ticks_ms(), sec_connection_start_ms)
 
         if modem_model and "bg600" in modem_model:
             logging.debug("tc_success: {}".format(tc_success))
@@ -168,6 +175,10 @@ def connect(cfg):
         if tc_success and not valid:
             # if system time is invalid, try to update it from network time
             cellular.update_rtc_from_network_time(modem_instance, True)
+
+    set_value(results, "cell_con_duration", connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
+    if sec_connection_duration >= 0:
+        set_value(results, "sec_cell_con_duration", sec_connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
 
     return results
 
