@@ -176,6 +176,17 @@ def connect(cfg):
             # if system time is invalid, try to update it from network time
             cellular.update_rtc_from_network_time(modem_instance, True)
 
+    cell_duration = 0
+    if init_duration >= 0:
+        cell_duration += init_duration
+    if activation_duration >= 0:
+        cell_duration += activation_duration
+    if attachment_duration >= 0:
+        cell_duration += attachment_duration
+    if connection_duration >= 0:
+        cell_duration += connection_duration
+
+    set_value(results, "cell_duration", cell_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
     set_value(results, "cell_con_duration", connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
     if sec_connection_duration >= 0:
         set_value(results, "sec_cell_con_duration", sec_connection_duration, SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND)
