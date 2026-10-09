@@ -924,18 +924,19 @@ class ModemBG600(modem_base.Modem):
     def http_get_file(self, url, destination_file, timeout_ms=250000):
         """Downloads url straight into the local file destination_file. Returns (success, bytes_written)."""
         if url.startswith("https://"):
-            return self._ssl_http_get_file(url, destination_file, timeout_ms)
-        return (False, -1)
+            status, bytes_written = self._ssl_http_get_file(url, destination_file, timeout_ms)
+            if status:
+                return (status, bytes_written)
 
-        # # plain HTTP has no shared socket, so the modem stages the file in its own filesystem first
-        # modem_file = destination_file.split("/")[-1]
-        # downloaded, file_size = self._modem_fs_http_get_file(url, modem_file, timeout_ms)
-        # if not downloaded:
-        #     return (False, file_size)
+        # retry with old implementation
+        modem_file = destination_file.split("/")[-1]
+        downloaded, file_size = self._modem_fs_http_get_file(url, modem_file, timeout_ms)
+        if not downloaded:
+            return (False, file_size)
 
-        # copied = self.get_file(modem_file, destination_file)
-        # self.delete_file(modem_file)
-        # return (copied, file_size)
+        copied = self.get_file(modem_file, destination_file)
+        self.delete_file(modem_file)
+        return (copied, file_size)
 
     def _split_url(self, url):
         scheme_separator = url.find("://")
@@ -1155,40 +1156,40 @@ class ModemBG600(modem_base.Modem):
 
             idle_timestamp = ticks_add(ticks_ms(), idle_timeout_ms)
 
-    # def _modem_fs_http_get_file(self, url, destination_file, timeout_ms=250000):
-    #     file_downloaded = False
-    #     file_size = -1
+    def _modem_fs_http_get_file(self, url, destination_file, timeout_ms=250000):
+        file_downloaded = False
+        file_size = -1
 
-    #     context_ready, _ = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
+        context_ready, _ = self.send_at_cmd('AT+QHTTPCFG="contextid",1')
 
-    #     if not context_ready:
-    #         return (file_downloaded, file_size)
+        if not context_ready:
+            return (file_downloaded, file_size)
 
-    #     self.send_at_cmd('AT+QHTTPCFG="requestheader",0')
-    #     self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
-    #     url_ready, _ = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
-    #     if not url_ready:
-    #         self.http_context_disconnect()
-    #         return (file_downloaded, file_size)
+        self.send_at_cmd('AT+QHTTPCFG="requestheader",0')
+        self.send_at_cmd('AT+QHTTPCFG="responseheader",0')
+        url_ready, _ = self.send_at_cmd("AT+QHTTPURL=" + str(len(url)) + ",80", 8000, "CONNECT")
+        if not url_ready:
+            self.http_context_disconnect()
+            return (file_downloaded, file_size)
 
-    #     url_setup, _ = self.send_at_cmd(url, 80)
-    #     if not url_setup:
-    #         self.http_context_disconnect()
-    #         return (file_downloaded, file_size)
+        url_setup, _ = self.send_at_cmd(url, 80)
+        if not url_setup:
+            self.http_context_disconnect()
+            return (file_downloaded, file_size)
 
-    #     get_requested, lines = self.send_at_cmd("AT+QHTTPGET=80", timeout_ms, r"\+QHTTPGET:.*")
-    #     line_maches = self._match_regex(r"\+QHTTPGET:\s*(\d+),(\d+),(\d+)", lines)
-    #     file_size = -1
-    #     if line_maches:
-    #         file_size = int(line_maches.group(3))
+        get_requested, lines = self.send_at_cmd("AT+QHTTPGET=80", timeout_ms, r"\+QHTTPGET:.*")
+        line_maches = self._match_regex(r"\+QHTTPGET:\s*(\d+),(\d+),(\d+)", lines)
+        file_size = -1
+        if line_maches:
+            file_size = int(line_maches.group(3))
 
-    #     if not get_requested or not line_maches or file_size < 0:
-    #         self.http_context_disconnect()
-    #         return (file_downloaded, file_size)
+        if not get_requested or not line_maches or file_size < 0:
+            self.http_context_disconnect()
+            return (file_downloaded, file_size)
 
-    #     file_downloaded, lines = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:\s*")
+        file_downloaded, lines = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:\s*")
 
-    #     return (file_downloaded, file_size)
+        return (file_downloaded, file_size)
 
     # url_base = "console.insigh.io"
     # url_request_route = /mf-rproxy/channels/list
