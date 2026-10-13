@@ -80,19 +80,19 @@ class ModemBG600(modem_base.Modem):
         try:
             logging.debug("Reading current configuration")
             nwscanseq_status, nwscanseq_lines = self.send_at_cmd('AT+QCFG="nwscanseq"')
-            nwscanseq_match = self._match_regex(r'\s*\+QCFG:\s*"nwscanseq",(\w+)', nwscanseq_lines)
+            nwscanseq_match = self._match_regex('\\s*\\+QCFG:\\s*"nwscanseq",(\\w+)', nwscanseq_lines)
 
             nwscanmode_status, nwscanmode_lines = self.send_at_cmd('AT+QCFG="nwscanmode"')
-            nwscanmode_match = self._match_regex(r'\s*\+QCFG:\s*"nwscanmode",(\w+)', nwscanmode_lines)
+            nwscanmode_match = self._match_regex('\\s*\\+QCFG:\\s*"nwscanmode",(\\w+)', nwscanmode_lines)
 
             iotopmode_status, iotopmode_lines = self.send_at_cmd('AT+QCFG="iotopmode"')
-            iotopmode_match = self._match_regex(r'\s*\+QCFG:\s*"iotopmode",{}'.format(iotmode), iotopmode_lines)
+            iotopmode_match = self._match_regex('\\s*\\+QCFG:\\s*"iotopmode",{}'.format(iotmode), iotopmode_lines)
 
             band_status, band_lines = self.send_at_cmd('AT+QCFG="band"')
-            band_match = self._match_regex(r'\s*\+QCFG:\s*"band",0xf,0x80084,0x80084', band_lines)
+            band_match = self._match_regex('\\s*\\+QCFG:\\s*"band",0xf,0x80084,0x80084', band_lines)
 
             simeffect_status, simeffect_lines = self.send_at_cmd('AT+QCFG="simeffect"')
-            simeffect_match = self._match_regex(r'\s*\+QCFG:\s*"simeffect",1', simeffect_lines)
+            simeffect_match = self._match_regex('\\s*\\+QCFG:\\s*"simeffect",1', simeffect_lines)
 
             self.send_at_cmd('AT+QCFG="servicedomain",2,1')
 
@@ -125,7 +125,7 @@ class ModemBG600(modem_base.Modem):
 
         status, lines = self.send_at_cmd("AT+QCCID")
         if status:
-            match_res = self._match_regex(r"\+QCCID:\s+(\d+)", lines)
+            match_res = self._match_regex("\\+QCCID:\\s+(\\d+)", lines)
             if match_res is not None:
                 self.sim_iccid = match_res.group(1)
 
@@ -320,10 +320,10 @@ class ModemBG600(modem_base.Modem):
             mqtt_result, lines = self.send_at_cmd(
                 "AT+QMTOPEN=" + str(temp_client_id) + ',"' + server_ip + '",' + str(server_port),
                 60000,
-                r"\+QMTOPEN:\s*{},\d".format(str(temp_client_id)),
+                "\\+QMTOPEN:\\s*{},\\d".format(str(temp_client_id)),
             )
 
-            reg_match = self._match_regex(r"\+QMTOPEN:\s*" + str(temp_client_id) + ",(-?\d)", lines)
+            reg_match = self._match_regex("\\+QMTOPEN:\\s*" + str(temp_client_id) + ",(-?\\d)", lines)
             if reg_match and reg_match.group(1) == "0":  # successfull connection
                 mqtt_ready = True
                 break
@@ -333,7 +333,7 @@ class ModemBG600(modem_base.Modem):
                 sleep_ms(1000)
 
             # +QIURC: "pdpdeact",1
-            elif self._match_regex(r'\+QIURC:\s*"pdpdeact",1', lines):  # check for pdpdeact message
+            elif self._match_regex('\\+QIURC:\\s*"pdpdeact",1', lines):  # check for pdpdeact message
                 self.deactivate_context()
 
             sleep_ms(500)
@@ -345,7 +345,7 @@ class ModemBG600(modem_base.Modem):
                 mqtt_connected, _ = self.send_at_cmd(
                     'AT+QMTCONN={},"{}","{}","{}"'.format(temp_client_id, "{}_{}".format(device_id, temp_client_id), username, password),
                     15000,
-                    r"\+QMTCONN:\s+{},0,0".format(temp_client_id),
+                    "\\+QMTCONN:\\s+{},0,0".format(temp_client_id),
                 )
                 if mqtt_connected:
                     break
@@ -632,10 +632,12 @@ class ModemBG600(modem_base.Modem):
         if not status:
             return False
         # +QSSLSTATE: <clientID>,"SSLClient","<host>",<port>,<lport>,<socket_state>,...
-        match = self._match_regex(r'\+QSSLSTATE:\s*{},"[^"]*","[^"]*",\d+,\d+,(\d+)'.format(self._ssl_client_id), lines)
+        match = self._match_regex('\\+QSSLSTATE:\\s*{},"[^"]*","[^"]*",\\d+,\\d+,(\\d+)'.format(self._ssl_client_id), lines)
+        logging.debug("SSL socket state match: {}".format(match))
         return match is not None and match.group(1) == "2"
 
     def ssl_socket_connect(self, host, port=443, timeout_ms=150000):
+        logging.info("Attempting to open SSL socket to {}:{}".format(host, port))
         if self._ssl_socket_host == host and self._ssl_socket_port == port and self.ssl_socket_is_connected():
             return True
 
@@ -645,10 +647,10 @@ class ModemBG600(modem_base.Modem):
         status, lines = self.send_at_cmd(
             'AT+QSSLOPEN={},{},{},"{}",{},0'.format(self._ssl_pdp_context_id, self._ssl_context_id, self._ssl_client_id, host, port),
             timeout_ms,
-            r"\+QSSLOPEN:\s*{},\d+".format(self._ssl_client_id),
+            "\\+QSSLOPEN:\\s*{},\\d+".format(self._ssl_client_id),
         )
 
-        match = self._match_regex(r"\+QSSLOPEN:\s*{},(\d+)".format(self._ssl_client_id), lines)
+        match = self._match_regex("\\+QSSLOPEN:\\s*{},(\\d+)".format(self._ssl_client_id), lines)
         if not status or match is None or match.group(1) != "0":
             logging.error("SSL socket open to {}:{} failed: {}".format(host, port, lines))
             self.ssl_socket_close()
@@ -690,15 +692,14 @@ class ModemBG600(modem_base.Modem):
 
         for offset in range(0, len(payload), self._SSL_SEND_MAX):
             segment = payload[offset : offset + self._SSL_SEND_MAX]
-            ready, _ = self.send_at_cmd("AT+QSSLSEND={},{}".format(self._ssl_client_id, len(segment)), 10000, ">")
+            ready, _ = self.send_at_cmd("AT+QSSLSEND={}".format(self._ssl_client_id), 10000, ">.*")
             if not ready:
                 logging.error("SSL socket not ready to send")
                 return False
 
-            # raw write: the modem consumes exactly <len> bytes, no line terminator must follow
             self.uart.write(segment)
-            if not self._wait_for_uart_response(r"SEND OK", 30000):
-                return False
+            http_send_ok, _ = self.send_at_cmd("\x1a", 15000, "SEND OK")
+            return http_send_ok
         return True
 
     def _ssl_handle_urc(self, text):
@@ -1177,7 +1178,7 @@ class ModemBG600(modem_base.Modem):
             return (file_downloaded, file_size)
 
         get_requested, lines = self.send_at_cmd("AT+QHTTPGET=80", timeout_ms, r"\+QHTTPGET:.*")
-        line_maches = self._match_regex(r"\+QHTTPGET:\s*(\d+),(\d+),(\d+)", lines)
+        line_maches = self._match_regex("\\+QHTTPGET:\\s*(\\d+),(\\d+),(\\d+)", lines)
         file_size = -1
         if line_maches:
             file_size = int(line_maches.group(3))
@@ -1186,7 +1187,9 @@ class ModemBG600(modem_base.Modem):
             self.http_context_disconnect()
             return (file_downloaded, file_size)
 
-        file_downloaded, lines = self.send_at_cmd('AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:\s*")
+        file_downloaded, lines = self.send_at_cmd(
+            'AT+QHTTPREADFILE="' + destination_file + '"', timeout_ms, r"\+QHTTPREADFILE:\s*", r"Http timeout"
+        )
 
         return (file_downloaded, file_size)
 
