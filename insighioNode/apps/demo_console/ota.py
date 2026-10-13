@@ -283,12 +283,14 @@ def downloadOTA(client, fileId, fileType, fileSize):
 
     if client.modem_based:
         file_downloaded, downloaded_size = client.modem_instance.http_get_file(URL, filename, 250000)
-        if file_downloaded and int(downloaded_size) == int(fileSize):
+        fs_file_size = utils.getFileSize(filename)
+        if file_downloaded and int(downloaded_size) == int(fileSize) and int(fs_file_size) == int(fileSize):
+            logging.debug("File downloaded successfully and verified against expected size.")
             return filename
 
         logging.error(
-            "file download failed, file_downloaded: {}, downloaded size: {}, expected file size: {}".format(
-                file_downloaded, downloaded_size, fileSize
+            "file download failed, file_downloaded: {}, downloaded size: {}, expected file size: {}, fs file size: {}".format(
+                file_downloaded, downloaded_size, fileSize, fs_file_size
             )
         )
         return None
