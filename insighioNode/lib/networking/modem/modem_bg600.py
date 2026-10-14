@@ -665,7 +665,7 @@ class ModemBG600(modem_base.Modem):
     def ssl_socket_close(self):
         self._ssl_socket_host = None
         self._ssl_socket_port = None
-        status, _ = self.send_at_cmd("AT+QSSLCLOSE={},10".format(self._ssl_client_id), 15000)
+        status, _ = self.send_at_cmd("AT+QSSLCLOSE={},0".format(self._ssl_client_id), 15000)
         return status
 
     def _wait_for_uart_response(self, regex, timeout_ms):
