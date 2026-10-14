@@ -705,6 +705,9 @@ class ModemBG600(modem_base.Modem):
     def _ssl_handle_urc(self, text):
         if "+QSSLURC" not in text:
             return
+        if '"recv",' in text:
+            # ignore printing
+            return
         logging.debug("  urc: " + text.strip())
         if '"closed"' in text:
             self._ssl_peer_closed = True
@@ -717,6 +720,10 @@ class ModemBG600(modem_base.Modem):
             leftover = self.uart.read(pending)
             if leftover:
                 self._ssl_handle_urc(leftover.decode("utf8", "ignore"))
+
+        # data_received_notification, _ = self.send_at_cmd("", 30000, '^\\+QSSLURC: "recv",(\\d+)')
+        # if not data_received_notification:
+        #     return None
 
         command = "AT+QSSLRECV={},{}".format(self._ssl_client_id, max_bytes)
         # logging.debug("> " + command)
@@ -1063,7 +1070,7 @@ class ModemBG600(modem_base.Modem):
         """Streams a content-length delimited body straight to disk, without buffering it."""
         bytes_written = 0
         total = base + content_length
-        next_progress_log = self._SSL_DOWNLOAD_PROGRESS_STEP
+        # next_progress_log = self._SSL_DOWNLOAD_PROGRESS_STEP
 
         if initial_body:
             initial_body = initial_body[:content_length]
@@ -1091,9 +1098,9 @@ class ModemBG600(modem_base.Modem):
             bytes_written += len(chunk)
             idle_timestamp = ticks_add(ticks_ms(), idle_timeout_ms)
 
-            if bytes_written >= next_progress_log:
-                logging.debug("  downloaded {}/{} bytes".format(base + bytes_written, total))
-                next_progress_log = bytes_written + self._SSL_DOWNLOAD_PROGRESS_STEP
+            # if bytes_written >= next_progress_log:
+            logging.debug("  downloaded {}/{} bytes".format(base + bytes_written, total))
+            # next_progress_log = bytes_written + self._SSL_DOWNLOAD_PROGRESS_STEP
 
         return (True, bytes_written)
 

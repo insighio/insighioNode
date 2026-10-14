@@ -475,14 +475,17 @@ class Modem:
             responseLines = ["error: invalid uart"]
             return (status, responseLines)
 
-        # clear incoming message buffer
-        while self.uart.any():
-            self.uart.readline()
+        if command:
+            while self.uart.any():
+                self.uart.readline()
 
-        logging.debug("> " + command)
-        write_success = self.uart.write(command + "\r\n")
-        if not write_success:
-            return (status, ["error: can not send command"])
+            logging.debug("> " + command)
+            write_success = self.uart.write(command + "\r\n")
+            if not write_success:
+                return (status, ["error: can not send command"])
+        else:
+            # used to read URC messages
+            pass
 
         start_timestamp = ticks_ms()
         timeout_timestamp = ticks_add(start_timestamp, timeoutms)
