@@ -416,7 +416,7 @@ class Modem:
             self.send_at_cmd("AT+COPS=3,2")
             status, lines = self.send_at_cmd("AT+COPS?")
             if status:
-                match_res = self._match_regex('\\+COPS:\\s+\\d,2,\\"(\\d+)\\",\\((\\d+)\\)', lines)
+                match_res = self._match_regex('\\+COPS:\\s+\\d,2,"(\\d+)",(\\d+)', lines)
                 if match_res is not None:
                     try:
                         self.mcc = int(match_res.group(1)[0:3])
