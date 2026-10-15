@@ -665,7 +665,7 @@ class ModemBG600(modem_base.Modem):
     def ssl_socket_close(self):
         self._ssl_socket_host = None
         self._ssl_socket_port = None
-        status, _ = self.send_at_cmd("AT+QSSLCLOSE={},0".format(self._ssl_client_id), 15000)
+        status, _ = self.send_at_cmd("AT+QSSLCLOSE={},10".format(self._ssl_client_id), 15000)
         return status
 
     def _wait_for_uart_response(self, regex, timeout_ms):
@@ -692,14 +692,15 @@ class ModemBG600(modem_base.Modem):
 
         for offset in range(0, len(payload), self._SSL_SEND_MAX):
             segment = payload[offset : offset + self._SSL_SEND_MAX]
-            ready, _ = self.send_at_cmd("AT+QSSLSEND={}".format(self._ssl_client_id), 10000, ">.*")
+            ready, _ = self.send_at_cmd("AT+QSSLSEND={},{}".format(self._ssl_client_id, len(segment)), 10000, ">")
             if not ready:
                 logging.error("SSL socket not ready to send")
                 return False
 
+            # raw write: the modem consumes exactly <len> bytes, no line terminator must follow
             self.uart.write(segment)
-            http_send_ok, _ = self.send_at_cmd("\x1a", 15000, "SEND OK")
-            return http_send_ok
+            if not self._wait_for_uart_response(r"SEND OK", 30000):
+                return False
         return True
 
     def _ssl_handle_urc(self, text):
