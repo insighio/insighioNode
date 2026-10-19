@@ -113,6 +113,11 @@
                       :tooltip="batteryLowChargingCurrentTooltip"
                       v-model:value="systemSettings.enableChargingLowCurrent"
                     />
+                    <SSwitch
+                      label="Lower max battery charge (4.0V)"
+                      :tooltip="batteryMaxAt4VTooltip"
+                      v-model:value="systemSettings.enableChargingMaxAt4V"
+                    />
                   </div>
                 </div>
               </div>
@@ -228,13 +233,15 @@ export default {
         loggingLevel: "DEBUG",
         enableFileSystemOptimization: true,
         enableBatteryLifeOptimization: false,
-        enableChargingLowCurrent: false
+        enableChargingLowCurrent: false,
+        enableChargingMaxAt4V: true
       },
       systemSettings: {
         loggingLevel: "DEBUG",
         enableFileSystemOptimization: true,
         enableBatteryLifeOptimization: false,
-        enableChargingLowCurrent: false
+        enableChargingLowCurrent: false,
+        enableChargingMaxAt4V: true
       },
       transitionDirection: "slide-left", // Default transition direction
       isMeasurementNamingDialogOpen: false,
@@ -243,7 +250,9 @@ export default {
       batteryLifeOptimizationTooltip:
         "Enabling this will charge keep the battery\ncharge around 80% to prolong battery life",
       batteryLowChargingCurrentTooltip:
-        "Enabling this will charge the battery at a lower current (240mA)\nwhich will prolong battery life but increase charging time"
+        "Enabling this will charge the battery\nat a lower current (240mA)\nwhich will prolong battery\nlife but increase charging time",
+      batteryMaxAt4VTooltip:
+        "Enabling this will limit the maximum\nbattery charge to 4.0V\nwhich will prolong battery life\nbut will reduce the available capacity"
     }
   },
   mounted() {

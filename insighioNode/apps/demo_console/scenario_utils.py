@@ -29,8 +29,6 @@ def execute_battery_setup():
         device_info.get_hw_module_version() != device_info._CONST_ESP32
         and device_info.get_hw_module_version() != device_info._CONST_ESP32_WROOM
     ):
-        device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4000_mv)
-
         battery_settings_applied = False
         if cfg.get("_SYSTEM_SETTINGS"):
             import json
@@ -38,34 +36,48 @@ def execute_battery_setup():
             try:
                 _system_settings = json.loads(cfg.get("_SYSTEM_SETTINGS"))
                 _has_battery = device_info.bq_charger_exec(device_info.bq_charger_has_battery)
-                if _system_settings and "enableBatteryLifeOptimization" in _system_settings and _has_battery:
-                    enableBatteryLifeOptimization = _system_settings["enableBatteryLifeOptimization"]
+                if _system_settings:
+                    if "enableBatteryLifeOptimization" in _system_settings and _has_battery:
+                        enableBatteryLifeOptimization = _system_settings["enableBatteryLifeOptimization"]
 
-                    if enableBatteryLifeOptimization:
-                        logging.debug("Setting max battery charge to 3.95V")
-                        vbatt = read_battery_voltage()
+                        if enableBatteryLifeOptimization:
+                            logging.debug("Setting max battery charge to 3.95V")
+                            vbatt = read_battery_voltage()
 
-                        BAT_VOLTAGE_RESUME = 3800
-                        BAT_VOLTAGE_CUTOFF = 4000  # 3950
-                        if vbatt is not None:
-                            if vbatt <= BAT_VOLTAGE_RESUME:
-                                logging.info("Battery voltage low (%d mV), resuming charging", vbatt)
-                                device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
-                                device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
-                            elif vbatt >= BAT_VOLTAGE_CUTOFF:
-                                logging.info("Battery voltage sufficient (%d mV), stopping charging to preserve battery life", vbatt)
-                                device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
-                                device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
-                            else:
-                                logging.debug("Battery voltage at %d mV, within thresholds, no action taken", vbatt)
-                        battery_settings_applied = True
+                            BAT_VOLTAGE_RESUME = 3800
+                            BAT_VOLTAGE_CUTOFF = 4000  # 3950
+                            if vbatt is not None:
+                                if vbatt <= BAT_VOLTAGE_RESUME:
+                                    logging.info("Battery voltage low (%d mV), resuming charging", vbatt)
+                                    device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
+                                    device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
+                                elif vbatt >= BAT_VOLTAGE_CUTOFF:
+                                    logging.info("Battery voltage sufficient (%d mV), stopping charging to preserve battery life", vbatt)
+                                    device_info.bq_charger_exec(device_info.bq_charger_set_charging_off)
+                                    device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_on)
+                                else:
+                                    logging.debug("Battery voltage at %d mV, within thresholds, no action taken", vbatt)
+
+                    hasChargingMaxSetting = "enableChargingMaxAt4V" in _system_settings
+                    enableChargingMaxAt4V = _system_settings["enableChargingMaxAt4V"] if hasChargingMaxSetting else False
+
+                    # the default is 4.0V if the device does not have the setting or if it is enabled
+                    if not hasChargingMaxSetting or enableChargingMaxAt4V:
+                        logging.debug("Setting max battery charge to 4.0V")
+                        device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4000_mv)
+                    else:
+                        logging.debug("Setting max battery charge to 4.2V")
+                        device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4200_mv)
+
+                battery_settings_applied = True
+
             except Exception as e:
                 logging.exception(e, "Battery settings error")
                 battery_settings_applied = False
 
         if not battery_settings_applied:
             logging.debug("Battery settings default")
-            # device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4000_mv)
+            device_info.bq_charger_exec(device_info.bq_charger_set_max_charge_4000_mv)
             device_info.bq_charger_exec(device_info.bq_charger_set_charging_on)
             device_info.bq_charger_exec(device_info.bq_charger_set_hiz_mode_off)
     else:
