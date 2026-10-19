@@ -66,7 +66,7 @@ class HttpClient:
         def _write_headers(sock, _headers):
             headers_cont = b""
             for k in _headers:
-                headers_cont += b"{}: {}\r\n".format(k, _headers[k])
+                headers_cont += "{}: {}\r\n".format(k, _headers[k]).encode("utf-8")
             return headers_cont
 
         try:
@@ -81,7 +81,6 @@ class HttpClient:
                 import ussl
             except:
                 import ssl as ussl
-
 
             port = 443
         else:
@@ -104,10 +103,10 @@ class HttpClient:
                 s = ussl.wrap_socket(s, server_hostname=host)
             content = b""
             # s.write(b'%s /%s HTTP/1.0\r\n' % (method, path))
-            content += b"%s /%s HTTP/1.0\r\n" % (method, path)
+            content += "{} /{} HTTP/1.0\r\n".format(method, path).encode("utf-8")
             if not "Host" in headers:
                 # s.write(b'Host: %s\r\n' % host)
-                content += b"Host: %s\r\n" % host
+                content += "Host: {}\r\n".format(host).encode("utf-8")
             # Iterate over keys to avoid tuple alloc
             content += _write_headers(s, self._headers)
             content += _write_headers(s, headers)

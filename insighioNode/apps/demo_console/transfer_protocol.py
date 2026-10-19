@@ -27,11 +27,11 @@ class TransferProtocol:
         logging.info("Control packet not supported for: " + self.protocol)
         return False
 
-    def get_control_message(self):
-        return logging.info("Control packet not supported for: " + self.protocol)
+    # def get_mqtt_first_control_message(self):
+    #     return logging.info("Control packet not supported for: " + self.protocol)
 
-    def clear_retained(self, topic):
-        return logging.info("Control packet not supported for: " + self.protocol)
+    # def clear_retained(self, topic):
+    #     return logging.info("Control packet not supported for: " + self.protocol)
 
 
 class TransferProtocolModemAT(TransferProtocol):
@@ -40,12 +40,14 @@ class TransferProtocolModemAT(TransferProtocol):
         self.modem_instance = modem_instance
         self.modem_based = modem_instance is not None
 
+        self.explicit_use_mqtt = False
+
         self.is_secondary_transfer_protocol = is_secondary_transfer_protocol
 
         if not self.is_secondary_transfer_protocol:
-            self.require_message_delivery_ack = utils.get_var_from_module(self.protocol_config, "REQ_MESG_DEL_ACK")
-            if self.require_message_delivery_ack is None:
-                self.require_message_delivery_ack = True  # enable if configuration is missing
+            # self.require_message_delivery_ack = utils.get_var_from_module(self.protocol_config, "REQ_MESG_DEL_ACK")
+            # if self.require_message_delivery_ack is None:
+            #     self.require_message_delivery_ack = True  # enable if configuration is missing
             self.modem_client_id = 1
         else:
             self.require_message_delivery_ack = True
@@ -65,6 +67,7 @@ class TransferProtocolModemAT(TransferProtocol):
                     logging.exception(
                         e, "Error parsing secondary measurement transmission info, cannot connect to secondary transfer protocol"
                     )
+            logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
 
         logging.info("Initialized TransferProtocolModemAT with modem client id: {}".format(self.modem_client_id))
         logging.info("Secondary transfer protocol enabled: {}".format(self.is_secondary_transfer_protocol))
@@ -74,13 +77,21 @@ class TransferProtocolModemAT(TransferProtocol):
             )
         )
 
-        logging.debug("Enabled message delivery ack: {}".format(self.require_message_delivery_ack))
-
     def connect(self):
         if self.is_connected():
             return True
 
-        if not self.is_secondary_transfer_protocol:
+        if self.is_secondary_transfer_protocol:
+            self.connected = self.modem_instance.mqtt_connect(
+                self._secondary_protocol_info["mqtt_url"],
+                self._secondary_protocol_info["mqtt_port"],
+                self._secondary_protocol_info["mqtt_username"],
+                self._secondary_protocol_info["mqtt_password"],
+                self.protocol_config.keepalive,
+                self.protocol_config.client_name,
+                self.modem_client_id,
+            )
+        elif self.explicit_use_mqtt:
             self.connected = self.modem_instance.mqtt_connect(
                 self.protocol_config.server_ip,
                 self.protocol_config.server_port,
@@ -91,43 +102,57 @@ class TransferProtocolModemAT(TransferProtocol):
                 self.modem_client_id,
             )
         else:
-            self.connected = self.modem_instance.mqtt_connect(
-                self._secondary_protocol_info["mqtt_url"],
-                self._secondary_protocol_info["mqtt_port"],
-                self._secondary_protocol_info["mqtt_username"],
-                self._secondary_protocol_info["mqtt_password"],
-                self.protocol_config.keepalive,
-                self.protocol_config.client_name,
-                self.modem_client_id,
-            )
+            self.connected = self.modem_instance.ssl_socket_connect("console.insigh.io")
 
         return self.connected
 
     def is_connected(self):
-        self.connected = self.modem_instance.mqtt_is_connected(self.modem_client_id)
+        if self.explicit_use_mqtt:
+            self.connected = self.modem_instance.mqtt_is_connected(self.modem_client_id)
+        else:
+            self.connected = self.modem_instance.ssl_socket_is_connected()
         return self.connected
 
     def disconnect(self):
-        self.modem_instance.mqtt_disconnect(self.modem_client_id)
+        if self.explicit_use_mqtt or self.is_secondary_transfer_protocol:
+            self.modem_instance.mqtt_disconnect(self.modem_client_id)
+        else:
+            self.modem_instance.ssl_socket_close()
         self.connected = False
         logging.info("Disconnected")
 
     def send_packet(self, message, subtopic=None):
-        # transport-related functionalities
-        if not self.connected:
-            logging.info("TransferProtocol not connected")
-            return False
-
+        # the secondary protocol targets a third party broker, so it stays on MQTT
         if self.is_secondary_transfer_protocol:
+            if not self.connected:
+                logging.info("TransferProtocol not connected")
+                return False
+
             topic = self._secondary_protocol_info["mqtt_topic"]
-        else:
+            if subtopic is not None:
+                topic += subtopic
+
+            return self.modem_instance.mqtt_publish(
+                topic, message, 3, False, 1 if self.require_message_delivery_ack else 0, self.modem_client_id
+            )
+
+        if self.explicit_use_mqtt:
             topic = "channels/{}/messages/{}".format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
 
-        if subtopic is not None:
-            topic += subtopic
+            if subtopic is not None:
+                topic += subtopic
 
-        return self.modem_instance.mqtt_publish(
-            topic, message, 3, False, 1 if self.require_message_delivery_ack else 0, self.modem_client_id
+            return self.modem_instance.mqtt_publish(
+                topic, message, 3, False, 1 if self.require_message_delivery_ack else 0, self.modem_client_id
+            )
+
+        # measurements are posted over the shared SSL socket to avoid a TLS handshake per message
+        url_path = "/http/channels/{}/messages/{}".format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
+        if subtopic is not None:
+            url_path += subtopic
+
+        return self.modem_instance.http_post_with_auth_header(
+            self.protocol_config.server_ip, url_path, self.protocol_config.thing_token, message, timeout_ms=125000
         )
 
     def send_control_packet(self, message, subtopic):
@@ -141,44 +166,34 @@ class TransferProtocolModemAT(TransferProtocol):
 
         logging.info("About to send control message")
 
-        topic = "channels/{}/messages/{}{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, subtopic)
-        return self.modem_instance.mqtt_publish(topic, message)
+        if self.explicit_use_mqtt:
+            topic = "channels/{}/messages/{}{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id, subtopic)
+            return self.modem_instance.mqtt_publish(topic, message)
+        else:
+            URL_BASE = self.protocol_config.server_ip
+            URL_PATH = "/http/channels/{}/messages/{}{}".format(
+                self.protocol_config.control_channel_id, self.protocol_config.thing_id, subtopic
+            )
 
-    def send_config_packet(self, message):
-        if not self.connected:
-            logging.info("TransferProtocol not connected")
-            return False
+            return self.modem_instance.http_post_with_auth_header(
+                URL_BASE, URL_PATH, self.protocol_config.thing_token, message, timeout_ms=125000
+            )
 
-        if self.is_secondary_transfer_protocol:
-            logging.info("Config packet not supported for secondary transfer protocol")
-            return False
+    # def get_mqtt_first_control_message(self):
+    #     if not self.connected:
+    #         logging.info("TransferProtocol not connected")
+    #         return None
 
-        logging.info("About to send config message")
-        URL_base = self.protocol_config.server_ip
-        URL_PATH = "/http/channels/{}/messages/{}{}".format(
-            self.protocol_config.control_channel_id, self.protocol_config.thing_id, "/configResponse"
-        )
+    #     if self.is_secondary_transfer_protocol:
+    #         logging.info("Control packet not supported for secondary transfer protocol")
+    #         return None
 
-        post_body = [{"n": "config", "vs": message}, {"n": "e", "v": 9}]
-        return self.modem_instance.http_post_with_auth_header(
-            URL_base, URL_PATH, self.protocol_config.thing_token, post_body, timeout_ms=125000
-        )
+    #     topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+    #     return self.modem_instance.mqtt_get_message(topic, 5000)
 
-    def get_control_message(self):
-        if not self.connected:
-            logging.info("TransferProtocol not connected")
-            return None
-
-        if self.is_secondary_transfer_protocol:
-            logging.info("Control packet not supported for secondary transfer protocol")
-            return None
-
-        topic = "channels/{}/messages/{}/#".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
-        return self.modem_instance.mqtt_get_message(topic, 5000)
-
-    def clear_retained(self, topic):
-        logging.info("About to clear retained message of topic: " + topic)
-        return self.modem_instance.mqtt_publish(topic, "", 3, True)
+    # def clear_retained(self, topic):
+    #     logging.info("About to clear retained message of topic: " + topic)
+    #     return self.modem_instance.mqtt_publish(topic, "", 3, True)
 
 
 class TransferProtocolMQTT(TransferProtocol):
@@ -248,18 +263,18 @@ class TransferProtocolMQTT(TransferProtocol):
         with locks.network_transmit_mutex:
             return self.client.sendControlMessage(message, subtopic)
 
-    def get_control_message(self):
-        if not self.connected:
-            logging.info("TransferProtocol not connected")
-            return None
+    # def get_mqtt_first_control_message(self):
+    #     if not self.connected:
+    #         logging.info("TransferProtocol not connected")
+    #         return None
 
-        with locks.network_transmit_mutex:
-            return self.client.subscribe_and_get_first_message()
+    #     with locks.network_transmit_mutex:
+    #         return self.client.subscribe_and_get_first_message()
 
-    def clear_retained(self, topic):
-        logging.info("About to clear retained message of topic: " + topic)
-        with locks.network_transmit_mutex:
-            return self.client.sendMessage("", topic, True)
+    # def clear_retained(self, topic):
+    #     logging.info("About to clear retained message of topic: " + topic)
+    #     with locks.network_transmit_mutex:
+    #         return self.client.sendMessage("", topic, True)
 
 
 class TransferProtocolCoAP(TransferProtocol):
@@ -301,3 +316,50 @@ class TransferProtocolCoAP(TransferProtocol):
         self.client.postMessage(message)
         logging.info("Done.")
         return True
+
+
+class TransferProtocolHTTPS(TransferProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.protocol = "https"
+
+    def connect(self):
+        self.connected = self.is_connected()
+        return self.connected
+
+    def is_connected(self):
+        from networking import wifi
+
+        return wifi.is_connected()
+
+    def disconnect(self):
+        self.connected = False
+        logging.info("Disconnected")
+
+    def send_packet(self, message, channel=None):
+        path = "/http/channels/{}/messages/{}".format(self.protocol_config.message_channel_id, self.protocol_config.thing_id)
+        return self._post(message, path + (channel if channel is not None else ""))
+
+    def send_control_packet(self, message, subtopic):
+        path = "/http/channels/{}/messages/{}".format(self.protocol_config.control_channel_id, self.protocol_config.thing_id)
+        return self._post(message, path + subtopic)
+
+    def _post(self, message, path):
+        if not self.connected or not self.is_connected():
+            logging.info("TransferProtocol not connected")
+            return False
+
+        from utils import httpclient
+
+        url = "https://{}{}".format(self.protocol_config.server_ip, path)
+        headers = {"Authorization": self.protocol_config.thing_token, "Content-Type": "application/json"}
+        try:
+            with locks.network_transmit_mutex:
+                response = httpclient.HttpClient(headers).post(url, data=message.encode("utf-8"))
+                try:
+                    return 200 <= response.status_code < 300
+                finally:
+                    response.close()
+        except Exception as e:
+            logging.exception(e, "Failed to send HTTPS packet")
+            return False

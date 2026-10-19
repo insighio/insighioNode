@@ -77,7 +77,7 @@ def send_control_message(cfg, message, subtopic):
     logging.error("Config message not yet supported for satellite")
 
 
-def send_config_message(cfg, message):
+def send_config_message(cfg, message, code):
     logging.error("Config message not yet supported for satellite")
     return False
 

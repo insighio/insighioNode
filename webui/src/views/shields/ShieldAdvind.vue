@@ -155,6 +155,7 @@ export default {
         if (
           rowEnabled === undefined ||
           rowEnabled === null ||
+          rowEnabled === false ||
           !rowLoc ||
           rowAddress === undefined ||
           rowAddress === null

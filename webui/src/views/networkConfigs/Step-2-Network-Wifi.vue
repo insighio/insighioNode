@@ -11,15 +11,6 @@
         :colsInput="9"
         ref="passwordInput"
       />
-      <SDivider label="Generic Configuration" />
-      <SRadioGroup
-        label="Protocol"
-        v-model:value="protocol"
-        @update:value="protocol = $event"
-        :valueOptions="protocol_options"
-        :colsLabel="3"
-        :colsInput="9"
-      />
       <div class="text-normal">
         SSIDs in range:
         <button class="btn btn-primary" type="button" @click="updateWifiList()">Refresh</button>
@@ -67,30 +58,18 @@ import { fetchInternal } from "@/js/utils.js"
 
 import SDivider from "@/components/SDivider.vue"
 import SInput from "@/components/SInput.vue"
-import SRadioGroup from "@/components/SRadioGroup.vue"
 
 export default {
   name: "NetworkWifi",
   mixins: [CommonTools],
-  components: { SDivider, SInput, SRadioGroup },
+  components: { SDivider, SInput },
   data() {
     return {
       // Add your component data here
       wifi_ssid: undefined,
       wifi_pass: undefined,
-      protocol: undefined,
       wifiAvailableNets: [],
-      localLoading: false,
-      protocol_options: [
-        {
-          label: "MQTT",
-          value: "mqtt"
-        },
-        {
-          label: "CoAP",
-          value: "coap"
-        }
-      ]
+      localLoading: false
     }
   },
   mounted() {
@@ -99,7 +78,6 @@ export default {
   methods: {
     // Add your component methods here
     initializeValues() {
-      this.protocol = this.getValueWithDefaults(this.$storage.get("protocol"), "mqtt")
       this.wifi_ssid = this.$storage.get("wifi-ssid")
       this.wifi_pass = this.$storage.get("wifi-pass")
     },
@@ -121,7 +99,6 @@ export default {
       this.$storage.set("network", "wifi")
       this.$storage.set("wifi-ssid", this.wifi_ssid.trim())
       this.$storage.set("wifi-pass", this.wifi_pass ? this.wifi_pass.trim() : "")
-      this.$storage.set("protocol", this.protocol)
     },
     ssidSelected(network) {
       this.wifi_ssid = network.ssid

@@ -377,7 +377,7 @@ def bq_charger_setup(i2c, bq_addr):
 
         # Preserve the previous bq24297 fast-charge current default.
 
-        _bq_write_u8(i2c, bq_addr, 0x02, 0x20)
+        # _bq_write_u8(i2c, bq_addr, 0x02, 0x20)
     else:
         REG0x16_Charger_Control_1 = 0x16
         # DISABLE WATCHDOG or else current will be halved every 50s!!!!!!!!!
@@ -393,16 +393,18 @@ def bq_charger_setup(i2c, bq_addr):
 
 def bq_charger_set_high_charging_current(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
-        return
-    REG0x02_Charge_Current_Limit = 0x02
-    _bq_write_u16(i2c, bq_addr, REG0x02_Charge_Current_Limit, 0x0240)  # 740mA
+        _bq_write_u8(i2c, bq_addr, 0x02, 0x10)
+    else:
+        REG0x02_Charge_Current_Limit = 0x02
+        _bq_write_u16(i2c, bq_addr, REG0x02_Charge_Current_Limit, 0x0240)  # 740mA
 
 
 def bq_charger_set_low_charging_current(i2c, bq_addr):
     if _bq_get_version(i2c, bq_addr) != _CHARGER_VERSION_2:
-        return
-    REG0x02_Charge_Current_Limit = 0x02
-    _bq_write_u16(i2c, bq_addr, REG0x02_Charge_Current_Limit, 0x0100)  # 240mA
+        _bq_write_u8(i2c, bq_addr, 0x02, 0x00)
+    else:
+        REG0x02_Charge_Current_Limit = 0x02
+        _bq_write_u16(i2c, bq_addr, REG0x02_Charge_Current_Limit, 0x0100)  # 240mA
 
 
 def bq_charger_enable_adc_averaging(i2c, bq_addr):
@@ -426,6 +428,11 @@ def bq_charger_enable_adc_averaging(i2c, bq_addr):
 def bq_charger_set_max_charge_4200_mv(i2c, bq_addr):
     logging.debug("Battery: max charge 4208mV")
     _bq_set_vbat_mv(i2c, bq_addr, 4208)
+
+
+def bq_charger_set_max_charge_4000_mv(i2c, bq_addr):
+    logging.debug("Battery: max charge 4000mV")
+    _bq_set_vbat_mv(i2c, bq_addr, 4000)
 
 
 def bq_charger_set_charging_on(i2c, bq_addr):

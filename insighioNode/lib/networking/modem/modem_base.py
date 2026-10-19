@@ -102,7 +102,7 @@ class Modem:
         command = "AT+COPS=0"
 
         try:
-            #check that mcc mnc is a since integer
+            # check that mcc mnc is a since integer
             mcc_mnc = "{}".format(int(mcc_mnc))
         except:
             mcc_mnc = None
@@ -272,7 +272,7 @@ class Modem:
                         # 2: not registered, trying to register
                         # 3: registration denied
                         # 4: Unknown
-                        # 5: registed, roaming
+                        # 5: registered, roaming
                         if group_val == "1" or group_val == "5":
                             return True
                         elif group_val == "3":
@@ -399,9 +399,11 @@ class Modem:
     def _match_regex(self, regex, lines):
         import ure
 
+        regObj = ure.compile(regex)
+
         if regex is not None or lines is not None:
             for line in lines:
-                match_res = ure.search(regex, line)
+                match_res = regObj.search(line)
                 if match_res is not None:
                     return match_res
         return None
@@ -414,7 +416,7 @@ class Modem:
             self.send_at_cmd("AT+COPS=3,2")
             status, lines = self.send_at_cmd("AT+COPS?")
             if status:
-                match_res = self._match_regex(r"\+COPS:\s+\d,2,\"(\d+)\",(\d+)", lines)
+                match_res = self._match_regex('\\+COPS:\\s+\\d,2,"(\\d+)",(\\d+)', lines)
                 if match_res is not None:
                     try:
                         self.mcc = int(match_res.group(1)[0:3])
@@ -430,7 +432,7 @@ class Modem:
 
         status, lines = self.send_at_cmd("at+cimi")
         if status:
-            match_res = self._match_regex(r"(\d+)", lines)
+            match_res = self._match_regex("(\\d+)", lines)
             if match_res is not None:
                 self.sim_imsi = match_res.group(1)
 
@@ -441,7 +443,7 @@ class Modem:
 
         status, lines = self.send_at_cmd("at+gsn")
         if status:
-            match_res = self._match_regex(r"(\d+)", lines)
+            match_res = self._match_regex("(\\d+)", lines)
             if match_res is not None:
                 self.modem_imei = match_res.group(1)
 
@@ -473,14 +475,17 @@ class Modem:
             responseLines = ["error: invalid uart"]
             return (status, responseLines)
 
-        # clear incoming message buffer
-        while self.uart.any():
-            self.uart.readline()
+        if command:
+            while self.uart.any():
+                self.uart.readline()
 
-        logging.debug("> " + command)
-        write_success = self.uart.write(command + "\r\n")
-        if not write_success:
-            return (status, ["error: can not send command"])
+            logging.debug("> " + command)
+            write_success = self.uart.write(command + "\r\n")
+            if not write_success:
+                return (status, ["error: can not send command"])
+        else:
+            # used to read URC messages
+            pass
 
         start_timestamp = ticks_ms()
         timeout_timestamp = ticks_add(start_timestamp, timeoutms)

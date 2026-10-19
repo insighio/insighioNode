@@ -2,7 +2,7 @@
   <div class="container ui-mb-1">
     <div :class="'columns col-' + colsSum + ' ui-pr-0 ui-pl-0'">
       <div :class="'column col-' + colsLabel + ' col-sm-12'">
-        <label class="form-label">
+        <label class="form-label" :for="controlId">
           {{ label }}
           <button v-if="tooltip" class="btn btn-link tooltip" :data-tooltip="tooltip">
             <i class="icon icon-flag"></i>
@@ -11,7 +11,7 @@
       </div>
       <div :class="'column col-' + colsInput + ' col-sm-12'">
         <input
-          :id="label"
+          :id="controlId"
           :disabled="disabled"
           :type="inputType"
           class="form-input constr-field"

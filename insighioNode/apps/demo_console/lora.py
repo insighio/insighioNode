@@ -28,7 +28,7 @@ def update_hw_ids(measurements, is_senml=True, is_json=False):
 def connect(cfg):
     # network connectivity & transmission
     logging.info("Joining network...")
-    (joinOk, join_duration) = lora.join(cfg.get_cfg_module(), lora.set_keys(cfg.get_cfg_module()))
+    joinOk, join_duration = lora.join(cfg.get_cfg_module(), lora.set_keys(cfg.get_cfg_module()))
     results = {}
     results["status"] = {"value": joinOk}
 
@@ -82,7 +82,7 @@ def send_control_message(cfg, message, subtopic):
     logging.error("Config message not yet supported for LoRA")
 
 
-def send_config_message(cfg, message):
+def send_config_message(cfg, message, code):
     logging.error("Config message not yet supported for LoRA")
     return False
 

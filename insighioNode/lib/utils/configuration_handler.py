@@ -59,7 +59,6 @@ configDict = {
     "_APN": "cell_apn",
     "_APP_EUI": "lora_app_eui",
     "_APP_KEY": "lora_app_key",
-    "_BAND": "cell_band",
     "_BATCH_UPLOAD_MESSAGE_BUFFER": "batch_upload_buffer_size",
     "_BOARD_TYPE": "selected_board",
     "_CELLULAR_TECHNOLOGY": "cell_tech",
@@ -264,6 +263,8 @@ def get_config_values(fillWithUndefinedIfNotExists=True, prepareForInternalUse=F
 
 
 def get_URI_param():
+    from external.microUrllib import parse
+
     configDict = get_config_values(False)
 
     uri_str = ""
@@ -271,7 +272,7 @@ def get_URI_param():
         for key in configDict.keys():
             if uri_str != "":
                 uri_str += "&"
-            uri_str += "{}={}".format(key.replace("_", "-"), configDict[key])
+            uri_str += "{}={}".format(key.replace("_", "-"), parse.quote(str(configDict[key])))
 
         return uri_str
     except Exception as e:
@@ -429,7 +430,19 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         contents += "\n" + get_file_config(app_path + "/templ/protocol_config_templ.py", keyValuePairDictionary)
 
     # create new
-    utils.writeToFile(config_file_explicit, contents)
+    temp_config_to_test = config_file_explicit.replace(".py", "_test.py")
+    utils.writeToFile(temp_config_to_test, contents)
+
+    try:
+        # try to import file, if import fails, the file is considered invalid
+        utils.importAndExecute(temp_config_to_test)
+        logging.debug("Configuration test passed for file: " + temp_config_to_test)
+    except Exception as e:
+        logging.exception(e, "error testing configuration")
+        return False
+
+    # delete the temporary test configuration file
+    utils.renameFile(temp_config_to_test, config_file_explicit)
 
     utils.clearCachedStates()
 
@@ -437,3 +450,4 @@ def apply_configuration(keyValuePairDictionary, config_file_explicit=config_file
         utils.requestFileSystemOptimization()
 
     gc.collect()
+    return True

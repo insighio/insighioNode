@@ -472,16 +472,7 @@ def executeDeviceConfigurationUpload(cfg, network):
     logging.debug("configUploadFileContent: {}".format(configUploadFileContent))
     if configUploadFileContent:
         logging.info("New configuration found, about to upload it.")
-        # from utils import configuration_handler
-
-        # configuration_handler.notifyServerWithNewConfig()
-
-        # message_sent = network.send_control_message(
-        #     cfg,
-        #     '[{"n":"config","vs":"' + configUploadFileContent + '"}]',
-        #     "/configResponse",
-        # )
-        message_sent = network.send_config_message(cfg, configUploadFileContent)
+        message_sent = network.send_config_message(cfg, configUploadFileContent, 9)
         if message_sent:
             utils.deleteFlagFile("/configLog")
 

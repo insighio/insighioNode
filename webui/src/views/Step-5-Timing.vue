@@ -36,7 +36,7 @@
             <div class="form-group columns">
               <div class="column col-1 col-mr-auto"></div>
               <div class="column col-3 col-sm-12">
-                <label class="form-label" for="measurements">Estimated Upload Period</label>
+                <span class="form-label">Estimated Upload Period</span>
               </div>
               <div class="column col-3 col-sm-12">
                 <span> {{ timing_period }} </span> s <i class="icon icon-arrow-right"></i>
@@ -54,13 +54,13 @@
                 <label class="form-label" for="input-scheduled-time-a">A:</label>
               </div>
               <div class="column col-3 col-sm-12">
-                <input type="time" name="appt" value="05:30" />
+                <input id="input-scheduled-time-a" type="time" name="appt" value="05:30" />
               </div>
               <div class="column col-1 col-sm-12">
                 <label class="form-label" for="input-scheduled-time-b">B:</label>
               </div>
               <div class="column col-3 col-sm-12">
-                <input type="time" name="appt" value="21:30" />
+                <input id="input-scheduled-time-b" type="time" name="appt" value="21:30" />
               </div>
               <div class="column col-6 col-mr-auto"></div>
             </div>

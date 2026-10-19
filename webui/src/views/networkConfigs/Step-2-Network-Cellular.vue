@@ -99,15 +99,6 @@
       <SDivider label="Generic Configuration" />
 
       <SRadioGroup
-        label="Protocol"
-        v-model:value="protocol"
-        @update:value="protocol = $event"
-        :valueOptions="protocol_options"
-        :colsLabel="3"
-        :colsInput="9"
-      />
-
-      <SRadioGroup
         label="IP version"
         v-model:value="ipversion"
         @update:value="ipversion = $event"
@@ -278,11 +269,9 @@ export default {
   data() {
     return {
       // Add your component data here
-      protocol: "mqtt",
       ipversion: "IP",
       cell_tech: "NBIoT",
       cell_apn: "iot.1nce.net",
-      cell_band: 20,
       cell_mcc_mnc: "20201",
       cell_mcc_mnc_enabled: false,
       cell_tech_options: [
@@ -290,16 +279,6 @@ export default {
         { value: "NBIoT", label: "NBIoT" },
         { value: "LTE-M", label: "LTE-M" },
         { value: "auto", label: "auto" }
-      ],
-      protocol_options: [
-        {
-          label: "MQTT",
-          value: "mqtt"
-        },
-        {
-          label: "CoAP",
-          value: "coap"
-        }
       ],
       ipversion_options: [
         {
@@ -341,12 +320,10 @@ export default {
   },
   methods: {
     initializeValues() {
-      this.protocol = this.getValueWithDefaults(this.$storage.get("protocol"), "mqtt")
       this.ipversion = this.getValueWithDefaults(this.$storage.get("ipversion"), "IP")
 
       this.cell_tech = this.getValueWithDefaults(this.$storage.get("cell-tech"), "NBIoT")
       this.cell_apn = this.getValueWithDefaults(this.$storage.get("cell-apn"), "iot.1nce.net")
-      this.cell_band = this.getValueWithDefaults(this.$storage.get("cell-band"), 20)
 
       let mccMncValue = this.$storage.get("cell-mcc-mnc")
       if (mccMncValue !== undefined && mccMncValue !== null && mccMncValue.trim() !== "") {
@@ -517,8 +494,6 @@ export default {
       this.$storage.set("network", "cellular")
       this.$storage.set("cell-tech", this.cell_tech)
       this.$storage.set("cell-apn", this.cell_apn.trim())
-      this.$storage.set("cell-band", this.cell_band)
-      this.$storage.set("protocol", this.protocol)
       this.$storage.set("ipversion", this.ipversion)
       if (this.cell_mcc_mnc_enabled) {
         this.$storage.set("cell-mcc-mnc", this.cell_mcc_mnc)

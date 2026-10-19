@@ -18,10 +18,11 @@ def execute(useExistingConfiguration=False):
     cfg.set("_SECRET_KEY", "000000000000000000000")
 
     headers = {"Authorization": cfg.get("_SECRET_KEY"), "accept": "application/json"}
-    URL_base = "console.insigh.io"
+    URL_BASE = "console.insigh.io"
     URL_PATH = "/things/bootstrap/{}".format(_DEVICE_ID)
-    url = "{}://{}{}".format("http" if device_info.get_hw_module_verison() == "esp32wroom" else "https", URL_base, URL_PATH)
+    url = "{}://{}{}".format("http" if device_info.get_hw_module_verison() == "esp32wroom" else "https", URL_BASE, URL_PATH)
 
+    response = None
     try:
         from utils import httpclient
 
@@ -95,22 +96,26 @@ def execute(useExistingConfiguration=False):
 
                 logging.info("about to apply: {}".format(keyValueDict))
                 configuration_handler.notifyServerWithNewConfig()
-                configuration_handler.apply_configuration(keyValueDict)
+                conf_status = configuration_handler.apply_configuration(keyValueDict)
+                if conf_status:
+                    logging.info("about to reboot to apply new config")
+                    from machine import reset
 
-                logging.info("about to reboot to apply new config")
-                from machine import reset
-
-                reset()
+                    reset()
+                else:
+                    logging.error("Failed to apply new configuration")
 
                 return resp
             except Exception as e:
                 logging.exception(e, " error reading response")
     except Exception as e:
         logging.exception(e, "error trying to execute bootstrap HTTP GET")
+    finally:
+        if response:
+            response.close()
+        utils.deleteModule("utils.httpclient")
 
     network.deinit()
-
-    utils.deleteModule("utils.httpclient")
 
     logging.error("failed to execute bootstrap")
     return False
