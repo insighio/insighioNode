@@ -268,7 +268,7 @@ class ModemConnectionInfo:
 
         cfg = DummyCfg()
         print("_CELLULAR_MCC_MNC: {}".format(cfg._CELLULAR_MCC_MNC))
-        status, activation_duration, attachment_duration, connection_duration = cellular.connect(cfg)
+        status, init_duration, activation_duration, attachment_duration, connection_duration = cellular.connect(cfg)
 
         rssi = None
         rsrp = None

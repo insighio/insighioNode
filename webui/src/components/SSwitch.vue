@@ -2,12 +2,11 @@
   <div class="container ui-mb-1">
     <div :class="'columns col-' + colsSum + ' ui-pr-0 ui-pl-0'">
       <div :class="'column col-' + colsLabel + ' col-sm-12'">
-        <label class="form-label" :for="controlId"
-          >{{ label }}
-          <button v-if="tooltip" class="btn btn-link tooltip" :data-tooltip="tooltip">
-            <i class="icon icon-flag"></i>
-          </button>
-        </label>
+        <label class="form-label" :for="controlId">{{ label }} </label>
+        <details v-if="tooltip" class="field-help">
+          <summary :aria-label="`Help for ${label}`">More info</summary>
+          <p>{{ tooltip }}</p>
+        </details>
       </div>
       <div :class="'column col-' + colsInput + ' col-sm-12'">
         <label class="form-switch">

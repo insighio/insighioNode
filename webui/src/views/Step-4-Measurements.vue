@@ -28,13 +28,9 @@
               </div>
 
               <SDivider label="Explicit key-values" />
-              <div class="accordion col-12">
-                <input type="checkbox" id="accordion-1" name="accordion-checkbox" hidden />
-                <label class="accordion-header" for="accordion-1">
-                  <i class="icon icon-arrow-right mr-1"></i>
-                  Explicit key-values
-                </label>
-                <div class="accordion-body">
+              <details class="configuration-section col-12">
+                <summary>Explicit key-values</summary>
+                <div class="section-body">
                   <div class="columns">
                     <div class="column col-12">
                       <table class="table">
@@ -43,7 +39,11 @@
                             <th>Key</th>
                             <th>Value</th>
                             <th>
-                              <button class="btn btn-primary" @click="keyValuePairs.push({ key: '', value: '' })">
+                              <button
+                                class="btn btn-primary"
+                                aria-label="Add key-value pair"
+                                @click="keyValuePairs.push({ key: '', value: '' })"
+                              >
                                 <i class="icon icon-plus"></i>
                               </button>
                             </th>
@@ -55,6 +55,8 @@
                               <input
                                 type="text"
                                 :id="`key-${index}`"
+                                :aria-label="`Key ${index + 1}`"
+                                class="form-input"
                                 v-model="pair.key"
                                 placeholder="key name"
                                 style="width: 100%"
@@ -64,13 +66,19 @@
                               <input
                                 type="text"
                                 :id="`value-${index}`"
+                                :aria-label="`Value ${index + 1}`"
+                                class="form-input"
                                 v-model="pair.value"
                                 placeholder="key value"
                                 style="width: 100%"
                               />
                             </td>
                             <td>
-                              <button class="btn btn-primary" @click="keyValuePairs.splice(index, 1)">
+                              <button
+                                class="btn btn-primary"
+                                :aria-label="`Remove key-value pair ${index + 1}`"
+                                @click="keyValuePairs.splice(index, 1)"
+                              >
                                 <i class="icon icon-delete"></i>
                               </button>
                             </td>
@@ -80,17 +88,13 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </details>
 
               <SDivider label="Advanced System Settings" />
-              <div class="accordion col-12">
-                <input type="checkbox" id="accordion-2" name="accordion-checkbox" hidden />
-                <label class="accordion-header" for="accordion-2">
-                  <i class="icon icon-arrow-right mr-1"></i>
-                  System
-                </label>
-                <div class="accordion-body">
-                  <div class="columns col-12" style="margin: 10px">
+              <details class="configuration-section col-12">
+                <summary>System</summary>
+                <div class="section-body">
+                  <div class="columns">
                     <SSwitch label="LED notifications" v-model:value="ledEnabled" />
                     <SSwitch label="OTA enabled" v-model:value="otaEnabled" />
                     <SSelect
@@ -120,19 +124,16 @@
                     />
                   </div>
                 </div>
-              </div>
+              </details>
 
               <SDivider label="Shield Selection" />
 
               <div class="column col-12">
                 <ul class="tab tab-block">
-                  <li
-                    v-for="(tab, index) in tabs"
-                    :key="index"
-                    :class="['tab-item', { active: activeTab === tab.id }]"
-                    @click="changeTab(tab.id)"
-                  >
-                    <a class="pointer">{{ tab.label }}</a>
+                  <li v-for="(tab, index) in tabs" :key="index" :class="['tab-item', { active: activeTab === tab.id }]">
+                    <button type="button" :aria-pressed="activeTab === tab.id" @click="changeTab(tab.id)">
+                      {{ tab.label }}
+                    </button>
                   </li>
                 </ul>
               </div>

@@ -5,17 +5,45 @@
     <div class="container grid-lg ui-mt-1">
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
-          <div class="btn-group btn-group-block img-center">
-            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('wifi')">
+          <div
+            class="btn-group btn-group-block img-center network-options"
+            role="group"
+            aria-label="Network technology"
+          >
+            <button
+              class="btn"
+              :class="{ 'btn-primary': evaluatedNetwork === 'wifi' }"
+              :aria-pressed="evaluatedNetwork === 'wifi'"
+              :disabled="disableButtons || noNetworkSelected"
+              @click="operationSelected('wifi')"
+            >
               WiFi
             </button>
-            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('cellular')">
+            <button
+              class="btn"
+              :class="{ 'btn-primary': evaluatedNetwork === 'cellular' }"
+              :aria-pressed="evaluatedNetwork === 'cellular'"
+              :disabled="disableButtons || noNetworkSelected"
+              @click="operationSelected('cellular')"
+            >
               Cellular
             </button>
-            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('lora')">
+            <button
+              class="btn"
+              :class="{ 'btn-primary': evaluatedNetwork === 'lora' }"
+              :aria-pressed="evaluatedNetwork === 'lora'"
+              :disabled="disableButtons || noNetworkSelected"
+              @click="operationSelected('lora')"
+            >
               LoRa
             </button>
-            <button class="btn" :disabled="disableButtons || noNetworkSelected" @click="operationSelected('satellite')">
+            <button
+              class="btn"
+              :class="{ 'btn-primary': evaluatedNetwork === 'satellite' }"
+              :aria-pressed="evaluatedNetwork === 'satellite'"
+              :disabled="disableButtons || noNetworkSelected"
+              @click="operationSelected('satellite')"
+            >
               Satellite
             </button>
           </div>
@@ -92,29 +120,6 @@ export default {
 
       this.activeNetwork = this.$storage.get("network")
       this.noNetworkSelected = this.activeNetwork === undefined || this.activeNetwork === null
-
-      // Highlight the corresponding button based on activeNetwork value
-      this.$nextTick(() => {
-        if (this.activeNetwork) {
-          const buttons = this.$el.querySelectorAll(".btn-group .btn")
-          buttons.forEach((btn) => btn.classList.remove("btn-primary"))
-
-          const networkMap = {
-            wifi: "WiFi",
-            cellular: "Cellular",
-            lora: "LoRa",
-            satellite: "Satellite"
-          }
-
-          const targetText = networkMap[this.activeNetwork.toLowerCase()]
-          if (targetText) {
-            const targetButton = Array.from(buttons).find((btn) => btn.textContent.trim() === targetText)
-            if (targetButton) {
-              targetButton.classList.add("btn-primary")
-            }
-          }
-        }
-      })
     },
 
     operationSelected(operationName) {

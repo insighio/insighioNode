@@ -1,26 +1,39 @@
 <template>
-  <div>
+  <div class="device-configurator">
+    <a class="skip-link" href="#configuration-content">Skip to configuration</a>
     <div class="header-container">
       <div class="container">
         <div class="columns">
           <div class="column col-10">
-            <img src="@/assets/img/logo.png" class="img-responsive px-2" />
+            <img src="@/assets/img/logo.png" class="img-responsive brand-mark" alt="insigh.io" />
           </div>
           <div class="column col-2" style="display: flex; justify-content: flex-end; align-items: center">
             <!-- Settings Button and Menu -->
             <div class="settings-container" :style="{ height: '100%', margin: '0' }" v-if="tabActive > 0">
               <button
                 class="btn settings-btn"
-                :style="{ height: '100%', margin: '0' }"
+                type="button"
+                aria-controls="device-actions"
+                :aria-expanded="showSettingsMenu"
                 @click="toggleSettingsMenu"
+                @keydown.down.prevent="focusFirstSetting"
                 ref="settingsButton"
               >
-                <!--i class="icon icon-more-vert"></i-->
-                <i class="icon icon-menu"></i>
+                <i class="icon icon-menu" aria-hidden="true"></i>
+                <span>Device actions</span>
               </button>
             </div>
           </div>
-          <div v-if="showSettingsMenu" class="settings-menu" @click.stop>
+          <div
+            v-if="showSettingsMenu"
+            id="device-actions"
+            ref="settingsMenu"
+            class="settings-menu"
+            role="group"
+            aria-label="Device actions"
+            @click.stop
+            @keydown.esc.stop.prevent="closeSettingsMenu"
+          >
             <button class="btn btn-link menu-item" @click="downloadMeasurements">
               <i class="icon icon-download" style="margin-right: 5px"></i>Download Measurements
             </button>
@@ -47,7 +60,7 @@
               <i class="icon icon-shutdown" style="margin-right: 5px"></i>Reboot
             </button>
             <div class="menu-separator"></div>
-            <button class="btn btn-link menu-item" @click="showFactoryResetConfirm = true">
+            <button class="btn btn-link menu-item text-error" @click="doShowFactoryResetConfirm">
               <i class="icon icon-cross" style="margin-right: 5px"></i>Factory Reset
             </button>
             <div class="menu-separator"></div>
@@ -56,18 +69,30 @@
       </div>
     </div>
 
-    <div class="panel panel-custom">
-      <div class="columns">
-        <div class="panel-nav col-12 hide-sm ui-pt-1">
-          <div class="toast" v-if="showToast">{{ toastMessage }}</div>
-
-          <ul class="step">
-            <li v-for="tab in tabs" class="step-item" :key="tab" :class="{ active: tabActive === tabs.indexOf(tab) }">
-              <a>{{ tab }}</a>
-            </li>
-          </ul>
-        </div>
-      </div>
+    <div class="toast status-toast" role="status" aria-live="polite" v-if="showToast">{{ toastMessage }}</div>
+    <main id="configuration-content" class="panel panel-custom" tabindex="-1">
+      <nav class="wizard-progress" aria-label="Configuration progress">
+        <ol class="wizard-steps">
+          <li
+            v-for="(step, index) in visibleSteps"
+            :key="step.index"
+            :class="{ 'is-current': tabActive === step.index, 'is-complete': tabActive > step.index }"
+            :aria-current="tabActive === step.index ? 'step' : undefined"
+          >
+            <span class="step-number" aria-hidden="true">{{ index + 1 }}</span>
+            <span>{{ step.label }}</span>
+            <span class="sr-only" v-if="tabActive > step.index"> (completed)</span>
+          </li>
+        </ol>
+        <p class="mobile-progress">
+          Step {{ currentStepNumber }} of {{ visibleSteps.length }} . {{ currentStepLabel }}
+        </p>
+      </nav>
+      <header class="step-heading">
+        <p class="eyebrow">Device configurator</p>
+        <h1 ref="stepHeading" tabindex="-1">{{ currentStepLabel }}</h1>
+        <p>{{ stepDescription }}</p>
+      </header>
 
       <div>
         <Step1Login v-if="tabActive === 0" :key="'step1-' + configVersion" @goNext="goToNextStep" />
@@ -110,13 +135,13 @@
         />
         <Step7Apply v-else-if="tabActive === 6" :key="'step7-' + configVersion" @start-over="goToStart" />
       </div>
-    </div>
+    </main>
 
-    <div v-if="showRebootConfirm" class="modal active">
-      <div class="modal-overlay" @click="showRebootConfirm = false"></div>
+    <div v-if="showRebootConfirm" class="modal active" role="dialog" aria-modal="true" aria-labelledby="reboot-title">
+      <div class="modal-overlay" @click="closeActiveDialog"></div>
       <div class="modal-container">
         <div class="modal-header">
-          <div class="modal-title h5">Confirm Device Reboot</div>
+          <div id="reboot-title" class="modal-title h5">Confirm Device Reboot</div>
         </div>
         <div class="modal-body">
           <p>
@@ -134,11 +159,17 @@
     </div>
 
     <!-- Factory Reset Confirmation Modal -->
-    <div v-if="showFactoryResetConfirm" class="modal active">
-      <div class="modal-overlay" @click="showFactoryResetConfirm = false"></div>
+    <div
+      v-if="showFactoryResetConfirm"
+      class="modal active"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reset-title"
+    >
+      <div class="modal-overlay" @click="closeActiveDialog"></div>
       <div class="modal-container">
         <div class="modal-header">
-          <div class="modal-title h5">Confirm Factory Reset</div>
+          <div id="reset-title" class="modal-title h5">Confirm Factory Reset</div>
         </div>
         <div class="modal-body">
           <p>
@@ -156,17 +187,18 @@
     </div>
 
     <!-- OTA Upload Modal -->
-    <div v-if="showOTAUploadModal" class="modal active">
+    <div v-if="showOTAUploadModal" class="modal active" role="dialog" aria-modal="true" aria-labelledby="ota-title">
       <div class="modal-overlay" @click="closeOTAModal"></div>
       <div class="modal-container">
         <div class="modal-header">
-          <div class="modal-title h5">Upload OTA Package</div>
+          <div id="ota-title" class="modal-title h5">Upload OTA Package</div>
         </div>
         <div class="modal-body">
           <p>Select a .tar OTA package file to upload (max 500KB).</p>
           <div class="form-group">
             <input
               type="file"
+              aria-label="OTA package (.tar)"
               ref="otaFileInput"
               @change="handleFileSelect"
               accept=".tar"
@@ -178,12 +210,20 @@
             <p><strong>File:</strong> {{ selectedFile.name }}</p>
             <p><strong>Size:</strong> {{ formatFileSize(selectedFile.size) }}</p>
           </div>
-          <div v-if="uploadError" class="toast toast-error">
+          <div v-if="uploadError" class="toast toast-error" role="alert">
             {{ uploadError }}
           </div>
           <div v-if="uploadProgress > 0 && uploadProgress < 100" class="upload-progress">
             <div class="bar">
-              <div class="bar-item" :style="{ width: uploadProgress + '%' }" role="progressbar"></div>
+              <div
+                class="bar-item"
+                :style="{ width: uploadProgress + '%' }"
+                role="progressbar"
+                aria-label="OTA upload"
+                :aria-valuenow="uploadProgress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
             </div>
             <p>Uploading: {{ uploadProgress }}%</p>
           </div>
@@ -202,17 +242,24 @@
     </div>
 
     <!-- Import Configuration Modal -->
-    <div v-if="showImportConfigModal" class="modal active">
+    <div
+      v-if="showImportConfigModal"
+      class="modal active"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="import-title"
+    >
       <div class="modal-overlay" @click="closeImportConfigModal"></div>
       <div class="modal-container">
         <div class="modal-header">
-          <div class="modal-title h5">Import Configuration</div>
+          <div id="import-title" class="modal-title h5">Import Configuration</div>
         </div>
         <div class="modal-body">
           <p>Select a configuration file (.py) to import settings.</p>
           <div class="form-group">
             <input
               type="file"
+              aria-label="Configuration file (.py)"
               ref="configFileInput"
               @change="handleConfigFileSelect"
               accept=".py"
@@ -225,12 +272,20 @@
             <p><strong>File:</strong> {{ selectedConfigFile.name }}</p>
             <p><strong>Size:</strong> {{ formatFileSize(selectedConfigFile.size) }}</p>
           </div>
-          <div v-if="importError" class="toast toast-error">
+          <div v-if="importError" class="toast toast-error" role="alert">
             {{ importError }}
           </div>
           <div v-if="importProgress > 0 && importProgress < 100" class="upload-progress">
             <div class="bar">
-              <div class="bar-item" :style="{ width: importProgress + '%' }" role="progressbar"></div>
+              <div
+                class="bar-item"
+                :style="{ width: importProgress + '%' }"
+                role="progressbar"
+                aria-label="Configuration import"
+                :aria-valuenow="importProgress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
             </div>
             <p>Importing: {{ importProgress }}%</p>
           </div>
@@ -245,7 +300,7 @@
     </div>
 
     <!-- Settings Synchronization Loading Overlay -->
-    <div v-if="isSynchingSettings" class="modal active">
+    <div v-if="isSynchingSettings" class="modal active" role="status" aria-live="polite">
       <div class="modal-overlay"></div>
       <div class="modal-container" style="background: transparent; box-shadow: none">
         <div class="modal-body" style="text-align: center; background: white; border-radius: 0.5rem; padding: 2rem">
@@ -289,6 +344,7 @@ export default {
       tabActive: -1,
       networkTech: "",
       showSettingsMenu: false,
+      dialogTrigger: null,
       showFactoryResetConfirm: false,
       showRebootConfirm: false,
       isResetting: false,
@@ -312,6 +368,64 @@ export default {
       isSynchingSettings: false // Loading state for settings synchronization
     }
   },
+  computed: {
+    activeDialog() {
+      if (this.showRebootConfirm) return "showRebootConfirm"
+      if (this.showFactoryResetConfirm) return "showFactoryResetConfirm"
+      if (this.showOTAUploadModal) return "showOTAUploadModal"
+      if (this.showImportConfigModal) return "showImportConfigModal"
+      return null
+    },
+    isDialogBusy() {
+      return this.isRebooting || this.isResetting || this.isUploading || this.isImporting
+    },
+    visibleSteps() {
+      return this.tabs
+        .map((label, index) => ({
+          label: index === 2 && this.networkTech === "lora" ? "LoRa Keys" : label,
+          index
+        }))
+        .filter((step) => !(step.index === 2 && this.networkTech === "satellite"))
+    },
+    currentStepNumber() {
+      return this.visibleSteps.findIndex((step) => step.index === this.tabActive) + 1
+    },
+    currentStepLabel() {
+      return this.visibleSteps.find((step) => step.index === this.tabActive)?.label || "Device setup"
+    },
+    stepDescription() {
+      return [
+        "Sign in to configure your device.",
+        "Choose how your device connects and sends data.",
+        "Set the credentials used to send your measurements.",
+        "Choose your sensors and the measurements to collect.",
+        "Set when measurements are taken and uploaded.",
+        "Review your settings before applying them to the device.",
+        "Save your configuration and restart the device."
+      ][this.tabActive]
+    }
+  },
+  watch: {
+    activeDialog(value) {
+      if (value) this.dialogTrigger = document.activeElement
+      this.$nextTick(() => {
+        if (value) {
+          this.$el.querySelector('[role="dialog"] .modal-footer button:last-child')?.focus()
+        } else if (this.dialogTrigger?.isConnected) {
+          this.dialogTrigger.focus()
+        } else {
+          this.$refs.settingsButton?.focus()
+        }
+      })
+    },
+    tabActive() {
+      this.showSettingsMenu = false
+      this.$nextTick(() => {
+        this.$refs.stepHeading?.focus({ preventScroll: true })
+        window.scrollTo({ top: 0, behavior: "instant" })
+      })
+    }
+  },
   mounted() {
     let storedActiveTab = this.$storage.get("activeTab")
 
@@ -326,11 +440,45 @@ export default {
 
     // Close settings menu when clicking outside
     document.addEventListener("click", this.handleOutsideClick)
+    document.addEventListener("focusin", this.handleOutsideClick)
+    document.addEventListener("keydown", this.handleDialogKeydown)
   },
   beforeUnmount() {
     document.removeEventListener("click", this.handleOutsideClick)
+    document.removeEventListener("focusin", this.handleOutsideClick)
+    document.removeEventListener("keydown", this.handleDialogKeydown)
   },
   methods: {
+    closeActiveDialog() {
+      if (!this.activeDialog || this.isDialogBusy) return
+      if (this.showOTAUploadModal) this.closeOTAModal()
+      else if (this.showImportConfigModal) this.closeImportConfigModal()
+      else this[this.activeDialog] = false
+    },
+    handleDialogKeydown(event) {
+      if (!this.activeDialog) return
+      if (event.key === "Escape") {
+        event.preventDefault()
+        this.closeActiveDialog()
+      }
+      if (event.key !== "Tab") return
+      const controls = Array.from(
+        this.$el.querySelectorAll(
+          '[role="dialog"] button:not(:disabled), [role="dialog"] input:not(:disabled), [role="dialog"] select:not(:disabled)'
+        )
+      ).filter((control) => control.getClientRects().length)
+      const first = controls[0]
+      const last = controls[controls.length - 1]
+      if (!first) {
+        event.preventDefault()
+      } else if (event.shiftKey && (document.activeElement === first || !controls.includes(document.activeElement))) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || !controls.includes(document.activeElement))) {
+        event.preventDefault()
+        first.focus()
+      }
+    },
     async goToNextStep() {
       // if tabActive is 0 (login page) and goToNextStep is called,
       // get the settings of the device.
@@ -407,8 +555,16 @@ export default {
     toggleSettingsMenu() {
       this.showSettingsMenu = !this.showSettingsMenu
     },
+    focusFirstSetting() {
+      this.showSettingsMenu = true
+      this.$nextTick(() => this.$refs.settingsMenu?.querySelector("button")?.focus())
+    },
+    closeSettingsMenu() {
+      this.showSettingsMenu = false
+      this.$refs.settingsButton?.focus()
+    },
     handleOutsideClick(event) {
-      if (!this.$refs.settingsButton || !this.$refs.settingsButton.contains(event.target)) {
+      if (!this.$refs.settingsButton?.contains(event.target) && !this.$refs.settingsMenu?.contains(event.target)) {
         this.showSettingsMenu = false
       }
     },
@@ -594,6 +750,10 @@ export default {
     },
     doShowRebootConfirm() {
       this.showRebootConfirm = true
+      this.showSettingsMenu = false
+    },
+    doShowFactoryResetConfirm() {
+      this.showFactoryResetConfirm = true
       this.showSettingsMenu = false
     },
     doUploadOTA() {
@@ -931,6 +1091,9 @@ export default {
   font-size: 0.8rem;
   padding: 0.4rem 0.8rem;
   border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .settings-menu {
@@ -943,6 +1106,9 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   min-width: 200px;
+  max-width: calc(100vw - 2rem);
+  max-height: 75vh;
+  overflow-y: auto;
   margin-top: 0.25rem;
 }
 
@@ -956,6 +1122,8 @@ export default {
   color: #333;
   text-decoration: none;
   transition: background-color 0.2s;
+  height: auto;
+  white-space: normal;
 }
 
 .menu-item:hover {
@@ -990,8 +1158,7 @@ export default {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .header-container {
-    flex-direction: column;
-    align-items: center;
+    align-items: stretch;
   }
 
   /* .settings-container {
@@ -999,9 +1166,8 @@ export default {
   } */
 
   .settings-menu {
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 0;
+    width: 18rem;
   }
 }
 

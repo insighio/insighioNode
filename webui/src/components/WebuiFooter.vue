@@ -1,9 +1,9 @@
 <template>
-  <div class="column col-12 ui-mb-3 ui-mt-2">
-    <button v-if="showSaveButton" class="btn btn-primary float-right" @click="savePressed()" style="margin-left: 30px">
-      Save
+  <div class="column col-12 wizard-actions">
+    <button v-if="showBackButton" class="btn" type="button" @click="backPressed()">Back</button>
+    <button v-if="showSaveButton" class="btn btn-primary" type="button" @click="savePressed()">
+      Save &amp; continue <i class="icon icon-arrow-right" aria-hidden="true"></i>
     </button>
-    <button v-if="showBackButton" class="btn btn-primary float-right" type="button" @click="backPressed()">Back</button>
   </div>
 </template>
 
