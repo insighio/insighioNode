@@ -2,47 +2,67 @@
   <div class="form-group columns">
     <SDivider label="SDI12" />
     <div class="column col-12 ui-option-area">
-      <table class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th>Index</th>
-            <th>Sensor ID</th>
-            <th>Board Location</th>
-            <!--th>Active</th-->
-            <th>
-              <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">
-                <i class="icon icon-plus"></i>
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in sdi12Rows" :key="index">
-            <td>{{ "SDI-12 n." + (index + 1) }}</td>
-            <td>
-              <select :id="`sdi12-sensorId-${index}`" class="form-select" v-model="row.sensorId">
-                <option v-for="opt in sdi12SensorIdOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-              </select>
-            </td>
-            <td>
-              <select :id="`sdi12-boardLocation-${index}`" class="form-select" v-model="row.boardLocation">
-                <option v-for="opt in sdi12LocationOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-              </select>
-            </td>
-            <!--td>
+      <div
+        class="table-scroll"
+        tabindex="0"
+        role="region"
+        aria-label="SDI12 sensors, scroll horizontally for all fields"
+      >
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Index</th>
+              <th>Sensor ID</th>
+              <th>Board Location</th>
+              <!--th>Active</th-->
+              <th>
+                <button
+                  :disabled="sdi12Rows.length >= 10"
+                  class="btn btn-primary"
+                  aria-label="Add SDI12 sensor"
+                  @click="addSdi12Row"
+                >
+                  <i class="icon icon-plus"></i>
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in sdi12Rows" :key="index">
+              <td>{{ "SDI-12 n." + (index + 1) }}</td>
+              <td>
+                <select :id="`sdi12-sensorId-${index}`" class="form-select" v-model="row.sensorId">
+                  <option v-for="opt in sdi12SensorIdOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </td>
+              <td>
+                <select :id="`sdi12-boardLocation-${index}`" class="form-select" v-model="row.boardLocation">
+                  <option v-for="opt in sdi12LocationOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </td>
+              <!--td>
               <label class="form-switch">
                 <input type="checkbox" v-model="row.active" />
                 <i class="form-icon"></i>
               </label>
             </td-->
-            <td>
-              <button class="btn btn-primary" @click="sdi12Rows.splice(index, 1)">
-                <i class="icon icon-delete"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <td>
+                <button
+                  class="btn btn-primary"
+                  :aria-label="`Remove SDI12 sensor ${index + 1}`"
+                  @click="sdi12Rows.splice(index, 1)"
+                >
+                  <i class="icon icon-delete"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <SInput
         label="Warmup time (ms)"

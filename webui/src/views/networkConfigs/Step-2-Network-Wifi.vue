@@ -13,19 +13,29 @@
       />
       <div class="text-normal">
         SSIDs in range:
-        <button class="btn btn-primary" type="button" @click="updateWifiList()">Refresh</button>
+        <button class="btn btn-primary" type="button" :disabled="localLoading" @click="updateWifiList()">
+          {{ localLoading ? "Scanning..." : "Refresh" }}
+        </button>
       </div>
-      <table class="table table-striped table-hover">
+      <p v-if="scanError" class="toast toast-error" role="alert">{{ scanError }}</p>
+      <table class="table table-striped table-hover wifi-networks">
+        <colgroup>
+          <col style="width: 50%" />
+          <col style="width: 25%" />
+          <col style="width: 25%" />
+        </colgroup>
         <thead>
           <tr>
             <th>SSID</th>
-            <th>rssi</th>
+            <th>RSSI (dBm)</th>
             <th>Quality</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="network in wifiAvailableNets" :key="network.ssid" @click="ssidSelected(network)">
-            <td class="pointer">{{ network.ssid }}</td>
+            <td>
+              <button class="btn btn-link" type="button" @click.stop="ssidSelected(network)">{{ network.ssid }}</button>
+            </td>
             <td class="pointer">{{ network.rssi }}</td>
             <td class="pointer">
               <span
@@ -69,7 +79,8 @@ export default {
       wifi_ssid: undefined,
       wifi_pass: undefined,
       wifiAvailableNets: [],
-      localLoading: false
+      localLoading: false,
+      scanError: ""
     }
   },
   mounted() {
@@ -85,11 +96,17 @@ export default {
       if (this.localLoading) return
 
       this.localLoading = true
+      this.scanError = ""
       fetchInternal("/update_wifi_list")
         .then((data) => {
           this.wifiAvailableNets = data.wifiAvailableNets
+          if (!this.wifiAvailableNets.length)
+            this.scanError = "No networks found. Try scanning again or enter an SSID above."
         })
-        .catch((err) => console.error("Error fetching WiFi list:", err))
+        .catch((err) => {
+          console.error("Error fetching WiFi list:", err)
+          this.scanError = "Could not scan for networks. Check your device connection and try again."
+        })
         .finally(() => {
           this.localLoading = false
         })
@@ -118,3 +135,11 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.wifi-networks .btn-link {
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+</style>

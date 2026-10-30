@@ -3,7 +3,11 @@
     <div class="modal-container">
       <div class="modal-header">
         <h5 class="modal-title">Custom Measurement Naming</h5>
-        <button class="btn btn-clear float-right" @click="$emit('close')"></button>
+        <button
+          class="btn btn-clear float-right"
+          aria-label="Close measurement naming"
+          @click="$emit('close')"
+        ></button>
       </div>
       <div class="modal-body">
         <div v-if="isLoading" class="empty-subtitle">
@@ -11,43 +15,62 @@
           <progress class="progress" :value="progressValue" max="60" style="margin: auto; width: 100%"></progress>
         </div>
 
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Alias</th>
-              <th>Unit</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(measurement, index) in measurements"
-              :key="index"
-              :class="[{ active: index % 2 === 0 }, 'table-row']"
-            >
-              <td>
-                <input
-                  type="text"
-                  :value="measurement.name"
-                  readonly
-                  style="border-width: 0px; border: none; box-shadow: none"
-                />
-              </td>
-              <td>
-                <input type="text" v-model="measurement.alias" :id="'value-' + index" />
-              </td>
-              <td>
-                <select v-model="measurement.unit" :id="'unit-' + index">
-                  <option v-for="unitObj in unitOptions" :key="unitObj.unit" :value="unitObj.unit">
-                    {{ unitObj.label }} - {{ unitObj.unit }}
-                  </option>
-                </select>
-              </td>
-              <td>{{ measurement.value }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div
+          class="table-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Measurement names, scroll horizontally for all fields"
+        >
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Alias</th>
+                <th>Unit</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(measurement, index) in measurements"
+                :key="index"
+                :class="[{ active: index % 2 === 0 }, 'table-row']"
+              >
+                <td>
+                  <input
+                    type="text"
+                    :aria-label="`Measurement ${index + 1}`"
+                    :value="measurement.name"
+                    readonly
+                    style="border-width: 0px; border: none; box-shadow: none"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="form-input"
+                    :aria-label="`Alias for ${measurement.name}`"
+                    v-model="measurement.alias"
+                    :id="'value-' + index"
+                  />
+                </td>
+                <td>
+                  <select
+                    class="form-select"
+                    :aria-label="`Unit for ${measurement.name}`"
+                    v-model="measurement.unit"
+                    :id="'unit-' + index"
+                  >
+                    <option v-for="unitObj in unitOptions" :key="unitObj.unit" :value="unitObj.unit">
+                      {{ unitObj.label }} - {{ unitObj.unit }}
+                    </option>
+                  </select>
+                </td>
+                <td>{{ measurement.value }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="toast">Accepted Characters: a-z, A-Z, 0-9, -, _, /, .</div>
       <div class="modal-footer">
@@ -390,6 +413,8 @@ export default {
   width: 90%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-header {

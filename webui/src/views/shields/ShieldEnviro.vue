@@ -17,52 +17,70 @@
         @update:value="sdi12Config.warmupTimeMs = $event"
       />
       <SDivider label="Sensors" />
-      <table class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th>Index</th>
-            <th>Sensor ID</th>
-            <th>Command</th>
-            <th>Sub Command</th>
-            <th>
-              <button :disabled="sdi12Sensors.length >= 10" class="btn btn-primary" @click="addSdi12Row">
-                <i class="icon icon-plus"></i>
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in sdi12Sensors" :key="index">
-            <td>{{ "SDI-12 n." + (index + 1) }}</td>
-            <td>
-              <select :id="`sdi12-addr-${index}`" class="form-select" v-model="row.address">
-                <option v-for="opt in sdi12sensorAddressOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
-            </td>
-            <td>
-              <select :id="`sdi12-cmd-${index}`" class="form-select" v-model="row.measCmd">
-                <option v-for="opt in sdi12CommandOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-              </select>
-            </td>
-            <td>
-              <input
-                :id="`sdi12-subcmd-${index}`"
-                type="text"
-                class="form-input"
-                maxlength="5"
-                v-model="row.measSubCmd"
-              />
-            </td>
-            <td>
-              <button class="btn btn-primary" @click="sdi12Sensors.splice(index, 1)">
-                <i class="icon icon-delete"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div
+        class="table-scroll"
+        tabindex="0"
+        role="region"
+        aria-label="SDI12 sensors, scroll horizontally for all fields"
+      >
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Index</th>
+              <th>Sensor ID</th>
+              <th>Command</th>
+              <th>Sub Command</th>
+              <th>
+                <button
+                  :disabled="sdi12Sensors.length >= 10"
+                  class="btn btn-primary"
+                  aria-label="Add SDI12 sensor"
+                  @click="addSdi12Row"
+                >
+                  <i class="icon icon-plus"></i>
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in sdi12Sensors" :key="index">
+              <td>{{ "SDI-12 n." + (index + 1) }}</td>
+              <td>
+                <select :id="`sdi12-addr-${index}`" class="form-select" v-model="row.address">
+                  <option v-for="opt in sdi12sensorAddressOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </td>
+              <td>
+                <select :id="`sdi12-cmd-${index}`" class="form-select" v-model="row.measCmd">
+                  <option v-for="opt in sdi12CommandOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </td>
+              <td>
+                <input
+                  :id="`sdi12-subcmd-${index}`"
+                  type="text"
+                  class="form-input"
+                  maxlength="5"
+                  v-model="row.measSubCmd"
+                />
+              </td>
+              <td>
+                <button
+                  class="btn btn-primary"
+                  :aria-label="`Remove SDI12 sensor ${index + 1}`"
+                  @click="sdi12Sensors.splice(index, 1)"
+                >
+                  <i class="icon icon-delete"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <SDivider label="MODBUS" />
     <div class="column col-12 ui-option-area">
@@ -93,62 +111,73 @@
           :valueOptions="modbusParityOptions"
         />
         <SDivider label="Sensors" />
-        <table class="table table-striped table-hover">
-          <thead>
-            <tr>
-              <th>Slave Addr</th>
-              <th>Register</th>
-              <th>Type</th>
-              <th>Format</th>
-              <th>Factor</th>
-              <th>Decimal Digits</th>
-              <th>MSW First</th>
-              <th>Little Endian</th>
-              <th>
-                <button class="btn btn-primary" @click="addModbusRow">
-                  <i class="icon icon-plus"></i>
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, index) in modbusSensors" :key="index">
-              <td><input type="number" class="form-input" min="1" max="255" v-model="row.slaveAddress" /></td>
-              <td><input type="number" class="form-input" min="0" max="65535" v-model="row.register" /></td>
-              <td>
-                <select class="form-select" v-model="row.type">
-                  <option v-for="opt in modbusSupportedTypes" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
-              </td>
-              <td>
-                <select class="form-select" v-model="row.format">
-                  <option v-for="opt in modbusSupportedFormats" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
-              </td>
+        <div
+          class="table-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Modbus sensors, scroll horizontally for all fields"
+        >
+          <table class="table table-striped table-hover table-modbus">
+            <thead>
+              <tr>
+                <th>Slave Addr</th>
+                <th>Register</th>
+                <th>Type</th>
+                <th>Format</th>
+                <th>Factor</th>
+                <th>Decimal Digits</th>
+                <th>MSW First</th>
+                <th>Little Endian</th>
+                <th>
+                  <button class="btn btn-primary" aria-label="Add Modbus sensor" @click="addModbusRow">
+                    <i class="icon icon-plus"></i>
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, index) in modbusSensors" :key="index">
+                <td><input type="number" class="form-input" min="1" max="255" v-model="row.slaveAddress" /></td>
+                <td><input type="number" class="form-input" min="0" max="65535" v-model="row.register" /></td>
+                <td>
+                  <select class="form-select" v-model="row.type">
+                    <option v-for="opt in modbusSupportedTypes" :key="opt.value" :value="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                </td>
+                <td>
+                  <select class="form-select" v-model="row.format">
+                    <option v-for="opt in modbusSupportedFormats" :key="opt.value" :value="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                </td>
 
-              <td><input type="number" class="form-input" step="0.000001" v-model="row.factor" /></td>
-              <td>
-                <select class="form-select" v-model="row.decimalDigits">
-                  <option v-for="opt in modbusDecimalDigits" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
-              </td>
+                <td><input type="number" class="form-input" step="0.000001" v-model="row.factor" /></td>
+                <td>
+                  <select class="form-select" v-model="row.decimalDigits">
+                    <option v-for="opt in modbusDecimalDigits" :key="opt.value" :value="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                </td>
 
-              <td><SSwitch v-model:value="row.mswFirst" /></td>
-              <td><SSwitch v-model:value="row.littleEndian" /></td>
-              <td>
-                <button class="btn btn-primary" @click="modbusSensors.splice(index, 1)">
-                  <i class="icon icon-delete"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <td><SSwitch v-model:value="row.mswFirst" /></td>
+                <td><SSwitch v-model:value="row.littleEndian" /></td>
+                <td>
+                  <button
+                    class="btn btn-primary"
+                    :aria-label="`Remove Modbus sensor ${index + 1}`"
+                    @click="modbusSensors.splice(index, 1)"
+                  >
+                    <i class="icon icon-delete"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <SDivider label="ADC" />

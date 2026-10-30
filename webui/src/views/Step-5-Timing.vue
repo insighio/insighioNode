@@ -5,11 +5,15 @@
       <div class="columns flex-centered">
         <div class="column col-xl-7 col-md-10 col-sm-12">
           <ul class="tab tab-block">
-            <li :class="['tab-item', { active: timing_type === 'periodic' }]" @click="timingChanged('periodic')">
-              <a class="pointer">Periodic</a>
+            <li :class="['tab-item', { active: timing_type === 'periodic' }]">
+              <button type="button" :aria-pressed="timing_type === 'periodic'" @click="timingChanged('periodic')">
+                Periodic
+              </button>
             </li>
-            <li :class="['tab-item', { active: timing_type === 'scheduled' }]" @click="timingChanged('scheduled')">
-              <a class="pointer">Time Scheduled</a>
+            <li :class="['tab-item', { active: timing_type === 'scheduled' }]">
+              <button type="button" :aria-pressed="timing_type === 'scheduled'" @click="timingChanged('scheduled')">
+                Time Scheduled
+              </button>
             </li>
           </ul>
           <div v-if="timing_type === 'periodic'" class="tabcontent ui-mt-1">

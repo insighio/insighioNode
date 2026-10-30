@@ -67,11 +67,10 @@ header {
 }
 
 .watermark {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
+  padding: 1rem;
+  text-align: center;
   font-size: 0.8rem;
-  color: #888;
-  opacity: 0.7;
+  color: #526371;
+  overflow-wrap: anywhere;
 }
 </style>

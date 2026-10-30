@@ -2,17 +2,22 @@
   <div class="panel-body ui-pt-1">
     <div v-if="isLoading" class="loading loading-lg"></div>
     <div class="empty">
-      <div v-show="!isLoading" class="empty-icon">
+      <div v-show="!isLoading && !saveError" class="empty-icon">
         <i class="icon icon-2x icon-check"></i>
       </div>
       <p v-if="isLoading" class="empty-title h5">Applying Configuration...</p>
+      <div v-else-if="saveError">
+        <p class="empty-title h5">Configuration not saved</p>
+        <p class="toast toast-error" role="alert">{{ saveError }}</p>
+        <button class="btn btn-primary" @click="apply">Try again</button>
+      </div>
       <div v-else>
         <p class="empty-title h5">Configuration Applied</p>
         <p class="empty-subtitle">The device will soon reboot to the desired configuration.</p>
       </div>
 
-      <div class="empty-action">
-        <button class="btn btn-primary" @click="startOver">Start over?</button>
+      <div class="empty-action" v-if="!isLoading">
+        <button class="btn" @click="startOver">Start over</button>
       </div>
     </div>
   </div>
@@ -25,7 +30,8 @@ export default {
   name: "Step7Apply",
   data() {
     return {
-      isLoading: true
+      isLoading: true,
+      saveError: ""
     }
   },
   mounted() {
@@ -33,6 +39,8 @@ export default {
   },
   methods: {
     apply() {
+      this.isLoading = true
+      this.saveError = ""
       const encodedParams = {}
       const config = {}
       let isConfigValid = false
@@ -83,7 +91,12 @@ export default {
           this.$storage.clear()
           this.requestReboot()
         })
-        .catch((err) => console.error("Error saving config:", err))
+        .catch((err) => {
+          console.error("Error saving config:", err)
+          this.isLoading = false
+          this.saveError =
+            "Could not save your configuration. Your settings are still available. Check your device connection and try again."
+        })
     },
     requestReboot() {
       this.isLoading = false

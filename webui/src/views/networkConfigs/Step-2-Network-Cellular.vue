@@ -50,7 +50,13 @@
             <div class="card-header">
               <div class="card-title h5">Available Networks</div>
             </div>
-            <div class="card-body" style="padding: 0.4rem 0">
+            <div
+              class="card-body table-scroll"
+              tabindex="0"
+              role="region"
+              aria-label="Available cellular networks, scroll horizontally for details"
+              style="padding: 0.4rem 0"
+            >
               <table class="table table-striped table-hover">
                 <thead>
                   <tr>

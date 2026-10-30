@@ -1,10 +1,9 @@
 <template>
-  <div class="panel-body ui-pt-1">
-    <hr />
+  <div class="panel-body login-panel">
     <div class="container">
       <div class="columns flex-centered">
         <div class="column col-6 col-xl-8 col-md-10 col-sm-12">
-          <div class="form-group">
+          <form class="form-group login-form" @submit.prevent="checkPassword" :aria-busy="isLoggingIn">
             <label class="form-label" for="input-username">Username</label>
             <input
               id="input-username"
@@ -12,7 +11,11 @@
               type="text"
               placeholder="Username"
               v-model="username"
-              @keyup.enter="checkPassword()"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+              :disabled="isLoggingIn"
             />
             <label class="form-label" for="input-password">Password</label>
             <input
@@ -21,15 +24,18 @@
               type="password"
               placeholder="Password"
               v-model="password"
-              @keyup.enter="checkPassword()"
+              autocomplete="current-password"
+              required
+              :disabled="isLoggingIn"
             />
+            <p v-if="loginError" class="toast toast-error ui-mt-1" role="alert">{{ loginError }}</p>
             <div class="flex-centered ui-mt-1 ui-mb-1">
-              <button class="btn btn-primary constr-field" @click="checkPassword()" :disabled="isLoggingIn">
+              <button class="btn btn-primary constr-field" type="submit" :disabled="isLoggingIn">
                 <span v-if="isLoggingIn">Logging in...</span>
                 <span v-else>Login</span>
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
@@ -47,7 +53,8 @@ export default {
     return {
       username: "",
       password: "",
-      isLoggingIn: false
+      isLoggingIn: false,
+      loginError: ""
     }
   },
   computed: {
@@ -59,8 +66,10 @@ export default {
   },
   methods: {
     checkPassword() {
+      if (this.isLoggingIn) return false
+      this.loginError = ""
       if (!this.username || !this.password) {
-        alert("Please enter username and password")
+        this.loginError = "Please enter your username and password."
         return false
       }
 
@@ -77,13 +86,13 @@ export default {
             this.$storage.set("session", "true")
             this.requestGoNext()
           } else {
-            alert(data.message || "Wrong Password!")
+            this.loginError = data.message || "Incorrect username or password. Please try again."
           }
         })
         .catch((err) => {
           this.isLoggingIn = false
           console.log("Login error:", err)
-          alert("Login failed. Please try again.")
+          this.loginError = "Could not sign in. Check your device connection and try again."
         })
 
       return false
