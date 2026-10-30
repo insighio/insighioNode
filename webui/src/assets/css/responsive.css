@@ -318,6 +318,21 @@ a:visited {
   max-width: 100%;
 }
 
+.sensor-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.sensor-count {
+  color: var(--ui-muted);
+  font-size: 0.8rem;
+}
+
 .table-scroll {
   width: 100%;
   max-width: 100%;
@@ -496,7 +511,6 @@ a:visited {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }

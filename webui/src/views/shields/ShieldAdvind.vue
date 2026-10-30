@@ -2,6 +2,12 @@
   <div class="form-group columns">
     <SDivider label="SDI12" />
     <div class="column col-12 ui-option-area">
+      <div class="sensor-table-actions">
+        <span class="sensor-count" role="status">{{ sdi12Rows.length }} / 10 SDI12 sensors</span>
+        <button type="button" class="btn btn-primary" :disabled="sdi12Rows.length >= 10" @click="addSdi12Row">
+          <i class="icon icon-plus" aria-hidden="true"></i> Add SDI12 sensor
+        </button>
+      </div>
       <div
         class="table-scroll"
         tabindex="0"
@@ -15,16 +21,7 @@
               <th>Sensor ID</th>
               <th>Board Location</th>
               <!--th>Active</th-->
-              <th>
-                <button
-                  :disabled="sdi12Rows.length >= 10"
-                  class="btn btn-primary"
-                  aria-label="Add SDI12 sensor"
-                  @click="addSdi12Row"
-                >
-                  <i class="icon icon-plus"></i>
-                </button>
-              </th>
+              <th scope="col">Remove</th>
             </tr>
           </thead>
           <tbody>
@@ -71,9 +68,6 @@
         @update:value="sdi12WarmupTimeMs = $event"
       />
     </div>
-    <!--div class="column col-12">
-      <button :disabled="sdi12Rows.length >= 10" class="btn btn-primary" @click="addSdi12Row">Add SDI-12 sensor</button>
-    </div-->
     <div class="column col-12 ui-option-area">
       <div class="columns">
         <SDivider label="4-20mA sensing" />

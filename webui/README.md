@@ -39,6 +39,10 @@ npm run lint
 
 ### UI and accessibility checks
 
+Loading spinners loop at their original speed while visible, including when the
+system's reduced-motion preference is enabled. Reduced motion shortens UI
+transitions and disables smooth scrolling without overriding loading animations.
+
 The layout supports desktop and mobile browsers without external fonts or a
 component framework. Shared responsive styles live in
 [responsive.css](src/assets/css/responsive.css), loaded after Spectre.
@@ -47,6 +51,9 @@ component framework. Shared responsive styles live in
   Forms should fit without page-level horizontal scrolling.
   Wide sensor and measurement-naming tables scroll within their own labeled,
   keyboard-focusable regions instead of squeezing editable fields.
+  Enviro and Advind sensor tables have labeled add buttons and row counts above
+  the scroll area, so adding sensors never requires horizontal scrolling.
+  SDI12 add buttons remain disabled at the existing limit of 10 sensors.
 - Desktop shows the full step list; phones show the current step and count.
   Satellite configurations omit the unused credentials step. Progress indicators
   are informational, so they cannot bypass step validation.

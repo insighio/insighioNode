@@ -17,6 +17,12 @@
         @update:value="sdi12Config.warmupTimeMs = $event"
       />
       <SDivider label="Sensors" />
+      <div class="sensor-table-actions">
+        <span class="sensor-count" role="status">{{ sdi12Sensors.length }} / 10 SDI12 sensors</span>
+        <button type="button" class="btn btn-primary" :disabled="sdi12Sensors.length >= 10" @click="addSdi12Row">
+          <i class="icon icon-plus" aria-hidden="true"></i> Add SDI12 sensor
+        </button>
+      </div>
       <div
         class="table-scroll"
         tabindex="0"
@@ -30,16 +36,7 @@
               <th>Sensor ID</th>
               <th>Command</th>
               <th>Sub Command</th>
-              <th>
-                <button
-                  :disabled="sdi12Sensors.length >= 10"
-                  class="btn btn-primary"
-                  aria-label="Add SDI12 sensor"
-                  @click="addSdi12Row"
-                >
-                  <i class="icon icon-plus"></i>
-                </button>
-              </th>
+              <th scope="col">Remove</th>
             </tr>
           </thead>
           <tbody>
@@ -111,6 +108,12 @@
           :valueOptions="modbusParityOptions"
         />
         <SDivider label="Sensors" />
+        <div class="sensor-table-actions">
+          <span class="sensor-count" role="status">{{ modbusSensors.length }} Modbus sensors</span>
+          <button type="button" class="btn btn-primary" @click="addModbusRow">
+            <i class="icon icon-plus" aria-hidden="true"></i> Add Modbus sensor
+          </button>
+        </div>
         <div
           class="table-scroll"
           tabindex="0"
@@ -128,11 +131,7 @@
                 <th>Decimal Digits</th>
                 <th>MSW First</th>
                 <th>Little Endian</th>
-                <th>
-                  <button class="btn btn-primary" aria-label="Add Modbus sensor" @click="addModbusRow">
-                    <i class="icon icon-plus"></i>
-                  </button>
-                </th>
+                <th scope="col">Remove</th>
               </tr>
             </thead>
             <tbody>
@@ -405,7 +404,7 @@ export default {
       this.sdi12Sensors =
         this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").sensors
           ? this.getJsonObjectFromCookies("meas-sdi12").sensors
-          : {}
+          : []
 
       this.sdi12Config =
         this.getJsonObjectFromCookies("meas-sdi12") && this.getJsonObjectFromCookies("meas-sdi12").config
@@ -415,7 +414,7 @@ export default {
       this.modbusSensors =
         this.getJsonObjectFromCookies("meas-modbus") && this.getJsonObjectFromCookies("meas-modbus").sensors
           ? this.getJsonObjectFromCookies("meas-modbus").sensors
-          : {}
+          : []
 
       this.modbusConfig =
         this.getJsonObjectFromCookies("meas-modbus") && this.getJsonObjectFromCookies("meas-modbus").config
