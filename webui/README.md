@@ -68,6 +68,10 @@ component framework. Shared responsive styles live in
   colors stay consistent. Use `btn-primary` for confirm actions, `btn-danger`
   for destructive actions, and `btn-cancel` for Cancel/Close. Check that every
   button is readable in normal, hover, focus, and pressed states.
+- Do not use `window.alert()`: Android WebViews may show it without buttons.
+  Use `showAlert(message, { type })` from `src/js/appAlert.js` (`type` is
+  `error`, `warning`, `success`, or `info`). Alerts are queued, show an OK
+  button, close with Enter/Escape, and return focus to the previous control.
 - Test incorrect credentials, disconnected-device errors, and a failed
   configuration save. Errors should be visible, and failed saves should allow
   retrying without discarding settings.

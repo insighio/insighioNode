@@ -63,6 +63,7 @@
 </template>
 
 <script>
+import { showAlert } from "@/js/appAlert.js"
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import { fetchInternal } from "@/js/utils.js"
 
@@ -125,7 +126,7 @@ export default {
     },
     validateMyForm() {
       if (!this.wifi_ssid) {
-        alert("please fill SSID info")
+        showAlert("Please enter the WiFi network name (SSID).", { type: "warning" })
         return false
       }
 

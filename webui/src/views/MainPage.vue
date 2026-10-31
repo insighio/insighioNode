@@ -337,6 +337,7 @@
 </template>
 
 <script>
+import { showAlert } from "@/js/appAlert.js"
 import "@/assets/css/style.css"
 import Step1Login from "@/views/Step-1-Login.vue"
 import Step2Network from "@/views/Step-2-Network.vue"
@@ -702,11 +703,11 @@ export default {
           console.log("Measurements downloaded successfully")
         } else {
           console.error("Failed to download measurements:", response.statusText)
-          alert("Failed to download measurements. Please try again.")
+          showAlert("Failed to download measurements. Please try again.", { type: "error" })
         }
       } catch (error) {
         console.error("Error downloading measurements:", error)
-        alert("Error downloading measurements. Please check your connection and try again.")
+        showAlert("Error downloading measurements. Please check your connection and try again.", { type: "error" })
       }
     },
     async clearMeasurements() {
@@ -714,11 +715,11 @@ export default {
       try {
         await fetchInternal("/clear_measurements", 30000, "POST", {})
 
-        alert("Measurements cleared successfully.")
+        showAlert("Measurements cleared successfully.", { type: "success" })
         console.log("Measurements cleared successfully")
       } catch (error) {
         console.error("Error clearing measurements:", error)
-        alert("Error clearing measurements. Please check your connection and try again.")
+        showAlert("Error clearing measurements. Please check your connection and try again.", { type: "error" })
       }
     },
     async factoryReset() {
@@ -727,15 +728,15 @@ export default {
       try {
         await fetchInternal("/factory_reset", 30000, "POST", {})
 
-        alert("Factory reset completed successfully. The device will restart.")
-
         this.showFactoryResetConfirm = false
         this.$storage.clear()
         this.tabActive = 0
         this.$storage.set("activeTab", this.tabActive)
+
+        showAlert("Factory reset completed successfully. The device will restart.", { type: "success" })
       } catch (error) {
         console.error("Error during factory reset:", error)
-        alert("Error during factory reset. Please check your connection and try again.")
+        showAlert("Error during factory reset. Please check your connection and try again.", { type: "error" })
       } finally {
         this.isResetting = false
       }
@@ -771,7 +772,7 @@ export default {
         })
         .catch((err) => {
           console.log("error setting device time: ", err)
-          alert("Error updating device system time. Please check your connection and try again.")
+          showAlert("Error updating device system time. Please check your connection and try again.", { type: "error" })
         })
     },
     doShowRebootConfirm() {
@@ -931,11 +932,11 @@ export default {
           console.log("Configuration downloaded successfully")
         } else {
           console.error("Failed to download configuration:", response.statusText)
-          alert("Failed to download configuration. Please try again.")
+          showAlert("Failed to download configuration. Please try again.", { type: "error" })
         }
       } catch (error) {
         console.error("Error downloading configuration:", error)
-        alert("Error downloading configuration. Please check your connection and try again.")
+        showAlert("Error downloading configuration. Please check your connection and try again.", { type: "error" })
       }
     },
     importConfiguration() {

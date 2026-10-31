@@ -1,4 +1,5 @@
 <script>
+import { showAlert } from "@/js/appAlert.js"
 // import "@/assets/css/spectre-icons.min.css"
 // import "@/assets/css/spectre.min.css"
 // import "@/assets/css/style.css"
@@ -40,13 +41,13 @@ export default {
     },
     validateElemValue(val, message, idRegex) {
       if (val === undefined || val === null) {
-        window.alert("Please enter field: " + message)
+        showAlert("Please enter field: " + message, { type: "warning" })
         return false
       }
 
       var value = val.trim()
       if (value == "" || (idRegex && !new RegExp(idRegex, "g").exec(value))) {
-        window.alert("Please enter a valid " + message)
+        showAlert("Please enter a valid " + message, { type: "warning" })
         return false
       }
       return true

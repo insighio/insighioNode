@@ -105,6 +105,7 @@
 </template>
 
 <script>
+import { showAlert } from "@/js/appAlert.js"
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import WebuiFooter from "@/components/WebuiFooter.vue"
 import SSwitch from "@/components/SSwitch.vue"
@@ -221,15 +222,15 @@ export default {
       // Validate MQTT settings if secondary transmission is enabled
       if (this.enable_secondary_measurement_transmission) {
         if (!this.secondary_measurement_transmission_info.mqtt_url) {
-          alert("MQTT URL is required when secondary measurement transmission is enabled")
+          showAlert("MQTT URL is required when secondary measurement transmission is enabled", { type: "warning" })
           return false
         }
         if (!this.secondary_measurement_transmission_info.mqtt_port) {
-          alert("MQTT Port is required when secondary measurement transmission is enabled")
+          showAlert("MQTT Port is required when secondary measurement transmission is enabled", { type: "warning" })
           return false
         }
         if (!this.secondary_measurement_transmission_info.mqtt_topic) {
-          alert("MQTT Topic is required when secondary measurement transmission is enabled")
+          showAlert("MQTT Topic is required when secondary measurement transmission is enabled", { type: "warning" })
           return false
         }
       }

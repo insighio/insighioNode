@@ -88,6 +88,7 @@
 </template>
 
 <script>
+import { showAlert } from "@/js/appAlert.js"
 import { fetchInternal } from "@/js/utils"
 import { getMapObject } from "@/js/unitHelper"
 
@@ -356,7 +357,7 @@ export default {
             errorMessage += "\n" + measurement.name
           }
         })
-        window.alert(errorMessage)
+        showAlert(errorMessage, { type: "warning" })
         return false
       }
 

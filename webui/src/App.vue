@@ -2,18 +2,21 @@
   <div id="app">
     <MainPage />
     <div class="watermark">Version: {{ appVersion }}</div>
+    <AppAlertDialog />
   </div>
 </template>
 
 <script>
 import MainPage from "@/views/MainPage.vue"
+import AppAlertDialog from "@/components/AppAlertDialog.vue"
 import { fetchInternal } from "@/js/utils.js"
 //const appVersion = import.meta.env.VITE_APP_VERSION || "unknown version"
 
 export default {
   name: "App",
   components: {
-    MainPage
+    MainPage,
+    AppAlertDialog
   },
   data() {
     return {

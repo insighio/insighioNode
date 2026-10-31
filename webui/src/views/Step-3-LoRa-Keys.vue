@@ -42,6 +42,7 @@
 </template>
 
 <script>
+import { showAlert } from "@/js/appAlert.js"
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import SInput from "@/components/SInput.vue"
 import WebuiFooter from "@/components/WebuiFooter.vue"
@@ -92,7 +93,7 @@ export default {
         !this.validateElemValue(this.lora_dev_eui, "Dev EUI", euiRegex) ||
         !this.validateElemValue(this.lora_app_key, "App Key", appKeyRegex)
       ) {
-        window.alert("DevEUI or APP key are invalid")
+        showAlert("DevEUI or APP key are invalid", { type: "warning" })
         return false
       }
 

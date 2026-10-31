@@ -261,6 +261,7 @@
 </template>
 
 <script>
+import { showAlert } from "@/js/appAlert.js"
 import CommonTools from "@/components/mixins/CommonTools.vue"
 import SInput from "@/components/SInput.vue"
 import SSelect from "@/components/SSelect.vue"
@@ -370,7 +371,7 @@ export default {
       } catch (error) {
         console.log("error getting modem error: ", error)
         this.localLoading = false
-        alert("Error updating modem info. Please check your connection and try again.")
+        showAlert("Error updating modem info. Please check your connection and try again.", { type: "error" })
       }
     },
     getSignalPercentage(value, min, max) {
@@ -455,11 +456,11 @@ export default {
           // Convert to array and sort by status (current first, then available, then forbidden)
           this.discoveredNetworks = Object.values(networkMap).sort((a, b) => b.status - a.status)
         } else {
-          alert("No networks found")
+          showAlert("No networks found", { type: "info" })
         }
       } catch (error) {
         console.log("error discovering networks: ", error)
-        alert("Error discovering networks. Please check your connection and try again.")
+        showAlert("Error discovering networks. Please check your connection and try again.", { type: "error" })
       } finally {
         this.discoverLoading = false
         if (this.discoverProgressInterval) {
@@ -510,14 +511,14 @@ export default {
 
     validateMyForm() {
       if (this.cell_apn.trim() === "") {
-        window.alert("Please enter an APN")
+        showAlert("Please enter an APN", { type: "warning" })
         return false
       }
 
       if (this.cell_mcc_mnc_enabled) {
         const mccMncRegex = /^\d{5,6}$/
         if (!this.cell_mcc_mnc || !mccMncRegex.test(this.cell_mcc_mnc.toString().trim())) {
-          window.alert("Please enter a valid MCC/MNC (5 or 6 digits)")
+          showAlert("Please enter a valid MCC/MNC (5 or 6 digits)", { type: "warning" })
           return false
         }
       }
