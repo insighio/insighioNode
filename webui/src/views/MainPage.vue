@@ -153,7 +153,7 @@
           <button class="btn btn-primary" @click="requestReboot" :disabled="isRebooting">
             {{ isRebooting ? "Rebooting..." : "Confirm Reboot" }}
           </button>
-          <button class="btn btn-link" @click="showRebootConfirm = false" :disabled="isRebooting">Cancel</button>
+          <button class="btn btn-cancel" @click="showRebootConfirm = false" :disabled="isRebooting">Cancel</button>
         </div>
       </div>
     </div>
@@ -178,10 +178,34 @@
           </p>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" @click="factoryReset" :disabled="isResetting">
+          <button class="btn btn-danger" @click="factoryReset" :disabled="isResetting">
             {{ isResetting ? "Resetting..." : "Confirm Reset" }}
           </button>
-          <button class="btn btn-link" @click="showFactoryResetConfirm = false" :disabled="isResetting">Cancel</button>
+          <button class="btn btn-cancel" @click="showFactoryResetConfirm = false" :disabled="isResetting">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showResetSessionConfirm"
+      class="modal active"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reset-session-title"
+    >
+      <div class="modal-overlay" @click="closeActiveDialog"></div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <div id="reset-session-title" class="modal-title h5">Reset Session</div>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to reset the session? All unsaved configuration will be lost.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" @click="confirmResetSession">Reset Session</button>
+          <button class="btn btn-cancel" @click="showResetSessionConfirm = false">Cancel</button>
         </div>
       </div>
     </div>
@@ -236,7 +260,7 @@
           >
             {{ isUploading ? "Uploading..." : "Upload" }}
           </button>
-          <button class="btn btn-link" @click="closeOTAModal" :disabled="isUploading">Cancel</button>
+          <button class="btn btn-cancel" @click="closeOTAModal" :disabled="isUploading">Cancel</button>
         </div>
       </div>
     </div>
@@ -294,7 +318,7 @@
           <button class="btn btn-primary" @click="uploadConfigFile" :disabled="!selectedConfigFile || isImporting">
             {{ isImporting ? "Importing..." : "Import" }}
           </button>
-          <button class="btn btn-link" @click="closeImportConfigModal" :disabled="isImporting">Cancel</button>
+          <button class="btn btn-cancel" @click="closeImportConfigModal" :disabled="isImporting">Cancel</button>
         </div>
       </div>
     </div>
@@ -347,6 +371,7 @@ export default {
       dialogTrigger: null,
       showFactoryResetConfirm: false,
       showRebootConfirm: false,
+      showResetSessionConfirm: false,
       isResetting: false,
       isRebooting: false,
       showToast: false,
@@ -372,6 +397,7 @@ export default {
     activeDialog() {
       if (this.showRebootConfirm) return "showRebootConfirm"
       if (this.showFactoryResetConfirm) return "showFactoryResetConfirm"
+      if (this.showResetSessionConfirm) return "showResetSessionConfirm"
       if (this.showOTAUploadModal) return "showOTAUploadModal"
       if (this.showImportConfigModal) return "showImportConfigModal"
       return null
@@ -1051,14 +1077,13 @@ export default {
     },
     resetSession() {
       this.showSettingsMenu = false
-      this.$nextTick(() => {
-        if (confirm("Are you sure you want to reset the session? All unsaved configuration will be lost.")) {
-          this.$storage.clear()
-          this.tabActive = 0
-          this.$storage.set("activeTab", this.tabActive)
-        }
-      })
-      console.log("to delete")
+      this.showResetSessionConfirm = true
+    },
+    confirmResetSession() {
+      this.showResetSessionConfirm = false
+      this.$storage.clear()
+      this.tabActive = 0
+      this.$storage.set("activeTab", this.tabActive)
     }
   },
   setup() {

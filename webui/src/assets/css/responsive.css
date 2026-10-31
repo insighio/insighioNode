@@ -253,6 +253,59 @@ a:visited {
   border-color: #11554d;
 }
 
+.btn.btn-primary:active,
+.btn.btn-primary.active {
+  background: #0c443d;
+  border-color: #0c443d;
+  color: white;
+}
+
+.btn.btn-danger,
+.btn.btn-danger:visited {
+  background: #b42318;
+  border-color: #b42318;
+  color: white;
+}
+
+.btn.btn-danger:hover,
+.btn.btn-danger:focus {
+  background: #912018;
+  border-color: #912018;
+  color: white;
+}
+
+.btn.btn-danger:active,
+.btn.btn-danger.active {
+  background: #7a1a13;
+  border-color: #7a1a13;
+  color: white;
+}
+
+.btn.btn-cancel,
+.btn.btn-cancel:visited {
+  background: white;
+  border-color: #8a9aa6;
+  color: #233542;
+}
+
+.btn.btn-cancel:hover,
+.btn.btn-cancel:focus {
+  background: #eef2f5;
+  border-color: #526371;
+  color: #233542;
+}
+
+.btn.btn-cancel:active,
+.btn.btn-cancel.active {
+  background: #dfe6eb;
+  border-color: #526371;
+  color: #233542;
+}
+
+.btn.btn-danger:focus-visible {
+  outline-color: #b42318;
+}
+
 :where(button, a, input, select, summary, [tabindex]):focus-visible {
   outline: 3px solid #186e64;
   outline-offset: 3px;

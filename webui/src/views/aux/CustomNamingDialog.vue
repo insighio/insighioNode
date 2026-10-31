@@ -80,7 +80,7 @@
           <button v-else class="btn btn-primary" @click="doSkip">Next</button>
         </div>
         <div class="float-right">
-          <button class="btn btn-secondary" @click="$emit('close')">Close</button>
+          <button class="btn btn-cancel" @click="$emit('close')">Close</button>
         </div>
       </div>
     </div>

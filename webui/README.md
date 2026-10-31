@@ -64,6 +64,10 @@ component framework. Shared responsive styles live in
 - Open device actions with the keyboard. Escape closes the action panel and
   restores focus. Confirmation and upload dialogs keep Tab focus inside and
   support Escape when no operation is running.
+- Confirmations use in-app dialogs instead of browser `confirm()` so button
+  colors stay consistent. Use `btn-primary` for confirm actions, `btn-danger`
+  for destructive actions, and `btn-cancel` for Cancel/Close. Check that every
+  button is readable in normal, hover, focus, and pressed states.
 - Test incorrect credentials, disconnected-device errors, and a failed
   configuration save. Errors should be visible, and failed saves should allow
   retrying without discarding settings.
