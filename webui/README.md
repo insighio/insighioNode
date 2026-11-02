@@ -85,5 +85,10 @@ component framework. Shared responsive styles live in
   Only apply, import, reset, or upload firmware to a device intended for testing.
 
 `npm run build` generates the production assets, including compressed versions.
+Only the `.gz` files (plus images and the favicon) are copied to the device by
+`update_www.sh`. They are compressed with Zopfli, which outputs standard gzip
+that is smaller than zlib's best level. Brotli is not produced because browsers
+only accept it over HTTPS, and the device serves plain HTTP. All JavaScript is
+emitted as one bundle, which compresses better and needs fewer requests.
 Check the production preview (`npm run preview`) as well as development mode:
 production CSS is purged, including dynamically generated grid classes.

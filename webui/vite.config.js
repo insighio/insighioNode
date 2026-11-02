@@ -3,19 +3,16 @@ import { fileURLToPath, URL } from "node:url"
 import { defineConfig } from "vite"
 import vue from "@vitejs/plugin-vue"
 
-import { compression } from "vite-plugin-compression2"
+import { compression, defineAlgorithm } from "vite-plugin-compression2"
+import { gzipAsync as zopfliGzip } from "@gfx/zopfli"
+
+// The ESP32 serves plain HTTP, where browsers only accept gzip (not brotli).
+// Zopfli produces standard gzip output that is ~3.5% smaller than zlib level 9.
+const zopfli = defineAlgorithm((buf, options) => zopfliGzip(buf, options), { numiterations: 15 })
 
 // https://vite.dev/config/
 export default defineConfig({
-  // plugins: [
-  //   vue(),
-  //   compression({
-  //     algorithm: "brotliCompress",
-  //     threshold: 512,
-  //     deleteOriginalAssets: true
-  //   })
-  // ],
-  plugins: [vue(), compression()],
+  plugins: [vue(), compression({ algorithms: [zopfli], filename: "[path][base].gz" })],
   css: {
     postcss: "./postcss.config.js" // Specify the PostCSS configuration file
   },
@@ -43,13 +40,7 @@ export default defineConfig({
     cssMinify: "lightningcss",
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes("node_modules")) {
-            if (id.includes("vue")) {
-              return "vue-core"
-            }
-          }
-        },
+        // Keep a single JS bundle: it gzips smaller and needs one less request to the ESP32.
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash].[ext]"
