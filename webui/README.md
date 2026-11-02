@@ -90,5 +90,9 @@ Only the `.gz` files (plus images and the favicon) are copied to the device by
 that is smaller than zlib's best level. Brotli is not produced because browsers
 only accept it over HTTPS, and the device serves plain HTTP. All JavaScript is
 emitted as one bundle, which compresses better and needs fewer requests.
+The build marks the stylesheet as non-render-blocking (`media="print"` switched
+to `all` on load), so the inline loading indicator in `index.html` paints as soon
+as the HTML arrives. The app stays hidden until window `load`, which also waits
+for the stylesheet, so it never appears unstyled.
 Check the production preview (`npm run preview`) as well as development mode:
 production CSS is purged, including dynamically generated grid classes.
