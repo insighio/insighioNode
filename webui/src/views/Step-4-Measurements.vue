@@ -3,7 +3,7 @@
     <!--div class="loading loading-lg"></div-->
     <div class="container grid-lg">
       <div class="columns flex-centered">
-        <div class="column col-xl-7 col-md-10 col-sm-12">
+        <div class="column col-12 wizard-form-column">
           <div class="container">
             <div class="columns">
               <SDivider label="Available measurements" />
@@ -29,64 +29,43 @@
 
               <SDivider label="Explicit key-values" />
               <details class="configuration-section col-12">
-                <summary>Explicit key-values</summary>
+                <summary>Key-value pairs ({{ keyValuePairs.length }})</summary>
                 <div class="section-body">
-                  <div class="columns">
-                    <div class="column col-12">
-                      <table class="table">
-                        <thead>
-                          <tr>
-                            <th>Key</th>
-                            <th>Value</th>
-                            <th>
-                              <button
-                                class="btn btn-primary"
-                                aria-label="Add key-value pair"
-                                @click="keyValuePairs.push({ key: '', value: '' })"
-                              >
-                                <i class="icon icon-plus"></i>
-                              </button>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(pair, index) in keyValuePairs" :key="index">
-                            <td>
-                              <input
-                                type="text"
-                                :id="`key-${index}`"
-                                :aria-label="`Key ${index + 1}`"
-                                class="form-input"
-                                v-model="pair.key"
-                                placeholder="key name"
-                                style="width: 100%"
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                :id="`value-${index}`"
-                                :aria-label="`Value ${index + 1}`"
-                                class="form-input"
-                                v-model="pair.value"
-                                placeholder="key value"
-                                style="width: 100%"
-                              />
-                            </td>
-                            <td>
-                              <button
-                                class="btn btn-primary"
-                                :aria-label="`Remove key-value pair ${index + 1}`"
-                                @click="keyValuePairs.splice(index, 1)"
-                              >
-                                <i class="icon icon-delete"></i>
-                              </button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  <div class="sensor-table-actions">
+                    <span class="sensor-count">Sent with every measurement</span>
+                    <button type="button" class="btn btn-primary" @click="keyValuePairs.push({ key: '', value: '' })">
+                      <i class="icon icon-plus" aria-hidden="true"></i> Add key-value pair
+                    </button>
                   </div>
+                  <ul v-if="keyValuePairs.length" class="key-value-list">
+                    <li v-for="(pair, index) in keyValuePairs" :key="index" class="key-value-row">
+                      <input
+                        type="text"
+                        :id="`key-${index}`"
+                        :aria-label="`Key ${index + 1}`"
+                        class="form-input"
+                        v-model="pair.key"
+                        placeholder="key name"
+                      />
+                      <input
+                        type="text"
+                        :id="`value-${index}`"
+                        :aria-label="`Value ${index + 1}`"
+                        class="form-input"
+                        v-model="pair.value"
+                        placeholder="key value"
+                      />
+                      <button
+                        type="button"
+                        class="btn btn-cancel btn-action"
+                        :aria-label="`Remove key-value pair ${index + 1}`"
+                        @click="keyValuePairs.splice(index, 1)"
+                      >
+                        <i class="icon icon-delete" aria-hidden="true"></i>
+                      </button>
+                    </li>
+                  </ul>
+                  <p v-else class="sensor-count">No key-value pairs added.</p>
                 </div>
               </details>
 

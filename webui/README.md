@@ -72,6 +72,12 @@ component framework. Shared responsive styles live in
   Use `showAlert(message, { type })` from `src/js/appAlert.js` (`type` is
   `error`, `warning`, `success`, or `info`). Alerts are queued, show an OK
   button, close with Enter/Escape, and return focus to the previous control.
+- Form fields (`SInput`, `SSelect`, `SRadioGroup`, `SSwitch`) carry the
+  `s-field` class. On desktop, labels are vertically centered on their control
+  and the step form column is capped at 760px (`wizard-form-column`). On phones,
+  labels stack above inputs, while switches share a row with their label.
+  Check at 360px, about 800px, and 1280px or wider that no label breaks
+  mid-word and that fields inside collapsible sections do not wrap.
 - Test incorrect credentials, disconnected-device errors, and a failed
   configuration save. Errors should be visible, and failed saves should allow
   retrying without discarding settings.

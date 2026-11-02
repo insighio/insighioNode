@@ -1,5 +1,5 @@
 <template>
-  <div class="container ui-mb-1">
+  <div class="container ui-mb-1 s-field">
     <div :class="'columns col-' + colsSum + ' ui-pr-0 ui-pl-0'">
       <div :class="'column col-' + colsLabel + ' col-sm-12'">
         <label class="form-label" :for="controlId">{{ label }} </label>

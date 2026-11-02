@@ -77,8 +77,8 @@ export default {
   data() {
     return {
       // Add your component data here
-      wifi_ssid: undefined,
-      wifi_pass: undefined,
+      wifi_ssid: "",
+      wifi_pass: "",
       wifiAvailableNets: [],
       localLoading: false,
       scanError: ""
@@ -90,8 +90,8 @@ export default {
   methods: {
     // Add your component methods here
     initializeValues() {
-      this.wifi_ssid = this.$storage.get("wifi-ssid")
-      this.wifi_pass = this.$storage.get("wifi-pass")
+      this.wifi_ssid = this.$storage.get("wifi-ssid") ?? ""
+      this.wifi_pass = this.$storage.get("wifi-pass") ?? ""
     },
     updateWifiList() {
       if (this.localLoading) return

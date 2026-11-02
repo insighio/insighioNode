@@ -3,7 +3,7 @@
     <div class="text-center">Timing:</div>
     <div class="container grid-lg ui-mt-1">
       <div class="columns flex-centered">
-        <div class="column col-xl-7 col-md-10 col-sm-12">
+        <div class="column col-12 wizard-form-column">
           <ul class="tab tab-block">
             <li :class="['tab-item', { active: timing_type === 'periodic' }]">
               <button type="button" :aria-pressed="timing_type === 'periodic'" @click="timingChanged('periodic')">

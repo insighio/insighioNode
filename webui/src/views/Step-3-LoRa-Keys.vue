@@ -3,7 +3,7 @@
     <div class="text-center">Set keys provided by the LoRa Server.</div>
     <div class="container grid-lg ui-mt-1">
       <div class="columns flex-centered">
-        <div class="column col-xl-7 col-md-10 col-sm-12">
+        <div class="column col-12 wizard-form-column">
           <div class="form-group">
             <div class="columns">
               <SInput

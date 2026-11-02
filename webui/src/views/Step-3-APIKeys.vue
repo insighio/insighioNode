@@ -3,7 +3,7 @@
     <div class="text-center">Set API keys that were generated during device creation in console.insigh.io.</div>
     <div class="container grid-lg">
       <div class="columns flex-centered">
-        <div class="column col-xl-7 col-md-10 col-sm-12">
+        <div class="column col-12 wizard-form-column">
           <div class="form-group">
             <div class="columns">
               <div class="column col-3 col-sm-12">
