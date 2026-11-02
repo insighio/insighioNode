@@ -88,7 +88,7 @@
           Step {{ currentStepNumber }} of {{ visibleSteps.length }} . {{ currentStepLabel }}
         </p>
       </nav>
-      <header class="step-heading">
+      <header class="step-heading" v-if="tabActive === 0">
         <p class="eyebrow">Device configurator</p>
         <h1 ref="stepHeading" tabindex="-1">{{ currentStepLabel }}</h1>
         <p>{{ stepDescription }}</p>

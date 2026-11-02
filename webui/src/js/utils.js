@@ -47,7 +47,7 @@ export function fetchInternal(url, timeout = 30000, method = "GET", body = null,
               throw new Error(err.message || `Request failed with status: ${response.status}`)
             } catch (e) {
               console.log("Error parsing JSON response: ", e)
-              throw new Error(`Request failed with status: ${response.status}`)
+              throw new Error(`Request failed with status: ${response.status}`, { cause: e })
             }
           })
         }
