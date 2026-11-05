@@ -366,6 +366,14 @@ details > * {
   margin-left: auto;
 }
 
+.verify-back {
+  margin-right: 10px;
+}
+
+.apply-mobile-retry {
+  display: none;
+}
+
 .login-form {
   max-width: 24rem;
   margin: 0 auto 1rem;
@@ -604,6 +612,52 @@ details > * {
 }
 
 @media (max-width: 600px) {
+  html {
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  #app {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-wizard-actions {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.75rem max(0.75rem, env(safe-area-inset-right, 0px)) calc(0.75rem + env(safe-area-inset-bottom, 0px))
+      max(0.75rem, env(safe-area-inset-left, 0px));
+    background: white;
+    border-top: 1px solid var(--ui-border);
+    box-shadow: 0 -4px 16px #2335420a;
+  }
+
+  .mobile-wizard-actions .btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .mobile-wizard-actions .btn:first-child:not(:last-child) {
+    flex: 0 0 auto;
+  }
+
+  .apply-retry {
+    display: none;
+  }
+
+  .apply-mobile-retry {
+    display: inline-block;
+  }
+
   .device-configurator {
     padding: 0.75rem;
   }

@@ -9,8 +9,8 @@
         The configuration is ready to be applied. By pressing the <span class="text-bold">Finish</span> button the
         device will reboot and start operating with the desired settings.
       </p>
-      <div class="empty-action">
-        <button class="btn btn-primary" style="margin-right: 10px" @click="requestGoBack()">Back</button>
+      <div class="empty-action mobile-wizard-actions">
+        <button class="btn btn-primary verify-back" @click="requestGoBack()">Back</button>
         <button class="btn btn-primary" @click="requestGoNext()">Finish</button>
       </div>
 

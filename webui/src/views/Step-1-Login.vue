@@ -78,7 +78,7 @@
               </button>
             </div>
             <p v-if="loginError" class="toast toast-error ui-mt-1" role="alert">{{ loginError }}</p>
-            <div class="flex-centered ui-mt-1 ui-mb-1">
+            <div class="flex-centered ui-mt-1 ui-mb-1 mobile-wizard-actions">
               <button class="btn btn-primary constr-field" type="submit" :disabled="isLoggingIn">
                 <span v-if="isLoggingIn">Logging in...</span>
                 <span v-else>Login</span>

@@ -1,5 +1,5 @@
 <template>
-  <div class="column col-12 wizard-actions">
+  <div class="column col-12 wizard-actions mobile-wizard-actions">
     <button v-if="showBackButton" class="btn" type="button" @click="backPressed()">Back</button>
     <button v-if="showSaveButton" class="btn btn-primary" type="button" @click="savePressed()">
       Save &amp; continue <i class="icon icon-arrow-right" aria-hidden="true"></i>

@@ -57,6 +57,11 @@ component framework. Shared responsive styles live in
 - Desktop shows the full step list; phones show the current step and count.
   Satellite configurations omit the unused credentials step. Progress indicators
   are informational, so they cannot bypass step validation.
+- At widths up to 600px, wizard navigation (including Login, Finish, and
+  Start over/Try again) stays in a bottom action bar while the page scrolls.
+  Space below the content and safe-area padding keep the final fields reachable.
+  Desktop navigation remains inline. Check short and long pages, every shield,
+  phone rotation, and an open software keyboard; dialogs must cover the action bar.
 - Use only the keyboard to sign in, select network technology, choose a shield
   and timing mode, open advanced sections, and expand field help.
 - Check that the selected network updates immediately, and that scanning for
@@ -78,6 +83,12 @@ component framework. Shared responsive styles live in
   labels stack above inputs, while switches share a row with their label.
   Check at 360px, about 800px, and 1280px or wider that no label breaks
   mid-word and that fields inside collapsible sections do not wrap.
+- Custom Measurement Naming (opened by "Save & continue" on Measurements) has
+  a fixed header and footer with a scrolling body, and is full-screen on
+  phones, where each measurement is a card. Check the empty, loading (buttons
+  disabled, Escape ignored), loaded, invalid-alias, and failed-fetch states.
+  Saving stores `meas-name-ext-mapping`. "Skip naming" continues without
+  storing anything, and Cancel/Escape stays on Measurements.
 - Test incorrect credentials, disconnected-device errors, and a failed
   configuration save. Errors should be visible, and failed saves should allow
   retrying without discarding settings.

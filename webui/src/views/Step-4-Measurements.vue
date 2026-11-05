@@ -404,6 +404,17 @@ export default {
   opacity: 0;
 }
 
+@media (max-width: 600px) {
+  /* A transformed shield would anchor its fixed navigation bar to the content. */
+  .slide-left-enter-active,
+  .slide-left-leave-active,
+  .slide-right-enter-active,
+  .slide-right-leave-active {
+    transform: none;
+    transition: opacity 0.3s ease;
+  }
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;

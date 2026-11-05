@@ -9,15 +9,16 @@
       <div v-else-if="saveError">
         <p class="empty-title h5">Configuration not saved</p>
         <p class="toast toast-error" role="alert">{{ saveError }}</p>
-        <button class="btn btn-primary" @click="apply">Try again</button>
+        <button class="btn btn-primary apply-retry" @click="apply">Try again</button>
       </div>
       <div v-else>
         <p class="empty-title h5">Configuration Applied</p>
         <p class="empty-subtitle">The device will soon reboot to the desired configuration.</p>
       </div>
 
-      <div class="empty-action" v-if="!isLoading">
+      <div class="empty-action mobile-wizard-actions" v-if="!isLoading">
         <button class="btn" @click="startOver">Start over</button>
+        <button v-if="saveError" class="btn btn-primary apply-mobile-retry" @click="apply">Try again</button>
       </div>
     </div>
   </div>
