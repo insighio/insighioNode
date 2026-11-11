@@ -50,6 +50,8 @@ except Exception as e:
     else:
         logging.error("Device never configured")
 
+device_info.enable_watchdog(getattr(cfg, "_WD_PERIOD", 120) if demo_config_exists else 120)
+
 
 charger_current_set = False
 if demo_config_exists and hasattr(cfg, "_SYSTEM_SETTINGS"):

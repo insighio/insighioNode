@@ -2,6 +2,7 @@ from utime import sleep_ms, ticks_ms, sleep_us, ticks_add, ticks_diff
 import logging
 
 from . import cfg
+from device_info import wdt_reset
 
 from external.kpn_senml.senml_unit import SenmlUnits
 from .dictionary_utils import set_value_float
@@ -70,8 +71,13 @@ def read_accelerometer(measurements=None, single_measurement=False):
 
     if single_measurement:
         (asm330_accX, asm330_accY, asm330_accZ) = (None, None, None)
+        next_wdt_reset_ms = ticks_add(ticks_ms(), 1000)
 
         while asm330_accX is None or asm330_accY is None or asm330_accZ is None:
+            now = ticks_ms()
+            if ticks_diff(now, next_wdt_reset_ms) >= 0:
+                wdt_reset()
+                next_wdt_reset_ms = ticks_add(now, 1000)
             (asm330_accX, asm330_accY, asm330_accZ) = asm330.get_reading(False)
             sleep_ms(1)
 
@@ -96,8 +102,13 @@ def read_accelerometer(measurements=None, single_measurement=False):
     dev_is_operating = -1
     idle_value = 100000  # intentionally big value to drop exclude it in the iteration of min calculation
     (baseX, baseY, baseZ) = calculate_baseline(asm330)
+    next_wdt_reset_ms = ticks_add(ticks_ms(), 1000)
 
     while 1:
+        now = ticks_ms()
+        if ticks_diff(now, next_wdt_reset_ms) >= 0:
+            wdt_reset()
+            next_wdt_reset_ms = ticks_add(now, 1000)
 
         (asm330_accX, asm330_accY, asm330_accZ) = asm330.get_reading(True)
         if asm330_accX is None or asm330_accY is None or asm330_accZ is None:

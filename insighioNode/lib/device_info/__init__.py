@@ -121,10 +121,6 @@ def set_defaults(
 ):
     """Sets basic configuration of board"""
     # disable/enable heartbeat
-    global wdt
-    global wdt_timeout
-    wdt = None
-
     import network
 
     wl = network.WLAN(network.STA_IF)
@@ -142,8 +138,29 @@ def set_defaults(
         pass
 
     if wdt_on_boot:
-        wdt = machine.WDT(timeout=(wdt_on_boot_timeout_sec * 1000))
-        wdt_timeout = wdt_on_boot_timeout_sec
+        enable_watchdog(wdt_on_boot_timeout_sec)
+
+
+def enable_watchdog(timeout_sec=120):
+    """Enable the hardware watchdog once; it cannot be reconfigured or stopped."""
+    global wdt
+    global wdt_timeout
+
+    if wdt is None:
+        wdt = machine.WDT(timeout=(timeout_sec * 1000))
+        wdt_timeout = timeout_sec
+
+
+def sleep_ms_with_wdt(duration_ms):
+    if duration_ms <= 0:
+        sleep_ms(duration_ms)
+        return
+
+    while duration_ms > 0:
+        wdt_reset()
+        sleep_duration_ms = min(duration_ms, 1000)
+        sleep_ms(sleep_duration_ms)
+        duration_ms -= sleep_duration_ms
 
 
 def initialize_led():

@@ -3,7 +3,7 @@ from utime import sleep_ms
 from external.kpn_senml.senml_unit import SenmlSecondaryUnits
 import logging
 from sensors import set_sensor_power_on, set_sensor_power_off
-from device_info import wdt_reset
+from device_info import sleep_ms_with_wdt, wdt_reset
 
 from .dictionary_utils import set_value, set_value_float
 from .sdi12_measurements import detect_timing, identify_sensor, read_measurement, set_no_response_error
@@ -65,7 +65,7 @@ def executeSDI12Measurement(sdi12, measurements, index):
     if _sdi12_sensor_switch_list[location] is not None:
         set_sensor_power_on(_sdi12_sensor_switch_list[location])
     powerOffAllSwitchExcept(location)
-    sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
+    sleep_ms_with_wdt(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
     try:
         read_sdi12_sensor(sdi12, address, measurements, location)
     except Exception as e:
@@ -79,7 +79,7 @@ def shield_measurements(measurements):
     set_sensor_power_on(cfg.get("_UC_IO_SNSR_REG_ON"))
 
     # get SDI12 measurements
-    sleep_ms(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
+    sleep_ms_with_wdt(cfg.get("_SDI12_WARM_UP_TIME_MSEC"))
 
     from external.microsdi12.microsdi12 import SDI12
 
@@ -87,6 +87,7 @@ def shield_measurements(measurements):
 
     try:
         sdi12 = SDI12(cfg.get("_UC_IO_DRV_IN"), cfg.get("_UC_IO_RCV_OUT"), None, 1)
+        sdi12.set_watchdog_reset(wdt_reset)
         sdi12.set_dual_direction_pins(cfg.get("_UC_IO_DRV_ON"), cfg.get("_UC_IO_RCV_ON"))
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)

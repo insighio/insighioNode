@@ -82,7 +82,7 @@ def executeDeviceInitialization():
     device_info.set_defaults(
         heartbeat=False,
         wifi_on_boot=False,
-        wdt_on_boot=isLightSleepScenario(),
+        wdt_on_boot=True,
         wdt_on_boot_timeout_sec=cfg.get("_WD_PERIOD"),
         bt_on_boot=False,
     )

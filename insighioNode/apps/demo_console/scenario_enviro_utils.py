@@ -18,7 +18,7 @@ import gpio_handler
 import _thread
 import utime
 from math import ceil
-from device_info import get_firmware_version, wdt_reset
+from device_info import get_firmware_version, sleep_ms_with_wdt, wdt_reset
 
 _BOARD_DEBUG_ON = cfg.get("_MEAS_BOARD_STAT_ENABLE")
 
@@ -309,8 +309,7 @@ def execute_sdi12_measurements(measurements):
         logging.debug("SDI12 warmup time: {}".format(t))
         try:
             t = int(t)
-            wdt_reset()
-            sleep_ms(t)
+            sleep_ms_with_wdt(t)
         except Exception as e:
             logging.exception(e, "Error during SDI12 warmup time")
 
@@ -338,6 +337,7 @@ def execute_sdi12_measurements(measurements):
             logging.error("Unsupported shield version: {}".format(SHIELD_VERSION))
             return
 
+        sdi12.set_watchdog_reset(wdt_reset)
         sdi12.set_wait_after_uart_write(True)
         sdi12.wait_after_each_send(500)
 
