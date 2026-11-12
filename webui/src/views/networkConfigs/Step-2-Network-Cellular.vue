@@ -239,6 +239,10 @@
               <table class="table ui-mb-0">
                 <tbody>
                   <tr>
+                    <td style="width: 40%; font-weight: 500">Initialization</td>
+                    <td>{{ modemInfo.initialization_duration }} ms</td>
+                  </tr>
+                  <tr>
                     <td style="width: 40%; font-weight: 500">Activation</td>
                     <td>{{ modemInfo.activation_duration }} ms</td>
                   </tr>
@@ -246,10 +250,10 @@
                     <td style="font-weight: 500">Attachment</td>
                     <td>{{ modemInfo.attachment_duration }} ms</td>
                   </tr>
-                  <tr>
+                  <!--tr>
                     <td style="font-weight: 500">Connection</td>
                     <td>{{ modemInfo.connection_duration }} ms</td>
-                  </tr>
+                  </tr-->
                 </tbody>
               </table>
             </div>
@@ -309,6 +313,7 @@ export default {
       modemInfo: {
         updated: false,
         status: "",
+        initialization_duration: "",
         activation_duration: "",
         attachment_duration: "",
         connection_duration: "",
@@ -356,6 +361,7 @@ export default {
         const data = await fetchInternal("/api/modem_info", 60000, "POST", body, "json")
 
         this.modemInfo.status = data.status
+        this.modemInfo.initialization_duration = data.initialization_duration
         this.modemInfo.activation_duration = data.activation_duration
         this.modemInfo.attachment_duration = data.attachment_duration
         this.modemInfo.connection_duration = data.connection_duration

@@ -315,6 +315,7 @@ class ModemConnectionInfo:
 
         response_dict = {
             "status": status_str,
+            "initialization_duration": init_duration,
             "activation_duration": activation_duration,
             "attachment_duration": attachment_duration,
             "connection_duration": connection_duration,
