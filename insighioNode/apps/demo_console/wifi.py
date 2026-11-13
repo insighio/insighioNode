@@ -30,7 +30,7 @@ def update_hw_ids(measurements, is_senml=True, is_json=False):
 
 def connect(cfg, explicit_protocol=None):
     with mutex:
-        connOk, connDur, scanDur, wifiChannel, wifiRssi = wifi.connect(
+        connOk, connDur, scanDur, _, wifiRssi = wifi.connect(
             cfg.get("_CONF_NETS"), cfg.get("_MAX_CONNECTION_ATTEMPT_TIME_SEC"), force_no_scan=True
         )
         results = {}
@@ -38,7 +38,7 @@ def connect(cfg, explicit_protocol=None):
         # if network statistics are enabled
         if cfg.get("_MEAS_NETWORK_STAT_ENABLE"):
             results["wifi_conn_duration"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_MILLISECOND, "value": connDur}
-            results["wifi_channel"] = {"value": wifiChannel}
+            #results["wifi_channel"] = {"value": wifiChannel}
             results["wifi_rssi"] = {"unit": SenmlSecondaryUnits.SENML_SEC_UNIT_DECIBEL_MILLIWATT, "value": wifiRssi}
 
         if connOk:
