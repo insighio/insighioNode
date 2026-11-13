@@ -18,8 +18,8 @@
       />
       <SDivider label="Sensors" />
       <div class="sensor-table-actions">
-        <span class="sensor-count" role="status">{{ sdi12Sensors.length }} / 10 SDI12 sensors</span>
-        <button type="button" class="btn btn-primary" :disabled="sdi12Sensors.length >= 10" @click="addSdi12Row">
+        <span class="sensor-count" role="status">{{ sdi12Sensors.length }} SDI12 sensors</span>
+        <button type="button" class="btn btn-primary" @click="addSdi12Row">
           <i class="icon icon-plus" aria-hidden="true"></i> Add SDI12 sensor
         </button>
       </div>
