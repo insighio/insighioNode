@@ -202,7 +202,7 @@ def is_connected():
         and modem_instance.is_connected()
         and (
             transfer_client.is_connected()
-            or (not is_secondary_transfer_protocol_enabled or (transfer_secondary_client and transfer_secondary_client.is_connected()))
+            or (is_secondary_transfer_protocol_enabled and transfer_secondary_client and transfer_secondary_client.is_connected())
         )
     )
 
