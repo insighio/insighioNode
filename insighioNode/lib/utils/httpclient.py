@@ -120,7 +120,10 @@ class HttpClient:
             if proto == "https:":
                 gc.collect()
                 s = ussl.wrap_socket(s, server_hostname=host)
-                s.settimeout(socket_timeout_sec)
+                try:
+                    s.settimeout(socket_timeout_sec)
+                except:
+                    print("ussl wrapped socket does not have settimeout")
             content = b""
             # s.write(b'%s /%s HTTP/1.0\r\n' % (method, path))
             content += "{} /{} HTTP/1.0\r\n".format(method, path).encode("utf-8")
