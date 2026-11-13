@@ -85,6 +85,7 @@ class TestWifiHttpsTransfer(unittest.TestCase):
     def test_http_client_writes_authenticated_json(self):
         socket = Mock()
         socket.readline.side_effect = [b"HTTP/1.0 201 Created\r\n", b"\r\n"]
+        socket.read.side_effect = [b"response body", b""]
         usocket = types.ModuleType("usocket")
         usocket.SOCK_STREAM = 1
         usocket.getaddrinfo = Mock(return_value=[(1, 1, 1, None, ("console.insigh.io", 443))])
@@ -110,8 +111,11 @@ class TestWifiHttpsTransfer(unittest.TestCase):
         self.assertIn(b"Content-Type: application/json\r\n", payload)
         self.assertIn(b"Content-Length: 2\r\n", payload)
         self.assertTrue(payload.endswith(b"[]"))
+        self.assertEqual(socket.settimeout.call_args_list[0].args, (30,))
+        self.assertEqual(response.content, b"response body")
         response.close()
         socket.close.assert_called_once()
+        self.assertGreaterEqual(device_info.wdt_reset.call_count, 5)
 
 
 class TestWifiHttpConsumers(unittest.TestCase):

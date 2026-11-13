@@ -1,8 +1,17 @@
 import usocket, os, gc
+import device_info
 from device_info import wdt_reset
 
 # from here: https://github.com/rdehuyss/micropython-ota-updater/blob/master/app/httpclient.py
 CHUNK_SIZE = const(512)  # bytes
+SOCKET_TIMEOUT_SEC = 30
+
+
+def _socket_timeout_sec():
+    watchdog_timeout_sec = getattr(device_info, "wdt_timeout", None)
+    if watchdog_timeout_sec is None:
+        return SOCKET_TIMEOUT_SEC
+    return min(SOCKET_TIMEOUT_SEC, watchdog_timeout_sec / 2)
 
 
 class Response:
@@ -11,16 +20,17 @@ class Response:
         self._saveToFile = saveToFile
         self._encoding = "utf-8"
         if saveToFile is not None:
-            with open(saveToFile, "w") as outfile:
-                data = self._socket.read(CHUNK_SIZE)
-                while data:
-                    print("saving http file, reading chunk: " + str(CHUNK_SIZE))
-                    wdt_reset()
-                    outfile.write(data)
-                    data = self._socket.read(CHUNK_SIZE)
-                outfile.close()
-
-            self.close()
+            try:
+                with open(saveToFile, "w") as outfile:
+                    while True:
+                        wdt_reset()
+                        data = self._socket.read(CHUNK_SIZE)
+                        if not data:
+                            break
+                        print("saving http file, reading chunk: " + str(CHUNK_SIZE))
+                        outfile.write(data)
+            finally:
+                self.close()
 
     def close(self):
         if self._socket:
@@ -33,8 +43,14 @@ class Response:
             raise SystemError("You cannot get the content from the response as you decided to save it in {}".format(self._saveToFile))
 
         try:
-            result = self._socket.read()
-            return result
+            result = bytearray()
+            while True:
+                wdt_reset()
+                data = self._socket.read(CHUNK_SIZE)
+                if not data:
+                    break
+                result.extend(data)
+            return bytes(result)
         finally:
             self.close()
 
@@ -46,8 +62,7 @@ class Response:
         try:
             import ujson
 
-            result = ujson.load(self._socket)
-            return result
+            return ujson.loads(self.content.decode(self._encoding))
         finally:
             self.close()
 
@@ -90,6 +105,7 @@ class HttpClient:
             host, port = host.split(":", 1)
             port = int(port)
 
+        wdt_reset()
         ai = usocket.getaddrinfo(host, port, 0, usocket.SOCK_STREAM)
         if len(ai) < 1:
             raise ValueError("You are not connected to the internet...")
@@ -97,10 +113,14 @@ class HttpClient:
 
         s = usocket.socket(ai[0], ai[1], ai[2])
         try:
+            socket_timeout_sec = _socket_timeout_sec()
+            s.settimeout(socket_timeout_sec)
+            wdt_reset()
             s.connect(ai[-1])
             if proto == "https:":
                 gc.collect()
                 s = ussl.wrap_socket(s, server_hostname=host)
+                s.settimeout(socket_timeout_sec)
             content = b""
             # s.write(b'%s /%s HTTP/1.0\r\n' % (method, path))
             content += "{} /{} HTTP/1.0\r\n".format(method, path).encode("utf-8")
@@ -145,8 +165,10 @@ class HttpClient:
                 custom(s)
             else:
                 content += b"\r\n"
+            wdt_reset()
             s.write(content)
 
+            wdt_reset()
             l = s.readline()
             # print('l: ', l)
             l = l.split(None, 2)
@@ -155,6 +177,7 @@ class HttpClient:
             if len(l) > 2:
                 reason = l[2].rstrip()
             while 1:
+                wdt_reset()
                 l = s.readline()
                 if not l or l == b"\r\n":
                     break
