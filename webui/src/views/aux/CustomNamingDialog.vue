@@ -33,13 +33,18 @@
         <div v-if="isLoading" class="naming-loading">
           <div class="naming-loading-text">
             <span class="loading" aria-hidden="true"></span>
-            <span role="status">Reading measurements from the device&hellip;</span>
+            <span v-if="processState === 'fetchingMeasurements'" role="status"
+              >Reading measurements from the device&hellip;</span
+            >
+            <span v-if="processState === 'sendingConfig'" role="status"
+              >Sending configuration to the device&hellip;</span
+            >
             <span class="naming-elapsed" aria-hidden="true">{{ progressValue }}s</span>
           </div>
           <progress
             class="progress naming-progress"
             :value="progressValue"
-            max="60"
+            :max="measurementTimeoutS"
             aria-label="Measurement reading progress, in seconds"
           ></progress>
         </div>
@@ -165,7 +170,9 @@ export default {
       progressValue: 0,
       progressTimer: undefined,
       hasFetched: false,
-      returnFocusTo: null
+      returnFocusTo: null,
+      measurementTimeoutS: 60,
+      processState: "idle"
     }
   },
   computed: {
@@ -309,9 +316,10 @@ export default {
       this.progressValue = 0
 
       this.progressTimer = setInterval(() => {
-        if (this.progressValue >= 60) {
+        if (this.progressValue >= this.measurementTimeoutS) {
           clearInterval(this.progressTimer)
           this.isLoading = false
+          this.processState = "idle"
         } else {
           this.progressValue += 1
         }
@@ -321,8 +329,11 @@ export default {
       this.isLoading = false
       this.progressValue = 0
       clearInterval(this.progressTimer)
+      this.processState = "idle"
     },
     executeMeasurements() {
+      this.processState = "sendingConfig"
+
       // Keep keyboard focus inside the dialog while its buttons are disabled.
       this.$refs.dialog?.focus()
       this.progressValue = 0
@@ -372,11 +383,20 @@ export default {
         return
       }
 
+      this.measurementTimeoutS = 60
+      if (this.$storage.get("meas-sdi12")) {
+        this.measurementTimeoutS += Math.floor((this.$storage.get("meas-sdi12")["config"]?.warmupTimeMs || 0) / 1000)
+      }
+
+      console.log("measurementTimeoutS: ", this.measurementTimeoutS)
+
       fetchInternal("/save-config-temp", 30000, "POST", objToSend, "json")
         .then(() => {
+          this.processState = "fetchingMeasurements"
           this.startProgress()
-          fetchInternal("/device_measurements", 60000)
+          fetchInternal("/device_measurements", this.measurementTimeoutS * 1000)
             .then((measurementNaming) => {
+              this.processState = "idle"
               this.stopProgress()
               this.addStaticValuesForNetwork(measurementNaming)
               console.log("measurements: ", measurementNaming)
@@ -412,6 +432,7 @@ export default {
               this.isLoading = false
             })
             .catch((err) => {
+              this.processState = "idle"
               this.stopProgress()
               console.log("error fetching measurements: ", err)
               showAlert(
@@ -423,6 +444,7 @@ export default {
             })
         })
         .catch((err) => {
+          this.processState = "idle"
           this.stopProgress()
           console.log("error saving config: ", err)
           showAlert("Could not send the configuration to the device. Check the connection and try again.", {
