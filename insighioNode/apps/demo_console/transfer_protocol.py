@@ -107,7 +107,7 @@ class TransferProtocolModemAT(TransferProtocol):
         return self.connected
 
     def is_connected(self):
-        if self.explicit_use_mqtt:
+        if self.explicit_use_mqtt or self.is_secondary_transfer_protocol:
             self.connected = self.modem_instance.mqtt_is_connected(self.modem_client_id)
         else:
             self.connected = self.modem_instance.ssl_socket_is_connected()
