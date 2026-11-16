@@ -638,11 +638,11 @@ def init_ulp(pcnt_cfg):
         pcnt_2_high_freq=pcnt_cfg[1].get("highFreq"),
     )
 
-    logging.info("=" * 60)
-    logging.info("Generated ULP Assembly Code:")
-    logging.info("=" * 60)
-    print(script_to_run)
-    logging.info("=" * 60)
+    # logging.info("=" * 60)
+    # logging.info("Generated ULP Assembly Code:")
+    # logging.info("=" * 60)
+    # print(script_to_run)
+    # logging.info("=" * 60)
 
     # Compile assembly to binary with error handling
     logging.info("Compiling ULP assembly for ESP32-S3...")
